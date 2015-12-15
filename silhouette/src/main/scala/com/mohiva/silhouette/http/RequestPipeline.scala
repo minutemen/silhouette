@@ -117,6 +117,14 @@ protected[silhouette] trait RequestPipeline[R] extends RequestExtractor[R] {
   def queryParam(name: String): Option[String]
 
   /**
+    * Adds a list of query params.
+    *
+    * @param params The query params to add
+    * @return A new response pipeline instance with the added query params.
+    */
+  def withQueryParam(params: (String, String)*): RequestPipeline[R]
+
+  /**
    * Unboxes the framework specific request implementation.
    *
    * @return The framework specific request implementation.
