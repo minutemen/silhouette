@@ -147,7 +147,9 @@ class CookieAuthenticatorService(
   repository: Option[AuthenticatorRepository[CookieAuthenticator]],
   fingerprintGenerator: FingerprintGenerator,
   idGenerator: IDGenerator,
-  clock: Clock)(implicit val executionContext: ExecutionContext)
+  clock: Clock,
+  requestTransport: RequestTransport,
+  responseTransport: ResponseTransport)(implicit val executionContext: ExecutionContext)
   extends AuthenticatorService[CookieAuthenticator]
   with Logging {
 
@@ -186,27 +188,17 @@ class CookieAuthenticatorService(
    * @return Some authenticator or None if no authenticator could be found in request.
    */
   override def retrieve[R](implicit request: RequestPipeline[R]): Future[Option[CookieAuthenticator]] = {
-    Future.fromTry(Try {
-      if (settings.useFingerprinting) Some(fingerprintGenerator.generate) else None
-    }).flatMap { fingerprint =>
-      request.cookie(settings.cookieName) match {
-        case Some(cookie) =>
-          (repository match {
-            case Some(d) => d.find(cookie.value)
-            case None => unserialize(cookie.value)(settings) match {
-              case Success(authenticator) => Future.successful(Some(authenticator))
-              case Failure(error) =>
-                logger.info(error.getMessage, error)
-                Future.successful(None)
-            }
-          }).map {
-            case Some(a) if fingerprint.isDefined && a.fingerprint != fingerprint =>
-              logger.info(InvalidFingerprint.format(ID, fingerprint, a))
-              None
-            case v => v
+      requestTransport.retrieve(request).flatMap {
+        case Some(value) => repository match {
+          case Some(d) => d.find(value)
+          case None => unserialize(value)(settings) match {
+            case Success(authenticator) => Future.successful(Some(authenticator))
+            case Failure(error) =>
+              logger.info(error.getMessage, error)
+              Future.successful(None)
           }
+        }
         case None => Future.successful(None)
-      }
     }.recover {
       case e => throw new AuthenticatorRetrievalException(RetrieveError.format(ID), e)
     }
@@ -255,7 +247,7 @@ class CookieAuthenticatorService(
    * @return The manipulated response pipeline.
    */
   override def embed[R, P](cookie: Cookie, response: ResponsePipeline[P])(implicit request: RequestPipeline[R]): Future[ResponsePipeline[P]] = {
-    Future.successful(response.withCookies(cookie).touch)
+    responseTransport.embed(cookie.value, response)
   }
 
   /**
@@ -266,7 +258,7 @@ class CookieAuthenticatorService(
    * @tparam R The type of the request.
    * @return The manipulated request pipeline.
    */
-  override def embed[R](cookie: Cookie, request: RequestPipeline[R]): RequestPipeline[R] = request.withCookies(cookie)
+  override def embed[R](cookie: Cookie, request: RequestPipeline[R]): RequestPipeline[R] = requestTransport.embed(cookie.value, request)
 
   /**
    * @inheritdoc

@@ -23,7 +23,7 @@ import com.mohiva.silhouette.services.AuthenticatorService
 import com.mohiva.silhouette.services.AuthenticatorService._
 import com.mohiva.silhouette.util.JsonFormats._
 import com.mohiva.silhouette.util.{ Clock, Crypto, FingerprintGenerator, Logging }
-import com.mohiva.silhouette.{ Authenticator, ExpirableAuthenticator, LoginInfo }
+import com.mohiva.silhouette._
 import org.joda.time.DateTime
 import play.api.libs.json.Json
 
@@ -125,7 +125,9 @@ object SessionAuthenticator extends Logging {
 class SessionAuthenticatorService(
   settings: SessionAuthenticatorSettings,
   fingerprintGenerator: FingerprintGenerator,
-  clock: Clock)(implicit val executionContext: ExecutionContext)
+  clock: Clock,
+  requestTransport: RequestTransport,
+  responseTransport: ResponseTransport)(implicit val executionContext: ExecutionContext)
   extends AuthenticatorService[SessionAuthenticator]
   with Logging {
 
@@ -162,20 +164,14 @@ class SessionAuthenticatorService(
    * @return Some authenticator or None if no authenticator could be found in request.
    */
   override def retrieve[R](implicit request: RequestPipeline[R]): Future[Option[SessionAuthenticator]] = {
-    Future.fromTry(Try {
-      if (settings.useFingerprinting) Some(fingerprintGenerator.generate) else None
-    }).map { fingerprint =>
-      request.session.get(settings.sessionKey).flatMap { value =>
-        unserialize(value)(settings) match {
-          case Success(authenticator) if fingerprint.isDefined && authenticator.fingerprint != fingerprint =>
-            logger.info(InvalidFingerprint.format(ID, fingerprint, authenticator))
-            None
-          case Success(authenticator) => Some(authenticator)
-          case Failure(error) =>
-            logger.info(error.getMessage, error)
-            None
-        }
+    requestTransport.retrieve(request).map {
+      case Some(value) => unserialize(value)(settings) match {
+        case Success(authenticator) => Some(authenticator)
+        case Failure(error) =>
+          logger.info(error.getMessage, error)
+          None
       }
+      case None => None
     }.recover {
       case e => throw new AuthenticatorRetrievalException(RetrieveError.format(ID), e)
     }
@@ -206,7 +202,7 @@ class SessionAuthenticatorService(
   override def embed[R, P](session: (String, String), response: ResponsePipeline[P])(
     implicit request: RequestPipeline[R]): Future[ResponsePipeline[P]] = {
 
-    Future.successful(response.withSession(session).touch)
+    responseTransport.embed(session._2, response)
   }
 
   /**
@@ -218,7 +214,7 @@ class SessionAuthenticatorService(
    * @return The manipulated request pipeline.
    */
   override def embed[R](session: (String, String), request: RequestPipeline[R]): RequestPipeline[R] = {
-    request.withSession(session)
+    requestTransport.embed(session._2, request)
   }
 
   /**

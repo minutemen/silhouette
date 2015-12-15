@@ -75,7 +75,9 @@ class BearerTokenAuthenticatorService(
   settings: BearerTokenAuthenticatorSettings,
   repository: AuthenticatorRepository[BearerTokenAuthenticator],
   idGenerator: IDGenerator,
-  clock: Clock)(implicit val executionContext: ExecutionContext)
+  clock: Clock,
+  requestTransport: RequestTransport,
+  responseTransport: ResponseTransport)(implicit val executionContext: ExecutionContext)
   extends AuthenticatorService[BearerTokenAuthenticator]
   with Logging {
 
@@ -109,7 +111,7 @@ class BearerTokenAuthenticatorService(
    * @return Some authenticator or None if no authenticator could be found in request.
    */
   override def retrieve[R](implicit request: RequestPipeline[R]): Future[Option[BearerTokenAuthenticator]] = {
-    Future.fromTry(Try(request.extractString(settings.fieldName, settings.requestParts))).flatMap {
+    requestTransport.retrieve(request).flatMap {
       case Some(token) => repository.find(token)
       case None => Future.successful(None)
     }.recover {
@@ -147,7 +149,7 @@ class BearerTokenAuthenticatorService(
   override def embed[R, P](token: String, response: ResponsePipeline[P])(
     implicit request: RequestPipeline[R]): Future[ResponsePipeline[P]] = {
 
-    Future.successful(response.withHeaders(settings.fieldName -> token).touch)
+    responseTransport.embed(token, response)
   }
 
   /**
@@ -159,7 +161,7 @@ class BearerTokenAuthenticatorService(
    * @return The manipulated request pipeline.
    */
   override def embed[R](token: String, request: RequestPipeline[R]): RequestPipeline[R] = {
-    request.withHeaders(Seq(settings.fieldName -> token): _*)
+    requestTransport.embed(token, request)
   }
 
   /**
