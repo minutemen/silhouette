@@ -1,8 +1,7 @@
 import Dependencies._
 
 libraryDependencies ++= Seq(
-  Library.jbcrypt,
-  Library.Specs2.core % Test
+  Library.jbcrypt
 )
 
 enablePlugins(Doc)
