@@ -51,7 +51,13 @@ object BasicSettings extends AutoPlugin {
     scalacOptions in Test ~= { (options: Seq[String]) =>
       options filterNot (_ == "-Ywarn-dead-code") // Allow dead code in tests (to support using mockito).
     },
-    parallelExecution in Test := false
+    parallelExecution in Test := false,
+    fork in Test := true,
+    // Needed to avoid https://github.com/travis-ci/travis-ci/issues/3775 in forked tests
+    // in Travis with `sudo: false`.
+    // See https://github.com/sbt/sbt/issues/653
+    // and https://github.com/travis-ci/travis-ci/issues/3775
+    javaOptions += "-Xmx1G"
   )
 }
 
@@ -62,7 +68,7 @@ object CodeFormatter extends AutoPlugin {
 
   import com.typesafe.sbt.SbtScalariform._
 
-  import scalariform.formatter.preferences.{ DoubleIndentClassDeclaration, FormatXml, PreserveDanglingCloseParenthesis }
+  import scalariform.formatter.preferences._
 
   lazy val BuildConfig = config("build") extend Compile
   lazy val BuildSbtConfig = config("buildsbt") extend Compile
@@ -71,7 +77,8 @@ object CodeFormatter extends AutoPlugin {
     ScalariformKeys.preferences := ScalariformKeys.preferences.value
       .setPreference(FormatXml, false)
       .setPreference(DoubleIndentClassDeclaration, false)
-      .setPreference(PreserveDanglingCloseParenthesis, true)
+      .setPreference(AlignSingleLineCaseStatements, true)
+      .setPreference(DanglingCloseParenthesis, Preserve)
   )
 
   override def trigger = allRequirements
@@ -187,7 +194,7 @@ object Publish extends AutoPlugin {
   }
 
   override def projectSettings = sonatypeSettings ++ Seq(
-    description := "Framework acnostic authentication library for Scala that supports several authentication methods, including OAuth1, OAuth2, OpenID, Credentials, Basic Authentication, Two Factor Authentication or custom authentication schemes",
+    description := "Framework acnostic authentication library for Scala that supports several authentication methods, including OAuth1, OAuth2, OpenID, CAS, Credentials, Basic Authentication, Two Factor Authentication or custom authentication schemes",
     homepage := Some(url("http://silhouette.mohiva.com/")),
     licenses := Seq("Apache License" -> url("https://github.com/mohiva/silhouette/blob/master/LICENSE")),
     publishMavenStyle := true,

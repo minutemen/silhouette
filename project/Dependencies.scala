@@ -18,15 +18,11 @@ import sbt._
 object Dependencies {
 
   object Versions {
-    val crossScala = Seq("2.11.7")
+    val crossScala = Seq("2.11.8")
     val scalaVersion = crossScala.head
   }
 
-  val resolvers = Seq(
-    "Atlassian Releases" at "https://maven.atlassian.com/public/",
-    "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases",
-    "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
-  )
+  val resolvers = Seq()
 
   object Library {
 
@@ -37,13 +33,12 @@ object Dependencies {
       val mock = "org.specs2" %% "specs2-mock" % version
     }
 
+    val mockito = "org.mockito" % "mockito-core" % "1.10.19"
     val jbcrypt = "org.mindrot" % "jbcrypt" % "0.3m"
-    val jwtCore = "com.atlassian.jwt" % "jwt-core" % "1.2.4"
-    val jwtApi = "com.atlassian.jwt" % "jwt-api" % "1.2.4"
     val scalaGuice = "net.codingwell" %% "scala-guice" % "4.0.0"
-    val jodaTime = "joda-time" % "joda-time" % "2.9.1"
     val playJson = "com.typesafe.play" % "play-json_2.11" % "2.4.4"
     val slf4jApi = "org.slf4j" % "slf4j-api" % "1.7.13"
     val inject = "javax.inject" % "javax.inject" % "1"
+    val commonCodec = "commons-codec" % "commons-codec" % "1.10"
   }
 }

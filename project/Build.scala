@@ -13,27 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import sbt.Keys._
 import sbt._
 
 object Build extends Build {
 
+  val silhouetteSpecs2 = Project(
+    id = "silhouette-specs2",
+    base = file("silhouette-specs2")
+  )
+
   val silhouette = Project(
     id = "silhouette",
-    base = file("silhouette")
+    base = file("silhouette"),
+    dependencies = Seq(silhouetteSpecs2 % Test)
+  )
+
+  lazy val silhouetteCryptoJca = Project(
+    id = "silhouette-crypto-jca",
+    base = file("silhouette-crypto-jca"),
+    dependencies = Seq(silhouette, silhouetteSpecs2 % Test)
   )
 
   val silhouettePasswordBcrypt = Project(
     id = "silhouette-password-bcrypt",
     base = file("silhouette-password-bcrypt"),
-    dependencies = Seq(silhouette)
+    dependencies = Seq(silhouette, silhouetteSpecs2 % Test)
   )
 
   val silhouettePersistence = Project(
     id = "silhouette-persistence",
     base = file("silhouette-persistence"),
-    dependencies = Seq(silhouette)
+    dependencies = Seq(silhouette, silhouetteSpecs2 % Test)
   )
 
   val root = Project(
@@ -41,6 +52,8 @@ object Build extends Build {
     base = file("."),
     aggregate = Seq(
       silhouette,
+      silhouetteCryptoJca,
+      silhouetteSpecs2,
       silhouettePasswordBcrypt,
       silhouettePersistence
     ),
