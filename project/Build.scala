@@ -47,6 +47,12 @@ object Build extends Build {
     dependencies = Seq(silhouette, silhouetteSpecs2 % Test)
   )
 
+  val silhouetteAkkaHttp = Project(
+    id = "silhouette-akka-http",
+    base = file("silhouette-akka-http"),
+    dependencies = Seq(silhouette, silhouetteSpecs2 % Test)
+  )
+
   val root = Project(
     id = "root",
     base = file("."),
@@ -55,7 +61,8 @@ object Build extends Build {
       silhouetteCryptoJca,
       silhouetteSpecs2,
       silhouettePasswordBcrypt,
-      silhouettePersistence
+      silhouettePersistence,
+      silhouetteAkkaHttp
     ),
     settings = Defaults.coreDefaultSettings ++
       APIDoc.settings ++
