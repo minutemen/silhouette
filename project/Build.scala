@@ -19,7 +19,7 @@ import sbt.Keys._
 import sbt._
 
 object Build extends Build {
-  lazy val buildVersions = taskKey[Unit]("Show some build versions")
+  lazy val buildVersions: TaskKey[Unit] = taskKey[Unit]("Show some build versions")
 
   val silhouetteSpecs2 = Project(
     id = "silhouette-specs2",
@@ -32,9 +32,15 @@ object Build extends Build {
     dependencies = Seq(silhouetteSpecs2 % Test)
   )
 
-  lazy val silhouetteCryptoJca = Project(
+  val silhouetteCryptoJca = Project(
     id = "silhouette-crypto-jca",
     base = file("silhouette-crypto-jca"),
+    dependencies = Seq(silhouette, silhouetteSpecs2 % Test)
+  )
+
+  val silhouetteJwtJose4j = Project(
+    id = "silhouette-jwt-jose4j",
+    base = file("silhouette-jwt-jose4j"),
     dependencies = Seq(silhouette, silhouetteSpecs2 % Test)
   )
 
@@ -56,12 +62,12 @@ object Build extends Build {
     aggregate = Seq(
       silhouette,
       silhouetteCryptoJca,
+      silhouetteJwtJose4j,
       silhouetteSpecs2,
       silhouettePasswordBcrypt,
       silhouettePersistence
     ),
     settings = Defaults.coreDefaultSettings ++
-      APIDoc.settings ++
       Seq(
         publish := {},
         buildVersions := {

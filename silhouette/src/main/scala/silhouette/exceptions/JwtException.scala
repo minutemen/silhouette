@@ -15,13 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Dependencies._
+package silhouette.exceptions
 
-libraryDependencies ++= Seq(
-  Library.Specs2.core,
-  Library.Specs2.matcherExtra,
-  Library.Specs2.mock,
-  Library.mockito,
-  Library.bouncyCastle
-)
-enablePlugins(Doc)
+/**
+ * Indicates that a JWT encoding/decoding issue occurred.
+ *
+ * @param msg   The exception message.
+ * @param cause The exception cause.
+ */
+class JwtException(msg: String, cause: Option[Throwable] = None)
+  extends SilhouetteException(msg, cause)

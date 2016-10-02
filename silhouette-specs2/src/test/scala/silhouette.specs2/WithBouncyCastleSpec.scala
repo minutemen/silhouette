@@ -17,31 +17,31 @@
  */
 package silhouette.specs2
 
-import org.specs2.concurrent.ExecutionEnv
-import org.specs2.matcher.Matcher
+import java.security.Security
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.specs2.mutable.Specification
 
-import scala.concurrent.Future
-import scala.concurrent.duration._
-import scala.languageFeature.implicitConversions
-
 /**
- * Helper to wait with patience to a result.
- *
- * This is needed to prevent the tests for timeouts.
+ * Test case for the [[WithBouncyCastle]] trait.
  */
-trait WaitPatience {
-  self: Specification =>
+class WithBouncyCastleSpec extends Specification {
 
-  val retries: Int = 10
+  "The trait" should {
+    "add the `BouncyCastleProvider` if it's not registered" in {
+      new Specification with WithBouncyCastle
 
-  val timeout: FiniteDuration = 1.second
+      val provider = new BouncyCastleProvider()
+      Option(Security.getProvider(provider.getName)) must beSome
+    }
 
-  implicit class WaitWithPatienceFutureMatchable[T](m: Matcher[T])(implicit ee: ExecutionEnv)
-    extends FutureMatchable[T](m)(ee) {
+    "add the `BouncyCastleProvider` if it's already registered" in {
+      val provider = new BouncyCastleProvider()
+      Security.addProvider(provider)
 
-    def awaitWithPatience: Matcher[Future[T]] = {
-      await(retries, timeout)
+      new Specification with WithBouncyCastle
+
+      Option(Security.getProvider(provider.getName)) must beSome
     }
   }
 }
