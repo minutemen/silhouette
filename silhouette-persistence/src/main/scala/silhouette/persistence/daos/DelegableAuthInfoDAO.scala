@@ -22,7 +22,7 @@ import scala.reflect.ClassTag
 /**
  * An implementation of the auth info DAO.
  *
- * This abstract implementation of the [[silhouette.AuthInfo]] trait
+ * This abstract implementation of the [[silhouette.persistence.daos.AuthInfoDAO]] trait
  * allows us to get the class tag of the auth info it is responsible for. Based on the class tag
  * the [[silhouette.persistence.repositories.DelegableAuthInfoRepository]] class
  * can delegate operations to the DAO which is responsible for the currently handled auth info.
