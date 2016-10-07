@@ -16,7 +16,6 @@
 package silhouette.persistence.daos
 
 import silhouette.AuthInfo
-import silhouette.persistence.repositories.DelegableAuthInfoRepository
 
 import scala.reflect.ClassTag
 
@@ -25,7 +24,7 @@ import scala.reflect.ClassTag
  *
  * This abstract implementation of the [[silhouette.AuthInfo]] trait
  * allows us to get the class tag of the auth info it is responsible for. Based on the class tag
- * the [[DelegableAuthInfoRepository]] class
+ * the [[silhouette.persistence.repositories.DelegableAuthInfoRepository]] class
  * can delegate operations to the DAO which is responsible for the currently handled auth info.
  *
  * @param classTag The class tag for the type parameter.

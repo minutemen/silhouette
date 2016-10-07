@@ -194,7 +194,7 @@ object Publish extends AutoPlugin {
   }
 
   override def projectSettings = sonatypeSettings ++ Seq(
-    description := "Framework acnostic authentication library for Scala that supports several authentication methods, including OAuth1, OAuth2, OpenID, CAS, Credentials, Basic Authentication, Two Factor Authentication or custom authentication schemes",
+    description := "Framework agnostic authentication library for Scala that supports several authentication methods, including OAuth1, OAuth2, OpenID, CAS, Credentials, Basic Authentication, Two Factor Authentication or custom authentication schemes",
     homepage := Some(url("http://silhouette.mohiva.com/")),
     licenses := Seq("Apache License" -> url("https://github.com/mohiva/silhouette/blob/master/LICENSE")),
     publishMavenStyle := true,
