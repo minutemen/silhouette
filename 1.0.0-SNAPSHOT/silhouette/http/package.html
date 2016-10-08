@@ -1,0 +1,397 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>http - silhouette.http</title>
+          <meta name="description" content="http - silhouette.http" />
+          <meta name="keywords" content="http silhouette.http" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../lib/template.js"></script>
+      <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../index.html';
+            var hash = 'silhouette.http.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img alt="Package" src="../../lib/package_big.png" />
+        <p id="owner"><a href="../package.html" class="extype" name="silhouette">silhouette</a></p>
+        <h1>http</h1><span class="permalink">
+      <a href="../../index.html#silhouette.http.package" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">http</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>HTTP related interfaces and implementations.
+</p></div><div class="toggleContainer block">
+          <span class="toggle">Linear Supertypes</span>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+        </div></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        <div id="order">
+              <span class="filtertype">Ordering</span>
+              <ol>
+                
+                <li class="alpha in"><span>Alphabetic</span></li>
+                <li class="inherit out"><span>By Inheritance</span></li>
+              </ol>
+            </div>
+        <div id="ancestors">
+                <span class="filtertype">Inherited<br />
+                </span>
+                <ol id="linearization">
+                  <li class="in" name="silhouette.http"><span>http</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+            <span class="filtertype"></span>
+            <ol>
+              <li class="hideall out"><span>Hide All</span></li>
+              <li class="showall in"><span>Show All</span></li>
+            </ol>
+          </div>
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="silhouette.http.Cookie" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="CookieextendsProductwithSerializable"></a>
+      <a id="Cookie:Cookie"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="Cookie.html"><span class="name">Cookie</span></a><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="value">value: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="maxAge">maxAge: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Int" class="extype" target="_top">Int</a>] = <span class="symbol">None</span></span>, <span name="domain">domain: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="path">path: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="secure">secure: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a> = <span class="symbol">false</span></span>, <span name="httpOnly">httpOnly: <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Boolean" class="extype" target="_top">Boolean</a> = <span class="symbol">false</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#silhouette.http.package@CookieextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">An HTTP cookie.</p><div class="fullcomment"><div class="comment cmt"><p>An HTTP cookie.</p><p>We do not use the <code>Expires</code> attribute because Play doesn't support it and <code>Max-Age</code> is the newer standard.
+</p></div><dl class="paramcmts block"><dt class="param">name</dt><dd class="cmt"><p>The cookie name.</p></dd><dt class="param">value</dt><dd class="cmt"><p>The cookie value.</p></dd><dt class="param">maxAge</dt><dd class="cmt"><p>The cookie expiration date in seconds, <code>None</code> for a transient cookie, or a value less than 0 to expire a cookie now.</p></dd><dt class="param">domain</dt><dd class="cmt"><p>The cookie domain.</p></dd><dt class="param">path</dt><dd class="cmt"><p>The the cookie path.</p></dd><dt class="param">secure</dt><dd class="cmt"><p>Whether this cookie is secured, sent only for HTTPS requests.</p></dd><dt class="param">httpOnly</dt><dd class="cmt"><p>Whether this cookie is HTTP only, i.e. not accessible from client-side JavaScript code.</p></dd></dl></div>
+    </li><li name="silhouette.http.FakeRequest" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="FakeRequestextendsProductwithSerializable"></a>
+      <a id="FakeRequest:FakeRequest"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="FakeRequest.html"><span class="name">FakeRequest</span></a><span class="params">(<span name="headers">headers: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>]] = <span class="symbol">Map()</span></span>, <span name="cookies">cookies: <span class="extype" name="scala.Seq">Seq</span>[<a href="Cookie.html" class="extype" name="silhouette.http.Cookie">Cookie</a>] = <span class="symbol">Seq()</span></span>, <span name="session">session: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Map()</span></span>, <span name="queryParams">queryParams: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>]] = <span class="symbol">Map()</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#silhouette.http.package@FakeRequestextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A fake request implementation.</p><div class="fullcomment"><div class="comment cmt"><p>A fake request implementation.
+</p></div><dl class="paramcmts block"><dt class="param">headers</dt><dd class="cmt"><p>The headers.</p></dd><dt class="param">cookies</dt><dd class="cmt"><p>The cookies.</p></dd><dt class="param">session</dt><dd class="cmt"><p>The session.</p></dd><dt class="param">queryParams</dt><dd class="cmt"><p>The query params</p></dd></dl><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../package.html" class="extype" name="silhouette">silhouette</a>] </dd></dl></div>
+    </li><li name="silhouette.http.FakeRequestPipeline" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="FakeRequestPipelineextendsRequestPipeline[silhouette.http.FakeRequest]withProductwithSerializable"></a>
+      <a id="FakeRequestPipeline:FakeRequestPipeline"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="FakeRequestPipeline.html"><span class="name">FakeRequestPipeline</span></a><span class="params">(<span name="request">request: <a href="FakeRequest.html" class="extype" name="silhouette.http.FakeRequest">FakeRequest</a> = <span class="symbol">FakeRequest()</span></span>)</span><span class="result"> extends <a href="RequestPipeline.html" class="extype" name="silhouette.http.RequestPipeline">RequestPipeline</a>[<a href="FakeRequest.html" class="extype" name="silhouette.http.FakeRequest">FakeRequest</a>] with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#silhouette.http.package@FakeRequestPipelineextendsRequestPipeline[silhouette.http.FakeRequest]withProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The request pipeline implementation based on the <code>FakeRequest</code>.</p><div class="fullcomment"><div class="comment cmt"><p>The request pipeline implementation based on the <code>FakeRequest</code>.
+</p></div><dl class="paramcmts block"><dt class="param">request</dt><dd class="cmt"><p>The request this pipeline handles.</p></dd></dl><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../package.html" class="extype" name="silhouette">silhouette</a>] </dd></dl></div>
+    </li><li name="silhouette.http.FakeResponse" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="FakeResponseextendsProductwithSerializable"></a>
+      <a id="FakeResponse:FakeResponse"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="FakeResponse.html"><span class="name">FakeResponse</span></a><span class="params">(<span name="headers">headers: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>]] = <span class="symbol">Map()</span></span>, <span name="cookies">cookies: <span class="extype" name="scala.Seq">Seq</span>[<a href="Cookie.html" class="extype" name="silhouette.http.Cookie">Cookie</a>] = <span class="symbol">Seq()</span></span>, <span name="session">session: <span class="extype" name="scala.Predef.Map">Map</span>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">Map()</span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#silhouette.http.package@FakeResponseextendsProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">A fake response implementation.</p><div class="fullcomment"><div class="comment cmt"><p>A fake response implementation.
+</p></div><dl class="paramcmts block"><dt class="param">headers</dt><dd class="cmt"><p>The headers.</p></dd><dt class="param">cookies</dt><dd class="cmt"><p>The cookies.</p></dd><dt class="param">session</dt><dd class="cmt"><p>The session.</p></dd></dl><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../package.html" class="extype" name="silhouette">silhouette</a>] </dd></dl></div>
+    </li><li name="silhouette.http.FakeResponsePipeline" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="FakeResponsePipelineextendsResponsePipeline[silhouette.http.FakeResponse]withProductwithSerializable"></a>
+      <a id="FakeResponsePipeline:FakeResponsePipeline"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a href="FakeResponsePipeline.html"><span class="name">FakeResponsePipeline</span></a><span class="params">(<span name="response">response: <a href="FakeResponse.html" class="extype" name="silhouette.http.FakeResponse">FakeResponse</a> = <span class="symbol">FakeResponse()</span></span>)</span><span class="result"> extends <a href="ResponsePipeline.html" class="extype" name="silhouette.http.ResponsePipeline">ResponsePipeline</a>[<a href="FakeResponse.html" class="extype" name="silhouette.http.FakeResponse">FakeResponse</a>] with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#silhouette.http.package@FakeResponsePipelineextendsResponsePipeline[silhouette.http.FakeResponse]withProductwithSerializable" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The response pipeline implementation based on the <code>FakeResponse</code>.</p><div class="fullcomment"><div class="comment cmt"><p>The response pipeline implementation based on the <code>FakeResponse</code>.
+</p></div><dl class="paramcmts block"><dt class="param">response</dt><dd class="cmt"><p>The response this pipeline handles.</p></dd></dl><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../package.html" class="extype" name="silhouette">silhouette</a>] </dd></dl></div>
+    </li><li name="silhouette.http.RequestBodyExtractor" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="RequestBodyExtractor[R]extendsAnyRef"></a>
+      <a id="RequestBodyExtractor[R]:RequestBodyExtractor[R]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="RequestBodyExtractor.html"><span class="name">RequestBodyExtractor</span></a><span class="tparams">[<span name="R">R</span>]</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#silhouette.http.package@RequestBodyExtractor[R]extendsAnyRef" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The body extractor helps to extract values from the body of a request.</p>
+    </li><li name="silhouette.http.RequestExtractor" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="RequestExtractor[R]extendsLogging"></a>
+      <a id="RequestExtractor[R]:RequestExtractor[R]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="RequestExtractor.html"><span class="name">RequestExtractor</span></a><span class="tparams">[<span name="R">R</span>]</span><span class="result"> extends <a href="../util/Logging.html" class="extype" name="silhouette.util.Logging">Logging</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#silhouette.http.package@RequestExtractor[R]extendsLogging" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Adds the ability to extract values from a request.</p><div class="fullcomment"><div class="comment cmt"><p>Adds the ability to extract values from a request.
+</p></div><dl class="paramcmts block"><dt class="tparam">R</dt><dd class="cmt"><p>The type of the request.</p></dd></dl></div>
+    </li><li name="silhouette.http.RequestPipeline" visbl="prt" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="RequestPipeline[R]extendsRequestExtractor[R]"></a>
+      <a id="RequestPipeline[R]:RequestPipeline[R]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="RequestPipeline.html"><span class="name">RequestPipeline</span></a><span class="tparams">[<span name="R">R</span>]</span><span class="result"> extends <a href="RequestExtractor.html" class="extype" name="silhouette.http.RequestExtractor">RequestExtractor</a>[<span class="extype" name="silhouette.http.RequestPipeline.R">R</span>]</span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#silhouette.http.package@RequestPipeline[R]extendsRequestExtractor[R]" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Decorates a framework specific request implementation.</p><div class="fullcomment"><div class="comment cmt"><p>Decorates a framework specific request implementation.</p><p>Frameworks should create an implicit conversion between the implementation of this pipeline and
+the Framework specific request instance.
+</p></div><dl class="paramcmts block"><dt class="tparam">R</dt><dd class="cmt"><p>The type of the request.</p></dd></dl><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../package.html" class="extype" name="silhouette">silhouette</a>] </dd></dl></div>
+    </li><li name="silhouette.http.RequestTransport" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="RequestTransportextendsTransport"></a>
+      <a id="RequestTransport:RequestTransport"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="RequestTransport.html"><span class="name">RequestTransport</span></a><span class="result"> extends <a href="Transport.html" class="extype" name="silhouette.http.Transport">Transport</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#silhouette.http.package@RequestTransportextendsTransport" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The request transport handles payload which can be transported in a request.</p>
+    </li><li name="silhouette.http.ResponsePipeline" visbl="prt" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="ResponsePipeline[P]extendsAnyRef"></a>
+      <a id="ResponsePipeline[P]:ResponsePipeline[P]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="ResponsePipeline.html"><span class="name">ResponsePipeline</span></a><span class="tparams">[<span name="P">P</span>]</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#silhouette.http.package@ResponsePipeline[P]extendsAnyRef" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Decorates a framework specific response implementation.</p><div class="fullcomment"><div class="comment cmt"><p>Decorates a framework specific response implementation.</p><p>Frameworks should create an implicit conversion between the implementation of this pipeline and
+the Framework specific response instance.
+</p></div><dl class="paramcmts block"><dt class="tparam">P</dt><dd class="cmt"><p>The type of the response.</p></dd></dl><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../package.html" class="extype" name="silhouette">silhouette</a>] </dd></dl></div>
+    </li><li name="silhouette.http.ResponseTransport" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="ResponseTransportextendsTransport"></a>
+      <a id="ResponseTransport:ResponseTransport"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="ResponseTransport.html"><span class="name">ResponseTransport</span></a><span class="result"> extends <a href="Transport.html" class="extype" name="silhouette.http.Transport">Transport</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#silhouette.http.package@ResponseTransportextendsTransport" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The response transport handles payload which can be transported in a response.</p>
+    </li><li name="silhouette.http.Transport" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="TransportextendsAnyRef"></a>
+      <a id="Transport:Transport"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="Transport.html"><span class="name">Transport</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#silhouette.http.package@TransportextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Defines the way how payload can be transported in an HTTP request or an HTTP response.</p><div class="fullcomment"><div class="comment cmt"><p>Defines the way how payload can be transported in an HTTP request or an HTTP response.</p><p>The transport is divided into two parts. The <a href="RequestTransport.html" class="extype" name="silhouette.http.RequestTransport">RequestTransport</a> and the <a href="ResponseTransport.html" class="extype" name="silhouette.http.ResponseTransport">ResponseTransport</a>.
+</p></div></div>
+    </li><li name="silhouette.http.TransportSettings" visbl="pub" data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="TransportSettingsextendsAnyRef"></a>
+      <a id="TransportSettings:TransportSettings"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a href="TransportSettings.html"><span class="name">TransportSettings</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#silhouette.http.package@TransportSettingsextendsAnyRef" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Marker trait for the transport settings.</p>
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="silhouette.http.RequestPart" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="RequestPart"></a>
+      <a id="RequestPart:RequestPart"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="RequestPart$.html"><span class="name">RequestPart</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Enumeration" class="extype" target="_top">Enumeration</a></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#silhouette.http.package@RequestPart" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">The request parts from which a value can be extracted.</p>
+    </li><li name="silhouette.http.transport" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="transport"></a>
+      <a id="transport:transport"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a href="transport/package.html"><span class="name">transport</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../index.html#silhouette.http.package@transport" title="Permalink" target="_top">
+        <img src="../../lib/permalink.png" alt="Permalink" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">HTTP transport implementations.</p>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.11.8/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+            </div>
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>
