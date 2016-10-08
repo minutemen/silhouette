@@ -35,11 +35,17 @@ if [ "$TRAVIS_REPO_SLUG" == "mohiva/silhouette" ] && [ "$TRAVIS_PULL_REQUEST" ==
   git clone --quiet --branch=gh-pages https://github.com/${TRAVIS_REPO_SLUG}.git "$GH_PAGES_DIR" > /dev/null
   git config --global user.email "travis@travis-ci.org"
   git config --global user.name "travis-ci"
+  git config --global push.default simple
 
   openssl aes-256-cbc -K ${ENCRYPTED_KEY} -iv ${ENCRYPTED_IV} -in ${ENCRYPTED_KEY_FILE} -out ${DECRYPTED_KEY_FILE} -d
   chmod 600 ${DECRYPTED_KEY_FILE}
-  eval `ssh-agent -s`
-  ssh-add ${DECRYPTED_KEY_FILE}
+
+  printf "%s\n" \
+    "Host github.com" \
+    "    HostName github.com" \
+    "    IdentityFile ${DECRYPTED_KEY_FILE}" \
+    "    IdentitiesOnly yes" \
+    > ~/.ssh/config
 
   scripts/sbt ghpages-push-site
 
