@@ -1,104 +1,180 @@
 <!DOCTYPE html >
 <html>
         <head>
+          <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
           <title></title>
           <meta name="description" content="" />
           <meta name="keywords" content="" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
       <link href="lib/index.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
       <script type="text/javascript" src="lib/jquery.js"></script>
-      <script type="text/javascript" src="lib/jquery-ui.js"></script>
-      <script type="text/javascript" src="lib/jquery.layout.js"></script>
+      <script type="text/javascript" src="lib/jquery.panzoom.min.js"></script>
+      <script type="text/javascript" src="lib/jquery.mousewheel.min.js"></script>
       <script type="text/javascript" src="lib/index.js"></script>
+      <script type="text/javascript" src="index.js"></script>
       <script type="text/javascript" src="lib/scheduler.js"></script>
+      <script type="text/javascript" src="lib/template.js"></script>
+      <script type="text/javascript" src="lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+        /* this variable can be used by the JS to determine the path to the root document */
+        var toRoot = '';
+      </script>
     
         </head>
         <body>
-      <div id="library">
-        <img class="class icon" alt="class icon" src="lib/class.png" />
-        <img class="trait icon" alt="trait icon" src="lib/trait.png" />
-        <img class="object icon" alt="trait icon" src="lib/object.png" />
-        <img class="package icon" alt="trait icon" src="lib/package.png" />
-      </div>
-      <div id="browser" class="ui-layout-west">
-      <div class="ui-west-center">
-      <div id="filter">
-          <div id="textfilter"></div>
-          <div id="letters"><a target="template" href="index/index-_.html">#</a><a target="template" href="index/index-a.html">A</a><a target="template" href="index/index-b.html">B</a><a target="template" href="index/index-c.html">C</a><a target="template" href="index/index-d.html">D</a><a target="template" href="index/index-e.html">E</a><a target="template" href="index/index-f.html">F</a><a target="template" href="index/index-g.html">G</a><a target="template" href="index/index-h.html">H</a><a target="template" href="index/index-i.html">I</a><a target="template" href="index/index-j.html">J</a><a target="template" href="index/index-k.html">K</a><a target="template" href="index/index-l.html">L</a><a target="template" href="index/index-m.html">M</a><a target="template" href="index/index-n.html">N</a><a target="template" href="index/index-o.html">O</a><a target="template" href="index/index-p.html">P</a><a target="template" href="index/index-q.html">Q</a><a target="template" href="index/index-r.html">R</a><a target="template" href="index/index-s.html">S</a><a target="template" href="index/index-t.html">T</a><a target="template" href="index/index-u.html">U</a><a target="template" href="index/index-v.html">V</a><a target="template" href="index/index-w.html">W</a><a target="template" href="index/index-x.html">X</a><span>Y</span><span>Z</span> – <span>deprecated</span></div>
-      </div>
-      <div class="pack" id="tpl">
-            
-            <ol class="templates"></ol>
-            <ol class="packages"> <li class="pack" title="org">
-            <a class="tplshow" href="org/package.html" target="template">org</a>
-            <ol class="templates"></ol>
-            <ol class="packages"> <li class="pack" title="org.specs2">
-            <a class="tplshow" href="org/specs2/package.html" target="template">org.specs2</a>
-            <ol class="templates"></ol>
-            <ol class="packages"> <li class="pack" title="org.specs2.matcher">
-            <a class="tplshow" href="org/specs2/matcher/package.html" target="template">org.specs2.matcher</a>
-            <ol class="templates"></ol>
-            <ol class="packages"> </ol>
-          </li></ol>
-          </li></ol>
-          </li><li class="pack" title="silhouette">
-            <a class="tplshow" href="silhouette/package.html" target="template">silhouette</a>
-            <ol class="templates"><li title="silhouette.Authenticator"><a class="tplshow" href="silhouette/Authenticator$.html" target="template"><span class="object">(object)</span></a><a class="tplshow" href="silhouette/Authenticator.html" target="template"><span class="trait">(trait)</span><span class="tplLink">Authenticator</span></a></li><li title="silhouette.AuthInfo"><div class="placeholder"></div><a class="tplshow" href="silhouette/AuthInfo.html" target="template"><span class="trait">(trait)</span><span class="tplLink">AuthInfo</span></a></li><li title="silhouette.Authorization"><a class="tplshow" href="silhouette/Authorization$.html" target="template"><span class="object">(object)</span></a><a class="tplshow" href="silhouette/Authorization.html" target="template"><span class="trait">(trait)</span><span class="tplLink">Authorization</span></a></li><li title="silhouette.Credentials"><div class="placeholder"></div><a class="tplshow" href="silhouette/Credentials.html" target="template"><span class="case class">(case class)</span><span class="tplLink">Credentials</span></a></li><li title="silhouette.ExecutionContextProvider"><div class="placeholder"></div><a class="tplshow" href="silhouette/ExecutionContextProvider.html" target="template"><span class="trait">(trait)</span><span class="tplLink">ExecutionContextProvider</span></a></li><li title="silhouette.ExpirableAuthenticator"><div class="placeholder"></div><a class="tplshow" href="silhouette/ExpirableAuthenticator.html" target="template"><span class="trait">(trait)</span><span class="tplLink">ExpirableAuthenticator</span></a></li><li title="silhouette.Identity"><div class="placeholder"></div><a class="tplshow" href="silhouette/Identity.html" target="template"><span class="trait">(trait)</span><span class="tplLink">Identity</span></a></li><li title="silhouette.LoginInfo"><a class="tplshow" href="silhouette/LoginInfo$.html" target="template"><span class="object">(object)</span></a><a class="tplshow" href="silhouette/LoginInfo.html" target="template"><span class="case class">(case class)</span><span class="tplLink">LoginInfo</span></a></li><li title="silhouette.Provider"><div class="placeholder"></div><a class="tplshow" href="silhouette/Provider.html" target="template"><span class="trait">(trait)</span><span class="tplLink">Provider</span></a></li><li title="silhouette.RequestProvider"><div class="placeholder"></div><a class="tplshow" href="silhouette/RequestProvider.html" target="template"><span class="trait">(trait)</span><span class="tplLink">RequestProvider</span></a></li><li title="silhouette.StorableAuthenticator"><div class="placeholder"></div><a class="tplshow" href="silhouette/StorableAuthenticator.html" target="template"><span class="trait">(trait)</span><span class="tplLink">StorableAuthenticator</span></a></li></ol>
-            <ol class="packages"> <li class="pack" title="silhouette.crypto">
-            <a class="tplshow" href="silhouette/crypto/package.html" target="template">silhouette.crypto</a>
-            <ol class="templates"><li title="silhouette.crypto.AuthenticatorEncoder"><div class="placeholder"></div><a class="tplshow" href="silhouette/crypto/AuthenticatorEncoder.html" target="template"><span class="trait">(trait)</span><span class="tplLink">AuthenticatorEncoder</span></a></li><li title="silhouette.crypto.Base64"><a class="tplshow" href="silhouette/crypto/Base64$.html" target="template"><span class="object">(object)</span><div class="placeholder"></div><span class="tplLink">Base64</span></a></li><li title="silhouette.crypto.Base64AuthenticatorEncoder"><div class="placeholder"></div><a class="tplshow" href="silhouette/crypto/Base64AuthenticatorEncoder.html" target="template"><span class="class">(class)</span><span class="tplLink">Base64AuthenticatorEncoder</span></a></li><li title="silhouette.crypto.CookieSigner"><div class="placeholder"></div><a class="tplshow" href="silhouette/crypto/CookieSigner.html" target="template"><span class="trait">(trait)</span><span class="tplLink">CookieSigner</span></a></li><li title="silhouette.crypto.Crypter"><div class="placeholder"></div><a class="tplshow" href="silhouette/crypto/Crypter.html" target="template"><span class="trait">(trait)</span><span class="tplLink">Crypter</span></a></li><li title="silhouette.crypto.CrypterAuthenticatorEncoder"><div class="placeholder"></div><a class="tplshow" href="silhouette/crypto/CrypterAuthenticatorEncoder.html" target="template"><span class="class">(class)</span><span class="tplLink">CrypterAuthenticatorEncoder</span></a></li><li title="silhouette.crypto.Hash"><a class="tplshow" href="silhouette/crypto/Hash$.html" target="template"><span class="object">(object)</span><div class="placeholder"></div><span class="tplLink">Hash</span></a></li><li title="silhouette.crypto.JcaCookieSigner"><a class="tplshow" href="silhouette/crypto/JcaCookieSigner$.html" target="template"><span class="object">(object)</span></a><a class="tplshow" href="silhouette/crypto/JcaCookieSigner.html" target="template"><span class="class">(class)</span><span class="tplLink">JcaCookieSigner</span></a></li><li title="silhouette.crypto.JcaCookieSignerSettings"><div class="placeholder"></div><a class="tplshow" href="silhouette/crypto/JcaCookieSignerSettings.html" target="template"><span class="case class">(case class)</span><span class="tplLink">JcaCookieSignerSettings</span></a></li><li title="silhouette.crypto.JcaCrypter"><a class="tplshow" href="silhouette/crypto/JcaCrypter$.html" target="template"><span class="object">(object)</span></a><a class="tplshow" href="silhouette/crypto/JcaCrypter.html" target="template"><span class="class">(class)</span><span class="tplLink">JcaCrypter</span></a></li><li title="silhouette.crypto.JcaCrypterSettings"><div class="placeholder"></div><a class="tplshow" href="silhouette/crypto/JcaCrypterSettings.html" target="template"><span class="case class">(case class)</span><span class="tplLink">JcaCrypterSettings</span></a></li></ol>
-            <ol class="packages"> </ol>
-          </li><li class="pack" title="silhouette.exceptions">
-            <a class="tplshow" href="silhouette/exceptions/package.html" target="template">silhouette.exceptions</a>
-            <ol class="templates"><li title="silhouette.exceptions.AuthenticatorCreationException"><div class="placeholder"></div><a class="tplshow" href="silhouette/exceptions/AuthenticatorCreationException.html" target="template"><span class="class">(class)</span><span class="tplLink">AuthenticatorCreationException</span></a></li><li title="silhouette.exceptions.AuthenticatorDiscardingException"><div class="placeholder"></div><a class="tplshow" href="silhouette/exceptions/AuthenticatorDiscardingException.html" target="template"><span class="class">(class)</span><span class="tplLink">AuthenticatorDiscardingException</span></a></li><li title="silhouette.exceptions.AuthenticatorException"><div class="placeholder"></div><a class="tplshow" href="silhouette/exceptions/AuthenticatorException.html" target="template"><span class="class">(class)</span><span class="tplLink">AuthenticatorException</span></a></li><li title="silhouette.exceptions.AuthenticatorInitializationException"><div class="placeholder"></div><a class="tplshow" href="silhouette/exceptions/AuthenticatorInitializationException.html" target="template"><span class="class">(class)</span><span class="tplLink">AuthenticatorInitializationException</span></a></li><li title="silhouette.exceptions.AuthenticatorRenewalException"><div class="placeholder"></div><a class="tplshow" href="silhouette/exceptions/AuthenticatorRenewalException.html" target="template"><span class="class">(class)</span><span class="tplLink">AuthenticatorRenewalException</span></a></li><li title="silhouette.exceptions.AuthenticatorRetrievalException"><div class="placeholder"></div><a class="tplshow" href="silhouette/exceptions/AuthenticatorRetrievalException.html" target="template"><span class="class">(class)</span><span class="tplLink">AuthenticatorRetrievalException</span></a></li><li title="silhouette.exceptions.AuthenticatorUpdateException"><div class="placeholder"></div><a class="tplshow" href="silhouette/exceptions/AuthenticatorUpdateException.html" target="template"><span class="class">(class)</span><span class="tplLink">AuthenticatorUpdateException</span></a></li><li title="silhouette.exceptions.ConfigurationException"><div class="placeholder"></div><a class="tplshow" href="silhouette/exceptions/ConfigurationException.html" target="template"><span class="class">(class)</span><span class="tplLink">ConfigurationException</span></a></li><li title="silhouette.exceptions.CryptoException"><div class="placeholder"></div><a class="tplshow" href="silhouette/exceptions/CryptoException.html" target="template"><span class="class">(class)</span><span class="tplLink">CryptoException</span></a></li><li title="silhouette.exceptions.NotAuthenticatedException"><div class="placeholder"></div><a class="tplshow" href="silhouette/exceptions/NotAuthenticatedException.html" target="template"><span class="class">(class)</span><span class="tplLink">NotAuthenticatedException</span></a></li><li title="silhouette.exceptions.NotAuthorizedException"><div class="placeholder"></div><a class="tplshow" href="silhouette/exceptions/NotAuthorizedException.html" target="template"><span class="class">(class)</span><span class="tplLink">NotAuthorizedException</span></a></li><li title="silhouette.exceptions.ProviderException"><div class="placeholder"></div><a class="tplshow" href="silhouette/exceptions/ProviderException.html" target="template"><span class="class">(class)</span><span class="tplLink">ProviderException</span></a></li><li title="silhouette.exceptions.SilhouetteException"><div class="placeholder"></div><a class="tplshow" href="silhouette/exceptions/SilhouetteException.html" target="template"><span class="class">(class)</span><span class="tplLink">SilhouetteException</span></a></li></ol>
-            <ol class="packages"> </ol>
-          </li><li class="pack" title="silhouette.http">
-            <a class="tplshow" href="silhouette/http/package.html" target="template">silhouette.http</a>
-            <ol class="templates"><li title="silhouette.http.Cookie"><div class="placeholder"></div><a class="tplshow" href="silhouette/http/Cookie.html" target="template"><span class="case class">(case class)</span><span class="tplLink">Cookie</span></a></li><li title="silhouette.http.FakeRequest"><div class="placeholder"></div><a class="tplshow" href="silhouette/http/FakeRequest.html" target="template"><span class="case class">(case class)</span><span class="tplLink">FakeRequest</span></a></li><li title="silhouette.http.FakeRequestPipeline"><div class="placeholder"></div><a class="tplshow" href="silhouette/http/FakeRequestPipeline.html" target="template"><span class="case class">(case class)</span><span class="tplLink">FakeRequestPipeline</span></a></li><li title="silhouette.http.FakeResponse"><div class="placeholder"></div><a class="tplshow" href="silhouette/http/FakeResponse.html" target="template"><span class="case class">(case class)</span><span class="tplLink">FakeResponse</span></a></li><li title="silhouette.http.FakeResponsePipeline"><div class="placeholder"></div><a class="tplshow" href="silhouette/http/FakeResponsePipeline.html" target="template"><span class="case class">(case class)</span><span class="tplLink">FakeResponsePipeline</span></a></li><li title="silhouette.http.RequestBodyExtractor"><div class="placeholder"></div><a class="tplshow" href="silhouette/http/RequestBodyExtractor.html" target="template"><span class="trait">(trait)</span><span class="tplLink">RequestBodyExtractor</span></a></li><li title="silhouette.http.RequestExtractor"><div class="placeholder"></div><a class="tplshow" href="silhouette/http/RequestExtractor.html" target="template"><span class="trait">(trait)</span><span class="tplLink">RequestExtractor</span></a></li><li title="silhouette.http.RequestPart"><a class="tplshow" href="silhouette/http/RequestPart$.html" target="template"><span class="object">(object)</span><div class="placeholder"></div><span class="tplLink">RequestPart</span></a></li><li title="silhouette.http.RequestPipeline"><div class="placeholder"></div><a class="tplshow" href="silhouette/http/RequestPipeline.html" target="template"><span class="trait">(trait)</span><span class="tplLink">RequestPipeline</span></a></li><li title="silhouette.http.RequestTransport"><div class="placeholder"></div><a class="tplshow" href="silhouette/http/RequestTransport.html" target="template"><span class="trait">(trait)</span><span class="tplLink">RequestTransport</span></a></li><li title="silhouette.http.ResponsePipeline"><div class="placeholder"></div><a class="tplshow" href="silhouette/http/ResponsePipeline.html" target="template"><span class="trait">(trait)</span><span class="tplLink">ResponsePipeline</span></a></li><li title="silhouette.http.ResponseTransport"><div class="placeholder"></div><a class="tplshow" href="silhouette/http/ResponseTransport.html" target="template"><span class="trait">(trait)</span><span class="tplLink">ResponseTransport</span></a></li><li title="silhouette.http.Transport"><div class="placeholder"></div><a class="tplshow" href="silhouette/http/Transport.html" target="template"><span class="trait">(trait)</span><span class="tplLink">Transport</span></a></li><li title="silhouette.http.TransportSettings"><div class="placeholder"></div><a class="tplshow" href="silhouette/http/TransportSettings.html" target="template"><span class="trait">(trait)</span><span class="tplLink">TransportSettings</span></a></li></ol>
-            <ol class="packages"> <li class="pack" title="silhouette.http.transport">
-            <a class="tplshow" href="silhouette/http/transport/package.html" target="template">silhouette.http.transport</a>
-            <ol class="templates"><li title="silhouette.http.transport.CookieTransport"><div class="placeholder"></div><a class="tplshow" href="silhouette/http/transport/CookieTransport.html" target="template"><span class="case class">(case class)</span><span class="tplLink">CookieTransport</span></a></li><li title="silhouette.http.transport.CookieTransportSettings"><div class="placeholder"></div><a class="tplshow" href="silhouette/http/transport/CookieTransportSettings.html" target="template"><span class="case class">(case class)</span><span class="tplLink">CookieTransportSettings</span></a></li><li title="silhouette.http.transport.HeaderTransport"><div class="placeholder"></div><a class="tplshow" href="silhouette/http/transport/HeaderTransport.html" target="template"><span class="case class">(case class)</span><span class="tplLink">HeaderTransport</span></a></li><li title="silhouette.http.transport.HeaderTransportSettings"><div class="placeholder"></div><a class="tplshow" href="silhouette/http/transport/HeaderTransportSettings.html" target="template"><span class="case class">(case class)</span><span class="tplLink">HeaderTransportSettings</span></a></li><li title="silhouette.http.transport.QueryStringRequestTransport"><div class="placeholder"></div><a class="tplshow" href="silhouette/http/transport/QueryStringRequestTransport.html" target="template"><span class="case class">(case class)</span><span class="tplLink">QueryStringRequestTransport</span></a></li><li title="silhouette.http.transport.QueryStringTransportSettings"><div class="placeholder"></div><a class="tplshow" href="silhouette/http/transport/QueryStringTransportSettings.html" target="template"><span class="case class">(case class)</span><span class="tplLink">QueryStringTransportSettings</span></a></li><li title="silhouette.http.transport.SessionTransport"><div class="placeholder"></div><a class="tplshow" href="silhouette/http/transport/SessionTransport.html" target="template"><span class="case class">(case class)</span><span class="tplLink">SessionTransport</span></a></li><li title="silhouette.http.transport.SessionTransportSettings"><div class="placeholder"></div><a class="tplshow" href="silhouette/http/transport/SessionTransportSettings.html" target="template"><span class="case class">(case class)</span><span class="tplLink">SessionTransportSettings</span></a></li></ol>
-            <ol class="packages"> </ol>
-          </li></ol>
-          </li><li class="pack" title="silhouette.password">
-            <a class="tplshow" href="silhouette/password/package.html" target="template">silhouette.password</a>
-            <ol class="templates"><li title="silhouette.password.BCryptPasswordHasher"><a class="tplshow" href="silhouette/password/BCryptPasswordHasher$.html" target="template"><span class="object">(object)</span></a><a class="tplshow" href="silhouette/password/BCryptPasswordHasher.html" target="template"><span class="class">(class)</span><span class="tplLink">BCryptPasswordHasher</span></a></li></ol>
-            <ol class="packages"> </ol>
-          </li><li class="pack" title="silhouette.persistence">
-            <a class="tplshow" href="silhouette/persistence/package.html" target="template">silhouette.persistence</a>
-            <ol class="templates"><li title="silhouette.persistence.CacheLayer"><div class="placeholder"></div><a class="tplshow" href="silhouette/persistence/CacheLayer.html" target="template"><span class="trait">(trait)</span><span class="tplLink">CacheLayer</span></a></li></ol>
-            <ol class="packages"> <li class="pack" title="silhouette.persistence.daos">
-            <a class="tplshow" href="silhouette/persistence/daos/package.html" target="template">silhouette.persistence.daos</a>
-            <ol class="templates"><li title="silhouette.persistence.daos.AuthInfoDAO"><div class="placeholder"></div><a class="tplshow" href="silhouette/persistence/daos/AuthInfoDAO.html" target="template"><span class="trait">(trait)</span><span class="tplLink">AuthInfoDAO</span></a></li><li title="silhouette.persistence.daos.DelegableAuthInfoDAO"><div class="placeholder"></div><a class="tplshow" href="silhouette/persistence/daos/DelegableAuthInfoDAO.html" target="template"><span class="class">(class)</span><span class="tplLink">DelegableAuthInfoDAO</span></a></li><li title="silhouette.persistence.daos.InMemoryAuthInfoDAO"><div class="placeholder"></div><a class="tplshow" href="silhouette/persistence/daos/InMemoryAuthInfoDAO.html" target="template"><span class="class">(class)</span><span class="tplLink">InMemoryAuthInfoDAO</span></a></li></ol>
-            <ol class="packages"> </ol>
-          </li><li class="pack" title="silhouette.persistence.repositories">
-            <a class="tplshow" href="silhouette/persistence/repositories/package.html" target="template">silhouette.persistence.repositories</a>
-            <ol class="templates"><li title="silhouette.persistence.repositories.CacheAuthenticatorRepository"><div class="placeholder"></div><a class="tplshow" href="silhouette/persistence/repositories/CacheAuthenticatorRepository.html" target="template"><span class="class">(class)</span><span class="tplLink">CacheAuthenticatorRepository</span></a></li><li title="silhouette.persistence.repositories.DelegableAuthInfoRepository"><a class="tplshow" href="silhouette/persistence/repositories/DelegableAuthInfoRepository$.html" target="template"><span class="object">(object)</span></a><a class="tplshow" href="silhouette/persistence/repositories/DelegableAuthInfoRepository.html" target="template"><span class="class">(class)</span><span class="tplLink">DelegableAuthInfoRepository</span></a></li></ol>
-            <ol class="packages"> </ol>
-          </li></ol>
-          </li><li class="pack" title="silhouette.repositories">
-            <a class="tplshow" href="silhouette/repositories/package.html" target="template">silhouette.repositories</a>
-            <ol class="templates"><li title="silhouette.repositories.AuthenticatorRepository"><div class="placeholder"></div><a class="tplshow" href="silhouette/repositories/AuthenticatorRepository.html" target="template"><span class="trait">(trait)</span><span class="tplLink">AuthenticatorRepository</span></a></li><li title="silhouette.repositories.AuthInfoRepository"><div class="placeholder"></div><a class="tplshow" href="silhouette/repositories/AuthInfoRepository.html" target="template"><span class="trait">(trait)</span><span class="tplLink">AuthInfoRepository</span></a></li></ol>
-            <ol class="packages"> </ol>
-          </li><li class="pack" title="silhouette.services">
-            <a class="tplshow" href="silhouette/services/package.html" target="template">silhouette.services</a>
-            <ol class="templates"><li title="silhouette.services.AuthenticatorService"><a class="tplshow" href="silhouette/services/AuthenticatorService$.html" target="template"><span class="object">(object)</span></a><a class="tplshow" href="silhouette/services/AuthenticatorService.html" target="template"><span class="trait">(trait)</span><span class="tplLink">AuthenticatorService</span></a></li><li title="silhouette.services.AvatarService"><div class="placeholder"></div><a class="tplshow" href="silhouette/services/AvatarService.html" target="template"><span class="trait">(trait)</span><span class="tplLink">AvatarService</span></a></li><li title="silhouette.services.IdentityService"><div class="placeholder"></div><a class="tplshow" href="silhouette/services/IdentityService.html" target="template"><span class="trait">(trait)</span><span class="tplLink">IdentityService</span></a></li></ol>
-            <ol class="packages"> </ol>
-          </li><li class="pack" title="silhouette.specs2">
-            <a class="tplshow" href="silhouette/specs2/package.html" target="template">silhouette.specs2</a>
-            <ol class="templates"><li title="silhouette.specs2.WaitPatience"><div class="placeholder"></div><a class="tplshow" href="silhouette/specs2/WaitPatience.html" target="template"><span class="trait">(trait)</span><span class="tplLink">WaitPatience</span></a></li></ol>
-            <ol class="packages"> </ol>
-          </li><li class="pack" title="silhouette.util">
-            <a class="tplshow" href="silhouette/util/package.html" target="template">silhouette.util</a>
-            <ol class="templates"><li title="silhouette.util.FingerprintGenerator"><div class="placeholder"></div><a class="tplshow" href="silhouette/util/FingerprintGenerator.html" target="template"><span class="trait">(trait)</span><span class="tplLink">FingerprintGenerator</span></a></li><li title="silhouette.util.IDGenerator"><div class="placeholder"></div><a class="tplshow" href="silhouette/util/IDGenerator.html" target="template"><span class="trait">(trait)</span><span class="tplLink">IDGenerator</span></a></li><li title="silhouette.util.JsonFormats"><a class="tplshow" href="silhouette/util/JsonFormats$.html" target="template"><span class="object">(object)</span><div class="placeholder"></div><span class="tplLink">JsonFormats</span></a></li><li title="silhouette.util.Logger"><a class="tplshow" href="silhouette/util/Logger$.html" target="template"><span class="object">(object)</span></a><a class="tplshow" href="silhouette/util/Logger.html" target="template"><span class="class">(class)</span><span class="tplLink">Logger</span></a></li><li title="silhouette.util.Logging"><div class="placeholder"></div><a class="tplshow" href="silhouette/util/Logging.html" target="template"><span class="trait">(trait)</span><span class="tplLink">Logging</span></a></li><li title="silhouette.util.PasswordHasher"><div class="placeholder"></div><a class="tplshow" href="silhouette/util/PasswordHasher.html" target="template"><span class="trait">(trait)</span><span class="tplLink">PasswordHasher</span></a></li><li title="silhouette.util.PasswordHasherRegistry"><div class="placeholder"></div><a class="tplshow" href="silhouette/util/PasswordHasherRegistry.html" target="template"><span class="case class">(case class)</span><span class="tplLink">PasswordHasherRegistry</span></a></li><li title="silhouette.util.PasswordInfo"><div class="placeholder"></div><a class="tplshow" href="silhouette/util/PasswordInfo.html" target="template"><span class="case class">(case class)</span><span class="tplLink">PasswordInfo</span></a></li><li title="silhouette.util.SecureRandomIDGenerator"><a class="tplshow" href="silhouette/util/SecureRandomIDGenerator$.html" target="template"><span class="object">(object)</span></a><a class="tplshow" href="silhouette/util/SecureRandomIDGenerator.html" target="template"><span class="class">(class)</span><span class="tplLink">SecureRandomIDGenerator</span></a></li></ol>
-            <ol class="packages"> </ol>
-          </li></ol>
-          </li></ol>
-          </div></div><script src="index.js"></script>
+      <div id="search">
+        <span id="doc-title"><span id="doc-version"></span></span>
+        <span class="close-results"><span class="left">&lt;</span> Back</span>
+        <div id="textfilter">
+          <span class="input">
+            <input autocapitalize="none" placeholder="Search" id="index-input" type="text" accesskey="/" />
+            <i class="clear material-icons"></i>
+            <i id="search-icon" class="material-icons"></i>
+          </span>
+        </div>
     </div>
-      <div id="content" class="ui-layout-center">
-        <iframe id="template" name="template" src="package.html"></iframe>
+      <div id="search-results">
+        <div id="search-progress">
+          <div id="progress-fill"></div>
+        </div>
+        <div id="results-content">
+          <div id="entity-results"></div>
+          <div id="member-results"></div>
+        </div>
+      </div>
+      <div id="content-scroll-container" style="-webkit-overflow-scrolling: touch;">
+        <div id="content-container" style="-webkit-overflow-scrolling: touch;">
+          <div id="subpackage-spacer">
+            <div id="packages">
+              <h1>Packages</h1>
+              <ul>
+                <li name="_root_.root" visbl="pub" class="indented0 current" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="_root_"></a><a id="root:_root_"></a>
+      <span class="permalink">
+      <a href="index.html#_root_" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">root</span>
+      </span>
+      
+      
+    </li><li name="_root_.org" visbl="pub" class="indented1 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="org"></a><a id="org:org"></a>
+      <span class="permalink">
+      <a href="index.html#org" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="org/index.html">
+              <span class="name">org</span>
+            </a>
+      </span>
+      
+      
+    </li><li name="_root_.silhouette" visbl="pub" class="indented1 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="silhouette"></a><a id="silhouette:silhouette"></a>
+      <span class="permalink">
+      <a href="index.html#silhouette" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="A framework agnostic authentication library for Scala that supports several authentication methods,
+including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes." href="silhouette/index.html">
+              <span class="name">silhouette</span>
+            </a>
+      </span>
+      
+      <p class="shortcomment cmt">A framework agnostic authentication library for Scala that supports several authentication methods,
+including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.</p>
+    </li>
+              </ul>
+            </div>
+          </div>
+          <div id="content">
+            <body class="package value">
+      <div id="definition">
+        <div class="big-circle package">p</div>
+        
+        <h1>root package<span class="permalink">
+      <a href="index.html" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span></h1>
+        
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">root</span>
+      </span>
+      </h4>
+
+      
+          <div id="comment" class="fullcommenttop"></div>
+        
+
+      
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        
+
+        
+
+        
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+    </body>
+          </div>
+        </div>
       </div>
     </body>
       </html>
