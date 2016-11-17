@@ -1,9 +1,11 @@
 /**
- * Copyright 2016 Mohiva Organisation (license at mohiva dot com)
+ * Licensed to the Minutemen Group under one or more contributor license
+ * agreements. See the COPYRIGHT file distributed with this work for
+ * additional information regarding copyright ownership.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -22,12 +24,12 @@ import scala.concurrent.duration.FiniteDuration
 /**
  * The settings for the cookie transport.
  *
- * @param name The cookie name.
- * @param path The cookie path.
- * @param domain The cookie domain.
- * @param secure Whether this cookie is secured, sent only for HTTPS requests.
+ * @param name     The cookie name.
+ * @param path     The cookie path.
+ * @param domain   The cookie domain.
+ * @param secure   Whether this cookie is secured, sent only for HTTPS requests.
  * @param httpOnly Whether this cookie is HTTP only, i.e. not accessible from client-side JavaScript code.
- * @param maxAge The duration a cookie expires. `None` for a transient cookie.
+ * @param maxAge   The duration a cookie expires. `None` for a transient cookie.
  */
 final case class CookieTransportSettings(
   name: String,
@@ -61,7 +63,7 @@ final case class CookieTransport(settings: CookieTransportSettings) extends Requ
    * @param f A function which gets the settings passed and returns different settings.
    * @return An instance of the transport initialized with new settings.
    */
-  override def withSettings(f: (Settings) => Settings): CookieTransport = new Self(f(settings))
+  override def withSettings(f: (Settings) => Settings): Self = new Self(f(settings))
 
   /**
    * Retrieves the payload, stored in a cookie, from request.
@@ -87,7 +89,7 @@ final case class CookieTransport(settings: CookieTransportSettings) extends Requ
   /**
    * Adds a cookie with the given payload to the response.
    *
-   * @param payload The payload to embed.
+   * @param payload  The payload to embed.
    * @param response The response pipeline to manipulate.
    * @tparam P The type of the response.
    * @return The manipulated response pipeline.

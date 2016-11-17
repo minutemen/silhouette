@@ -1,12 +1,14 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
 #
 # Builds the project in the continuous integration environment.
 #
-# Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+# Licensed to the Minutemen Group under one or more contributor license
+# agreements. See the COPYRIGHT file distributed with this work for
+# additional information regarding copyright ownership.
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License"); you
+# may not use this file except in compliance with the License. You may
+# obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
@@ -20,15 +22,19 @@ set -o nounset -o errexit
 
 echo ""
 echo "Validating code formatting"
-scripts/validate-format
+scripts/validate-format.sh
+
+echo ""
+echo "Validating code style"
+scripts/validate-style.sh
 
 echo ""
 echo "Testing and generating documentation"
-scripts/sbt clean coverage test doc coverageReport
+scripts/sbt.sh clean coverage test doc coverageReport
 
 echo ""
 echo "Aggregate coverage from sub-projects"
-scripts/sbt coverageAggregate
+scripts/sbt.sh coverageAggregate
 
 echo ""
 echo "Build finished"

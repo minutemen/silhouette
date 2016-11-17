@@ -14,7 +14,7 @@ you can think of that may be helpful. If in doubt, just ask.
 Development workflow
 --------------------
 
-Development is coordinated via [GitHub]. Ideas for improvements are discussed using the [chat] or the [mailing list].
+Development is coordinated via [GitHub]. Ideas for improvements are discussed using the [chat] or the [forum].
 
 To submit issues, please use the [GitHub issue tracker]. **Please do not use the issue tracker for questions!**
 
@@ -41,11 +41,11 @@ copyright license to the Mohiva Organisation, unless the contribution clearly st
 (e.g., it contains original work by a third party).
 
 
-[GitHub]: https://github.com/mohiva/silhouette
-[GitHub issue tracker]: https://github.com/mohiva/silhouette/issues
+[GitHub]: https://github.com/minutemen/silhouette
+[GitHub issue tracker]: https://github.com/minutemen/silhouette/issues
 [GitHub workflow for submitting pull requests]: https://www.playframework.com/documentation/2.5.x/WorkingWithGit
-[chat]: https://gitter.im/mohiva/silhouette
-[mailing list]: https://groups.google.com/forum/#!forum/silhouette
+[chat]: https://gitter.im/minutemen/silhouette
+[forum]: http://discourse.silhouette.rocks
 [Scala Style Guide]: http://docs.scala-lang.org/style/
-[watch the result]: https://travis-ci.org/mohiva/silhouette/pull_requests
-[readme.io]: http://silhouette.mohiva.com/
+[watch the result]: https://travis-ci.org/minutemen/silhouette/pull_requests
+[readme.io]: http://www.silhouette.rocks/

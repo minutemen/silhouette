@@ -1,9 +1,11 @@
 /**
- * Copyright 2016 Mohiva Organisation (license at mohiva dot com)
+ * Licensed to the Minutemen Group under one or more contributor license
+ * agreements. See the COPYRIGHT file distributed with this work for
+ * additional information regarding copyright ownership.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -20,12 +22,13 @@ package silhouette.http
  *
  * We do not use the `Expires` attribute because Play doesn't support it and `Max-Age` is the newer standard.
  *
- * @param name The cookie name.
- * @param value The cookie value.
- * @param maxAge The cookie expiration date in seconds, `None` for a transient cookie, or a value less than 0 to expire a cookie now.
- * @param domain The cookie domain.
- * @param path The the cookie path.
- * @param secure Whether this cookie is secured, sent only for HTTPS requests.
+ * @param name     The cookie name.
+ * @param value    The cookie value.
+ * @param maxAge   The cookie expiration date in seconds, `None` for a transient cookie, or a value less than 0 to
+ *                 expire a cookie now.
+ * @param domain   The cookie domain.
+ * @param path     The the cookie path.
+ * @param secure   Whether this cookie is secured, sent only for HTTPS requests.
  * @param httpOnly Whether this cookie is HTTP only, i.e. not accessible from client-side JavaScript code.
  */
 case class Cookie(

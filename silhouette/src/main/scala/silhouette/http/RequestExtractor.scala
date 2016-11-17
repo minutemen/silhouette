@@ -1,9 +1,11 @@
 /**
- * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+ * Licensed to the Minutemen Group under one or more contributor license
+ * agreements. See the COPYRIGHT file distributed with this work for
+ * additional information regarding copyright ownership.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -40,8 +42,9 @@ trait RequestExtractor[R] extends Logging {
   /**
    * Extracts a string from a request.
    *
-   * @param name The name of the value to extract.
-   * @param parts Some request parts from which a value can be extracted or None to extract values from any part of the request.
+   * @param name  The name of the value to extract.
+   * @param parts Some request parts from which a value can be extracted or None to extract values from any part
+   *              of the request.
    * @return The extracted value as string.
    */
   def extractString(name: String, parts: Option[Parts] = None): Option[String] = {
@@ -55,13 +58,13 @@ trait RequestExtractor[R] extends Logging {
   /**
    * Extracts a value from query string.
    *
-   * @param name The name of the value to extract.
+   * @param name  The name of the value to extract.
    * @param parts The request parts from which a value can be extracted.
    * @return The extracted value as string.
    */
   protected def fromQueryString(name: String, parts: Option[Parts]): Option[String] = {
     isAllowed(RequestPart.QueryString, parts) {
-      logger.debug("[Silhouette] Try to extract value with name `%s` from query string: %s".format(name, rawQueryString))
+      logger.debug(s"[Silhouette] Try to extract value with name `$name` from query string: $rawQueryString")
       queryParam(name).headOption
     }
   }
@@ -69,13 +72,13 @@ trait RequestExtractor[R] extends Logging {
   /**
    * Extracts a value from headers.
    *
-   * @param name The name of the value to extract.
+   * @param name  The name of the value to extract.
    * @param parts The request parts from which a value can be extracted.
    * @return The extracted value as string.
    */
   protected def fromHeaders(name: String, parts: Option[Parts]): Option[String] = {
     isAllowed(RequestPart.Headers, parts) {
-      logger.debug("[Silhouette] Try to extract value with name `%s` from headers: %s".format(name, headers))
+      logger.debug(s"[Silhouette] Try to extract value with name `$name` from headers: $headers")
       header(name).headOption
     }
   }
@@ -83,7 +86,7 @@ trait RequestExtractor[R] extends Logging {
   /**
    * Extracts a value from form url encoded body.
    *
-   * @param name The name of the value to extract.
+   * @param name  The name of the value to extract.
    * @param parts The request parts from which a value can be extracted.
    * @return The extracted value as string.
    */
@@ -91,7 +94,7 @@ trait RequestExtractor[R] extends Logging {
     isAllowed(RequestPart.FormUrlEncodedBody, parts) {
       bodyExtractor.fromJson(name).flatMap {
         case (body, maybeValue) =>
-          logger.debug("[Silhouette] Try to extract value with name `%s` from form url encoded body: %s".format(name, body))
+          logger.debug(s"[Silhouette] Try to extract value with name `$name` from form url encoded body: $body")
           maybeValue
       }
     }
@@ -100,7 +103,7 @@ trait RequestExtractor[R] extends Logging {
   /**
    * Extracts a value from Json body.
    *
-   * @param name The name of the value to extract.
+   * @param name  The name of the value to extract.
    * @param parts The request parts from which a value can be extracted.
    * @return The extracted value.
    */
@@ -108,7 +111,7 @@ trait RequestExtractor[R] extends Logging {
     isAllowed(RequestPart.JsonBody, parts) {
       bodyExtractor.fromJson(name).flatMap {
         case (body, maybeValue) =>
-          logger.debug("[Silhouette] Try to extract value with name `%s` from Json body: %s".format(name, body))
+          logger.debug(s"[Silhouette] Try to extract value with name `$name` from Json body: $body")
           maybeValue
       }
     }
@@ -117,7 +120,7 @@ trait RequestExtractor[R] extends Logging {
   /**
    * Extracts a value from Xml body.
    *
-   * @param name The name of the value to extract.
+   * @param name  The name of the value to extract.
    * @param parts The request parts from which a value can be extracted.
    * @return The extracted value.
    */
@@ -125,7 +128,7 @@ trait RequestExtractor[R] extends Logging {
     isAllowed(RequestPart.XMLBody, parts) {
       bodyExtractor.fromJson(name).flatMap {
         case (body, maybeValue) =>
-          logger.debug("[Silhouette] Try to extract value with name `%s` from Xml body: %s".format(name, body))
+          logger.debug(s"[Silhouette] Try to extract value with name `$name` from Xml body: $body")
           maybeValue
       }
     }
@@ -134,7 +137,7 @@ trait RequestExtractor[R] extends Logging {
   /**
    * Executes the given block if the given part is contained in the list of parts or if part validation is disabled.
    *
-   * @param part The part to check for.
+   * @param part  The part to check for.
    * @param parts The request parts from which a value can be extracted.
    * @param b The block to execute.
    * @return The found value if any.

@@ -1,9 +1,11 @@
 /**
- * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+ * Licensed to the Minutemen Group under one or more contributor license
+ * agreements. See the COPYRIGHT file distributed with this work for
+ * additional information regarding copyright ownership.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -15,17 +17,14 @@
  */
 package silhouette.persistence.repositories
 
-import com.google.inject.{ AbstractModule, Guice, Provides }
-import net.codingwell.scalaguice.ScalaModule
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.control.NoLanguageFeatures
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.exceptions.ConfigurationException
-import silhouette.persistence.daos.{ DelegableAuthInfoDAO, InMemoryAuthInfoDAO }
+import silhouette.persistence.daos.InMemoryAuthInfoDAO
 import silhouette.persistence.repositories.DelegableAuthInfoRepository._
-import silhouette.repositories.AuthInfoRepository
 import silhouette.specs2.WaitPatience
 import silhouette.util.PasswordInfo
 import silhouette.{ AuthInfo, LoginInfo }
@@ -75,7 +74,7 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
 
       service.find[UnsupportedInfo](loginInfo) must throwA[ConfigurationException].like {
         case e => e.getMessage must startWith(FindError.format(classOf[UnsupportedInfo]))
-      }.awaitWithPatience
+      }
     }
   }
 
@@ -106,7 +105,7 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
 
       service.add(loginInfo, new UnsupportedInfo) must throwA[ConfigurationException].like {
         case e => e.getMessage must startWith(AddError.format(classOf[UnsupportedInfo]))
-      }.awaitWithPatience
+      }
     }
   }
 
@@ -137,7 +136,7 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
 
       service.update(loginInfo, new UnsupportedInfo) must throwA[ConfigurationException].like {
         case e => e.getMessage must startWith(UpdateError.format(classOf[UnsupportedInfo]))
-      }.awaitWithPatience
+      }
     }
   }
 
@@ -168,7 +167,7 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
 
       service.save(loginInfo, new UnsupportedInfo) must throwA[ConfigurationException].like {
         case e => e.getMessage must startWith(SaveError.format(classOf[UnsupportedInfo]))
-      }.awaitWithPatience
+      }
     }
   }
 
@@ -205,7 +204,7 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
 
       service.remove[UnsupportedInfo](loginInfo) must throwA[ConfigurationException].like {
         case e => e.getMessage must startWith(RemoveError.format(classOf[UnsupportedInfo]))
-      }.awaitWithPatience
+      }
     }
   }
 
@@ -220,11 +219,6 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
     class UnsupportedInfo extends AuthInfo
     class OAuth1Info extends AuthInfo
     class OAuth2Info extends AuthInfo
-
-    /**
-     * The Guice injector.
-     */
-    val injector = Guice.createInjector(new BaseModule)
 
     /**
      * The auth info.
@@ -243,43 +237,7 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
     /**
      * The cache instance to store the different auth information instances.
      */
-    val service = injector.getInstance(classOf[AuthInfoRepository])
-
-    /**
-     * The Guice module.
-     *
-     * This is to test if the [[silhouette.persistence.daos.DelegableAuthInfoDAO]] can be used for
-     * dependency injection because it depends on an implicit [[scala.reflect.ClassTag]] parameter which the
-     * compiler injects at compile time.
-     */
-    class BaseModule extends AbstractModule with ScalaModule {
-
-      /**
-       * Configures the module.
-       */
-      def configure() {
-        bind[DelegableAuthInfoDAO[PasswordInfo]].toInstance(passwordInfoDAO)
-        bind[DelegableAuthInfoDAO[OAuth1Info]].toInstance(oauth1InfoDAO)
-        bind[DelegableAuthInfoDAO[OAuth2Info]].toInstance(oauth2InfoDAO)
-      }
-
-      /**
-       * Provides the auth info repository.
-       *
-       * @param passwordInfoDAO The implementation of the delegable password auth info DAO.
-       * @param oauth1InfoDAO The implementation of the delegable OAuth1 auth info DAO.
-       * @param oauth2InfoDAO The implementation of the delegable OAuth2 auth info DAO.
-       * @return The auth info repository instance.
-       */
-      @Provides
-      def provideAuthInfoService(
-        passwordInfoDAO: DelegableAuthInfoDAO[PasswordInfo],
-        oauth1InfoDAO: DelegableAuthInfoDAO[OAuth1Info],
-        oauth2InfoDAO: DelegableAuthInfoDAO[OAuth2Info]): AuthInfoRepository = {
-
-        new DelegableAuthInfoRepository(passwordInfoDAO, oauth1InfoDAO, oauth2InfoDAO)
-      }
-    }
+    val service = new DelegableAuthInfoRepository(passwordInfoDAO, oauth1InfoDAO, oauth2InfoDAO)
 
     /**
      * The DAO to store the password information.

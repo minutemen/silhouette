@@ -1,9 +1,11 @@
 /**
- * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+ * Licensed to the Minutemen Group under one or more contributor license
+ * agreements. See the COPYRIGHT file distributed with this work for
+ * additional information regarding copyright ownership.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -17,9 +19,9 @@ import sbt._
 
 object Dependencies {
 
-  object Versions {
-    val crossScala = Seq("2.11.8")
-    val scalaVersion = crossScala.head
+  object Version {
+    val specs2 = "3.8.6"
+    val circe = "0.6.0"
   }
 
   val resolvers = Seq()
@@ -27,16 +29,19 @@ object Dependencies {
   object Library {
 
     object Specs2 {
-      private val version = "3.6.5"
-      val core = "org.specs2" %% "specs2-core" % version
-      val matcherExtra = "org.specs2" %% "specs2-matcher-extra" % version
-      val mock = "org.specs2" %% "specs2-mock" % version
+      val core = "org.specs2" %% "specs2-core" % Version.specs2
+      val matcherExtra = "org.specs2" %% "specs2-matcher-extra" % Version.specs2
+      val mock = "org.specs2" %% "specs2-mock" % Version.specs2
+    }
+
+    object Circe {
+      val core = "io.circe" %% "circe-core" % Version.circe
+      val generic = "io.circe" %% "circe-generic" % Version.circe
+      val parser = "io.circe" %% "circe-parser" % Version.circe
     }
 
     val mockito = "org.mockito" % "mockito-core" % "1.10.19"
     val jbcrypt = "org.mindrot" % "jbcrypt" % "0.3m"
-    val scalaGuice = "net.codingwell" %% "scala-guice" % "4.0.0"
-    val playJson = "com.typesafe.play" % "play-json_2.11" % "2.4.4"
     val slf4jApi = "org.slf4j" % "slf4j-api" % "1.7.13"
     val inject = "javax.inject" % "javax.inject" % "1"
     val commonCodec = "commons-codec" % "commons-codec" % "1.10"

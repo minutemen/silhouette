@@ -1,9 +1,11 @@
 /**
- * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+ * Licensed to the Minutemen Group under one or more contributor license
+ * agreements. See the COPYRIGHT file distributed with this work for
+ * additional information regarding copyright ownership.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -33,7 +35,7 @@ trait AuthInfoRepository {
    * Finds the auth info which is linked with the specified login info.
    *
    * @param loginInfo The linked login info.
-   * @param tag The class tag of the auth info.
+   * @param tag       The class tag of the auth info.
    * @tparam T The type of the auth info to handle.
    * @return The found auth info or None if no auth info could be found for the given login info.
    */
@@ -43,7 +45,7 @@ trait AuthInfoRepository {
    * Adds new auth info for the given login info.
    *
    * @param loginInfo The login info for which the auth info should be saved.
-   * @param authInfo The auth info to save.
+   * @param authInfo  The auth info to save.
    * @tparam T The type of the auth info to handle.
    * @return The saved auth info.
    */
@@ -53,7 +55,7 @@ trait AuthInfoRepository {
    * Updates the auth info for the given login info.
    *
    * @param loginInfo The login info for which the auth info should be updated.
-   * @param authInfo The auth info to update.
+   * @param authInfo  The auth info to update.
    * @tparam T The type of the auth info to handle.
    * @return The updated auth info.
    */
@@ -66,7 +68,7 @@ trait AuthInfoRepository {
    * if it already exists.
    *
    * @param loginInfo The login info for which the auth info should be saved.
-   * @param authInfo The auth info to save.
+   * @param authInfo  The auth info to save.
    * @tparam T The type of the auth info to handle.
    * @return The updated auth info.
    */
@@ -76,7 +78,7 @@ trait AuthInfoRepository {
    * Removes the auth info for the given login info.
    *
    * @param loginInfo The login info for which the auth info should be removed.
-   * @param tag The class tag of the auth info.
+   * @param tag       The class tag of the auth info.
    * @tparam T The type of the auth info to handle.
    * @return A future to wait for the process to be completed.
    */

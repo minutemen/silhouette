@@ -1,9 +1,11 @@
 /**
- * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+ * Licensed to the Minutemen Group under one or more contributor license
+ * agreements. See the COPYRIGHT file distributed with this work for
+ * additional information regarding copyright ownership.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -50,7 +52,7 @@ class InMemoryAuthInfoDAO[T <: AuthInfo: ClassTag] extends DelegableAuthInfoDAO[
    * Adds new auth info for the given login info.
    *
    * @param loginInfo The login info for which the auth info should be added.
-   * @param authInfo The auth info to add.
+   * @param authInfo  The auth info to add.
    * @return The added auth info.
    */
   def add(loginInfo: LoginInfo, authInfo: T): Future[T] = {
@@ -62,7 +64,7 @@ class InMemoryAuthInfoDAO[T <: AuthInfo: ClassTag] extends DelegableAuthInfoDAO[
    * Updates the auth info for the given login info.
    *
    * @param loginInfo The login info for which the auth info should be updated.
-   * @param authInfo The auth info to update.
+   * @param authInfo  The auth info to update.
    * @return The updated auth info.
    */
   def update(loginInfo: LoginInfo, authInfo: T): Future[T] = {
@@ -77,7 +79,7 @@ class InMemoryAuthInfoDAO[T <: AuthInfo: ClassTag] extends DelegableAuthInfoDAO[
    * if it already exists.
    *
    * @param loginInfo The login info for which the auth info should be saved.
-   * @param authInfo The auth info to save.
+   * @param authInfo  The auth info to save.
    * @return The saved auth info.
    */
   def save(loginInfo: LoginInfo, authInfo: T): Future[T] = {

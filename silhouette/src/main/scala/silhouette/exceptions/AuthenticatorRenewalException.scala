@@ -1,9 +1,11 @@
 /**
- * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+ * Licensed to the Minutemen Group under one or more contributor license
+ * agreements. See the COPYRIGHT file distributed with this work for
+ * additional information regarding copyright ownership.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -18,8 +20,8 @@ package silhouette.exceptions
 /**
  * An exception thrown when there is an error during authenticator renewal.
  *
- * @param msg The exception message.
+ * @param msg   The exception message.
  * @param cause The exception cause.
  */
-class AuthenticatorRenewalException(msg: String, cause: Throwable = null)
+class AuthenticatorRenewalException(msg: String, cause: Option[Throwable] = None)
   extends AuthenticatorException(msg, cause)

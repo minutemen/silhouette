@@ -1,9 +1,11 @@
 /**
- * Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+ * Licensed to the Minutemen Group under one or more contributor license
+ * agreements. See the COPYRIGHT file distributed with this work for
+ * additional information regarding copyright ownership.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -15,25 +17,12 @@
  */
 package silhouette
 
-import play.api.libs.json.Json
-
 /**
  * Represents a linked login for an identity (i.e. a local username/password or a Facebook/Google account).
  *
  * The login info contains the data about the provider that authenticated that identity.
  *
- * @param providerID The ID of the provider.
+ * @param providerID  The ID of the provider.
  * @param providerKey A unique key which identifies a user on this provider (userID, email, ...).
  */
 case class LoginInfo(providerID: String, providerKey: String)
-
-/**
- * The companion object of the login info.
- */
-object LoginInfo extends ((String, String) => LoginInfo) {
-
-  /**
-   * Converts the [[_root_.silhouette.LoginInfo]] to Json and vice versa.
-   */
-  implicit val jsonFormat = Json.format[LoginInfo]
-}
