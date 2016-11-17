@@ -1,13 +1,11 @@
 /**
- * Original work: SecureSocial (https://github.com/jaliss/securesocial)
- * Copyright 2013 Jorge Aliss (jaliss at gmail dot com) - twitter: @jaliss
+ * Licensed to the Minutemen Group under one or more contributor license
+ * agreements. See the COPYRIGHT file distributed with this work for
+ * additional information regarding copyright ownership.
  *
- * Derivative work: Silhouette (https://github.com/mohiva/silhouette)
- * Modifications Copyright 2015 Mohiva Organisation (license at mohiva dot com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -19,7 +17,8 @@
  */
 package silhouette
 
-import org.joda.time.DateTime
+import java.time.ZonedDateTime
+
 import silhouette.Authenticator.Implicits._
 
 import scala.concurrent.duration.FiniteDuration
@@ -69,7 +68,7 @@ object Authenticator {
      *
      * @param dateTime The `DateTime` instance on which the additional methods should be defined.
      */
-    implicit class RichDateTime(dateTime: DateTime) {
+    implicit class RichDateTime(dateTime: ZonedDateTime) {
 
       /**
        * Adds a duration to a date/time.
@@ -77,8 +76,8 @@ object Authenticator {
        * @param duration The duration to add.
        * @return A date/time instance with the added duration.
        */
-      def +(duration: FiniteDuration) = {
-        dateTime.plusSeconds(duration.toSeconds.toInt)
+      def +(duration: FiniteDuration): ZonedDateTime = {
+        dateTime.plusSeconds(duration.toSeconds)
       }
 
       /**
@@ -87,8 +86,8 @@ object Authenticator {
        * @param duration The duration to subtract.
        * @return A date/time instance with the subtracted duration.
        */
-      def -(duration: FiniteDuration) = {
-        dateTime.minusSeconds(duration.toSeconds.toInt)
+      def -(duration: FiniteDuration): ZonedDateTime = {
+        dateTime.minusSeconds(duration.toSeconds)
       }
     }
   }
@@ -115,12 +114,12 @@ trait ExpirableAuthenticator extends Authenticator {
   /**
    * The last used date/time.
    */
-  val lastUsedDateTime: DateTime
+  val lastUsedDateTime: ZonedDateTime
 
   /**
    * The expiration date/time.
    */
-  val expirationDateTime: DateTime
+  val expirationDateTime: ZonedDateTime
 
   /**
    * The duration an authenticator can be idle before it timed out.
@@ -132,7 +131,7 @@ trait ExpirableAuthenticator extends Authenticator {
    *
    * @return True if the authenticator isn't expired and isn't timed out.
    */
-  override def isValid = !isExpired && !isTimedOut
+  override def isValid: Boolean = !isExpired && !isTimedOut
 
   /**
    * Checks if the authenticator is expired. This is an absolute timeout since the creation of
@@ -140,7 +139,7 @@ trait ExpirableAuthenticator extends Authenticator {
    *
    * @return True if the authenticator is expired, false otherwise.
    */
-  def isExpired = expirationDateTime.isBeforeNow
+  def isExpired: Boolean = expirationDateTime.isBefore(ZonedDateTime.now())
 
   /**
    * Checks if the time elapsed since the last time the authenticator was used, is longer than
@@ -148,5 +147,5 @@ trait ExpirableAuthenticator extends Authenticator {
    *
    * @return True if sliding window expiration is activated and the authenticator is timed out, false otherwise.
    */
-  def isTimedOut = idleTimeout.isDefined && (lastUsedDateTime + idleTimeout.get).isBeforeNow
+  def isTimedOut: Boolean = idleTimeout.isDefined && (lastUsedDateTime + idleTimeout.get).isBefore(ZonedDateTime.now())
 }

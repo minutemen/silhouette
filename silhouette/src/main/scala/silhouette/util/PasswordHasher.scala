@@ -1,13 +1,11 @@
 /**
- * Original work: SecureSocial (https://github.com/jaliss/securesocial)
- * Copyright 2013 Jorge Aliss (jaliss at gmail dot com) - twitter: @jaliss
+ * Licensed to the Minutemen Group under one or more contributor license
+ * agreements. See the COPYRIGHT file distributed with this work for
+ * additional information regarding copyright ownership.
  *
- * Derivative work: Silhouette (https://github.com/mohiva/silhouette)
- * Modifications Copyright 2015 Mohiva Organisation (license at mohiva dot com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -57,7 +55,7 @@ trait PasswordHasher {
   /**
    * Checks whether a supplied password matches the hashed one.
    *
-   * @param passwordInfo The password retrieved from the backing store.
+   * @param passwordInfo     The password retrieved from the backing store.
    * @param suppliedPassword The password supplied by the user trying to log in.
    * @return True if the password matches, false otherwise.
    */
@@ -98,17 +96,17 @@ trait PasswordHasher {
  * hashers, which should match passwords that are stored in the baking store but which are different to the
  * current hasher.
  *
- * @param current The current password hasher used by the application.
+ * @param current    The current password hasher used by the application.
  * @param deprecated The deprecated list of password hashers.
  */
-case class PasswordHasherRegistry(current: PasswordHasher, deprecated: Seq[PasswordHasher] = Seq()) {
+case class PasswordHasherRegistry(current: PasswordHasher, deprecated: List[PasswordHasher] = List()) {
 
   /**
    * Returns the complete list of supported password hashers.
    *
    * @return The complete list of supported password hashers.
    */
-  def all = current +: deprecated
+  def all: List[PasswordHasher] = current +: deprecated
 
   /**
    * Finds the password hasher suitable for the given password info.

@@ -1,13 +1,11 @@
 /**
- * Original work: SecureSocial (https://github.com/jaliss/securesocial)
- * Copyright 2013 Jorge Aliss (jaliss at gmail dot com) - twitter: @jaliss
+ * Licensed to the Minutemen Group under one or more contributor license
+ * agreements. See the COPYRIGHT file distributed with this work for
+ * additional information regarding copyright ownership.
  *
- * Derivative work: Silhouette (https://github.com/mohiva/silhouette)
- * Modifications Copyright 2015 Mohiva Organisation (license at mohiva dot com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -36,7 +34,7 @@ class BCryptPasswordHasher(logRounds: Int = 10) extends PasswordHasher {
    *
    * @return The ID of the hasher.
    */
-  override def id = ID
+  override def id: String = ID
 
   /**
    * Hashes a password.
@@ -47,7 +45,7 @@ class BCryptPasswordHasher(logRounds: Int = 10) extends PasswordHasher {
    * @param plainPassword The password to hash.
    * @return A PasswordInfo containing the hashed password.
    */
-  override def hash(plainPassword: String) = PasswordInfo(
+  override def hash(plainPassword: String): PasswordInfo = PasswordInfo(
     hasher = id,
     password = BCrypt.hashpw(plainPassword, BCrypt.gensalt(logRounds))
   )
@@ -55,11 +53,11 @@ class BCryptPasswordHasher(logRounds: Int = 10) extends PasswordHasher {
   /**
    * Checks if a password matches the hashed version.
    *
-   * @param passwordInfo The password retrieved from the backing store.
+   * @param passwordInfo     The password retrieved from the backing store.
    * @param suppliedPassword The password supplied by the user trying to log in.
    * @return True if the password matches, false otherwise.
    */
-  override def matches(passwordInfo: PasswordInfo, suppliedPassword: String) = {
+  override def matches(passwordInfo: PasswordInfo, suppliedPassword: String): Boolean = {
     BCrypt.checkpw(suppliedPassword, passwordInfo.password)
   }
 

@@ -1,14 +1,16 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Validates the code formatting.
 #
 # If there are style violations, outputs a message and exits with a non-zero status code.
 #
-# Copyright 2015 Mohiva Organisation (license at mohiva dot com)
+# Licensed to the Minutemen Group under one or more contributor license
+# agreements. See the COPYRIGHT file distributed with this work for
+# additional information regarding copyright ownership.
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License"); you
+# may not use this file except in compliance with the License. You may
+# obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
@@ -25,15 +27,15 @@ git diff --quiet || (
   false
 )
 
-scripts/reformat
+scripts/reformat.sh
 
 git config color.diff.whitespace "red reverse ul"
 git --no-pager diff -R --color --exit-code || (
   echo ""
   echo "ERROR: The code is not formatted according to the project's standards."
   echo "The differences are shown above. Your code is shown in green and the expected format is shown in red."
-  echo "To perform this same validation on your environment, run 'scripts/validate-format'."
-  echo "To fix, format your sources running 'scripts/reformat' before submitting a pull request."
+  echo "To perform this same validation on your environment, run 'scripts/validate-format.sh'."
+  echo "To fix, format your sources running 'scripts/reformat.sh' before submitting a pull request."
   echo "After correcting, please squash your commits (eg, use 'git commit --amend') before updating your pull request."
   false
 )

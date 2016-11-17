@@ -1,13 +1,11 @@
 /**
- * Original work: SecureSocial (https://github.com/jaliss/securesocial)
- * Copyright 2013 Jorge Aliss (jaliss at gmail dot com) - twitter: @jaliss
+ * Licensed to the Minutemen Group under one or more contributor license
+ * agreements. See the COPYRIGHT file distributed with this work for
+ * additional information regarding copyright ownership.
  *
- * Derivative work: Silhouette (https://github.com/mohiva/silhouette)
- * Modifications Copyright 2015 Mohiva Organisation (license at mohiva dot com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -35,9 +33,9 @@ trait Authorization[I <: Identity, A <: Authenticator] {
   /**
    * Checks whether the user is authorized to execute an endpoint or not.
    *
-   * @param identity The current identity instance.
+   * @param identity      The current identity instance.
    * @param authenticator The current authenticator instance.
-   * @param request The request pipeline.
+   * @param request       The request pipeline.
    * @tparam R The type of the request.
    * @return True if the user is authorized, false otherwise.
    */
@@ -53,7 +51,7 @@ object Authorization {
    * Defines additional methods on an `Authorization` instance.
    *
    * @param self The `Authorization` instance on which the additional methods should be defined.
-   * @param ec The execution context to handle the asynchronous operations.
+   * @param ec   The execution context to handle the asynchronous operations.
    */
   implicit final class RichAuthorization[I <: Identity, A <: Authenticator](self: Authorization[I, A])(
     implicit

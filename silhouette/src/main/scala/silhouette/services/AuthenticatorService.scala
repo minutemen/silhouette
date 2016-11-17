@@ -1,13 +1,11 @@
 /**
- * Original work: SecureSocial (https://github.com/jaliss/securesocial)
- * Copyright 2013 Jorge Aliss (jaliss at gmail dot com) - twitter: @jaliss
+ * Licensed to the Minutemen Group under one or more contributor license
+ * agreements. See the COPYRIGHT file distributed with this work for
+ * additional information regarding copyright ownership.
  *
- * Derivative work: Silhouette (https://github.com/mohiva/silhouette)
- * Modifications Copyright 2015 Mohiva Organisation (license at mohiva dot com)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -35,7 +33,7 @@ trait AuthenticatorService[T <: Authenticator] extends ExecutionContextProvider 
    * Creates a new authenticator for the specified login info.
    *
    * @param loginInfo The login info for which the authenticator should be created.
-   * @param request The request pipeline.
+   * @param request   The request pipeline.
    * @tparam R The type of the request.
    * @return An authenticator.
    */
@@ -55,7 +53,7 @@ trait AuthenticatorService[T <: Authenticator] extends ExecutionContextProvider 
    * the serialized value.
    *
    * @param authenticator The authenticator instance.
-   * @param request The request pipeline.
+   * @param request       The request pipeline.
    * @tparam R The type of the request.
    * @return The serialized authenticator value.
    */
@@ -64,14 +62,16 @@ trait AuthenticatorService[T <: Authenticator] extends ExecutionContextProvider 
   /**
    * Embeds authenticator specific artifacts into the response.
    *
-   * @param value The authenticator value to embed.
+   * @param value    The authenticator value to embed.
    * @param response The response pipeline to manipulate.
-   * @param request The request pipeline.
+   * @param request  The request pipeline.
    * @tparam R The type of the request.
    * @tparam P The type of the response.
    * @return The manipulated response pipeline.
    */
-  def embed[R, P](value: T#Value, response: ResponsePipeline[P])(implicit request: RequestPipeline[R]): Future[ResponsePipeline[P]]
+  def embed[R, P](value: T#Value, response: ResponsePipeline[P])(
+    implicit
+    request: RequestPipeline[R]): Future[ResponsePipeline[P]]
 
   /**
    * Embeds authenticator specific artifacts into the request.
@@ -83,7 +83,7 @@ trait AuthenticatorService[T <: Authenticator] extends ExecutionContextProvider 
    *
    * If an existing authenticator exists, then it will be overridden.
    *
-   * @param value The authenticator value to embed.
+   * @param value   The authenticator value to embed.
    * @param request The request pipeline.
    * @tparam R The type of the request.
    * @return The manipulated request pipeline.
@@ -113,13 +113,15 @@ trait AuthenticatorService[T <: Authenticator] extends ExecutionContextProvider 
    * expect the authenticator was not touched.
    *
    * @param authenticator The authenticator to update.
-   * @param response The response pipeline to manipulate.
-   * @param request The request pipeline.
+   * @param response      The response pipeline to manipulate.
+   * @param request       The request pipeline.
    * @tparam R The type of the request.
    * @tparam P The type of the response.
    * @return The original or a manipulated response pipeline.
    */
-  def update[R, P](authenticator: T, response: ResponsePipeline[P])(implicit request: RequestPipeline[R]): Future[ResponsePipeline[P]]
+  def update[R, P](authenticator: T, response: ResponsePipeline[P])(
+    implicit
+    request: RequestPipeline[R]): Future[ResponsePipeline[P]]
 
   /**
    * Renews the expiration of an authenticator without embedding it into the response.
@@ -128,7 +130,7 @@ trait AuthenticatorService[T <: Authenticator] extends ExecutionContextProvider 
    * creating a new one. If the authenticator was updated, then the updated artifacts should be returned.
    *
    * @param authenticator The authenticator to renew.
-   * @param request The request pipeline.
+   * @param request       The request pipeline.
    * @tparam R The type of the request.
    * @return The serialized expression of the authenticator.
    */
@@ -142,25 +144,29 @@ trait AuthenticatorService[T <: Authenticator] extends ExecutionContextProvider 
    * into the response.
    *
    * @param authenticator The authenticator to renew.
-   * @param response The response pipeline to manipulate.
-   * @param request The request pipeline.
+   * @param response      The response pipeline to manipulate.
+   * @param request       The request pipeline.
    * @tparam R The type of the request.
    * @tparam P The type of the response.
    * @return The original or a manipulated response pipeline.
    */
-  def renew[R, P](authenticator: T, response: ResponsePipeline[P])(implicit request: RequestPipeline[R]): Future[ResponsePipeline[P]]
+  def renew[R, P](authenticator: T, response: ResponsePipeline[P])(
+    implicit
+    request: RequestPipeline[R]): Future[ResponsePipeline[P]]
 
   /**
    * Manipulates the response and removes authenticator specific artifacts before sending it to the client.
    *
    * @param authenticator The authenticator instance.
-   * @param response The response pipeline to manipulate.
-   * @param request The request pipeline.
+   * @param response      The response pipeline to manipulate.
+   * @param request       The request pipeline.
    * @tparam R The type of the request.
    * @tparam P The type of the response.
    * @return The manipulated response pipeline.
    */
-  def discard[R, P](authenticator: T, response: ResponsePipeline[P])(implicit request: RequestPipeline[R]): Future[ResponsePipeline[P]]
+  def discard[R, P](authenticator: T, response: ResponsePipeline[P])(
+    implicit
+    request: RequestPipeline[R]): Future[ResponsePipeline[P]]
 }
 
 /**
