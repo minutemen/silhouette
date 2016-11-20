@@ -20,14 +20,17 @@
 #
 set -o nounset -o errexit
 
+SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "$SCRIPTS_DIR/vars.sh"
+
 if [ "$TRAVIS_REPO_SLUG" == "minutemen/silhouette" ] &&
   [ "$TRAVIS_PULL_REQUEST" == "false" ] &&
-  [ "$TRAVIS_BRANCH" == "master" ]; then
+  [ "$TRAVIS_BRANCH" == "master" ] &&
+  [ "$TRAVIS_SCALA_VERSION" == "$SCALA_VERSION" ]; then
 
   echo ""
   echo "Starting API-Doc update process"
 
-  SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
   GH_PAGES_DIR="$HOME/.sbt/ghpages/group.minutemen/root"
   ENCRYPTED_KEY_VAR="encrypted_${ENCRYPTION_ID}_key"
   ENCRYPTED_IV_VAR="encrypted_${ENCRYPTION_ID}_iv"
@@ -53,7 +56,7 @@ if [ "$TRAVIS_REPO_SLUG" == "minutemen/silhouette" ] &&
   git config --global user.name "travis-ci"
   git config --global push.default simple
 
-  scripts/sbt.sh ghpages-push-site
+  ${SCRIPTS_DIR}/sbt.sh ghpages-push-site
 
   echo ""
   echo "Finished API-Doc update process"

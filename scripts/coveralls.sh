@@ -20,10 +20,18 @@
 #
 set -o nounset -o errexit
 
-echo ""
-echo "Publish coverage report"
-scripts/sbt.sh coveralls
+SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "$SCRIPTS_DIR/vars.sh"
 
-echo ""
-echo "Report published"
-echo ""
+if [ "$TRAVIS_SCALA_VERSION" == "$SCALA_VERSION" ]; then
+  echo ""
+  echo "Publish coverage report"
+  ${SCRIPTS_DIR}/sbt.sh coveralls
+
+  echo ""
+  echo "Report published"
+  echo ""
+else
+  echo ""
+  echo "Skipping coverage publishing"
+fi

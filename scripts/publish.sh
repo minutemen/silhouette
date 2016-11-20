@@ -20,16 +20,19 @@
 #
 set -o nounset -o errexit
 
-VERSION=$(sbt --error 'set showSuccess := false' showVersion 2>&- | tail -1)
+SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "$SCRIPTS_DIR/vars.sh"
+
 if [ "$TRAVIS_REPO_SLUG" == "minutemen/silhouette" ] &&
   [ "$TRAVIS_PULL_REQUEST" == "false" ] &&
   [ "$TRAVIS_BRANCH" == "master" ] &&
-  [[ "$VERSION" == *"SNAPSHOT" ]]; then
+  [ "$TRAVIS_SCALA_VERSION" == "$SCALA_VERSION" ] &&
+  [[ "$PROJECT_VERSION" == *"SNAPSHOT" ]]; then
 
   echo ""
-  echo "Starting publishing SNAPSHOT version: $VERSION"
+  echo "Starting publishing SNAPSHOT version: $PROJECT_VERSION"
 
-  scripts/sbt.sh +publish
+  ${SCRIPTS_DIR}/sbt.sh +publish
 
   echo ""
   echo "Finished SNAPSHOT publishing process"
