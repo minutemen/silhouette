@@ -19,7 +19,7 @@ import sbt.Keys._
 import sbt._
 
 object Build extends Build {
-  lazy val showVersion = taskKey[Unit]("Show version")
+  lazy val buildVersions = taskKey[Unit]("Show some build versions")
 
   val silhouetteSpecs2 = Project(
     id = "silhouette-specs2",
@@ -64,7 +64,12 @@ object Build extends Build {
       APIDoc.settings ++
       Seq(
         publish := {},
-        showVersion := println(version.value)
+        buildVersions := {
+          // scalastyle:off println
+          println(s"PROJECT_VERSION ${version.value}")
+          println(s"SCALA_VERSION ${scalaVersion.value}")
+          // scalastyle:on println
+        }
       )
   )
 }

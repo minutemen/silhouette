@@ -20,21 +20,23 @@
 #
 set -o nounset -o errexit
 
+SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 echo ""
 echo "Validating code formatting"
-scripts/validate-format.sh
+${SCRIPTS_DIR}/validate-format.sh
 
 echo ""
 echo "Validating code style"
-scripts/validate-style.sh
+${SCRIPTS_DIR}/validate-style.sh
 
 echo ""
 echo "Testing and generating documentation"
-scripts/sbt.sh clean coverage test doc coverageReport
+${SCRIPTS_DIR}/sbt.sh clean coverage test doc coverageReport
 
 echo ""
 echo "Aggregate coverage from sub-projects"
-scripts/sbt.sh coverageAggregate
+${SCRIPTS_DIR}/sbt.sh coverageAggregate
 
 echo ""
 echo "Build finished"

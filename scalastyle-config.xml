@@ -38,7 +38,8 @@
   <check level="error" class="org.scalastyle.file.FileLineLengthChecker" enabled="true">
     <parameters>
       <parameter name="maxLineLength"><![CDATA[120]]></parameter>
-      <parameter name="tabSize"><![CDATA[4]]></parameter>
+      <parameter name="tabSize"><![CDATA[2]]></parameter>
+      <parameter name="ignoreImports">true</parameter>
    </parameters>
   </check>
   <check level="error" class="org.scalastyle.scalariform.ClassNamesChecker" enabled="true">
@@ -88,10 +89,23 @@
     </parameters>
     <customMessage>No lines ending with a ;</customMessage>
   </check>
-  <check level="error" class="org.scalastyle.file.RegexChecker" enabled="true">
+  <check level="error" class="org.scalastyle.scalariform.EnsureSingleSpaceBeforeTokenChecker" enabled="true">
     <parameters>
-      <parameter name="regex"><![CDATA[println]]></parameter>
+      <parameter name="tokens">EQUALS, ELSE, TRY, CATCH, FINALLY, LARROW, RARROW</parameter>
     </parameters>
+  </check>
+  <check level="error" class="org.scalastyle.scalariform.EnsureSingleSpaceAfterTokenChecker" enabled="true">
+    <parameters>
+      <parameter name="tokens">ARROW, EQUALS, COMMA, COLON, IF, ELSE, DO, WHILE, FOR, MATCH, TRY, CATCH, FINALLY, LARROW, RARROW</parameter>
+    </parameters>
+  </check>
+  <check customId="println" level="error" class="org.scalastyle.scalariform.TokenChecker" enabled="true">
+    <parameters><parameter name="regex">^println$</parameter></parameters>
+    <customMessage><![CDATA[Are you sure you want to println? If yes, wrap the code block with
+      // scalastyle:off println
+      println(...)
+      // scalastyle:on println]]>
+    </customMessage>
   </check>
   <check level="error" class="org.scalastyle.scalariform.NumberOfTypesChecker" enabled="true">
     <parameters>
