@@ -22,12 +22,14 @@
 #
 set -o nounset -o errexit
 
+SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 git diff --quiet || (
   echo "ERROR: The code formatting validation must be run on a repository with no pending changes."
   false
 )
 
-scripts/reformat.sh
+${SCRIPTS_DIR}/reformat.sh
 
 git config color.diff.whitespace "red reverse ul"
 git --no-pager diff -R --color --exit-code || (

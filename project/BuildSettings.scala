@@ -212,14 +212,14 @@ object Release extends AutoPlugin {
       setReleaseVersion,
       commitReleaseVersion,
       tagRelease,
-      ReleaseStep(action =
-        Command.process("publishSigned", _),
+      ReleaseStep(
+        action = Command.process("publishSigned", _),
         enableCrossBuild = crossScalaVersions.value.length > 1
       ),
       setNextVersion,
       commitNextVersion,
-      ReleaseStep(action =
-        Command.process("sonatypeReleaseAll", _),
+      ReleaseStep(
+        action = Command.process("sonatypeReleaseAll", _),
         enableCrossBuild = crossScalaVersions.value.length > 1
       ),
       pushChanges

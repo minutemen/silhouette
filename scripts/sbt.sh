@@ -20,4 +20,6 @@
 #
 set -o nounset -o errexit
 
-scripts/sbt-runner.sh -jvm-opts project/build-jvm-opts "$@"
+SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+${SCRIPTS_DIR}/sbt-runner.sh -jvm-opts project/build-jvm-opts "$@"
