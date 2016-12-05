@@ -45,5 +45,6 @@ object Dependencies {
     val slf4jApi = "org.slf4j" % "slf4j-api" % "1.7.13"
     val inject = "javax.inject" % "javax.inject" % "1"
     val commonCodec = "commons-codec" % "commons-codec" % "1.10"
+    val akkaHttp = "com.typesafe.akka" %% "akka-http-core" % "2.4.10"
   }
 }
