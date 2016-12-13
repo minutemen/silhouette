@@ -15,15 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Dependencies._
+package silhouette.util
 
-libraryDependencies ++= Seq(
-  Library.jsonAst,
-  Library.slf4jApi,
-  Library.inject,
-  Library.commonCodec,
-  Library.Circe.core,
-  Library.Circe.parser,
-  Library.scalaXml
-)
-enablePlugins(Doc)
+/**
+ * Represents an encode action that transform an instance of A to B.
+ *
+ * @tparam A The data source of encode action.
+ * @tparam B The type target of encode action.
+ */
+trait Encoder[A, B] {
+
+  /**
+   * Encode from A to target B.
+   *
+   * @param in The data source of encode action.
+   * @return An instance of B.
+   */
+  def encode(in: A): B
+}

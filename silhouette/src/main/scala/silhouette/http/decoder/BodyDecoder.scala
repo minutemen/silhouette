@@ -15,15 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Dependencies._
+package silhouette.http.decoder
 
-libraryDependencies ++= Seq(
-  Library.jsonAst,
-  Library.slf4jApi,
-  Library.inject,
-  Library.commonCodec,
-  Library.Circe.core,
-  Library.Circe.parser,
-  Library.scalaXml
-)
-enablePlugins(Doc)
+import silhouette.http.client.Body
+import silhouette.util.Decoder
+import scala.util.Try
+
+/**
+ * Represents a decode action that extract from [[silhouette.http.client.Body]] an instance of B.
+ *
+ * @tparam T The type target of decode action.
+ */
+trait BodyDecoder[T] extends Decoder[Body, Try[T]]
+
+/**
+ * The only aim of this object is to provide default implicit BodyDecoder,
+ * uses trait for provide lowest implicit conversion chain.
+ */
+object BodyDecoder extends DefaultBodyDecoder

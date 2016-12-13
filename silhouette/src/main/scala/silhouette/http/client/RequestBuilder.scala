@@ -70,7 +70,7 @@ private[silhouette] trait RequestBuilder {
    * @param body The body to set.
    * @return A request builder to provide a fluent interface.
    */
-  def withBody(body: String): Self
+  def withBody(body: Body): Self
 
   /**
    * Execute the request and produce a response.

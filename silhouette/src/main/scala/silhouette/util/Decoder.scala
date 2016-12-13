@@ -15,15 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Dependencies._
+package silhouette.util
 
-libraryDependencies ++= Seq(
-  Library.jsonAst,
-  Library.slf4jApi,
-  Library.inject,
-  Library.commonCodec,
-  Library.Circe.core,
-  Library.Circe.parser,
-  Library.scalaXml
-)
-enablePlugins(Doc)
+/**
+ * Represents a decode action that extract from A an instance of B.
+ *
+ * @tparam A The raw data source of decode action.
+ * @tparam B The type target of decode action.
+ */
+trait Decoder[A, B] {
+
+  /**
+   * Decode from A to target B.
+   *
+   * @param in The raw data source of decode action.
+   * @return An instance of B.
+   */
+  def decode(in: A): B
+}

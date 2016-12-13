@@ -15,15 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Dependencies._
+package silhouette.http.client
 
-libraryDependencies ++= Seq(
-  Library.jsonAst,
-  Library.slf4jApi,
-  Library.inject,
-  Library.commonCodec,
-  Library.Circe.core,
-  Library.Circe.parser,
-  Library.scalaXml
+import java.nio.charset.{ Charset, StandardCharsets }
+
+/**
+ * Represents a body of a Request.
+ *
+ * @param contentType The content type of body.
+ * @param data The data of body.
+ */
+final case class Body(
+  contentType: ContentType,
+  charset: Charset = StandardCharsets.UTF_8,
+  data: Array[Byte]
 )
-enablePlugins(Doc)

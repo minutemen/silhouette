@@ -53,5 +53,5 @@ private[silhouette] trait Response {
    *
    * @return The response body.
    */
-  def body: String
+  def body: Body
 }

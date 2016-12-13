@@ -15,15 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Dependencies._
+package silhouette.http
 
-libraryDependencies ++= Seq(
-  Library.jsonAst,
-  Library.slf4jApi,
-  Library.inject,
-  Library.commonCodec,
-  Library.Circe.core,
-  Library.Circe.parser,
-  Library.scalaXml
-)
-enablePlugins(Doc)
+import silhouette.http.client.Body
+import scala.util.Try
+
+/**
+ * This package contains decode feature.
+ */
+package object decoder {
+
+  /**
+   * Provides syntax via enrichment classes.
+   */
+  implicit final class DecoderOps[A <: Body](val wrapped: A) {
+
+    /**
+     * Provide method that decode from Body to a T.
+     *
+     * @param decoder Decoder instance able to decode.
+     * @tparam T The result type to decode.
+     * @return an instance of T or an error if the body couldn't be decoded.
+     */
+    def as[T](implicit decoder: BodyDecoder[T]): Try[T] = decoder.decode(wrapped)
+  }
+}

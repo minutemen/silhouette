@@ -15,15 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Dependencies._
+package silhouette.http.client
 
-libraryDependencies ++= Seq(
-  Library.jsonAst,
-  Library.slf4jApi,
-  Library.inject,
-  Library.commonCodec,
-  Library.Circe.core,
-  Library.Circe.parser,
-  Library.scalaXml
-)
-enablePlugins(Doc)
+/**
+ * Represents the content type of a request.
+ *
+ * @param value String format for content-type.
+ */
+final case class ContentType(value: String)
+
+/**
+ * Util class for content-type values.
+ */
+object ContentTypes {
+  val `application/json` = ContentType("application/json")
+  val `application/xml` = ContentType("application/xml")
+}

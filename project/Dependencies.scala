@@ -48,5 +48,6 @@ object Dependencies {
     val jose4j = "org.bitbucket.b_c" % "jose4j" % "0.5.4"
     val jsonAst = "org.mdedetrich" %% "scala-json-ast" % "1.0.0-M4"
     val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15on" % "1.56"
+    val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
   }
 }
