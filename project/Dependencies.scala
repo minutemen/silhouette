@@ -45,5 +45,8 @@ object Dependencies {
     val slf4jApi = "org.slf4j" % "slf4j-api" % "1.7.13"
     val inject = "javax.inject" % "javax.inject" % "1"
     val commonCodec = "commons-codec" % "commons-codec" % "1.10"
+    val jose4j = "org.bitbucket.b_c" % "jose4j" % "0.5.4"
+    val jsonAst = "org.mdedetrich" %% "scala-json-ast" % "1.0.0-M4"
+    val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15on" % "1.56"
   }
 }

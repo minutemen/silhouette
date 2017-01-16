@@ -18,6 +18,7 @@
 import Dependencies._
 
 libraryDependencies ++= Seq(
+  Library.jsonAst,
   Library.slf4jApi,
   Library.inject,
   Library.commonCodec

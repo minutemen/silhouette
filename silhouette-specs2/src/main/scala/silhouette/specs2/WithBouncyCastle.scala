@@ -15,13 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Dependencies._
+package silhouette.specs2
 
-libraryDependencies ++= Seq(
-  Library.Specs2.core,
-  Library.Specs2.matcherExtra,
-  Library.Specs2.mock,
-  Library.mockito,
-  Library.bouncyCastle
-)
-enablePlugins(Doc)
+import java.security.Security
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.specs2.mutable.Specification
+
+/**
+ * Add the Bouncy Castle JCE provider to a test.
+ */
+trait WithBouncyCastle {
+  self: Specification =>
+
+  try {
+    val provider = new BouncyCastleProvider()
+    if (Option(Security.getProvider(provider.getName)).isDefined) {
+      Security.removeProvider(provider.getName)
+    }
+    Security.addProvider(provider)
+  } catch {
+    case e: Exception => throw new RuntimeException("Could not initialize bouncy castle encryption", e)
+  }
+}

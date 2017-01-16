@@ -28,7 +28,7 @@ object BasicSettings extends AutoPlugin {
     organization := "group.minutemen",
     resolvers ++= Dependencies.resolvers,
     scalaVersion := crossScalaVersions.value.head,
-    crossScalaVersions := Seq("2.12.0", "2.11.8"),
+    crossScalaVersions := Seq("2.12.1", "2.11.8"),
     scalacOptions ++= Seq(
       "-deprecation", // Emit warning and location for usages of deprecated APIs.
       "-feature", // Emit warning and location for usages of features that should be imported explicitly.
@@ -93,27 +93,9 @@ object CodeFormatter extends AutoPlugin {
 }
 
 ////*******************************
-//// ScalaDoc settings
+//// Doc settings
 ////*******************************
 object Doc extends AutoPlugin {
-
-  override def projectSettings: Seq[Setting[_]] = Seq(
-    autoAPIMappings := true,
-    apiURL := Some(url(s"http://api.silhouette.rocks/${version.value}/")),
-    apiMappings ++= {
-      implicit val cp = (fullClasspath in Compile).value
-      Map(
-        scalaInstance.value.libraryJar -> url(s"http://www.scala-lang.org/api/${scalaVersion.value}/")
-      )
-    }
-  )
-}
-
-////*******************************
-//// APIDoc settings
-////*******************************
-// @see https://github.com/paypal/horizon/blob/develop/src/main/scala/com/paypal/horizon/BuildUtilities.scala
-object APIDoc {
 
   import com.typesafe.sbt.SbtGhPages.GhPagesKeys._
   import com.typesafe.sbt.SbtGhPages.ghpages
@@ -125,26 +107,36 @@ object APIDoc {
 
   lazy val files = Seq(file("CNAME"))
 
-  lazy val settings = unidocSettings ++
+  lazy val scalaDocSettings = Seq(
+    autoAPIMappings := true,
+    apiURL := Some(url(s"http://api.silhouette.rocks/${version.value}/"))
+  )
+
+  lazy val apiDocPublishSettings = Seq(
+    // https://github.com/paypal/horizon/blob/develop/src/main/scala/com/paypal/horizon/BuildUtilities.scala
+    // Create version
+    siteMappings <++= (mappings in (ScalaUnidoc, packageDoc), version).map { (mapping, ver) =>
+      for ((file, path) <- mapping) yield (file, s"$ver/$path")
+    },
+    // Add custom files from site directory
+    siteMappings <++= baseDirectory.map { dir =>
+      for (file <- files) yield (new File(dir.getAbsolutePath + "/site/" + file), file.name)
+    },
+    // Do not delete old versions
+    synchLocal <<= (privateMappings, updatedRepository, gitRunner, streams).map { (mappings, repo, git, s) =>
+      val betterMappings = mappings.map { case (file, tgt) => (file, repo / tgt) }
+      IO.copy(betterMappings)
+      repo
+    },
+    git.remoteRepo := "git@github.com:minutemen/silhouette.git"
+  )
+
+  override def projectSettings: Seq[Setting[_]] =
+    unidocSettings ++
     site.settings ++
     ghpages.settings ++
-    Seq(
-      // Create version
-      siteMappings <++= (mappings in (ScalaUnidoc, packageDoc), version).map { (mapping, ver) =>
-        for ((file, path) <- mapping) yield (file, s"$ver/$path")
-      },
-      // Add custom files from site directory
-      siteMappings <++= baseDirectory.map { dir =>
-        for (file <- files) yield (new File(dir.getAbsolutePath + "/site/" + file), file.name)
-      },
-      // Do not delete old versions
-      synchLocal <<= (privateMappings, updatedRepository, gitRunner, streams).map { (mappings, repo, git, s) =>
-        val betterMappings = mappings.map { case (file, tgt) => (file, repo / tgt) }
-        IO.copy(betterMappings)
-        repo
-      },
-      git.remoteRepo := "git@github.com:minutemen/silhouette.git"
-    )
+    scalaDocSettings ++
+    apiDocPublishSettings
 }
 
 ////*******************************
