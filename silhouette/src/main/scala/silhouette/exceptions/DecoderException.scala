@@ -15,15 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Dependencies._
+package silhouette.exceptions
 
-libraryDependencies ++= Seq(
-  Library.jsonAst,
-  Library.slf4jApi,
-  Library.inject,
-  Library.commonCodec,
-  Library.Circe.core,
-  Library.Circe.parser,
-  Library.scalaXml
-)
-enablePlugins(Doc)
+/**
+ * Indicates that a decode operation error occurred.
+ *
+ * @param msg   The exception message.
+ * @param cause The exception cause.
+ */
+class DecoderException(msg: String, cause: Option[Throwable] = None)
+  extends SilhouetteException(msg, cause)

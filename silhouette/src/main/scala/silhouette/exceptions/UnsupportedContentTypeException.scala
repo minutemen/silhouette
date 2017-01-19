@@ -15,15 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Dependencies._
+package silhouette.exceptions
 
-libraryDependencies ++= Seq(
-  Library.jsonAst,
-  Library.slf4jApi,
-  Library.inject,
-  Library.commonCodec,
-  Library.Circe.core,
-  Library.Circe.parser,
-  Library.scalaXml
-)
-enablePlugins(Doc)
+/**
+ * Indicates that a decode operation could not be done because of Content-type mismatch.
+ *
+ * @param msg   The exception message.
+ * @param cause The exception cause.
+ */
+class UnsupportedContentTypeException(msg: String, cause: Option[Throwable] = None)
+  extends DecoderException(msg, cause)
