@@ -128,10 +128,28 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="silhouette.http">http</a></dd></dl></div>
+    </li><li name="silhouette.http.client.decoder" visbl="pub" class="indented4 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="decoder"></a><a id="decoder:decoder"></a>
+      <span class="permalink">
+      <a href="../../../silhouette/http/client/index.html#decoder" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <a title="Provides HTTP decoder implementations." href="decoder/index.html">
+              <span class="name">decoder</span>
+            </a>
+      </span>
+      
+      <p class="shortcomment cmt">Provides HTTP decoder implementations.</p>
     </li><li class="current-entities indented3">
                         <span class="separator"></span>
-                        <a class="class" href="Body.html" title="Represents a body of a Request."></a>
-                        <a href="Body.html" title="Represents a body of a Request.">
+                        <a class="class" href="Body.html" title="Represents the body of a request."></a>
+                        <a href="Body.html" title="Represents the body of a request.">
                           Body
                         </a>
                       </li><li class="current-entities indented3">
@@ -142,30 +160,11 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
                         </a>
                       </li><li class="current-entities indented3">
                         <span class="separator"></span>
-                        <a class="object" href="ContentTypes$.html" title="Util class for content-type values."></a>
-                        <a href="ContentTypes$.html" title="Util class for content-type values.">
+                        <a class="object" href="ContentTypes$.html" title="Util class for content type values."></a>
+                        <a href="ContentTypes$.html" title="Util class for content type values.">
                           ContentTypes
                         </a>
-                      </li><li name="silhouette.http.decoder" visbl="pub" class="indented3 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="decoder"></a><a id="decoder:decoder"></a>
-      <span class="permalink">
-      <a href="../../silhouette/http/index.html#decoder" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">package</span>
-      </span>
-      <span class="symbol">
-        <a title="This package contains decode feature." href="../decoder/index.html">
-              <span class="name">decoder</span>
-            </a>
-      </span>
-      
-      <p class="shortcomment cmt">This package contains decode feature.</p><div class="fullcomment"><div class="comment cmt"><p>This package contains decode feature.
-</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="silhouette.http">http</a></dd></dl></div>
-    </li><li name="silhouette.http.transport" visbl="pub" class="indented3 " data-isabs="false" fullComment="yes" group="Ungrouped">
+                      </li><li name="silhouette.http.transport" visbl="pub" class="indented3 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="transport"></a><a id="transport:transport"></a>
       <span class="permalink">
       <a href="../../silhouette/http/index.html#transport" title="Permalink">
@@ -177,12 +176,12 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">package</span>
       </span>
       <span class="symbol">
-        <a title="HTTP transport implementations." href="../transport/index.html">
+        <a title="Provides HTTP transport implementations." href="../transport/index.html">
               <span class="name">transport</span>
             </a>
       </span>
       
-      <p class="shortcomment cmt">HTTP transport implementations.</p><div class="fullcomment"><div class="comment cmt"><p>HTTP transport implementations.
+      <p class="shortcomment cmt">Provides HTTP transport implementations.</p><div class="fullcomment"><div class="comment cmt"><p>Provides HTTP transport implementations.
 </p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="silhouette.http">http</a></dd></dl></div>
     </li>
               </ul>
@@ -259,13 +258,13 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a title="Represents a body of a Request." href="Body.html">
+        <a title="Represents the body of a request." href="Body.html">
               <span class="name">Body</span>
-            </a><span class="params">(<span name="contentType">contentType: <a href="ContentType.html" class="extype" name="silhouette.http.client.ContentType">ContentType</a></span>, <span name="charset">charset: <span class="extype" name="java.nio.charset.Charset">Charset</span> = <span class="symbol">StandardCharsets.UTF_8</span></span>, <span name="data">data: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Byte" class="extype" target="_top">Byte</a>]</span>)</span><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+            </a><span class="params">(<span name="contentType">contentType: <a href="ContentType.html" class="extype" name="silhouette.http.client.ContentType">ContentType</a></span>, <span name="codec">codec: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.io.Codec" class="extype" target="_top">Codec</a> = <span class="symbol">Codec.UTF8</span></span>, <span name="data">data: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Byte" class="extype" target="_top">Byte</a>]</span>)</span><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       
-      <p class="shortcomment cmt">Represents a body of a Request.</p><div class="fullcomment"><div class="comment cmt"><p>Represents a body of a Request.
-</p></div><dl class="paramcmts block"><dt class="param">contentType</dt><dd class="cmt"><p>The content type of body.</p></dd><dt class="param">data</dt><dd class="cmt"><p>The data of body.</p></dd></dl></div>
+      <p class="shortcomment cmt">Represents the body of a request.</p><div class="fullcomment"><div class="comment cmt"><p>Represents the body of a request.
+</p></div><dl class="paramcmts block"><dt class="param">contentType</dt><dd class="cmt"><p>The content type of the body.</p></dd><dt class="param">codec</dt><dd class="cmt"><p>The codec of the body.</p></dd><dt class="param">data</dt><dd class="cmt"><p>The body data.</p></dd></dl></div>
     </li><li name="silhouette.http.client.ContentType" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ContentTypeextendsProductwithSerializable"></a><a id="ContentType:ContentType"></a>
       <span class="permalink">
@@ -284,7 +283,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
       </span>
       
       <p class="shortcomment cmt">Represents the content type of a request.</p><div class="fullcomment"><div class="comment cmt"><p>Represents the content type of a request.
-</p></div><dl class="paramcmts block"><dt class="param">value</dt><dd class="cmt"><p>String format for content-type.</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="param">value</dt><dd class="cmt"><p>String format for a content type.</p></dd></dl></div>
     </li></ol>
             </div>
 
@@ -305,12 +304,12 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a title="Util class for content-type values." href="ContentTypes$.html">
+        <a title="Util class for content type values." href="ContentTypes$.html">
               <span class="name">ContentTypes</span>
             </a>
       </span>
       
-      <p class="shortcomment cmt">Util class for content-type values.</p>
+      <p class="shortcomment cmt">Util class for content type values.</p>
     </li>
               </ol>
             </div>

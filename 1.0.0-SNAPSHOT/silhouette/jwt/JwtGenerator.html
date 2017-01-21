@@ -203,21 +203,9 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
                         </a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="class" href="JwtClaims.html" title="JWT reserved claims and also optional custom claims in the form of a JSON string."></a>
-                        <a href="JwtClaims.html" title="JWT reserved claims and also optional custom claims in the form of a JSON string.">
+                        <a class="class" href="JwtClaims.html" title="JWT reserved claims and also optional custom claims in the form of a JSON object."></a>
+                        <a href="JwtClaims.html" title="JWT reserved claims and also optional custom claims in the form of a JSON object.">
                           JwtClaims
-                        </a>
-                      </li><li class="current-entities indented2">
-                        <span class="separator"></span>
-                        <a class="trait" href="JwtDecoder.html" title="Specifies decoding of JWTs."></a>
-                        <a href="JwtDecoder.html" title="Specifies decoding of JWTs.">
-                          JwtDecoder
-                        </a>
-                      </li><li class="current-entities indented2">
-                        <span class="separator"></span>
-                        <a class="trait" href="JwtEncoder.html" title="Specifies encoding of JWTs."></a>
-                        <a href="JwtEncoder.html" title="Specifies encoding of JWTs.">
-                          JwtEncoder
                         </a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
@@ -248,7 +236,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <span class="name">JwtGenerator</span><span class="result"> extends <a href="JwtEncoder.html" class="extype" name="silhouette.jwt.JwtEncoder">JwtEncoder</a> with <a href="JwtDecoder.html" class="extype" name="silhouette.jwt.JwtDecoder">JwtDecoder</a></span>
+        <span class="name">JwtGenerator</span><span class="result"> extends <a href="../util/Encoder.html" class="extype" name="silhouette.util.Encoder">Encoder</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]] with <a href="../util/Decoder.html" class="extype" name="silhouette.util.Decoder">Decoder</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>]]</span>
       </span>
       </h4>
 
@@ -258,7 +246,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="JwtDecoder.html" class="extype" name="silhouette.jwt.JwtDecoder">JwtDecoder</a>, <a href="JwtEncoder.html" class="extype" name="silhouette.jwt.JwtEncoder">JwtEncoder</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="../util/Decoder.html" class="extype" name="silhouette.util.Decoder">Decoder</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>]], <a href="../util/Encoder.html" class="extype" name="silhouette.util.Encoder">Encoder</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]], <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div><div class="toggleContainer block">
             <span class="toggle">
               Known Subclasses
@@ -289,7 +277,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
                   <span class="filtertype">Inherited<br />
                   </span>
                   <ol id="linearization">
-                    <li class="in" name="silhouette.jwt.JwtGenerator"><span>JwtGenerator</span></li><li class="in" name="silhouette.jwt.JwtDecoder"><span>JwtDecoder</span></li><li class="in" name="silhouette.jwt.JwtEncoder"><span>JwtEncoder</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                    <li class="in" name="silhouette.jwt.JwtGenerator"><span>JwtGenerator</span></li><li class="in" name="silhouette.util.Decoder"><span>Decoder</span></li><li class="in" name="silhouette.util.Encoder"><span>Encoder</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -313,10 +301,10 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
 
         <div class="values members">
               <h3>Abstract Value Members</h3>
-              <ol><li name="silhouette.jwt.JwtDecoder#decode" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="decode(str:String):scala.util.Try[silhouette.jwt.JwtClaims]"></a><a id="decode(String):Try[JwtClaims]"></a>
+              <ol><li name="silhouette.util.Decoder#decode" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="decode(in:A):B"></a><a id="decode(String):Try[JwtClaims]"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/JwtGenerator.html#decode(str:String):scala.util.Try[silhouette.jwt.JwtClaims]" title="Permalink">
+      <a href="../../silhouette/jwt/JwtGenerator.html#decode(in:A):B" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -325,15 +313,15 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">decode</span><span class="params">(<span name="str">str: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>]</span>
+        <span class="name">decode</span><span class="params">(<span name="in">in: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>]</span>
       </span>
       
-      <p class="shortcomment cmt">Decodes a JWT string and returns a JWT claims object.</p><div class="fullcomment"><div class="comment cmt"><p>Decodes a JWT string and returns a JWT claims object.
-</p></div><dl class="paramcmts block"><dt class="param">str</dt><dd class="cmt"><p>A JWT string.</p></dd><dt>returns</dt><dd class="cmt"><p>The decoded JWT claims object or an error if the string couldn't be decoded.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="JwtDecoder.html" class="extype" name="silhouette.jwt.JwtDecoder">JwtDecoder</a></dd></dl></div>
-    </li><li name="silhouette.jwt.JwtEncoder#encode" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="encode(jwt:silhouette.jwt.JwtClaims):scala.util.Try[String]"></a><a id="encode(JwtClaims):Try[String]"></a>
+      <p class="shortcomment cmt">Decode from source A to target B.</p><div class="fullcomment"><div class="comment cmt"><p>Decode from source A to target B.
+</p></div><dl class="paramcmts block"><dt class="param">in</dt><dd class="cmt"><p>The source to decode.</p></dd><dt>returns</dt><dd class="cmt"><p>An instance of B.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../util/Decoder.html" class="extype" name="silhouette.util.Decoder">Decoder</a></dd></dl></div>
+    </li><li name="silhouette.util.Encoder#encode" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="encode(in:A):B"></a><a id="encode(JwtClaims):Try[String]"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/JwtGenerator.html#encode(jwt:silhouette.jwt.JwtClaims):scala.util.Try[String]" title="Permalink">
+      <a href="../../silhouette/jwt/JwtGenerator.html#encode(in:A):B" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -342,11 +330,11 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">encode</span><span class="params">(<span name="jwt">jwt: <a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a></span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
+        <span class="name">encode</span><span class="params">(<span name="in">in: <a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a></span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
       </span>
       
-      <p class="shortcomment cmt">Encodes a JWT claims object and returns a JWT as string.</p><div class="fullcomment"><div class="comment cmt"><p>Encodes a JWT claims object and returns a JWT as string.
-</p></div><dl class="paramcmts block"><dt class="param">jwt</dt><dd class="cmt"><p>The JWT claims object to encode.</p></dd><dt>returns</dt><dd class="cmt"><p>The JWT string representation or an error if the JWT claims object couldn't be encoded.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="JwtEncoder.html" class="extype" name="silhouette.jwt.JwtEncoder">JwtEncoder</a></dd></dl></div>
+      <p class="shortcomment cmt">Encode from source A to target B.</p><div class="fullcomment"><div class="comment cmt"><p>Encode from source A to target B.
+</p></div><dl class="paramcmts block"><dt class="param">in</dt><dd class="cmt"><p>The source to encode.</p></dd><dt>returns</dt><dd class="cmt"><p>An instance of B.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../util/Encoder.html" class="extype" name="silhouette.util.Encoder">Encoder</a></dd></dl></div>
     </li></ol>
             </div>
 
@@ -697,10 +685,10 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="silhouette.jwt.JwtDecoder">
-              <h3>Inherited from <a href="JwtDecoder.html" class="extype" name="silhouette.jwt.JwtDecoder">JwtDecoder</a></h3>
-            </div><div class="parent" name="silhouette.jwt.JwtEncoder">
-              <h3>Inherited from <a href="JwtEncoder.html" class="extype" name="silhouette.jwt.JwtEncoder">JwtEncoder</a></h3>
+        <div class="parent" name="silhouette.util.Decoder">
+              <h3>Inherited from <a href="../util/Decoder.html" class="extype" name="silhouette.util.Decoder">Decoder</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>]]</h3>
+            </div><div class="parent" name="silhouette.util.Encoder">
+              <h3>Inherited from <a href="../util/Encoder.html" class="extype" name="silhouette.util.Encoder">Encoder</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]]</h3>
             </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">

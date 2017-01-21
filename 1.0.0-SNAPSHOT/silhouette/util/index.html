@@ -278,8 +278,8 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
 </p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="silhouette">silhouette</a></dd></dl></div>
     </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="trait" href="Decoder.html" title="Represents a decode action that extract from A an instance of B."></a>
-                        <a href="Decoder.html" title="Represents a decode action that extract from A an instance of B.">
+                        <a class="trait" href="Decoder.html" title="Represents a decode action that transform an instance of A to B."></a>
+                        <a href="Decoder.html" title="Represents a decode action that transform an instance of A to B.">
                           Decoder
                         </a>
                       </li><li class="current-entities indented2">
@@ -429,13 +429,13 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <a title="Represents a decode action that extract from A an instance of B." href="Decoder.html">
+        <a title="Represents a decode action that transform an instance of A to B." href="Decoder.html">
               <span class="name">Decoder</span>
             </a><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
       
-      <p class="shortcomment cmt">Represents a decode action that extract from A an instance of B.</p><div class="fullcomment"><div class="comment cmt"><p>Represents a decode action that extract from A an instance of B.
-</p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>The raw data source of decode action.</p></dd><dt class="tparam">B</dt><dd class="cmt"><p>The type target of decode action.</p></dd></dl></div>
+      <p class="shortcomment cmt">Represents a decode action that transform an instance of A to B.</p><div class="fullcomment"><div class="comment cmt"><p>Represents a decode action that transform an instance of A to B.
+</p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>The source type.</p></dd><dt class="tparam">B</dt><dd class="cmt"><p>The target type.</p></dd></dl></div>
     </li><li name="silhouette.util.Encoder" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="Encoder[A,B]extendsAnyRef"></a><a id="Encoder[A,B]:Encoder[A,B]"></a>
       <span class="permalink">
@@ -454,7 +454,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
       </span>
       
       <p class="shortcomment cmt">Represents an encode action that transform an instance of A to B.</p><div class="fullcomment"><div class="comment cmt"><p>Represents an encode action that transform an instance of A to B.
-</p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>The data source of encode action.</p></dd><dt class="tparam">B</dt><dd class="cmt"><p>The type target of encode action.</p></dd></dl></div>
+</p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>The source type.</p></dd><dt class="tparam">B</dt><dd class="cmt"><p>The target type.</p></dd></dl></div>
     </li><li name="silhouette.util.FingerprintGenerator" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="FingerprintGeneratorextendsAnyRef"></a><a id="FingerprintGenerator:FingerprintGenerator"></a>
       <span class="permalink">

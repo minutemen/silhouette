@@ -114,8 +114,8 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
 </p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="silhouette">silhouette</a></dd></dl></div>
     </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="trait" href="" title="Represents a decode action that extract from A an instance of B."></a>
-                        <a href="" title="Represents a decode action that extract from A an instance of B.">
+                        <a class="trait" href="" title="Represents a decode action that transform an instance of A to B."></a>
+                        <a href="" title="Represents a decode action that transform an instance of A to B.">
                           Decoder
                         </a>
                       </li><li class="current-entities indented2">
@@ -200,8 +200,8 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Represents a decode action that extract from A an instance of B.
-</p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>The raw data source of decode action.</p></dd><dt class="tparam">B</dt><dd class="cmt"><p>The type target of decode action.</p></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Represents a decode action that transform an instance of A to B.
+</p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>The source type.</p></dd><dt class="tparam">B</dt><dd class="cmt"><p>The target type.</p></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
@@ -210,7 +210,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
             <span class="toggle">
               Known Subclasses
             </span>
-            <div class="subClasses hiddenContent"><a href="../http/decoder/BodyDecoder.html" class="extype" name="silhouette.http.decoder.BodyDecoder">BodyDecoder</a></div>
+            <div class="subClasses hiddenContent"><a href="../http/client/decoder/BodyDecoder.html" class="extype" name="silhouette.http.client.decoder.BodyDecoder">BodyDecoder</a>, <a href="../jwt/Jose4jJwtGenerator.html" class="extype" name="silhouette.jwt.Jose4jJwtGenerator">Jose4jJwtGenerator</a>, <a href="../jwt/JwtGenerator.html" class="extype" name="silhouette.jwt.JwtGenerator">JwtGenerator</a></div>
           </div></div>
         
 
@@ -275,8 +275,8 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="name">decode</span><span class="params">(<span name="in">in: <span class="extype" name="silhouette.util.Decoder.A">A</span></span>)</span><span class="result">: <span class="extype" name="silhouette.util.Decoder.B">B</span></span>
       </span>
       
-      <p class="shortcomment cmt">Decode from A to target B.</p><div class="fullcomment"><div class="comment cmt"><p>Decode from A to target B.
-</p></div><dl class="paramcmts block"><dt class="param">in</dt><dd class="cmt"><p>The raw data source of decode action.</p></dd><dt>returns</dt><dd class="cmt"><p>An instance of B.</p></dd></dl></div>
+      <p class="shortcomment cmt">Decode from source A to target B.</p><div class="fullcomment"><div class="comment cmt"><p>Decode from source A to target B.
+</p></div><dl class="paramcmts block"><dt class="param">in</dt><dd class="cmt"><p>The source to decode.</p></dd><dt>returns</dt><dd class="cmt"><p>An instance of B.</p></dd></dl></div>
     </li></ol>
             </div>
 

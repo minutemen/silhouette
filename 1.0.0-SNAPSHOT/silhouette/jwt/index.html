@@ -257,21 +257,9 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
                         </a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="class" href="JwtClaims.html" title="JWT reserved claims and also optional custom claims in the form of a JSON string."></a>
-                        <a href="JwtClaims.html" title="JWT reserved claims and also optional custom claims in the form of a JSON string.">
+                        <a class="class" href="JwtClaims.html" title="JWT reserved claims and also optional custom claims in the form of a JSON object."></a>
+                        <a href="JwtClaims.html" title="JWT reserved claims and also optional custom claims in the form of a JSON object.">
                           JwtClaims
-                        </a>
-                      </li><li class="current-entities indented2">
-                        <span class="separator"></span>
-                        <a class="trait" href="JwtDecoder.html" title="Specifies decoding of JWTs."></a>
-                        <a href="JwtDecoder.html" title="Specifies decoding of JWTs.">
-                          JwtDecoder
-                        </a>
-                      </li><li class="current-entities indented2">
-                        <span class="separator"></span>
-                        <a class="trait" href="JwtEncoder.html" title="Specifies encoding of JWTs."></a>
-                        <a href="JwtEncoder.html" title="Specifies encoding of JWTs.">
-                          JwtEncoder
                         </a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
@@ -740,54 +728,18 @@ JSON Web Encryption ([JWE](https://tools.ietf.org/html/rfc7516)), and JSON Web K
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <a title="JWT reserved claims and also optional custom claims in the form of a JSON string." href="JwtClaims.html">
+        <a title="JWT reserved claims and also optional custom claims in the form of a JSON object." href="JwtClaims.html">
               <span class="name">JwtClaims</span>
             </a><span class="params">(<span name="issuer">issuer: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="subject">subject: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="audience">audience: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Predef.String">String</span>]] = <span class="symbol">None</span></span>, <span name="expirationTime">expirationTime: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Long" class="extype" target="_top">Long</a>] = <span class="symbol">None</span></span>, <span name="notBefore">notBefore: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Long" class="extype" target="_top">Long</a>] = <span class="symbol">None</span></span>, <span name="issuedAt">issuedAt: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Long" class="extype" target="_top">Long</a>] = <span class="symbol">None</span></span>, <span name="jwtID">jwtID: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="custom">custom: <a href="https://oss.sonatype.org/service/local/repositories/public/archive/org/mdedetrich/scala-json-ast_2.12/1.0.0-M4/scala-json-ast_2.12-1.0.0-M4-javadoc.jar/!/index.html#scala.json.ast.JObject" class="extype" target="_top">JObject</a> = <span class="symbol">JObject()</span></span>)</span><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       
-      <p class="shortcomment cmt">JWT reserved claims and also optional custom claims in the form of a JSON string.</p><div class="fullcomment"><div class="comment cmt"><p>JWT reserved claims and also optional custom claims in the form of a JSON string.</p><p>See the [JWT RFC](https://tools.ietf.org/html/rfc7519#section-4) for
+      <p class="shortcomment cmt">JWT reserved claims and also optional custom claims in the form of a JSON object.</p><div class="fullcomment"><div class="comment cmt"><p>JWT reserved claims and also optional custom claims in the form of a JSON object.</p><p>See the [JWT RFC](https://tools.ietf.org/html/rfc7519#section-4) for
 the full description of the claims.
 </p></div><dl class="paramcmts block"><dt class="param">issuer</dt><dd class="cmt"><p>The JWT 'iss' claim.</p></dd><dt class="param">subject</dt><dd class="cmt"><p>The JWT 'sub' claim.</p></dd><dt class="param">audience</dt><dd class="cmt"><p>The JWT 'aud' claim.</p></dd><dt class="param">expirationTime</dt><dd class="cmt"><p>The JWT 'exp' claim in seconds.</p></dd><dt class="param">notBefore</dt><dd class="cmt"><p>The JWT 'nbf' claim in seconds.</p></dd><dt class="param">issuedAt</dt><dd class="cmt"><p>The JWT 'iat' claim in seconds.</p></dd><dt class="param">jwtID</dt><dd class="cmt"><p>The JWT 'jti' claim.</p></dd><dt class="param">custom</dt><dd class="cmt"><p>Some custom claims as JSON.</p></dd></dl></div>
-    </li><li name="silhouette.jwt.JwtDecoder" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="JwtDecoderextendsAnyRef"></a><a id="JwtDecoder:JwtDecoder"></a>
-      <span class="permalink">
-      <a href="../../silhouette/jwt/index.html#JwtDecoderextendsAnyRef" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">trait</span>
-      </span>
-      <span class="symbol">
-        <a title="Specifies decoding of JWTs." href="JwtDecoder.html">
-              <span class="name">JwtDecoder</span>
-            </a><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
-      </span>
-      
-      <p class="shortcomment cmt">Specifies decoding of JWTs.</p>
-    </li><li name="silhouette.jwt.JwtEncoder" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="JwtEncoderextendsAnyRef"></a><a id="JwtEncoder:JwtEncoder"></a>
-      <span class="permalink">
-      <a href="../../silhouette/jwt/index.html#JwtEncoderextendsAnyRef" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">trait</span>
-      </span>
-      <span class="symbol">
-        <a title="Specifies encoding of JWTs." href="JwtEncoder.html">
-              <span class="name">JwtEncoder</span>
-            </a><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
-      </span>
-      
-      <p class="shortcomment cmt">Specifies encoding of JWTs.</p>
     </li><li name="silhouette.jwt.JwtGenerator" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="JwtGeneratorextendsJwtEncoderwithJwtDecoder"></a><a id="JwtGenerator:JwtGenerator"></a>
+      <a id="JwtGeneratorextendsEncoder[silhouette.jwt.JwtClaims,scala.util.Try[String]]withDecoder[String,scala.util.Try[silhouette.jwt.JwtClaims]]"></a><a id="JwtGenerator:JwtGenerator"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/index.html#JwtGeneratorextendsJwtEncoderwithJwtDecoder" title="Permalink">
+      <a href="../../silhouette/jwt/index.html#JwtGeneratorextendsEncoder[silhouette.jwt.JwtClaims,scala.util.Try[String]]withDecoder[String,scala.util.Try[silhouette.jwt.JwtClaims]]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -798,7 +750,7 @@ the full description of the claims.
       <span class="symbol">
         <a title="JWT encoder/decoder." href="JwtGenerator.html">
               <span class="name">JwtGenerator</span>
-            </a><span class="result"> extends <a href="JwtEncoder.html" class="extype" name="silhouette.jwt.JwtEncoder">JwtEncoder</a> with <a href="JwtDecoder.html" class="extype" name="silhouette.jwt.JwtDecoder">JwtDecoder</a></span>
+            </a><span class="result"> extends <a href="../util/Encoder.html" class="extype" name="silhouette.util.Encoder">Encoder</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]] with <a href="../util/Decoder.html" class="extype" name="silhouette.util.Decoder">Decoder</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>]]</span>
       </span>
       
       <p class="shortcomment cmt">JWT encoder/decoder.</p>
