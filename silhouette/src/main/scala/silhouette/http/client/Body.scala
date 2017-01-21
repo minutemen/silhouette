@@ -17,16 +17,17 @@
  */
 package silhouette.http.client
 
-import java.nio.charset.{ Charset, StandardCharsets }
+import scala.io.Codec
 
 /**
- * Represents a body of a Request.
+ * Represents the body of a request.
  *
- * @param contentType The content type of body.
- * @param data The data of body.
+ * @param contentType The content type of the body.
+ * @param codec       The codec of the body.
+ * @param data        The body data.
  */
 final case class Body(
   contentType: ContentType,
-  charset: Charset = StandardCharsets.UTF_8,
+  codec: Codec = Codec.UTF8,
   data: Array[Byte]
 )

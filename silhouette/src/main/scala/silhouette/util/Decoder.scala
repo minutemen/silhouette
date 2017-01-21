@@ -18,17 +18,17 @@
 package silhouette.util
 
 /**
- * Represents a decode action that extract from A an instance of B.
+ * Represents a decode action that transform an instance of A to B.
  *
- * @tparam A The raw data source of decode action.
- * @tparam B The type target of decode action.
+ * @tparam A The source type.
+ * @tparam B The target type.
  */
 trait Decoder[A, B] {
 
   /**
-   * Decode from A to target B.
+   * Decode from source A to target B.
    *
-   * @param in The raw data source of decode action.
+   * @param in The source to decode.
    * @return An instance of B.
    */
   def decode(in: A): B

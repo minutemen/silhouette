@@ -18,6 +18,6 @@
 package silhouette.http
 
 /**
- * HTTP transport implementations.
+ * Provides HTTP transport implementations.
  */
 package object transport {}

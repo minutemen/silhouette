@@ -20,12 +20,12 @@ package silhouette.http.client
 /**
  * Represents the content type of a request.
  *
- * @param value String format for content-type.
+ * @param value String format for a content type.
  */
 final case class ContentType(value: String)
 
 /**
- * Util class for content-type values.
+ * Util class for content type values.
  */
 object ContentTypes {
   val `application/json` = ContentType("application/json")
