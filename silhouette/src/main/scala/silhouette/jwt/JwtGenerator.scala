@@ -17,11 +17,13 @@
  */
 package silhouette.jwt
 
+import silhouette.util.{ Decoder, Encoder }
+
 import scala.json.ast.JObject
 import scala.util.Try
 
 /**
- * JWT reserved claims and also optional custom claims in the form of a JSON string.
+ * JWT reserved claims and also optional custom claims in the form of a JSON object.
  *
  * See the [JWT RFC](https://tools.ietf.org/html/rfc7519#section-4) for
  * the full description of the claims.
@@ -46,34 +48,6 @@ case class JwtClaims(
   custom: JObject = JObject())
 
 /**
- * Specifies encoding of JWTs.
- */
-trait JwtEncoder {
-
-  /**
-   * Encodes a JWT claims object and returns a JWT as string.
-   *
-   * @param jwt The JWT claims object to encode.
-   * @return The JWT string representation or an error if the JWT claims object couldn't be encoded.
-   */
-  def encode(jwt: JwtClaims): Try[String]
-}
-
-/**
- * Specifies decoding of JWTs.
- */
-trait JwtDecoder {
-
-  /**
-   * Decodes a JWT string and returns a JWT claims object.
-   *
-   * @param str A JWT string.
-   * @return The decoded JWT claims object or an error if the string couldn't be decoded.
-   */
-  def decode(str: String): Try[JwtClaims]
-}
-
-/**
  * JWT encoder/decoder.
  */
-trait JwtGenerator extends JwtEncoder with JwtDecoder
+trait JwtGenerator extends Encoder[JwtClaims, Try[String]] with Decoder[String, Try[JwtClaims]]

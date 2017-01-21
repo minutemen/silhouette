@@ -15,21 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.http.decoder
+package silhouette.http.client
 
-import silhouette.http.client.Body
-import silhouette.util.Decoder
 import scala.util.Try
 
 /**
- * Represents a decode action that extract from [[silhouette.http.client.Body]] an instance of B.
- *
- * @tparam T The type target of decode action.
+ * Provides HTTP decoder implementations.
  */
-trait BodyDecoder[T] extends Decoder[Body, Try[T]]
+package object decoder {
 
-/**
- * The only aim of this object is to provide default implicit BodyDecoder,
- * uses trait for provide lowest implicit conversion chain.
- */
-object BodyDecoder extends DefaultBodyDecoder
+  /**
+   * Provides syntax via enrichment classes.
+   *
+   * @param body The [[Body]] instance on which the additional methods should be defined.
+   */
+  implicit final class RichBody[A <: Body](body: A) {
+
+    /**
+     * Provides a method that decodes from [[Body]] to T.
+     *
+     * @param decoder An implicit [[BodyDecoder]] instance that is used to decode the body.
+     * @tparam T The type of the result.
+     * @return An instance of T or an error if the body couldn't be decoded.
+     */
+    def as[T](implicit decoder: BodyDecoder[T]): Try[T] = decoder.decode(body)
+  }
+}

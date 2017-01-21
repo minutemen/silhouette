@@ -20,15 +20,15 @@ package silhouette.util
 /**
  * Represents an encode action that transform an instance of A to B.
  *
- * @tparam A The data source of encode action.
- * @tparam B The type target of encode action.
+ * @tparam A The source type.
+ * @tparam B The target type.
  */
 trait Encoder[A, B] {
 
   /**
-   * Encode from A to target B.
+   * Encode from source A to target B.
    *
-   * @param in The data source of encode action.
+   * @param in The source to encode.
    * @return An instance of B.
    */
   def encode(in: A): B

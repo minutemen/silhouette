@@ -15,45 +15,62 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.http.decoder
+package silhouette.http.client.decoder
 
-import io.circe.{ Json, ParsingFailure }
 import io.circe.parser._
+import io.circe.{ Json, ParsingFailure }
 import silhouette.exceptions.{ DecoderException, UnsupportedContentTypeException }
 import silhouette.http.client.{ Body, ContentTypes }
+import silhouette.http.client.decoder.DefaultBodyDecoder._
+
 import scala.util.{ Failure, Try }
-import scala.xml.NodeSeq
-import DefaultBodyDecoder._
+import scala.xml._
 
 /**
- * Provide implicit decoder for default value.
+ * Provides implicit decoders for the body types supported by Silhouette.
  */
 trait DefaultBodyDecoder {
+
+  /**
+   * Encodes a [[Body]] into a Circe JSON object.
+   *
+   * @return A [[BodyDecoder]] instance that encodes a [[Body]] into a Circe JSON object.
+   */
   implicit def circeJsonDecoder: BodyDecoder[Json] = new BodyDecoder[Json] {
     override def decode(in: Body): Try[Json] = in match {
-      case Body(ContentTypes.`application/json`, charset, bytes) =>
-        parse(new String(bytes, charset)).toTry.recover {
-          case e @ ParsingFailure(msg, underlying) => throw new DecoderException(msg, Option(e))
+      case Body(ContentTypes.`application/json`, codec, bytes) =>
+        parse(new String(bytes, codec.charSet)).toTry.recover {
+          case ParsingFailure(msg, e) => throw new DecoderException(msg, Option(e))
         }
       case Body(ct, _, _) =>
         Failure(new UnsupportedContentTypeException(UnsupportedContentType.format(ContentTypes.`application/json`, ct)))
     }
   }
 
+  /**
+   * Encodes a [[Body]] into a Scala XML object.
+   *
+   * @return A [[BodyDecoder]] instance that encodes a [[Body]] into a Scala XML object.
+   */
   implicit def scalaXmlDecoder: BodyDecoder[NodeSeq] = new BodyDecoder[NodeSeq] {
     override def decode(in: Body): Try[NodeSeq] = in match {
-      case Body(ContentTypes.`application/xml`, charset, bytes) =>
-        Try(scala.xml.XML.loadString(new String(bytes, charset))).recover {
-          case e: org.xml.sax.SAXParseException => throw new DecoderException(e.getMessage, Option(e))
+      case Body(ContentTypes.`application/xml`, codec, bytes) =>
+        Try(XML.loadString(new String(bytes, codec.charSet))).recover {
+          case e: SAXParseException => throw new DecoderException(e.getMessage, Option(e))
         }
       case Body(ct, _, _) =>
         Failure(new UnsupportedContentTypeException(UnsupportedContentType.format(ContentTypes.`application/xml`, ct)))
     }
   }
 
+  /**
+   * Encodes a [[Body]] into string.
+   *
+   * @return A [[BodyDecoder]] instance that encodes a [[Body]] into a string.
+   */
   implicit def stringDecoder: BodyDecoder[String] = new BodyDecoder[String] {
     override def decode(in: Body): Try[String] = in match {
-      case Body(_, charset, bytes) => Try(new String(bytes, charset))
+      case Body(_, codec, bytes) => Try(new String(bytes, codec.charSet))
     }
   }
 }
@@ -67,5 +84,4 @@ object DefaultBodyDecoder {
    * The error messages.
    */
   val UnsupportedContentType: String = "[Silhouette][DefaultBodyDecoder] Expected %s but found %s"
-
 }

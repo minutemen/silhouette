@@ -17,9 +17,7 @@
  */
 package silhouette.jwt
 
-import org.jose4j.jwt.consumer.JwtConsumerBuilder
 import org.jose4j.jwt.{ NumericDate, JwtClaims => JJwtClaims }
-import org.jose4j.jwx.JsonWebStructure
 import silhouette.exceptions.JwtException
 import silhouette.jwt.Jose4jJwtGenerator._
 
