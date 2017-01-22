@@ -23,11 +23,10 @@ import io.circe.Json
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.exceptions.{ DecoderException, UnsupportedContentTypeException }
+import silhouette.http.client.decoder.DefaultBodyDecoder._
 import silhouette.http.client.{ Body, ContentType, ContentTypes }
 
-import scala.util.Try
 import scala.xml.NodeSeq
-import DefaultBodyDecoder._
 
 /**
  * Test case for the [[DefaultBodyDecoder]] class.
@@ -40,11 +39,11 @@ class DefaultBodyDecoderSpec extends Specification {
     }
 
     "decode a Body as json" in new Context {
-      validJsonBody.as[Json] must be equalTo io.circe.parser.parse(validJson).toTry
+      validJsonBody.as[Json] must beSuccessfulTry(io.circe.parser.parse(validJson).right.get)
     }
 
     "decode a Body as xml" in new Context {
-      validXmlBody.as[NodeSeq] must be equalTo Try(scala.xml.XML.loadString(validXml))
+      validXmlBody.as[NodeSeq] must beSuccessfulTry(scala.xml.XML.loadString(validXml))
     }
 
     "return a Failure on invalid json" in new Context {

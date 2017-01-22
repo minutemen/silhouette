@@ -65,7 +65,7 @@ class QueryStringTransportSpec extends Specification {
     /**
      * The query string transport to test.
      */
-    val transport = QueryStringRequestTransport(settings)
+    val transport = QueryStringRequestTransport[String](settings)
 
     /**
      * A fake request.
