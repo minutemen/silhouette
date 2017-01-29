@@ -256,13 +256,13 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <span class="name">Transport</span><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+        <span class="name">Transport</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
       </h4>
 
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Defines the way how payload can be transported in an HTTP request or an HTTP response.</p><p>The transport is divided into two parts. The <a href="RequestTransport.html" class="extype" name="silhouette.http.RequestTransport">RequestTransport</a> and the <a href="ResponseTransport.html" class="extype" name="silhouette.http.ResponseTransport">ResponseTransport</a>.
-</p></div><div class="toggleContainer block">
+</p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>The internal type every transport implementation handles.</p></dd><dt class="tparam">B</dt><dd class="cmt"><p>The type of the payload to transport.</p></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
@@ -356,7 +356,24 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
 
         <div class="values members">
               <h3>Abstract Value Members</h3>
-              <ol><li name="silhouette.http.Transport#settings" visbl="prt" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+              <ol><li name="silhouette.http.Transport#format" visbl="prt" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="format:silhouette.util.Format[A,B]"></a><a id="format:Format[A,B]"></a>
+      <span class="permalink">
+      <a href="../../silhouette/http/Transport.html#format:silhouette.util.Format[A,B]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">format</span><span class="result">: <a href="../util/Format.html" class="extype" name="silhouette.util.Format">Format</a>[<span class="extype" name="silhouette.http.Transport.A">A</span>, <span class="extype" name="silhouette.http.Transport.B">B</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">The format to transform between the transport specific value and the payload.</p><div class="fullcomment"><div class="comment cmt"><p>The format to transform between the transport specific value and the payload.
+</p></div><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd></dl></div>
+    </li><li name="silhouette.http.Transport#settings" visbl="prt" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="settings:Transport.this.Settings"></a><a id="settings:Settings"></a>
       <span class="permalink">
       <a href="../../silhouette/http/Transport.html#settings:Transport.this.Settings" title="Permalink">
@@ -632,6 +649,23 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="silhouette.http.Transport#read" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="read(value:A):B"></a><a id="read(A):B"></a>
+      <span class="permalink">
+      <a href="../../silhouette/http/Transport.html#read(value:A):B" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">read</span><span class="params">(<span name="value">value: <span class="extype" name="silhouette.http.Transport.A">A</span></span>)</span><span class="result">: <span class="extype" name="silhouette.http.Transport.B">B</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">Transforms the transport specific value into the payload.</p><div class="fullcomment"><div class="comment cmt"><p>Transforms the transport specific value into the payload.
+</p></div><dl class="paramcmts block"><dt class="param">value</dt><dd class="cmt"><p>The transport specific value to read from.</p></dd><dt>returns</dt><dd class="cmt"><p>The transformed payload or an exception if an error occurred during transformation.</p></dd></dl><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">
@@ -730,6 +764,23 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="silhouette.http.Transport#write" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="write(payload:B):A"></a><a id="write(B):A"></a>
+      <span class="permalink">
+      <a href="../../silhouette/http/Transport.html#write(payload:B):A" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">write</span><span class="params">(<span name="payload">payload: <span class="extype" name="silhouette.http.Transport.B">B</span></span>)</span><span class="result">: <span class="extype" name="silhouette.http.Transport.A">A</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">Transforms the payload into the transport specific value.</p><div class="fullcomment"><div class="comment cmt"><p>Transforms the payload into the transport specific value.
+</p></div><dl class="paramcmts block"><dt class="param">payload</dt><dd class="cmt"><p>The payload that should be transformed into the transport specific value.</p></dd><dt>returns</dt><dd class="cmt"><p>The transport specific value.</p></dd></dl><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd></dl></div>
     </li>
               </ol>
             </div>

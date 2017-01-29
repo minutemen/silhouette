@@ -150,8 +150,8 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
                         </a>
                       </li><li class="current-entities indented2">
                         <a class="object" href="Logger$.html" title=""></a>
-                        <a class="class" href="" title=""></a>
-                        <a href="" title="">
+                        <a class="class" href="Logger.html" title=""></a>
+                        <a href="Logger.html" title="">
                           Logger
                         </a>
                       </li><li class="current-entities indented2">
@@ -180,8 +180,8 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
                         </a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="trait" href="Reads.html" title="Represents a reader that transform an instance of A to B."></a>
-                        <a href="Reads.html" title="Represents a reader that transform an instance of A to B.">
+                        <a class="trait" href="" title="Represents a reader that transform an instance of A to B."></a>
+                        <a href="" title="Represents a reader that transform an instance of A to B.">
                           Reads
                         </a>
                       </li><li class="current-entities indented2">
@@ -201,37 +201,41 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
             </div>
           </div>
           <div id="content">
-            <body class="class type">
+            <body class="trait type">
       <div id="definition">
-        <a href="Logger$.html" title="See companion object"><div class="big-circle class-companion-object">c</div></a>
+        <div class="big-circle trait">t</div>
         <p id="owner"><a href="../index.html" class="extype" name="silhouette">silhouette</a>.<a href="index.html" class="extype" name="silhouette.util">util</a></p>
-        <h1><a href="Logger$.html" title="See companion object">Logger</a><span class="permalink">
-      <a href="../../silhouette/util/Logger.html" title="Permalink">
+        <h1>Reads<span class="permalink">
+      <a href="../../silhouette/util/Reads.html" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span></h1>
-        <h3><span class="morelinks"><div>
-            Companion <a href="Logger$.html" title="See companion object">object Logger</a>
-          </div></span></h3>
+        <h3><span class="morelinks"></span></h3>
       </div>
 
       <h4 id="signature" class="signature">
       <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">class</span>
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <span class="name">Logger</span><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+        <span class="name">Reads</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Represents a reader that transform an instance of A to B.
+</p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>The source type.</p></dd><dt class="tparam">B</dt><dd class="cmt"><p>The target type.</p></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
           <div class="superTypes hiddenContent"><a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Any" class="extype" target="_top">Any</a></div>
-        </div></div>
+        </div><div class="toggleContainer block">
+            <span class="toggle">
+              Known Subclasses
+            </span>
+            <div class="subClasses hiddenContent"><a href="../http/transport/format/BasicAuthHeaderFormat.html" class="extype" name="silhouette.http.transport.format.BasicAuthHeaderFormat">BasicAuthHeaderFormat</a>, <a href="../http/transport/format/BearerAuthHeaderFormat.html" class="extype" name="silhouette.http.transport.format.BearerAuthHeaderFormat">BearerAuthHeaderFormat</a>, <a href="Format.html" class="extype" name="silhouette.util.Format">Format</a></div>
+          </div></div>
         
 
       <div id="mbrsel">
@@ -256,7 +260,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
                   <span class="filtertype">Inherited<br />
                   </span>
                   <ol id="linearization">
-                    <li class="in" name="silhouette.util.Logger"><span>Logger</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                    <li class="in" name="silhouette.util.Reads"><span>Reads</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -278,15 +282,35 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
 
         
 
-        
+        <div class="values members">
+              <h3>Abstract Value Members</h3>
+              <ol><li name="silhouette.util.Reads#read" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="read(in:A):B"></a><a id="read(A):B"></a>
+      <span class="permalink">
+      <a href="../../silhouette/util/Reads.html#read(in:A):B" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">read</span><span class="params">(<span name="in">in: <span class="extype" name="silhouette.util.Reads.A">A</span></span>)</span><span class="result">: <span class="extype" name="silhouette.util.Reads.B">B</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">Transforms from source A to target B.</p><div class="fullcomment"><div class="comment cmt"><p>Transforms from source A to target B.
+</p></div><dl class="paramcmts block"><dt class="param">in</dt><dd class="cmt"><p>The source to transform.</p></dd><dt>returns</dt><dd class="cmt"><p>An instance of B.</p></dd></dl></div>
+    </li></ol>
+            </div>
 
         <div class="values members">
-              <h3>Value Members</h3>
+              <h3>Concrete Value Members</h3>
               <ol>
                 <li name="scala.AnyRef#!=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a><a id="!=(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#!=(x$1:Any):Boolean" title="Permalink">
+      <a href="../../silhouette/util/Reads.html#!=(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -302,7 +326,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef###" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Logger.html###():Int" title="Permalink">
+      <a href="../../silhouette/util/Reads.html###():Int" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -318,7 +342,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#==" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a><a id="==(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#==(x$1:Any):Boolean" title="Permalink">
+      <a href="../../silhouette/util/Reads.html#==(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -334,7 +358,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#asInstanceOf[T0]:T0" title="Permalink">
+      <a href="../../silhouette/util/Reads.html#asInstanceOf[T0]:T0" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -350,7 +374,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#clone" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a><a id="clone():AnyRef"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#clone():Object" title="Permalink">
+      <a href="../../silhouette/util/Reads.html#clone():Object" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -369,42 +393,10 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="silhouette.util.Logger#debug" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="debug(message:=&gt;String,cause:Throwable):Unit"></a><a id="debug(⇒String,Throwable):Unit"></a>
-      <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#debug(message:=&gt;String,cause:Throwable):Unit" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">debug</span><span class="params">(<span name="message">message: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="cause">cause: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
-      </span>
-      
-      
-    </li><li name="silhouette.util.Logger#debug" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="debug(message:=&gt;String):Unit"></a><a id="debug(⇒String):Unit"></a>
-      <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#debug(message:=&gt;String):Unit" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">debug</span><span class="params">(<span name="message">message: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
-      </span>
-      
-      
     </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a><a id="eq(AnyRef):Boolean"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#eq(x$1:AnyRef):Boolean" title="Permalink">
+      <a href="../../silhouette/util/Reads.html#eq(x$1:AnyRef):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -420,7 +412,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#equals" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="equals(x$1:Any):Boolean"></a><a id="equals(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#equals(x$1:Any):Boolean" title="Permalink">
+      <a href="../../silhouette/util/Reads.html#equals(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -433,42 +425,10 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="silhouette.util.Logger#error" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="error(message:=&gt;String,cause:Throwable):Unit"></a><a id="error(⇒String,Throwable):Unit"></a>
-      <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#error(message:=&gt;String,cause:Throwable):Unit" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">error</span><span class="params">(<span name="message">message: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="cause">cause: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
-      </span>
-      
-      
-    </li><li name="silhouette.util.Logger#error" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="error(message:=&gt;String):Unit"></a><a id="error(⇒String):Unit"></a>
-      <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#error(message:=&gt;String):Unit" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">error</span><span class="params">(<span name="message">message: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
-      </span>
-      
-      
     </li><li name="scala.AnyRef#finalize" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#finalize():Unit" title="Permalink">
+      <a href="../../silhouette/util/Reads.html#finalize():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -490,7 +450,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#getClass" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#getClass():Class[_]" title="Permalink">
+      <a href="../../silhouette/util/Reads.html#getClass():Class[_]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -506,7 +466,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#hashCode" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#hashCode():Int" title="Permalink">
+      <a href="../../silhouette/util/Reads.html#hashCode():Int" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -519,90 +479,10 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="silhouette.util.Logger#info" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="info(message:=&gt;String,cause:Throwable):Unit"></a><a id="info(⇒String,Throwable):Unit"></a>
-      <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#info(message:=&gt;String,cause:Throwable):Unit" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">info</span><span class="params">(<span name="message">message: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="cause">cause: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
-      </span>
-      
-      
-    </li><li name="silhouette.util.Logger#info" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="info(message:=&gt;String):Unit"></a><a id="info(⇒String):Unit"></a>
-      <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#info(message:=&gt;String):Unit" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">info</span><span class="params">(<span name="message">message: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
-      </span>
-      
-      
-    </li><li name="silhouette.util.Logger#isDebugEnabled" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="isDebugEnabled:Boolean"></a>
-      <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#isDebugEnabled:Boolean" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">isDebugEnabled</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
-      </span>
-      
-      
-    </li><li name="silhouette.util.Logger#isErrorEnabled" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="isErrorEnabled:Boolean"></a>
-      <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#isErrorEnabled:Boolean" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">isErrorEnabled</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
-      </span>
-      
-      
-    </li><li name="silhouette.util.Logger#isInfoEnabled" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="isInfoEnabled:Boolean"></a>
-      <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#isInfoEnabled:Boolean" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">isInfoEnabled</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
-      </span>
-      
-      
     </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#isInstanceOf[T0]:Boolean" title="Permalink">
+      <a href="../../silhouette/util/Reads.html#isInstanceOf[T0]:Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -615,58 +495,10 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="silhouette.util.Logger#isTraceEnabled" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="isTraceEnabled:Boolean"></a>
-      <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#isTraceEnabled:Boolean" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">isTraceEnabled</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
-      </span>
-      
-      
-    </li><li name="silhouette.util.Logger#isWarnEnabled" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="isWarnEnabled:Boolean"></a>
-      <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#isWarnEnabled:Boolean" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">isWarnEnabled</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Boolean" class="extype" target="_top">Boolean</a></span>
-      </span>
-      
-      
-    </li><li name="silhouette.util.Logger#name" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="name:String"></a>
-      <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#name:String" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">name</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
-      </span>
-      
-      
     </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#ne(x$1:AnyRef):Boolean" title="Permalink">
+      <a href="../../silhouette/util/Reads.html#ne(x$1:AnyRef):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -682,7 +514,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#notify" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#notify():Unit" title="Permalink">
+      <a href="../../silhouette/util/Reads.html#notify():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -698,7 +530,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#notifyAll():Unit" title="Permalink">
+      <a href="../../silhouette/util/Reads.html#notifyAll():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -714,7 +546,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
+      <a href="../../silhouette/util/Reads.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -730,7 +562,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#toString" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#toString():String" title="Permalink">
+      <a href="../../silhouette/util/Reads.html#toString():String" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -743,42 +575,10 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="silhouette.util.Logger#trace" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="trace(message:=&gt;String,cause:Throwable):Unit"></a><a id="trace(⇒String,Throwable):Unit"></a>
-      <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#trace(message:=&gt;String,cause:Throwable):Unit" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">trace</span><span class="params">(<span name="message">message: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="cause">cause: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
-      </span>
-      
-      
-    </li><li name="silhouette.util.Logger#trace" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="trace(message:=&gt;String):Unit"></a><a id="trace(⇒String):Unit"></a>
-      <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#trace(message:=&gt;String):Unit" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">trace</span><span class="params">(<span name="message">message: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
-      </span>
-      
-      
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#wait():Unit" title="Permalink">
+      <a href="../../silhouette/util/Reads.html#wait():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -800,7 +600,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait(x$1:Long,x$2:Int):Unit"></a><a id="wait(Long,Int):Unit"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
+      <a href="../../silhouette/util/Reads.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -822,7 +622,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait(x$1:Long):Unit"></a><a id="wait(Long):Unit"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#wait(x$1:Long):Unit" title="Permalink">
+      <a href="../../silhouette/util/Reads.html#wait(x$1:Long):Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -841,38 +641,6 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="silhouette.util.Logger#warn" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="warn(message:=&gt;String,cause:Throwable):Unit"></a><a id="warn(⇒String,Throwable):Unit"></a>
-      <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#warn(message:=&gt;String,cause:Throwable):Unit" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">warn</span><span class="params">(<span name="message">message: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>, <span name="cause">cause: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
-      </span>
-      
-      
-    </li><li name="silhouette.util.Logger#warn" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="warn(message:=&gt;String):Unit"></a><a id="warn(⇒String):Unit"></a>
-      <span class="permalink">
-      <a href="../../silhouette/util/Logger.html#warn(message:=&gt;String):Unit" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">warn</span><span class="params">(<span name="message">message: ⇒ <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Unit" class="extype" target="_top">Unit</a></span>
-      </span>
-      
-      
     </li>
               </ol>
             </div>

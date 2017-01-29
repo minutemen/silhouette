@@ -256,17 +256,17 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <span class="name">ResponseTransport</span><span class="result"> extends <a href="Transport.html" class="extype" name="silhouette.http.Transport">Transport</a></span>
+        <span class="name">ResponseTransport</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="result"> extends <a href="Transport.html" class="extype" name="silhouette.http.Transport">Transport</a>[<span class="extype" name="silhouette.http.ResponseTransport.A">A</span>, <span class="extype" name="silhouette.http.ResponseTransport.B">B</span>]</span>
       </span>
       </h4>
 
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>The response transport handles payload which can be transported in a response.
-</p></div><div class="toggleContainer block">
+</p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>The internal type every transport implementation handles.</p></dd><dt class="tparam">B</dt><dd class="cmt"><p>The type of the payload to transport.</p></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="Transport.html" class="extype" name="silhouette.http.Transport">Transport</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="Transport.html" class="extype" name="silhouette.http.Transport">Transport</a>[<span class="extype" name="silhouette.http.ResponseTransport.A">A</span>, <span class="extype" name="silhouette.http.ResponseTransport.B">B</span>], <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div><div class="toggleContainer block">
             <span class="toggle">
               Known Subclasses
@@ -376,9 +376,9 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
       <p class="shortcomment cmt">Manipulates the response so that it removes payload stored on the client.</p><div class="fullcomment"><div class="comment cmt"><p>Manipulates the response so that it removes payload stored on the client.
 </p></div><dl class="paramcmts block"><dt class="tparam">P</dt><dd class="cmt"><p>The type of the response.</p></dd><dt class="param">response</dt><dd class="cmt"><p>The response pipeline to manipulate.</p></dd><dt>returns</dt><dd class="cmt"><p>The manipulated response pipeline.</p></dd></dl></div>
     </li><li name="silhouette.http.ResponseTransport#embed" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="embed[P](payload:String,response:silhouette.http.ResponsePipeline[P]):silhouette.http.ResponsePipeline[P]"></a><a id="embed[P](String,ResponsePipeline[P]):ResponsePipeline[P]"></a>
+      <a id="embed[P](payload:B,response:silhouette.http.ResponsePipeline[P]):silhouette.http.ResponsePipeline[P]"></a><a id="embed[P](B,ResponsePipeline[P]):ResponsePipeline[P]"></a>
       <span class="permalink">
-      <a href="../../silhouette/http/ResponseTransport.html#embed[P](payload:String,response:silhouette.http.ResponsePipeline[P]):silhouette.http.ResponsePipeline[P]" title="Permalink">
+      <a href="../../silhouette/http/ResponseTransport.html#embed[P](payload:B,response:silhouette.http.ResponsePipeline[P]):silhouette.http.ResponsePipeline[P]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -387,11 +387,28 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">embed</span><span class="tparams">[<span name="P">P</span>]</span><span class="params">(<span name="payload">payload: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="response">response: <a href="ResponsePipeline.html" class="extype" name="silhouette.http.ResponsePipeline">ResponsePipeline</a>[<span class="extype" name="silhouette.http.ResponseTransport.embed.P">P</span>]</span>)</span><span class="result">: <a href="ResponsePipeline.html" class="extype" name="silhouette.http.ResponsePipeline">ResponsePipeline</a>[<span class="extype" name="silhouette.http.ResponseTransport.embed.P">P</span>]</span>
+        <span class="name">embed</span><span class="tparams">[<span name="P">P</span>]</span><span class="params">(<span name="payload">payload: <span class="extype" name="silhouette.http.ResponseTransport.B">B</span></span>, <span name="response">response: <a href="ResponsePipeline.html" class="extype" name="silhouette.http.ResponsePipeline">ResponsePipeline</a>[<span class="extype" name="silhouette.http.ResponseTransport.embed.P">P</span>]</span>)</span><span class="result">: <a href="ResponsePipeline.html" class="extype" name="silhouette.http.ResponsePipeline">ResponsePipeline</a>[<span class="extype" name="silhouette.http.ResponseTransport.embed.P">P</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Embeds payload into the response.</p><div class="fullcomment"><div class="comment cmt"><p>Embeds payload into the response.
 </p></div><dl class="paramcmts block"><dt class="tparam">P</dt><dd class="cmt"><p>The type of the response.</p></dd><dt class="param">payload</dt><dd class="cmt"><p>The payload to embed.</p></dd><dt class="param">response</dt><dd class="cmt"><p>The response pipeline to manipulate.</p></dd><dt>returns</dt><dd class="cmt"><p>The manipulated response pipeline.</p></dd></dl></div>
+    </li><li name="silhouette.http.Transport#format" visbl="prt" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="format:silhouette.util.Format[A,B]"></a><a id="format:Format[A,B]"></a>
+      <span class="permalink">
+      <a href="../../silhouette/http/ResponseTransport.html#format:silhouette.util.Format[A,B]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">format</span><span class="result">: <a href="../util/Format.html" class="extype" name="silhouette.util.Format">Format</a>[<span class="extype" name="silhouette.http.ResponseTransport.A">A</span>, <span class="extype" name="silhouette.http.ResponseTransport.B">B</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">The format to transform between the transport specific value and the payload.</p><div class="fullcomment"><div class="comment cmt"><p>The format to transform between the transport specific value and the payload.
+</p></div><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="Transport.html" class="extype" name="silhouette.http.Transport">Transport</a></dd></dl></div>
     </li><li name="silhouette.http.Transport#settings" visbl="prt" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="settings:Transport.this.Settings"></a><a id="settings:Settings"></a>
       <span class="permalink">
@@ -668,6 +685,23 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="silhouette.http.Transport#read" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="read(value:A):B"></a><a id="read(A):B"></a>
+      <span class="permalink">
+      <a href="../../silhouette/http/ResponseTransport.html#read(value:A):B" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">read</span><span class="params">(<span name="value">value: <span class="extype" name="silhouette.http.ResponseTransport.A">A</span></span>)</span><span class="result">: <span class="extype" name="silhouette.http.ResponseTransport.B">B</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">Transforms the transport specific value into the payload.</p><div class="fullcomment"><div class="comment cmt"><p>Transforms the transport specific value into the payload.
+</p></div><dl class="paramcmts block"><dt class="param">value</dt><dd class="cmt"><p>The transport specific value to read from.</p></dd><dt>returns</dt><dd class="cmt"><p>The transformed payload or an exception if an error occurred during transformation.</p></dd></dl><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="Transport.html" class="extype" name="silhouette.http.Transport">Transport</a></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">
@@ -766,6 +800,23 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="silhouette.http.Transport#write" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="write(payload:B):A"></a><a id="write(B):A"></a>
+      <span class="permalink">
+      <a href="../../silhouette/http/ResponseTransport.html#write(payload:B):A" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">write</span><span class="params">(<span name="payload">payload: <span class="extype" name="silhouette.http.ResponseTransport.B">B</span></span>)</span><span class="result">: <span class="extype" name="silhouette.http.ResponseTransport.A">A</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">Transforms the payload into the transport specific value.</p><div class="fullcomment"><div class="comment cmt"><p>Transforms the payload into the transport specific value.
+</p></div><dl class="paramcmts block"><dt class="param">payload</dt><dd class="cmt"><p>The payload that should be transformed into the transport specific value.</p></dd><dt>returns</dt><dd class="cmt"><p>The transport specific value.</p></dd></dl><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="Transport.html" class="extype" name="silhouette.http.Transport">Transport</a></dd></dl></div>
     </li>
               </ol>
             </div>
@@ -777,7 +828,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
 
         <div id="inheritedMembers">
         <div class="parent" name="silhouette.http.Transport">
-              <h3>Inherited from <a href="Transport.html" class="extype" name="silhouette.http.Transport">Transport</a></h3>
+              <h3>Inherited from <a href="Transport.html" class="extype" name="silhouette.http.Transport">Transport</a>[<span class="extype" name="silhouette.http.ResponseTransport.A">A</span>, <span class="extype" name="silhouette.http.ResponseTransport.B">B</span>]</h3>
             </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
