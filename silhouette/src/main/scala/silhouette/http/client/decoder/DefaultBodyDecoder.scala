@@ -23,7 +23,7 @@ import silhouette.exceptions.{ DecoderException, UnsupportedContentTypeException
 import silhouette.http.client.{ Body, ContentTypes }
 import silhouette.http.client.decoder.DefaultBodyDecoder._
 
-import scala.util.{ Failure, Try }
+import scala.util.{ Failure, Success, Try }
 import scala.xml._
 
 /**
@@ -39,8 +39,9 @@ trait DefaultBodyDecoder {
   implicit def circeJsonDecoder: BodyDecoder[Json] = new BodyDecoder[Json] {
     override def decode(in: Body): Try[Json] = in match {
       case Body(ContentTypes.`application/json`, codec, bytes) =>
-        parse(new String(bytes, codec.charSet)).toTry.recover {
-          case ParsingFailure(msg, e) => throw new DecoderException(msg, Option(e))
+        parse(new String(bytes, codec.charSet)) match {
+          case Left(ParsingFailure(msg, e)) => Failure(new DecoderException(msg, Option(e)))
+          case Right(json)                  => Success(json)
         }
       case Body(ct, _, _) =>
         Failure(new UnsupportedContentTypeException(UnsupportedContentType.format(ContentTypes.`application/json`, ct)))

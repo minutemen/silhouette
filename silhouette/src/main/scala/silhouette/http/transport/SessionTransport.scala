@@ -18,6 +18,7 @@
 package silhouette.http.transport
 
 import silhouette.http._
+import silhouette.util.Format
 
 /**
  * The settings for the header transport.
@@ -30,13 +31,17 @@ final case class SessionTransportSettings(key: String) extends TransportSettings
  * The session transport.
  *
  * @param settings The transport settings.
+ * @param format   The format to transform between the transport specific value and the payload.
  */
-final case class SessionTransport(settings: SessionTransportSettings) extends RequestTransport with ResponseTransport {
+final case class SessionTransport[B](settings: SessionTransportSettings)(
+  implicit
+  protected val format: Format[String, B]
+) extends RequestTransport[String, B] with ResponseTransport[String, B] {
 
   /**
    * The type of the concrete implementation of this abstract type.
    */
-  override type Self = SessionTransport
+  override type Self = SessionTransport[B]
 
   /**
    * The settings type.
@@ -58,8 +63,8 @@ final case class SessionTransport(settings: SessionTransportSettings) extends Re
    * @tparam R The type of the request.
    * @return Some value or None if no payload could be found in request.
    */
-  override def retrieve[R](request: RequestPipeline[R]): Option[String] =
-    request.session.get(settings.key)
+  override def retrieve[R](request: RequestPipeline[R]): Option[B] =
+    request.session.get(settings.key).map(read)
 
   /**
    * Adds a session key with the given payload to the request.
@@ -69,7 +74,7 @@ final case class SessionTransport(settings: SessionTransportSettings) extends Re
    * @tparam R The type of the request.
    * @return The manipulated request pipeline.
    */
-  override def embed[R](payload: String, request: RequestPipeline[R]): RequestPipeline[R] =
+  override def embed[R](payload: B, request: RequestPipeline[R]): RequestPipeline[R] =
     request.withSession(settings.key -> payload)
 
   /**
@@ -80,7 +85,7 @@ final case class SessionTransport(settings: SessionTransportSettings) extends Re
    * @tparam P The type of the response.
    * @return The manipulated response pipeline.
    */
-  override def embed[P](payload: String, response: ResponsePipeline[P]): ResponsePipeline[P] =
+  override def embed[P](payload: B, response: ResponsePipeline[P]): ResponsePipeline[P] =
     response.withSession(settings.key -> payload)
 
   /**
