@@ -22,12 +22,13 @@ package silhouette.http.client
  *
  * @param value String format for a content type.
  */
-final case class ContentType(value: String)
+private[silhouette] final case class ContentType(value: String)
 
 /**
  * Util class for content type values.
  */
-object ContentTypes {
+private[silhouette] object ContentTypes {
+  val `text/plain` = ContentType("text/plain")
   val `application/json` = ContentType("application/json")
   val `application/xml` = ContentType("application/xml")
 }

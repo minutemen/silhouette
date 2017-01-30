@@ -15,21 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.util
+package silhouette.http
+
+import scala.util.Try
 
 /**
- * Represents a decode action that transform an instance of A to B.
- *
- * @tparam A The source type.
- * @tparam B The target type.
+ * Provides the HTTP client implementation.
  */
-trait Decoder[A, B] {
+package object client {
 
   /**
-   * Decode from source A to target B.
+   * Provides syntax via enrichment classes.
    *
-   * @param in The source to decode.
-   * @return An instance of B.
+   * @param body The body instance on which the additional methods should be defined.
    */
-  def decode(in: A): B
+  implicit final class RichBody[A <: Body](body: A) {
+
+    /**
+     * Provides a method that transforms from `Body` to `T`.
+     *
+     * @param format An implicit `BodyFormat` instance that is used to transform the body.
+     * @tparam T The type of the result.
+     * @return An instance of T or an error if the body couldn't be transformed.
+     */
+    def as[T](implicit format: BodyFormat[T]): Try[T] = format.read(body)
+  }
 }

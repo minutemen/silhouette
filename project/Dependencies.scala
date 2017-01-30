@@ -21,7 +21,7 @@ object Dependencies {
 
   object Version {
     val specs2 = "3.8.6"
-    val circe = "0.6.0"
+    val circe = "0.7.0"
   }
 
   val resolvers = Seq()
@@ -46,7 +46,7 @@ object Dependencies {
     val inject = "javax.inject" % "javax.inject" % "1"
     val commonCodec = "commons-codec" % "commons-codec" % "1.10"
     val jose4j = "org.bitbucket.b_c" % "jose4j" % "0.5.4"
-    val jsonAst = "org.mdedetrich" %% "scala-json-ast" % "1.0.0-M4"
+    val jsonAst = "org.mdedetrich" %% "scala-json-ast" % "1.0.0-M7"
     val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15on" % "1.56"
     val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
   }

@@ -73,9 +73,19 @@ private[silhouette] trait RequestBuilder {
   def withBody(body: Body): Self
 
   /**
+   * Returns a copy of this instance with a new body.
+   *
+   * @tparam T The type of the body.
+   * @param body   The body to set.
+   * @param format The format which converts the given format into a body instance.
+   * @return A request builder to provide a fluent interface.
+   */
+  def withBody[T](body: T)(implicit format: BodyFormat[T]): Self = withBody(format.write(body))
+
+  /**
    * Execute the request and produce a response.
    *
    * @return The response.
    */
-  def execute(): Future[Response]
+  def execute: Future[Response]
 }

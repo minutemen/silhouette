@@ -18,10 +18,10 @@
 package silhouette.exceptions
 
 /**
- * Indicates that a decode operation could not be done because of Content-type mismatch.
+ * Indicates that a transform operation could not be done because of content type mismatch.
  *
  * @param msg   The exception message.
  * @param cause The exception cause.
  */
 class UnsupportedContentTypeException(msg: String, cause: Option[Throwable] = None)
-  extends DecoderException(msg, cause)
+  extends TransformException(msg, cause)
