@@ -17,7 +17,7 @@
  */
 package silhouette.jwt
 
-import silhouette.util.{ Decoder, Encoder }
+import silhouette.util.{ Reads, Writes }
 
 import scala.json.ast.JObject
 import scala.util.Try
@@ -48,6 +48,6 @@ case class JwtClaims(
   custom: JObject = JObject())
 
 /**
- * JWT encoder/decoder.
+ * JWT transformer.
  */
-trait JwtGenerator extends Encoder[JwtClaims, Try[String]] with Decoder[String, Try[JwtClaims]]
+trait JwtFormat extends Reads[String, Try[JwtClaims]] with Writes[JwtClaims, Try[String]]

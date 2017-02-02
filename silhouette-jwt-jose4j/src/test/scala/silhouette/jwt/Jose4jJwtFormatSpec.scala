@@ -28,16 +28,16 @@ import org.specs2.matcher.MatchResult
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.exceptions.JwtException
-import silhouette.jwt.Jose4jJwtGenerator._
+import silhouette.jwt.Jose4JJwtFormat._
 import silhouette.specs2.WithBouncyCastle
 
 import scala.json.ast._
 import scala.util.Try
 
 /**
- * Test case for the [[Jose4jJwtGenerator]] class.
+ * Test case for the [[Jose4JJwtFormat]] class.
  */
-class Jose4jJwtGeneratorSpec extends Specification with WithBouncyCastle {
+class Jose4jJwtFormatSpec extends Specification with WithBouncyCastle {
 
   "The `generator`" should {
     "generate a JWT with an `iss` claim" in new Context {
@@ -86,7 +86,7 @@ class Jose4jJwtGeneratorSpec extends Specification with WithBouncyCastle {
     }
   }
 
-  "The `encode` method" should {
+  "The `write` method" should {
     "throw a JwtException if a custom claim tries to override the reserved claim `iss`" in new Context {
       reserved("iss")
     }
@@ -116,9 +116,9 @@ class Jose4jJwtGeneratorSpec extends Specification with WithBouncyCastle {
     }
   }
 
-  "The `decode` method" should {
+  "The `read` method" should {
     "throw a JwtException if an error occurred during decoding" in new Context {
-      generator.decode("invalid.token") must beFailedTry.like {
+      generator.read("invalid.token") must beFailedTry.like {
         case e: JwtException => e.getMessage must be equalTo FraudulentJwtToken.format("invalid.token")
       }
     }
@@ -159,7 +159,7 @@ class Jose4jJwtGeneratorSpec extends Specification with WithBouncyCastle {
     /**
      * The generator to test.
      */
-    val generator = new Jose4jJwtGenerator(producer, consumer)
+    val generator = new Jose4JJwtFormat(producer, consumer)
 
     /**
      * Some custom claims.
@@ -182,16 +182,16 @@ class Jose4jJwtGeneratorSpec extends Specification with WithBouncyCastle {
     ))
 
     /**
-     * A helper method which encodes claims into a JWT and then decodes the JWT to check if the same
-     * claims were decoded.
+     * A helper method which transforms claims into a JWT and vice versa to check if the same
+     * claims were transformed.
      *
      * @param claims The claims to check for.
      * @return A Specs2 match result.
      */
     protected def generate(claims: JwtClaims): MatchResult[Any] = {
-      generator.encode(claims) must beSuccessfulTry.like {
+      generator.write(claims) must beSuccessfulTry.like {
         case jwt =>
-          generator.decode(jwt) must beSuccessfulTry.withValue(claims)
+          generator.read(jwt) must beSuccessfulTry.withValue(claims)
       }
     }
 
@@ -203,7 +203,7 @@ class Jose4jJwtGeneratorSpec extends Specification with WithBouncyCastle {
      */
     protected def reserved(claim: String): MatchResult[Any] = {
       val message = OverrideReservedClaim.format(claim, ReservedClaims.mkString(", "))
-      generator.encode(JwtClaims(custom = JObject(Map(claim -> JString("test"))))) must beFailedTry.like {
+      generator.write(JwtClaims(custom = JObject(Map(claim -> JString("test"))))) must beFailedTry.like {
         case e: JwtException => e.getMessage must be equalTo message
       }
     }

@@ -26,7 +26,7 @@ import org.specs2.specification.Scope
 import silhouette.crypto.Hash._
 import silhouette.exceptions.JwtException
 import silhouette.jwt.Jose4jJwt._
-import silhouette.jwt.Jose4jJwtGenerator._
+import silhouette.jwt.Jose4JJwtFormat._
 import silhouette.specs2.WithBouncyCastle
 
 /**
@@ -214,33 +214,33 @@ class Jose4jJwtSpec extends Specification with Mockito with WithBouncyCastle {
     /**
      * The generator to test.
      */
-    lazy val generator = new Jose4jJwtGenerator(producer, consumer)
+    lazy val generator = new Jose4JJwtFormat(producer, consumer)
 
     /**
-     * A helper method which encodes claims into a JWT and then decodes the JWT to check if the same
-     * claims were decoded.
+     * A helper method which transforms claims into a JWT and vice versa to check if the same
+     * claims were transformed.
      *
      * @param claims The claims to check for.
      * @return A Specs2 match result.
      */
     protected def generate(claims: JwtClaims): MatchResult[Any] = {
-      generator.encode(claims) must beSuccessfulTry.like {
+      generator.write(claims) must beSuccessfulTry.like {
         case jwt =>
-          generator.decode(jwt) must beSuccessfulTry.withValue(claims)
+          generator.read(jwt) must beSuccessfulTry.withValue(claims)
       }
     }
 
     /**
-     * A helper method which encodes claims into a JWT and then decodes the JWT to check if the consumer
+     * A helper method which transforms claims into a JWT and vice versa to check if the consumer
      * throws an exception which indicates that the token is fraudulent.
      *
      * @param claims The claims to check for.
      * @return A Specs2 match result.
      */
     protected def fraudulent(claims: JwtClaims): MatchResult[Any] = {
-      generator.encode(claims) must beSuccessfulTry.like {
+      generator.write(claims) must beSuccessfulTry.like {
         case jwt =>
-          generator.decode(jwt) must beFailedTry.like {
+          generator.read(jwt) must beFailedTry.like {
             case e: JwtException => e.getMessage must startWith(FraudulentJwtToken.format(""))
           }
       }
