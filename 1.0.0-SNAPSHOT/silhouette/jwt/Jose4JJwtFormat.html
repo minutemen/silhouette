@@ -93,10 +93,10 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes."
 including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.</p><div class="fullcomment"><div class="comment cmt"><p>A framework agnostic authentication library for Scala that supports several authentication methods,
 including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
 </p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../index.html" class="extype" name="_root_">root</a></dd></dl></div>
-    </li><li name="silhouette.util" visbl="pub" class="indented2 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="util"></a><a id="util:util"></a>
+    </li><li name="silhouette.jwt" visbl="pub" class="indented2 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="jwt"></a><a id="jwt:jwt"></a>
       <span class="permalink">
-      <a href="../silhouette/index.html#util" title="Permalink">
+      <a href="../silhouette/index.html#jwt" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -105,125 +105,151 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">package</span>
       </span>
       <span class="symbol">
-        <a title="Provides utilities used by the API." href="index.html">
-              <span class="name">util</span>
+        <a title="" href="index.html">
+              <span class="name">jwt</span>
             </a>
       </span>
       
-      <p class="shortcomment cmt">Provides utilities used by the API.</p><div class="fullcomment"><div class="comment cmt"><p>Provides utilities used by the API.
-</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="silhouette">silhouette</a></dd></dl></div>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="silhouette">silhouette</a></dd></dl></div>
     </li><li class="current-entities indented2">
-                        <span class="separator"></span>
-                        <a class="trait" href="DefaultFormats.html" title="Some default formats."></a>
-                        <a href="DefaultFormats.html" title="Some default formats.">
-                          DefaultFormats
+                        <a class="object" href="Jose4JJwtFormat$.html" title="The companion object."></a>
+                        <a class="class" href="" title="JWT transformer based on the [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library."></a>
+                        <a href="" title="JWT transformer based on the [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library.">
+                          Jose4JJwtFormat
                         </a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="trait" href="FingerprintGenerator.html" title="A generator which creates a fingerprint to identify a user."></a>
-                        <a href="FingerprintGenerator.html" title="A generator which creates a fingerprint to identify a user.">
-                          FingerprintGenerator
-                        </a>
-                      </li><li class="current-entities indented2">
-                        <a class="object" href="Format$.html" title="Provides the implicit default formats."></a>
-                        <a class="trait" href="Format.html" title="Represents a transform operation which transforms between A and B."></a>
-                        <a href="Format.html" title="Represents a transform operation which transforms between A and B.">
-                          Format
+                        <a class="object" href="Jose4jJwt$.html" title="Concrete implementations for the Jose4j JWT implementation."></a>
+                        <a href="Jose4jJwt$.html" title="Concrete implementations for the Jose4j JWT implementation.">
+                          Jose4jJwt
                         </a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="trait" href="IDGenerator.html" title="A generator which creates an ID."></a>
-                        <a href="IDGenerator.html" title="A generator which creates an ID.">
-                          IDGenerator
-                        </a>
-                      </li><li class="current-entities indented2">
-                        <a class="object" href="Logger$.html" title=""></a>
-                        <a class="class" href="Logger.html" title=""></a>
-                        <a href="Logger.html" title="">
-                          Logger
+                        <a class="trait" href="Jose4jJwtConsumer.html" title="Consumes JWT tokens with the help of the [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library."></a>
+                        <a href="Jose4jJwtConsumer.html" title="Consumes JWT tokens with the help of the [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library.">
+                          Jose4jJwtConsumer
                         </a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="trait" href="Logging.html" title="Implement this to get a named logger in scope."></a>
-                        <a href="Logging.html" title="Implement this to get a named logger in scope.">
-                          Logging
+                        <a class="trait" href="Jose4jJwtProducer.html" title="Produces JWT tokens with the help of the [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library."></a>
+                        <a href="Jose4jJwtProducer.html" title="Produces JWT tokens with the help of the [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library.">
+                          Jose4jJwtProducer
                         </a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="trait" href="PasswordHasher.html" title="A trait that defines the password hasher interface."></a>
-                        <a href="PasswordHasher.html" title="A trait that defines the password hasher interface.">
-                          PasswordHasher
+                        <a class="trait" href="JwaAlgorithm.html" title="Base trait for a JWA(JSON Web Algorithms) algorithm."></a>
+                        <a href="JwaAlgorithm.html" title="Base trait for a JWA(JSON Web Algorithms) algorithm.">
+                          JwaAlgorithm
                         </a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="class" href="PasswordHasherRegistry.html" title="Defines the password hashers used by the application."></a>
-                        <a href="PasswordHasherRegistry.html" title="Defines the password hashers used by the application.">
-                          PasswordHasherRegistry
+                        <a class="trait" href="JwsAsymmetricAlgorithm.html" title="A JWS algorithm which uses asymmetric cryptography like RSA or EC."></a>
+                        <a href="JwsAsymmetricAlgorithm.html" title="A JWS algorithm which uses asymmetric cryptography like RSA or EC.">
+                          JwsAsymmetricAlgorithm
                         </a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="class" href="PasswordInfo.html" title="The password details."></a>
-                        <a href="PasswordInfo.html" title="The password details.">
-                          PasswordInfo
+                        <a class="trait" href="JwsConfiguration.html" title="Base trait for a JWS configuration."></a>
+                        <a href="JwsConfiguration.html" title="Base trait for a JWS configuration.">
+                          JwsConfiguration
                         </a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="trait" href="" title="Represents a reader that transform an instance of A to B."></a>
-                        <a href="" title="Represents a reader that transform an instance of A to B.">
-                          Reads
-                        </a>
-                      </li><li class="current-entities indented2">
-                        <a class="object" href="SecureRandomIDGenerator$.html" title="The companion object."></a>
-                        <a class="class" href="SecureRandomIDGenerator.html" title="A generator which uses SecureRandom to generate cryptographically strong IDs."></a>
-                        <a href="SecureRandomIDGenerator.html" title="A generator which uses SecureRandom to generate cryptographically strong IDs.">
-                          SecureRandomIDGenerator
+                        <a class="trait" href="JwsEcAlgorithm.html" title="A JWS algorithm which is based on asymmetric EC(elliptic-curve) cryptography."></a>
+                        <a href="JwsEcAlgorithm.html" title="A JWS algorithm which is based on asymmetric EC(elliptic-curve) cryptography.">
+                          JwsEcAlgorithm
                         </a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="trait" href="Writes.html" title="Represents a writer that transform an instance of A to B."></a>
-                        <a href="Writes.html" title="Represents a writer that transform an instance of A to B.">
-                          Writes
+                        <a class="class" href="JwsEcConfiguration.html" title="The JWS configuration for asymmetric EC(elliptic-curve) cryptography based algorithms."></a>
+                        <a href="JwsEcConfiguration.html" title="The JWS configuration for asymmetric EC(elliptic-curve) cryptography based algorithms.">
+                          JwsEcConfiguration
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="JwsHmacAlgorithm.html" title="A JWS algorithm which is based on a HMAC(Keyed-Hash Message Authentication Code)."></a>
+                        <a href="JwsHmacAlgorithm.html" title="A JWS algorithm which is based on a HMAC(Keyed-Hash Message Authentication Code).">
+                          JwsHmacAlgorithm
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="JwsHmacConfiguration.html" title="The JWS configuration for HMAC based algorithms."></a>
+                        <a href="JwsHmacConfiguration.html" title="The JWS configuration for HMAC based algorithms.">
+                          JwsHmacConfiguration
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="JwsRsaAlgorithm.html" title="A JWS algorithm which is based on asymmetric RSA cryptography."></a>
+                        <a href="JwsRsaAlgorithm.html" title="A JWS algorithm which is based on asymmetric RSA cryptography.">
+                          JwsRsaAlgorithm
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="JwsRsaConfiguration.html" title="The JWS configuration for asymmetric RSA cryptography based algorithms."></a>
+                        <a href="JwsRsaConfiguration.html" title="The JWS configuration for asymmetric RSA cryptography based algorithms.">
+                          JwsRsaConfiguration
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="JwsRsaPssAlgorithm.html" title="A JWS algorithm which is based on asymmetric RSA cryptography and the Probabilistic Signature Scheme."></a>
+                        <a href="JwsRsaPssAlgorithm.html" title="A JWS algorithm which is based on asymmetric RSA cryptography and the Probabilistic Signature Scheme.">
+                          JwsRsaPssAlgorithm
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="JwsRsaPssConfiguration.html" title="The JWS configuration for asymmetric RSA-PSS cryptography based algorithms."></a>
+                        <a href="JwsRsaPssConfiguration.html" title="The JWS configuration for asymmetric RSA-PSS cryptography based algorithms.">
+                          JwsRsaPssConfiguration
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="JwtClaims.html" title="JWT reserved claims and also optional custom claims in the form of a JSON object."></a>
+                        <a href="JwtClaims.html" title="JWT reserved claims and also optional custom claims in the form of a JSON object.">
+                          JwtClaims
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="JwtFormat.html" title="JWT transformer."></a>
+                        <a href="JwtFormat.html" title="JWT transformer.">
+                          JwtFormat
                         </a>
                       </li>
               </ul>
             </div>
           </div>
           <div id="content">
-            <body class="trait type">
+            <body class="class type">
       <div id="definition">
-        <div class="big-circle trait">t</div>
-        <p id="owner"><a href="../index.html" class="extype" name="silhouette">silhouette</a>.<a href="index.html" class="extype" name="silhouette.util">util</a></p>
-        <h1>Reads<span class="permalink">
-      <a href="../../silhouette/util/Reads.html" title="Permalink">
+        <a href="Jose4JJwtFormat$.html" title="See companion object"><div class="big-circle class-companion-object">c</div></a>
+        <p id="owner"><a href="../index.html" class="extype" name="silhouette">silhouette</a>.<a href="index.html" class="extype" name="silhouette.jwt">jwt</a></p>
+        <h1><a href="Jose4JJwtFormat$.html" title="See companion object">Jose4JJwtFormat</a><span class="permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span></h1>
-        <h3><span class="morelinks"></span></h3>
+        <h3><span class="morelinks"><div>
+            Companion <a href="Jose4JJwtFormat$.html" title="See companion object">object Jose4JJwtFormat</a>
+          </div></span></h3>
       </div>
 
       <h4 id="signature" class="signature">
       <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">trait</span>
+        <span class="modifier">final </span>
+        <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <span class="name">Reads</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+        <span class="name">Jose4JJwtFormat</span><span class="result"> extends <a href="JwtFormat.html" class="extype" name="silhouette.jwt.JwtFormat">JwtFormat</a></span>
       </span>
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Represents a reader that transform an instance of A to B.
-</p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>The source type.</p></dd><dt class="tparam">B</dt><dd class="cmt"><p>The target type.</p></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>JWT transformer based on the [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library.</p><p>The library supports the JWS/JWE compact serializations with the complete suite of JOSE algorithms.
+</p></div><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Any" class="extype" target="_top">Any</a></div>
-        </div><div class="toggleContainer block">
-            <span class="toggle">
-              Known Subclasses
-            </span>
-            <div class="subClasses hiddenContent"><a href="../http/transport/format/BasicAuthHeaderFormat.html" class="extype" name="silhouette.http.transport.format.BasicAuthHeaderFormat">BasicAuthHeaderFormat</a>, <a href="../http/transport/format/BearerAuthHeaderFormat.html" class="extype" name="silhouette.http.transport.format.BearerAuthHeaderFormat">BearerAuthHeaderFormat</a>, <a href="../jwt/Jose4JJwtFormat.html" class="extype" name="silhouette.jwt.Jose4JJwtFormat">Jose4JJwtFormat</a>, <a href="../jwt/JwtFormat.html" class="extype" name="silhouette.jwt.JwtFormat">JwtFormat</a>, <a href="Format.html" class="extype" name="silhouette.util.Format">Format</a></div>
-          </div></div>
+          <div class="superTypes hiddenContent"><a href="JwtFormat.html" class="extype" name="silhouette.jwt.JwtFormat">JwtFormat</a>, <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]], <a href="../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>]], <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+        </div></div>
         
 
       <div id="mbrsel">
@@ -248,7 +274,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
                   <span class="filtertype">Inherited<br />
                   </span>
                   <ol id="linearization">
-                    <li class="in" name="silhouette.util.Reads"><span>Reads</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                    <li class="in" name="silhouette.jwt.Jose4JJwtFormat"><span>Jose4JJwtFormat</span></li><li class="in" name="silhouette.jwt.JwtFormat"><span>JwtFormat</span></li><li class="in" name="silhouette.util.Writes"><span>Writes</span></li><li class="in" name="silhouette.util.Reads"><span>Reads</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -266,39 +292,38 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
 
       <div id="template">
         <div id="allMembers">
-        
-
-        
-
-        <div class="values members">
-              <h3>Abstract Value Members</h3>
-              <ol><li name="silhouette.util.Reads#read" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="read(in:A):B"></a><a id="read(A):B"></a>
+        <div id="constructors" class="members">
+              <h3>Instance Constructors</h3>
+              <ol><li name="silhouette.jwt.Jose4JJwtFormat#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="&lt;init&gt;(producer:silhouette.jwt.Jose4jJwtProducer,consumer:silhouette.jwt.Jose4jJwtConsumer):silhouette.jwt.Jose4JJwtFormat"></a><a id="&lt;init&gt;:Jose4JJwtFormat"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Reads.html#read(in:A):B" title="Permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html#&lt;init&gt;(producer:silhouette.jwt.Jose4jJwtProducer,consumer:silhouette.jwt.Jose4jJwtConsumer):silhouette.jwt.Jose4JJwtFormat" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
       <span class="modifier_kind">
-        <span class="modifier">abstract </span>
-        <span class="kind">def</span>
+        <span class="modifier"></span>
+        <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">read</span><span class="params">(<span name="in">in: <span class="extype" name="silhouette.util.Reads.A">A</span></span>)</span><span class="result">: <span class="extype" name="silhouette.util.Reads.B">B</span></span>
+        <span class="name">Jose4JJwtFormat</span><span class="params">(<span name="producer">producer: <a href="Jose4jJwtProducer.html" class="extype" name="silhouette.jwt.Jose4jJwtProducer">Jose4jJwtProducer</a></span>, <span name="consumer">consumer: <a href="Jose4jJwtConsumer.html" class="extype" name="silhouette.jwt.Jose4jJwtConsumer">Jose4jJwtConsumer</a></span>)</span>
       </span>
       
-      <p class="shortcomment cmt">Transforms from source A to target B.</p><div class="fullcomment"><div class="comment cmt"><p>Transforms from source A to target B.
-</p></div><dl class="paramcmts block"><dt class="param">in</dt><dd class="cmt"><p>The source to transform.</p></dd><dt>returns</dt><dd class="cmt"><p>An instance of B.</p></dd></dl></div>
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">producer</dt><dd class="cmt"><p>The JWT producer.</p></dd><dt class="param">consumer</dt><dd class="cmt"><p>The JWT consumer.</p></dd></dl></div>
     </li></ol>
             </div>
 
+        
+
+        
+
         <div class="values members">
-              <h3>Concrete Value Members</h3>
+              <h3>Value Members</h3>
               <ol>
                 <li name="scala.AnyRef#!=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a><a id="!=(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Reads.html#!=(x$1:Any):Boolean" title="Permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html#!=(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -314,7 +339,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef###" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Reads.html###():Int" title="Permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html###():Int" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -330,7 +355,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#==" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a><a id="==(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Reads.html#==(x$1:Any):Boolean" title="Permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html#==(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -346,7 +371,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Reads.html#asInstanceOf[T0]:T0" title="Permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html#asInstanceOf[T0]:T0" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -362,7 +387,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#clone" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a><a id="clone():AnyRef"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Reads.html#clone():Object" title="Permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html#clone():Object" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -384,7 +409,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a><a id="eq(AnyRef):Boolean"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Reads.html#eq(x$1:AnyRef):Boolean" title="Permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html#eq(x$1:AnyRef):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -400,7 +425,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#equals" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="equals(x$1:Any):Boolean"></a><a id="equals(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Reads.html#equals(x$1:Any):Boolean" title="Permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html#equals(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -416,7 +441,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#finalize" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Reads.html#finalize():Unit" title="Permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html#finalize():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -438,7 +463,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#getClass" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Reads.html#getClass():Class[_]" title="Permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html#getClass():Class[_]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -454,7 +479,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#hashCode" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Reads.html#hashCode():Int" title="Permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html#hashCode():Int" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -470,7 +495,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Reads.html#isInstanceOf[T0]:Boolean" title="Permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html#isInstanceOf[T0]:Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -486,7 +511,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Reads.html#ne(x$1:AnyRef):Boolean" title="Permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html#ne(x$1:AnyRef):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -502,7 +527,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#notify" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Reads.html#notify():Unit" title="Permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html#notify():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -518,7 +543,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Reads.html#notifyAll():Unit" title="Permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html#notifyAll():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -531,10 +556,27 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="silhouette.jwt.Jose4JJwtFormat#read" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="read(str:String):scala.util.Try[silhouette.jwt.JwtClaims]"></a><a id="read(String):Try[JwtClaims]"></a>
+      <span class="permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html#read(str:String):scala.util.Try[silhouette.jwt.JwtClaims]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">read</span><span class="params">(<span name="str">str: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Transforms a JWT string into a JWT claims object.</p><div class="fullcomment"><div class="comment cmt"><p>Transforms a JWT string into a JWT claims object.
+</p></div><dl class="paramcmts block"><dt class="param">str</dt><dd class="cmt"><p>A JWT string.</p></dd><dt>returns</dt><dd class="cmt"><p>The transformed JWT claims object or an error if the string couldn't be transformed.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="silhouette.jwt.Jose4JJwtFormat">Jose4JJwtFormat</a> → <a href="../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Reads.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -550,7 +592,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#toString" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Reads.html#toString():String" title="Permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html#toString():String" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -566,7 +608,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Reads.html#wait():Unit" title="Permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html#wait():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -588,7 +630,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait(x$1:Long,x$2:Int):Unit"></a><a id="wait(Long,Int):Unit"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Reads.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -610,7 +652,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait(x$1:Long):Unit"></a><a id="wait(Long):Unit"></a>
       <span class="permalink">
-      <a href="../../silhouette/util/Reads.html#wait(x$1:Long):Unit" title="Permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html#wait(x$1:Long):Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -629,6 +671,23 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="silhouette.jwt.Jose4JJwtFormat#write" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="write(jwt:silhouette.jwt.JwtClaims):scala.util.Try[String]"></a><a id="write(JwtClaims):Try[String]"></a>
+      <span class="permalink">
+      <a href="../../silhouette/jwt/Jose4JJwtFormat.html#write(jwt:silhouette.jwt.JwtClaims):scala.util.Try[String]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">write</span><span class="params">(<span name="jwt">jwt: <a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a></span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Transforms a JWT claims object into a JWT as string.</p><div class="fullcomment"><div class="comment cmt"><p>Transforms a JWT claims object into a JWT as string.
+</p></div><dl class="paramcmts block"><dt class="param">jwt</dt><dd class="cmt"><p>The JWT claims object to transform.</p></dd><dt>returns</dt><dd class="cmt"><p>The JWT string representation or an error if the JWT claims object couldn't be transformed.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="silhouette.jwt.Jose4JJwtFormat">Jose4JJwtFormat</a> → <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a></dd></dl></div>
     </li>
               </ol>
             </div>
@@ -639,7 +698,13 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="scala.AnyRef">
+        <div class="parent" name="silhouette.jwt.JwtFormat">
+              <h3>Inherited from <a href="JwtFormat.html" class="extype" name="silhouette.jwt.JwtFormat">JwtFormat</a></h3>
+            </div><div class="parent" name="silhouette.util.Writes">
+              <h3>Inherited from <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]]</h3>
+            </div><div class="parent" name="silhouette.util.Reads">
+              <h3>Inherited from <a href="../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>]]</h3>
+            </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
               <h3>Inherited from <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Any" class="extype" target="_top">Any</a></h3>

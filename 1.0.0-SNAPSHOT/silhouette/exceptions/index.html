@@ -184,12 +184,6 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
                         </a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="class" href="DecoderException.html" title="Indicates that a decode operation error occurred."></a>
-                        <a href="DecoderException.html" title="Indicates that a decode operation error occurred.">
-                          DecoderException
-                        </a>
-                      </li><li class="current-entities indented2">
-                        <span class="separator"></span>
                         <a class="class" href="JwtException.html" title="Indicates that a JWT encoding/decoding issue occurred."></a>
                         <a href="JwtException.html" title="Indicates that a JWT encoding/decoding issue occurred.">
                           JwtException
@@ -226,8 +220,8 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
                         </a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="class" href="UnsupportedContentTypeException.html" title="Indicates that a decode operation could not be done because of Content-type mismatch."></a>
-                        <a href="UnsupportedContentTypeException.html" title="Indicates that a decode operation could not be done because of Content-type mismatch.">
+                        <a class="class" href="UnsupportedContentTypeException.html" title="Indicates that a transform operation could not be done because of content type mismatch."></a>
+                        <a href="UnsupportedContentTypeException.html" title="Indicates that a transform operation could not be done because of content type mismatch.">
                           UnsupportedContentTypeException
                         </a>
                       </li><li name="silhouette.http" visbl="pub" class="indented2 " data-isabs="false" fullComment="yes" group="Ungrouped">
@@ -585,24 +579,6 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
       </span>
       
       <p class="shortcomment cmt">Indicates that a crypto operation error occurred.</p>
-    </li><li name="silhouette.exceptions.DecoderException" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="DecoderExceptionextendsSilhouetteException"></a><a id="DecoderException:DecoderException"></a>
-      <span class="permalink">
-      <a href="../../silhouette/exceptions/index.html#DecoderExceptionextendsSilhouetteException" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">class</span>
-      </span>
-      <span class="symbol">
-        <a title="Indicates that a decode operation error occurred." href="DecoderException.html">
-              <span class="name">DecoderException</span>
-            </a><span class="result"> extends <a href="SilhouetteException.html" class="extype" name="silhouette.exceptions.SilhouetteException">SilhouetteException</a></span>
-      </span>
-      
-      <p class="shortcomment cmt">Indicates that a decode operation error occurred.</p>
     </li><li name="silhouette.exceptions.JwtException" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="JwtExceptionextendsSilhouetteException"></a><a id="JwtException:JwtException"></a>
       <span class="permalink">
@@ -712,9 +688,9 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
       
       <p class="shortcomment cmt">Indicates that an error occurred during a transformation operation.</p>
     </li><li name="silhouette.exceptions.UnsupportedContentTypeException" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="UnsupportedContentTypeExceptionextendsDecoderException"></a><a id="UnsupportedContentTypeException:UnsupportedContentTypeException"></a>
+      <a id="UnsupportedContentTypeExceptionextendsTransformException"></a><a id="UnsupportedContentTypeException:UnsupportedContentTypeException"></a>
       <span class="permalink">
-      <a href="../../silhouette/exceptions/index.html#UnsupportedContentTypeExceptionextendsDecoderException" title="Permalink">
+      <a href="../../silhouette/exceptions/index.html#UnsupportedContentTypeExceptionextendsTransformException" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -723,12 +699,12 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <a title="Indicates that a decode operation could not be done because of Content-type mismatch." href="UnsupportedContentTypeException.html">
+        <a title="Indicates that a transform operation could not be done because of content type mismatch." href="UnsupportedContentTypeException.html">
               <span class="name">UnsupportedContentTypeException</span>
-            </a><span class="result"> extends <a href="DecoderException.html" class="extype" name="silhouette.exceptions.DecoderException">DecoderException</a></span>
+            </a><span class="result"> extends <a href="TransformException.html" class="extype" name="silhouette.exceptions.TransformException">TransformException</a></span>
       </span>
       
-      <p class="shortcomment cmt">Indicates that a decode operation could not be done because of Content-type mismatch.</p>
+      <p class="shortcomment cmt">Indicates that a transform operation could not be done because of content type mismatch.</p>
     </li></ol>
             </div>
 

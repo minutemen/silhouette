@@ -127,42 +127,13 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="name">client</span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="silhouette.http">http</a></dd></dl></div>
-    </li><li name="silhouette.http.client.decoder" visbl="pub" class="indented4 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="decoder"></a><a id="decoder:decoder"></a>
-      <span class="permalink">
-      <a href="../../../silhouette/http/client/index.html#decoder" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">package</span>
-      </span>
-      <span class="symbol">
-        <a title="Provides HTTP decoder implementations." href="decoder/index.html">
-              <span class="name">decoder</span>
-            </a>
-      </span>
-      
-      <p class="shortcomment cmt">Provides HTTP decoder implementations.</p>
+      <p class="shortcomment cmt">Provides the HTTP client implementation.</p><div class="fullcomment"><div class="comment cmt"><p>Provides the HTTP client implementation.
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="silhouette.http">http</a></dd></dl></div>
     </li><li class="current-entities indented3">
                         <span class="separator"></span>
-                        <a class="class" href="Body.html" title="Represents the body of a request."></a>
-                        <a href="Body.html" title="Represents the body of a request.">
-                          Body
-                        </a>
-                      </li><li class="current-entities indented3">
-                        <span class="separator"></span>
-                        <a class="class" href="ContentType.html" title="Represents the content type of a request."></a>
-                        <a href="ContentType.html" title="Represents the content type of a request.">
-                          ContentType
-                        </a>
-                      </li><li class="current-entities indented3">
-                        <span class="separator"></span>
-                        <a class="object" href="ContentTypes$.html" title="Util class for content type values."></a>
-                        <a href="ContentTypes$.html" title="Util class for content type values.">
-                          ContentTypes
+                        <a class="class" href="package$$RichBody.html" title="Provides syntax via enrichment classes."></a>
+                        <a href="package$$RichBody.html" title="Provides syntax via enrichment classes.">
+                          RichBody
                         </a>
                       </li><li name="silhouette.http.transport" visbl="pub" class="indented3 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="transport"></a><a id="transport:transport"></a>
@@ -211,34 +182,16 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"></div>
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Provides the HTTP client implementation.
+</p></div><div class="toggleContainer block">
+          <span class="toggle">
+            Linear Supertypes
+          </span>
+          <div class="superTypes hiddenContent"><a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+        </div></div>
         
 
-      <div id="mbrsel">
-        <div class="toggle"></div>
-        <div id="memberfilter">
-          <i class="material-icons arrow"></i>
-          <span class="input">
-            <input id="mbrsel-input" placeholder="Filter all members" type="text" accesskey="/" />
-          </span>
-          <i class="clear material-icons"></i>
-        </div>
-        <div id="filterby">
-          <div id="order">
-            <span class="filtertype">Ordering</span>
-            <ol>
-              
-              <li class="alpha in"><span>Alphabetic</span></li>
-              
-            </ol>
-          </div>
-          
-          <div id="visbl">
-              <span class="filtertype">Visibility</span>
-              <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
-            </div>
-        </div>
-      </div>
+      
 
       <div id="template">
         <div id="allMembers">
@@ -246,73 +199,30 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="silhouette.http.client.Body" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="BodyextendsProductwithSerializable"></a><a id="Body:Body"></a>
+              <ol><li name="silhouette.http.client.RichBody" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="RichBody[A&lt;:silhouette.http.client.Body]extendsAnyRef"></a><a id="RichBody[A&lt;:Body]:RichBody[A]"></a>
       <span class="permalink">
-      <a href="../../../silhouette/http/client/index.html#BodyextendsProductwithSerializable" title="Permalink">
+      <a href="../../../silhouette/http/client/index.html#RichBody[A&lt;:silhouette.http.client.Body]extendsAnyRef" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
       <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">case class</span>
+        <span class="modifier">implicit final </span>
+        <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <a title="Represents the body of a request." href="Body.html">
-              <span class="name">Body</span>
-            </a><span class="params">(<span name="contentType">contentType: <a href="ContentType.html" class="extype" name="silhouette.http.client.ContentType">ContentType</a></span>, <span name="codec">codec: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.io.Codec" class="extype" target="_top">Codec</a> = <span class="symbol">Codec.UTF8</span></span>, <span name="data">data: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Array" class="extype" target="_top">Array</a>[<a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Byte" class="extype" target="_top">Byte</a>]</span>)</span><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <a title="Provides syntax via enrichment classes." href="package$$RichBody.html">
+              <span class="name">RichBody</span>
+            </a><span class="tparams">[<span name="A">A &lt;: <span class="extype" name="silhouette.http.client.Body">Body</span></span>]</span><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
       
-      <p class="shortcomment cmt">Represents the body of a request.</p><div class="fullcomment"><div class="comment cmt"><p>Represents the body of a request.
-</p></div><dl class="paramcmts block"><dt class="param">contentType</dt><dd class="cmt"><p>The content type of the body.</p></dd><dt class="param">codec</dt><dd class="cmt"><p>The codec of the body.</p></dd><dt class="param">data</dt><dd class="cmt"><p>The body data.</p></dd></dl></div>
-    </li><li name="silhouette.http.client.ContentType" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="ContentTypeextendsProductwithSerializable"></a><a id="ContentType:ContentType"></a>
-      <span class="permalink">
-      <a href="../../../silhouette/http/client/index.html#ContentTypeextendsProductwithSerializable" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier">final </span>
-        <span class="kind">case class</span>
-      </span>
-      <span class="symbol">
-        <a title="Represents the content type of a request." href="ContentType.html">
-              <span class="name">ContentType</span>
-            </a><span class="params">(<span name="value">value: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
-      </span>
-      
-      <p class="shortcomment cmt">Represents the content type of a request.</p><div class="fullcomment"><div class="comment cmt"><p>Represents the content type of a request.
-</p></div><dl class="paramcmts block"><dt class="param">value</dt><dd class="cmt"><p>String format for a content type.</p></dd></dl></div>
+      <p class="shortcomment cmt">Provides syntax via enrichment classes.</p>
     </li></ol>
             </div>
 
         
 
-        <div class="values members">
-              <h3>Value Members</h3>
-              <ol>
-                <li name="silhouette.http.client.ContentTypes" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="ContentTypes"></a><a id="ContentTypes:ContentTypes"></a>
-      <span class="permalink">
-      <a href="../../../silhouette/http/client/index.html#ContentTypes" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">object</span>
-      </span>
-      <span class="symbol">
-        <a title="Util class for content type values." href="ContentTypes$.html">
-              <span class="name">ContentTypes</span>
-            </a>
-      </span>
-      
-      <p class="shortcomment cmt">Util class for content type values.</p>
-    </li>
-              </ol>
-            </div>
+        
 
         
 
@@ -320,7 +230,11 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         </div>
 
         <div id="inheritedMembers">
-        
+        <div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Any" class="extype" target="_top">Any</a></h3>
+            </div>
         
         </div>
 
