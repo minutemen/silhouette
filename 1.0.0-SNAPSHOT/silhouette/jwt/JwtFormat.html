@@ -209,9 +209,21 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
                         </a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="trait" href="" title="JWT transformer."></a>
-                        <a href="" title="JWT transformer.">
+                        <a class="trait" href="" title="JWT transformer combinator."></a>
+                        <a href="" title="JWT transformer combinator.">
                           JwtFormat
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="JwtReads.html" title="Transforms a string into a JwtClaims object."></a>
+                        <a href="JwtReads.html" title="Transforms a string into a JwtClaims object.">
+                          JwtReads
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="JwtWrites.html" title="Transforms a JwtClaims object into a string."></a>
+                        <a href="JwtWrites.html" title="Transforms a JwtClaims object into a string.">
+                          JwtWrites
                         </a>
                       </li>
               </ul>
@@ -236,17 +248,17 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <span class="name">JwtFormat</span><span class="result"> extends <a href="../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>]] with <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]]</span>
+        <span class="name">JwtFormat</span><span class="result"> extends <a href="JwtReads.html" class="extype" name="silhouette.jwt.JwtReads">JwtReads</a> with <a href="JwtWrites.html" class="extype" name="silhouette.jwt.JwtWrites">JwtWrites</a></span>
       </span>
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>JWT transformer.
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>JWT transformer combinator.
 </p></div><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]], <a href="../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>]], <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="JwtWrites.html" class="extype" name="silhouette.jwt.JwtWrites">JwtWrites</a>, <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]], <a href="JwtReads.html" class="extype" name="silhouette.jwt.JwtReads">JwtReads</a>, <a href="../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>]], <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div><div class="toggleContainer block">
             <span class="toggle">
               Known Subclasses
@@ -277,7 +289,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
                   <span class="filtertype">Inherited<br />
                   </span>
                   <ol id="linearization">
-                    <li class="in" name="silhouette.jwt.JwtFormat"><span>JwtFormat</span></li><li class="in" name="silhouette.util.Writes"><span>Writes</span></li><li class="in" name="silhouette.util.Reads"><span>Reads</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                    <li class="in" name="silhouette.jwt.JwtFormat"><span>JwtFormat</span></li><li class="in" name="silhouette.jwt.JwtWrites"><span>JwtWrites</span></li><li class="in" name="silhouette.util.Writes"><span>Writes</span></li><li class="in" name="silhouette.jwt.JwtReads"><span>JwtReads</span></li><li class="in" name="silhouette.util.Reads"><span>Reads</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -316,8 +328,8 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="name">read</span><span class="params">(<span name="in">in: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>]</span>
       </span>
       
-      <p class="shortcomment cmt">Transforms from source A to target B.</p><div class="fullcomment"><div class="comment cmt"><p>Transforms from source A to target B.
-</p></div><dl class="paramcmts block"><dt class="param">in</dt><dd class="cmt"><p>The source to transform.</p></dd><dt>returns</dt><dd class="cmt"><p>An instance of B.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a></dd></dl></div>
+      <p class="shortcomment cmt">Transforms from source <code>A</code> to target <code>B</code>.</p><div class="fullcomment"><div class="comment cmt"><p>Transforms from source <code>A</code> to target <code>B</code>.
+</p></div><dl class="paramcmts block"><dt class="param">in</dt><dd class="cmt"><p>The source to transform.</p></dd><dt>returns</dt><dd class="cmt"><p>An instance of <code>B</code>.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a></dd></dl></div>
     </li><li name="silhouette.util.Writes#write" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="write(in:A):B"></a><a id="write(JwtClaims):Try[String]"></a>
       <span class="permalink">
@@ -333,8 +345,8 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="name">write</span><span class="params">(<span name="in">in: <a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a></span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
       </span>
       
-      <p class="shortcomment cmt">Transforms from source A to target B.</p><div class="fullcomment"><div class="comment cmt"><p>Transforms from source A to target B.
-</p></div><dl class="paramcmts block"><dt class="param">in</dt><dd class="cmt"><p>The source to transform.</p></dd><dt>returns</dt><dd class="cmt"><p>An instance of B.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a></dd></dl></div>
+      <p class="shortcomment cmt">Transforms from source <code>A</code> to target <code>B</code>.</p><div class="fullcomment"><div class="comment cmt"><p>Transforms from source <code>A</code> to target <code>B</code>.
+</p></div><dl class="paramcmts block"><dt class="param">in</dt><dd class="cmt"><p>The source to transform.</p></dd><dt>returns</dt><dd class="cmt"><p>An instance of <code>B</code>.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a></dd></dl></div>
     </li></ol>
             </div>
 
@@ -389,6 +401,40 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="silhouette.util.Writes#andThen" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="andThen[C](writes:silhouette.util.Writes[B,C]):silhouette.util.Writes[A,C]"></a><a id="andThen[C](Writes[Try[String],C]):Writes[JwtClaims,C]"></a>
+      <span class="permalink">
+      <a href="../../silhouette/jwt/JwtFormat.html#andThen[C](writes:silhouette.util.Writes[B,C]):silhouette.util.Writes[A,C]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">andThen</span><span class="tparams">[<span name="C">C</span>]</span><span class="params">(<span name="writes">writes: <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>[<a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>], <span class="extype" name="silhouette.util.Writes.andThen.C">C</span>]</span>)</span><span class="result">: <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>, <span class="extype" name="silhouette.util.Writes.andThen.C">C</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Composes this <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a> with a transformation function that gets applied to the result of this <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>.</p><div class="fullcomment"><div class="comment cmt"><p>Composes this <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a> with a transformation function that gets applied to the result of this <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>.
+</p></div><dl class="paramcmts block"><dt class="tparam">C</dt><dd class="cmt"><p>The result type of the transformation function.</p></dd><dt class="param">writes</dt><dd class="cmt"><p>The transformation function.</p></dd><dt>returns</dt><dd class="cmt"><p>A new composable <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a></dd></dl></div>
+    </li><li name="silhouette.util.Reads#andThen" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="andThen[C](reads:silhouette.util.Reads[B,C]):silhouette.util.Reads[A,C]"></a><a id="andThen[C](Reads[Try[JwtClaims],C]):Reads[String,C]"></a>
+      <span class="permalink">
+      <a href="../../silhouette/jwt/JwtFormat.html#andThen[C](reads:silhouette.util.Reads[B,C]):silhouette.util.Reads[A,C]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">andThen</span><span class="tparams">[<span name="C">C</span>]</span><span class="params">(<span name="reads">reads: <a href="../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a>[<a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>], <span class="extype" name="silhouette.util.Reads.andThen.C">C</span>]</span>)</span><span class="result">: <a href="../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="silhouette.util.Reads.andThen.C">C</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Composes this <a href="../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a> with a transformation function that gets applied to the result of this <a href="../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a>.</p><div class="fullcomment"><div class="comment cmt"><p>Composes this <a href="../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a> with a transformation function that gets applied to the result of this <a href="../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a>.
+</p></div><dl class="paramcmts block"><dt class="tparam">C</dt><dd class="cmt"><p>The result type of the transformation function.</p></dd><dt class="param">reads</dt><dd class="cmt"><p>The transformation function.</p></dd><dt>returns</dt><dd class="cmt"><p>A new composable <a href="../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a>.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a></dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <span class="permalink">
@@ -685,8 +731,12 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="silhouette.util.Writes">
+        <div class="parent" name="silhouette.jwt.JwtWrites">
+              <h3>Inherited from <a href="JwtWrites.html" class="extype" name="silhouette.jwt.JwtWrites">JwtWrites</a></h3>
+            </div><div class="parent" name="silhouette.util.Writes">
               <h3>Inherited from <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]]</h3>
+            </div><div class="parent" name="silhouette.jwt.JwtReads">
+              <h3>Inherited from <a href="JwtReads.html" class="extype" name="silhouette.jwt.JwtReads">JwtReads</a></h3>
             </div><div class="parent" name="silhouette.util.Reads">
               <h3>Inherited from <a href="../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>]]</h3>
             </div><div class="parent" name="scala.AnyRef">

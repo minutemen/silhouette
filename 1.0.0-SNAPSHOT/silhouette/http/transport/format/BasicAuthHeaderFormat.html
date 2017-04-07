@@ -187,7 +187,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <span class="name">BasicAuthHeaderFormat</span><span class="result"> extends <a href="../../../util/Format.html" class="extype" name="silhouette.util.Format">Format</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a>]</span>
+        <span class="name">BasicAuthHeaderFormat</span><span class="result"> extends <a href="../../TransportFormat.html" class="extype" name="silhouette.http.TransportFormat">TransportFormat</a>[<a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a>]</span>
       </span>
       </h4>
 
@@ -197,7 +197,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="../../../util/Format.html" class="extype" name="silhouette.util.Format">Format</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a>], <a href="../../../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>[<a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a>, <span class="extype" name="scala.Predef.String">String</span>], <a href="../../../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a>]], <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="../../TransportFormat.html" class="extype" name="silhouette.http.TransportFormat">TransportFormat</a>[<a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a>], <a href="../../TransportWrites.html" class="extype" name="silhouette.http.TransportWrites">TransportWrites</a>[<a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a>], <a href="../../../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>[<a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]], <a href="../../TransportReads.html" class="extype" name="silhouette.http.TransportReads">TransportReads</a>[<a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a>], <a href="../../../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a>]], <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
         
 
@@ -223,7 +223,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
                   <span class="filtertype">Inherited<br />
                   </span>
                   <ol id="linearization">
-                    <li class="in" name="silhouette.http.transport.format.BasicAuthHeaderFormat"><span>BasicAuthHeaderFormat</span></li><li class="in" name="silhouette.util.Format"><span>Format</span></li><li class="in" name="silhouette.util.Writes"><span>Writes</span></li><li class="in" name="silhouette.util.Reads"><span>Reads</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                    <li class="in" name="silhouette.http.transport.format.BasicAuthHeaderFormat"><span>BasicAuthHeaderFormat</span></li><li class="in" name="silhouette.http.TransportFormat"><span>TransportFormat</span></li><li class="in" name="silhouette.http.TransportWrites"><span>TransportWrites</span></li><li class="in" name="silhouette.util.Writes"><span>Writes</span></li><li class="in" name="silhouette.http.TransportReads"><span>TransportReads</span></li><li class="in" name="silhouette.util.Reads"><span>Reads</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -317,6 +317,40 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="silhouette.util.Writes#andThen" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="andThen[C](writes:silhouette.util.Writes[B,C]):silhouette.util.Writes[A,C]"></a><a id="andThen[C](Writes[Try[String],C]):Writes[Credentials,C]"></a>
+      <span class="permalink">
+      <a href="../../../../silhouette/http/transport/format/BasicAuthHeaderFormat.html#andThen[C](writes:silhouette.util.Writes[B,C]):silhouette.util.Writes[A,C]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">andThen</span><span class="tparams">[<span name="C">C</span>]</span><span class="params">(<span name="writes">writes: <a href="../../../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>[<a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>], <span class="extype" name="silhouette.util.Writes.andThen.C">C</span>]</span>)</span><span class="result">: <a href="../../../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>[<a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a>, <span class="extype" name="silhouette.util.Writes.andThen.C">C</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Composes this <a href="../../../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a> with a transformation function that gets applied to the result of this <a href="../../../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>.</p><div class="fullcomment"><div class="comment cmt"><p>Composes this <a href="../../../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a> with a transformation function that gets applied to the result of this <a href="../../../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>.
+</p></div><dl class="paramcmts block"><dt class="tparam">C</dt><dd class="cmt"><p>The result type of the transformation function.</p></dd><dt class="param">writes</dt><dd class="cmt"><p>The transformation function.</p></dd><dt>returns</dt><dd class="cmt"><p>A new composable <a href="../../../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a></dd></dl></div>
+    </li><li name="silhouette.util.Reads#andThen" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="andThen[C](reads:silhouette.util.Reads[B,C]):silhouette.util.Reads[A,C]"></a><a id="andThen[C](Reads[Try[Credentials],C]):Reads[String,C]"></a>
+      <span class="permalink">
+      <a href="../../../../silhouette/http/transport/format/BasicAuthHeaderFormat.html#andThen[C](reads:silhouette.util.Reads[B,C]):silhouette.util.Reads[A,C]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">andThen</span><span class="tparams">[<span name="C">C</span>]</span><span class="params">(<span name="reads">reads: <a href="../../../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a>[<a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a>], <span class="extype" name="silhouette.util.Reads.andThen.C">C</span>]</span>)</span><span class="result">: <a href="../../../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="silhouette.util.Reads.andThen.C">C</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Composes this <a href="../../../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a> with a transformation function that gets applied to the result of this <a href="../../../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a>.</p><div class="fullcomment"><div class="comment cmt"><p>Composes this <a href="../../../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a> with a transformation function that gets applied to the result of this <a href="../../../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a>.
+</p></div><dl class="paramcmts block"><dt class="tparam">C</dt><dd class="cmt"><p>The result type of the transformation function.</p></dd><dt class="param">reads</dt><dd class="cmt"><p>The transformation function.</p></dd><dt>returns</dt><dd class="cmt"><p>A new composable <a href="../../../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a>.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a></dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <span class="permalink">
@@ -621,9 +655,9 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
               
         </dd></dl></div>
     </li><li name="silhouette.http.transport.format.BasicAuthHeaderFormat#write" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="write(credentials:silhouette.Credentials):String"></a><a id="write(Credentials):String"></a>
+      <a id="write(credentials:silhouette.Credentials):scala.util.Try[String]"></a><a id="write(Credentials):Try[String]"></a>
       <span class="permalink">
-      <a href="../../../../silhouette/http/transport/format/BasicAuthHeaderFormat.html#write(credentials:silhouette.Credentials):String" title="Permalink">
+      <a href="../../../../silhouette/http/transport/format/BasicAuthHeaderFormat.html#write(credentials:silhouette.Credentials):scala.util.Try[String]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -632,7 +666,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">write</span><span class="params">(<span name="credentials">credentials: <a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">write</span><span class="params">(<span name="credentials">credentials: <a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a></span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Transforms <a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a> into a &quot;basic&quot; <code>Authorization</code> header value.</p><div class="fullcomment"><div class="comment cmt"><p>Transforms <a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a> into a &quot;basic&quot; <code>Authorization</code> header value.
@@ -647,10 +681,14 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="silhouette.util.Format">
-              <h3>Inherited from <a href="../../../util/Format.html" class="extype" name="silhouette.util.Format">Format</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a>]</h3>
+        <div class="parent" name="silhouette.http.TransportFormat">
+              <h3>Inherited from <a href="../../TransportFormat.html" class="extype" name="silhouette.http.TransportFormat">TransportFormat</a>[<a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a>]</h3>
+            </div><div class="parent" name="silhouette.http.TransportWrites">
+              <h3>Inherited from <a href="../../TransportWrites.html" class="extype" name="silhouette.http.TransportWrites">TransportWrites</a>[<a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a>]</h3>
             </div><div class="parent" name="silhouette.util.Writes">
-              <h3>Inherited from <a href="../../../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>[<a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a>, <span class="extype" name="scala.Predef.String">String</span>]</h3>
+              <h3>Inherited from <a href="../../../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>[<a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]]</h3>
+            </div><div class="parent" name="silhouette.http.TransportReads">
+              <h3>Inherited from <a href="../../TransportReads.html" class="extype" name="silhouette.http.TransportReads">TransportReads</a>[<a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a>]</h3>
             </div><div class="parent" name="silhouette.util.Reads">
               <h3>Inherited from <a href="../../../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<a href="../../../Credentials.html" class="extype" name="silhouette.Credentials">Credentials</a>]]</h3>
             </div><div class="parent" name="scala.AnyRef">

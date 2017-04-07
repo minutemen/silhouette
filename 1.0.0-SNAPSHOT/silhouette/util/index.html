@@ -278,21 +278,9 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
 </p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="silhouette">silhouette</a></dd></dl></div>
     </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="trait" href="DefaultFormats.html" title="Some default formats."></a>
-                        <a href="DefaultFormats.html" title="Some default formats.">
-                          DefaultFormats
-                        </a>
-                      </li><li class="current-entities indented2">
-                        <span class="separator"></span>
                         <a class="trait" href="FingerprintGenerator.html" title="A generator which creates a fingerprint to identify a user."></a>
                         <a href="FingerprintGenerator.html" title="A generator which creates a fingerprint to identify a user.">
                           FingerprintGenerator
-                        </a>
-                      </li><li class="current-entities indented2">
-                        <a class="object" href="Format$.html" title="Provides the implicit default formats."></a>
-                        <a class="trait" href="Format.html" title="Represents a transform operation which transforms between A and B."></a>
-                        <a href="Format.html" title="Represents a transform operation which transforms between A and B.">
-                          Format
                         </a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
@@ -429,25 +417,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
-              <ol><li name="silhouette.util.DefaultFormats" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="DefaultFormatsextendsAnyRef"></a><a id="DefaultFormats:DefaultFormats"></a>
-      <span class="permalink">
-      <a href="../../silhouette/util/index.html#DefaultFormatsextendsAnyRef" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">trait</span>
-      </span>
-      <span class="symbol">
-        <a title="Some default formats." href="DefaultFormats.html">
-              <span class="name">DefaultFormats</span>
-            </a><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
-      </span>
-      
-      <p class="shortcomment cmt">Some default formats.</p>
-    </li><li name="silhouette.util.FingerprintGenerator" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+              <ol><li name="silhouette.util.FingerprintGenerator" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="FingerprintGeneratorextendsAnyRef"></a><a id="FingerprintGenerator:FingerprintGenerator"></a>
       <span class="permalink">
       <a href="../../silhouette/util/index.html#FingerprintGeneratorextendsAnyRef" title="Permalink">
@@ -465,27 +435,6 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
       </span>
       
       <p class="shortcomment cmt">A generator which creates a fingerprint to identify a user.</p>
-    </li><li name="silhouette.util.Format" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="Format[A,B]extendsReads[A,scala.util.Try[B]]withWrites[B,A]"></a><a id="Format[A,B]:Format[A,B]"></a>
-      <span class="permalink">
-      <a href="../../silhouette/util/index.html#Format[A,B]extendsReads[A,scala.util.Try[B]]withWrites[B,A]" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">trait</span>
-      </span>
-      <span class="symbol">
-        <a title="Represents a transform operation which transforms between A and B." href="Format.html">
-              <span class="name">Format</span>
-            </a><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="result"> extends <a href="Reads.html" class="extype" name="silhouette.util.Reads">Reads</a>[<span class="extype" name="silhouette.util.Format.A">A</span>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="silhouette.util.Format.B">B</span>]] with <a href="Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>[<span class="extype" name="silhouette.util.Format.B">B</span>, <span class="extype" name="silhouette.util.Format.A">A</span>]</span>
-      </span>
-      
-      <p class="shortcomment cmt">Represents a transform operation which transforms between A and B.</p><div class="fullcomment"><div class="comment cmt"><p>Represents a transform operation which transforms between A and B.</p><p>This is a default format which assumes that the read operation can throw an <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.package@Exception=Exception" class="extype" target="_top">scala.Exception</a> and the
-write operation doesn't throw an exception. This is the most common case. For special cases you
-should declare a specific format.
-</p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>The source type on the read operation and the target type on the write operation.</p></dd><dt class="tparam">B</dt><dd class="cmt"><p>The target type on the read operation and the source type on the write operation.</p></dd></dl></div>
     </li><li name="silhouette.util.IDGenerator" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="IDGeneratorextendsAnyRef"></a><a id="IDGenerator:IDGenerator"></a>
       <span class="permalink">
@@ -621,7 +570,7 @@ current hasher.
             </a><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
       
-      <p class="shortcomment cmt">Represents a reader that transform an instance of A to B.</p><div class="fullcomment"><div class="comment cmt"><p>Represents a reader that transform an instance of A to B.
+      <p class="shortcomment cmt">Represents a reader that transform an instance of <code>A</code> to <code>B</code>.</p><div class="fullcomment"><div class="comment cmt"><p>Represents a reader that transform an instance of <code>A</code> to <code>B</code>.
 </p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>The source type.</p></dd><dt class="tparam">B</dt><dd class="cmt"><p>The target type.</p></dd></dl></div>
     </li><li name="silhouette.util.SecureRandomIDGenerator" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="SecureRandomIDGeneratorextendsIDGenerator"></a><a id="SecureRandomIDGenerator:SecureRandomIDGenerator"></a>
@@ -658,7 +607,7 @@ current hasher.
             </a><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
       
-      <p class="shortcomment cmt">Represents a writer that transform an instance of A to B.</p><div class="fullcomment"><div class="comment cmt"><p>Represents a writer that transform an instance of A to B.
+      <p class="shortcomment cmt">Represents a writer that transform an instance of <code>A</code> to <code>B</code>.</p><div class="fullcomment"><div class="comment cmt"><p>Represents a writer that transform an instance of <code>A</code> to <code>B</code>.
 </p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>The source type.</p></dd><dt class="tparam">B</dt><dd class="cmt"><p>The target type.</p></dd></dl></div>
     </li></ol>
             </div>
@@ -668,25 +617,7 @@ current hasher.
         <div class="values members">
               <h3>Value Members</h3>
               <ol>
-                <li name="silhouette.util.Format" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="Format"></a><a id="Format:Format"></a>
-      <span class="permalink">
-      <a href="../../silhouette/util/index.html#Format" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">object</span>
-      </span>
-      <span class="symbol">
-        <a title="Provides the implicit default formats." href="Format$.html">
-              <span class="name">Format</span>
-            </a><span class="result"> extends <a href="DefaultFormats.html" class="extype" name="silhouette.util.DefaultFormats">DefaultFormats</a></span>
-      </span>
-      
-      <p class="shortcomment cmt">Provides the implicit default formats.</p>
-    </li><li name="silhouette.util.Logger" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+                <li name="silhouette.util.Logger" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Logger"></a><a id="Logger:Logger"></a>
       <span class="permalink">
       <a href="../../silhouette/util/index.html#Logger" title="Permalink">

@@ -221,17 +221,17 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">QueryStringRequestTransport</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="settings">settings: <a href="QueryStringTransportSettings.html" class="extype" name="silhouette.http.transport.QueryStringTransportSettings">QueryStringTransportSettings</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="format">format: <a href="../../util/Format.html" class="extype" name="silhouette.util.Format">Format</a>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="silhouette.http.transport.QueryStringRequestTransport.B">B</span>]</span>)</span><span class="result"> extends <a href="../RequestTransport.html" class="extype" name="silhouette.http.RequestTransport">RequestTransport</a>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="silhouette.http.transport.QueryStringRequestTransport.B">B</span>] with <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <span class="name">QueryStringRequestTransport</span><span class="params">(<span name="settings">settings: <a href="QueryStringTransportSettings.html" class="extype" name="silhouette.http.transport.QueryStringTransportSettings">QueryStringTransportSettings</a></span>)</span><span class="result"> extends <a href="../RequestTransport.html" class="extype" name="silhouette.http.RequestTransport">RequestTransport</a> with <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4>
 
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>The query string transport.</p><p>A query string does only exists for a request. So this is the only implementation.
-</p></div><dl class="paramcmts block"><dt class="param">settings</dt><dd class="cmt"><p>The transport settings.</p></dd><dt class="param">format</dt><dd class="cmt"><p>The format to transform between the transport specific value and the payload.</p></dd></dl><div class="toggleContainer block">
+</p></div><dl class="paramcmts block"><dt class="param">settings</dt><dd class="cmt"><p>The transport settings.</p></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Serializable" class="extype" target="_top">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Product" class="extype" target="_top">Product</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Equals" class="extype" target="_top">Equals</a>, <a href="../RequestTransport.html" class="extype" name="silhouette.http.RequestTransport">RequestTransport</a>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="silhouette.http.transport.QueryStringRequestTransport.B">B</span>], <a href="../Transport.html" class="extype" name="silhouette.http.Transport">Transport</a>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="silhouette.http.transport.QueryStringRequestTransport.B">B</span>], <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Serializable" class="extype" target="_top">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Product" class="extype" target="_top">Product</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Equals" class="extype" target="_top">Equals</a>, <a href="../RequestTransport.html" class="extype" name="silhouette.http.RequestTransport">RequestTransport</a>, <a href="../Transport.html" class="extype" name="silhouette.http.Transport">Transport</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div></div>
         
 
@@ -278,9 +278,9 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="silhouette.http.transport.QueryStringRequestTransport#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="&lt;init&gt;(settings:silhouette.http.transport.QueryStringTransportSettings)(implicitformat:silhouette.util.Format[String,B]):silhouette.http.transport.QueryStringRequestTransport[B]"></a><a id="&lt;init&gt;:QueryStringRequestTransport[B]"></a>
+      <a id="&lt;init&gt;(settings:silhouette.http.transport.QueryStringTransportSettings):silhouette.http.transport.QueryStringRequestTransport"></a><a id="&lt;init&gt;:QueryStringRequestTransport"></a>
       <span class="permalink">
-      <a href="../../../silhouette/http/transport/QueryStringRequestTransport.html#&lt;init&gt;(settings:silhouette.http.transport.QueryStringTransportSettings)(implicitformat:silhouette.util.Format[String,B]):silhouette.http.transport.QueryStringRequestTransport[B]" title="Permalink">
+      <a href="../../../silhouette/http/transport/QueryStringRequestTransport.html#&lt;init&gt;(settings:silhouette.http.transport.QueryStringTransportSettings):silhouette.http.transport.QueryStringRequestTransport" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -289,19 +289,19 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">QueryStringRequestTransport</span><span class="params">(<span name="settings">settings: <a href="QueryStringTransportSettings.html" class="extype" name="silhouette.http.transport.QueryStringTransportSettings">QueryStringTransportSettings</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="format">format: <a href="../../util/Format.html" class="extype" name="silhouette.util.Format">Format</a>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="silhouette.http.transport.QueryStringRequestTransport.B">B</span>]</span>)</span>
+        <span class="name">QueryStringRequestTransport</span><span class="params">(<span name="settings">settings: <a href="QueryStringTransportSettings.html" class="extype" name="silhouette.http.transport.QueryStringTransportSettings">QueryStringTransportSettings</a></span>)</span>
       </span>
       
-      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">settings</dt><dd class="cmt"><p>The transport settings.</p></dd><dt class="param">format</dt><dd class="cmt"><p>The format to transform between the transport specific value and the payload.</p></dd></dl></div>
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">settings</dt><dd class="cmt"><p>The transport settings.</p></dd></dl></div>
     </li></ol>
             </div>
 
         <div id="types" class="types members">
               <h3>Type Members</h3>
               <ol><li name="silhouette.http.transport.QueryStringRequestTransport.Self" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="Self=silhouette.http.transport.QueryStringRequestTransport[B]"></a><a id="Self:Self"></a>
+      <a id="Self=silhouette.http.transport.QueryStringRequestTransport"></a><a id="Self:Self"></a>
       <span class="permalink">
-      <a href="../../../silhouette/http/transport/QueryStringRequestTransport.html#Self=silhouette.http.transport.QueryStringRequestTransport[B]" title="Permalink">
+      <a href="../../../silhouette/http/transport/QueryStringRequestTransport.html#Self=silhouette.http.transport.QueryStringRequestTransport" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -310,7 +310,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">type</span>
       </span>
       <span class="symbol">
-        <span class="name">Self</span><span class="result alias"> = <a href="" class="extype" name="silhouette.http.transport.QueryStringRequestTransport">QueryStringRequestTransport</a>[<span class="extype" name="silhouette.http.transport.QueryStringRequestTransport.B">B</span>]</span>
+        <span class="name">Self</span><span class="result alias"> = <a href="" class="extype" name="silhouette.http.transport.QueryStringRequestTransport">QueryStringRequestTransport</a></span>
       </span>
       
       <p class="shortcomment cmt">The type of the concrete implementation of this abstract type.</p><div class="fullcomment"><div class="comment cmt"><p>The type of the concrete implementation of this abstract type.
@@ -427,9 +427,9 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
               
         </dd></dl></div>
     </li><li name="silhouette.http.transport.QueryStringRequestTransport#embed" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="embed[R](payload:B,request:silhouette.http.RequestPipeline[R]):silhouette.http.RequestPipeline[R]"></a><a id="embed[R](B,RequestPipeline[R]):RequestPipeline[R]"></a>
+      <a id="embed[R](payload:String,request:silhouette.http.RequestPipeline[R]):silhouette.http.RequestPipeline[R]"></a><a id="embed[R](String,RequestPipeline[R]):RequestPipeline[R]"></a>
       <span class="permalink">
-      <a href="../../../silhouette/http/transport/QueryStringRequestTransport.html#embed[R](payload:B,request:silhouette.http.RequestPipeline[R]):silhouette.http.RequestPipeline[R]" title="Permalink">
+      <a href="../../../silhouette/http/transport/QueryStringRequestTransport.html#embed[R](payload:String,request:silhouette.http.RequestPipeline[R]):silhouette.http.RequestPipeline[R]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -438,7 +438,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">embed</span><span class="tparams">[<span name="R">R</span>]</span><span class="params">(<span name="payload">payload: <span class="extype" name="silhouette.http.transport.QueryStringRequestTransport.B">B</span></span>, <span name="request">request: <a href="../RequestPipeline.html" class="extype" name="silhouette.http.RequestPipeline">RequestPipeline</a>[<span class="extype" name="silhouette.http.transport.QueryStringRequestTransport.embed.R">R</span>]</span>)</span><span class="result">: <a href="../RequestPipeline.html" class="extype" name="silhouette.http.RequestPipeline">RequestPipeline</a>[<span class="extype" name="silhouette.http.transport.QueryStringRequestTransport.embed.R">R</span>]</span>
+        <span class="name">embed</span><span class="tparams">[<span name="R">R</span>]</span><span class="params">(<span name="payload">payload: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="request">request: <a href="../RequestPipeline.html" class="extype" name="silhouette.http.RequestPipeline">RequestPipeline</a>[<span class="extype" name="silhouette.http.transport.QueryStringRequestTransport.embed.R">R</span>]</span>)</span><span class="result">: <a href="../RequestPipeline.html" class="extype" name="silhouette.http.RequestPipeline">RequestPipeline</a>[<span class="extype" name="silhouette.http.transport.QueryStringRequestTransport.embed.R">R</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Adds a query param with the given payload to the request.</p><div class="fullcomment"><div class="comment cmt"><p>Adds a query param with the given payload to the request.
@@ -481,22 +481,6 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="silhouette.http.transport.QueryStringRequestTransport#format" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="format:silhouette.util.Format[String,B]"></a><a id="format:Format[String,B]"></a>
-      <span class="permalink">
-      <a href="../../../silhouette/http/transport/QueryStringRequestTransport.html#format:silhouette.util.Format[String,B]" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier">implicit </span>
-        <span class="kind">val</span>
-      </span>
-      <span class="symbol">
-        <span class="name">format</span><span class="result">: <a href="../../util/Format.html" class="extype" name="silhouette.util.Format">Format</a>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="silhouette.http.transport.QueryStringRequestTransport.B">B</span>]</span>
-      </span>
-      
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="" class="extype" name="silhouette.http.transport.QueryStringRequestTransport">QueryStringRequestTransport</a> → <a href="../Transport.html" class="extype" name="silhouette.http.Transport">Transport</a></dd></dl></div>
     </li><li name="scala.AnyRef#getClass" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <span class="permalink">
@@ -577,27 +561,10 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="silhouette.http.Transport#read" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="read(value:A):B"></a><a id="read(String):B"></a>
-      <span class="permalink">
-      <a href="../../../silhouette/http/transport/QueryStringRequestTransport.html#read(value:A):B" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier">implicit </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">read</span><span class="params">(<span name="value">value: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="result">: <span class="extype" name="silhouette.http.transport.QueryStringRequestTransport.B">B</span></span>
-      </span>
-      
-      <p class="shortcomment cmt">Transforms the transport specific value into the payload.</p><div class="fullcomment"><div class="comment cmt"><p>Transforms the transport specific value into the payload.
-</p></div><dl class="paramcmts block"><dt class="param">value</dt><dd class="cmt"><p>The transport specific value to read from.</p></dd><dt>returns</dt><dd class="cmt"><p>The transformed payload or an exception if an error occurred during transformation.</p></dd></dl><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../Transport.html" class="extype" name="silhouette.http.Transport">Transport</a></dd></dl></div>
     </li><li name="silhouette.http.transport.QueryStringRequestTransport#retrieve" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="retrieve[R](request:silhouette.http.RequestPipeline[R]):Option[B]"></a><a id="retrieve[R](RequestPipeline[R]):Option[B]"></a>
+      <a id="retrieve[R](request:silhouette.http.RequestPipeline[R]):Option[String]"></a><a id="retrieve[R](RequestPipeline[R]):Option[String]"></a>
       <span class="permalink">
-      <a href="../../../silhouette/http/transport/QueryStringRequestTransport.html#retrieve[R](request:silhouette.http.RequestPipeline[R]):Option[B]" title="Permalink">
+      <a href="../../../silhouette/http/transport/QueryStringRequestTransport.html#retrieve[R](request:silhouette.http.RequestPipeline[R]):Option[String]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -606,7 +573,7 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">retrieve</span><span class="tparams">[<span name="R">R</span>]</span><span class="params">(<span name="request">request: <a href="../RequestPipeline.html" class="extype" name="silhouette.http.RequestPipeline">RequestPipeline</a>[<span class="extype" name="silhouette.http.transport.QueryStringRequestTransport.retrieve.R">R</span>]</span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="silhouette.http.transport.QueryStringRequestTransport.B">B</span>]</span>
+        <span class="name">retrieve</span><span class="tparams">[<span name="R">R</span>]</span><span class="params">(<span name="request">request: <a href="../RequestPipeline.html" class="extype" name="silhouette.http.RequestPipeline">RequestPipeline</a>[<span class="extype" name="silhouette.http.transport.QueryStringRequestTransport.retrieve.R">R</span>]</span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Retrieves the payload, stored in the query string, from request.</p><div class="fullcomment"><div class="comment cmt"><p>Retrieves the payload, stored in the query string, from request.
@@ -721,28 +688,11 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">withSettings</span><span class="params">(<span name="f">f: (<a href="#Settings=silhouette.http.transport.QueryStringTransportSettings" class="extmbr" name="silhouette.http.transport.QueryStringRequestTransport.Settings">Settings</a>) ⇒ <a href="#Settings=silhouette.http.transport.QueryStringTransportSettings" class="extmbr" name="silhouette.http.transport.QueryStringRequestTransport.Settings">Settings</a></span>)</span><span class="result">: <a href="#Self=silhouette.http.transport.QueryStringRequestTransport[B]" class="extmbr" name="silhouette.http.transport.QueryStringRequestTransport.Self">Self</a></span>
+        <span class="name">withSettings</span><span class="params">(<span name="f">f: (<a href="#Settings=silhouette.http.transport.QueryStringTransportSettings" class="extmbr" name="silhouette.http.transport.QueryStringRequestTransport.Settings">Settings</a>) ⇒ <a href="#Settings=silhouette.http.transport.QueryStringTransportSettings" class="extmbr" name="silhouette.http.transport.QueryStringRequestTransport.Settings">Settings</a></span>)</span><span class="result">: <a href="#Self=silhouette.http.transport.QueryStringRequestTransport" class="extmbr" name="silhouette.http.transport.QueryStringRequestTransport.Self">Self</a></span>
       </span>
       
       <p class="shortcomment cmt">Gets a transport initialized with a new settings object.</p><div class="fullcomment"><div class="comment cmt"><p>Gets a transport initialized with a new settings object.
 </p></div><dl class="paramcmts block"><dt class="param">f</dt><dd class="cmt"><p>A function which gets the settings passed and returns different settings.</p></dd><dt>returns</dt><dd class="cmt"><p>An instance of the transport initialized with new settings.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="silhouette.http.transport.QueryStringRequestTransport">QueryStringRequestTransport</a> → <a href="../Transport.html" class="extype" name="silhouette.http.Transport">Transport</a></dd></dl></div>
-    </li><li name="silhouette.http.Transport#write" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="write(payload:B):A"></a><a id="write(B):String"></a>
-      <span class="permalink">
-      <a href="../../../silhouette/http/transport/QueryStringRequestTransport.html#write(payload:B):A" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier">implicit </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">write</span><span class="params">(<span name="payload">payload: <span class="extype" name="silhouette.http.transport.QueryStringRequestTransport.B">B</span></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
-      </span>
-      
-      <p class="shortcomment cmt">Transforms the payload into the transport specific value.</p><div class="fullcomment"><div class="comment cmt"><p>Transforms the payload into the transport specific value.
-</p></div><dl class="paramcmts block"><dt class="param">payload</dt><dd class="cmt"><p>The payload that should be transformed into the transport specific value.</p></dd><dt>returns</dt><dd class="cmt"><p>The transport specific value.</p></dd></dl><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd><a href="../Transport.html" class="extype" name="silhouette.http.Transport">Transport</a></dd></dl></div>
     </li>
               </ol>
             </div>
@@ -762,9 +712,9 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
             </div><div class="parent" name="scala.Equals">
               <h3>Inherited from <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Equals" class="extype" target="_top">Equals</a></h3>
             </div><div class="parent" name="silhouette.http.RequestTransport">
-              <h3>Inherited from <a href="../RequestTransport.html" class="extype" name="silhouette.http.RequestTransport">RequestTransport</a>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="silhouette.http.transport.QueryStringRequestTransport.B">B</span>]</h3>
+              <h3>Inherited from <a href="../RequestTransport.html" class="extype" name="silhouette.http.RequestTransport">RequestTransport</a></h3>
             </div><div class="parent" name="silhouette.http.Transport">
-              <h3>Inherited from <a href="../Transport.html" class="extype" name="silhouette.http.Transport">Transport</a>[<span class="extype" name="scala.Predef.String">String</span>, <span class="extype" name="silhouette.http.transport.QueryStringRequestTransport.B">B</span>]</h3>
+              <h3>Inherited from <a href="../Transport.html" class="extype" name="silhouette.http.Transport">Transport</a></h3>
             </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">

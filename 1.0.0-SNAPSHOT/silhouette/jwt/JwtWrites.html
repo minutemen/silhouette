@@ -131,8 +131,8 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
                         </a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="trait" href="" title="Produces JWT tokens with the help of the [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library."></a>
-                        <a href="" title="Produces JWT tokens with the help of the [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library.">
+                        <a class="trait" href="Jose4jJwtProducer.html" title="Produces JWT tokens with the help of the [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library."></a>
+                        <a href="Jose4jJwtProducer.html" title="Produces JWT tokens with the help of the [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library.">
                           Jose4jJwtProducer
                         </a>
                       </li><li class="current-entities indented2">
@@ -221,8 +221,8 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
                         </a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="trait" href="JwtWrites.html" title="Transforms a JwtClaims object into a string."></a>
-                        <a href="JwtWrites.html" title="Transforms a JwtClaims object into a string.">
+                        <a class="trait" href="" title="Transforms a JwtClaims object into a string."></a>
+                        <a href="" title="Transforms a JwtClaims object into a string.">
                           JwtWrites
                         </a>
                       </li>
@@ -234,8 +234,8 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
       <div id="definition">
         <div class="big-circle trait">t</div>
         <p id="owner"><a href="../index.html" class="extype" name="silhouette">silhouette</a>.<a href="index.html" class="extype" name="silhouette.jwt">jwt</a></p>
-        <h1>Jose4jJwtProducer<span class="permalink">
-      <a href="../../silhouette/jwt/Jose4jJwtProducer.html" title="Permalink">
+        <h1>JwtWrites<span class="permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span></h1>
@@ -248,26 +248,22 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <span class="name">Jose4jJwtProducer</span><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+        <span class="name">JwtWrites</span><span class="result"> extends <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]]</span>
       </span>
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Produces JWT tokens with the help of the [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library.</p><p>The production of a JWT can be very complex, especially with the jose4j library because of it's feature richness.
-A JWT can use different encryption and signing algorithms, it can be nested or it can use the two-pass consumption
-approach. Therefore we allow a user to define it's own <a href="https://oss.sonatype.org/service/local/repositories/public/archive/org/bitbucket/b_c/jose4j/0.5.4/jose4j-0.5.4-javadoc.jar/!/index.html#org.jose4j.jwx.JsonWebStructure" class="extype" target="_top">org.jose4j.jwx.JsonWebStructure</a> implementation for the
-given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/jose4j/wiki/JWT%20Examples) to see how a
-<a href="https://oss.sonatype.org/service/local/repositories/public/archive/org/bitbucket/b_c/jose4j/0.5.4/jose4j-0.5.4-javadoc.jar/!/index.html#org.jose4j.jwe.JsonWebEncryption" class="extype" target="_top">org.jose4j.jwe.JsonWebEncryption</a> or a <a href="https://oss.sonatype.org/service/local/repositories/public/archive/org/bitbucket/b_c/jose4j/0.5.4/jose4j-0.5.4-javadoc.jar/!/index.html#org.jose4j.jws.JsonWebSignature" class="extype" target="_top">org.jose4j.jws.JsonWebSignature</a> can be configured.
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Transforms a <a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a> object into a string.
 </p></div><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Any" class="extype" target="_top">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]], <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Any" class="extype" target="_top">Any</a></div>
         </div><div class="toggleContainer block">
             <span class="toggle">
               Known Subclasses
             </span>
-            <div class="subClasses hiddenContent"><a href="Jose4jJwt$$SimpleProducer.html" class="extype" name="silhouette.jwt.Jose4jJwt.SimpleProducer">SimpleProducer</a></div>
+            <div class="subClasses hiddenContent"><a href="Jose4JJwtFormat.html" class="extype" name="silhouette.jwt.Jose4JJwtFormat">Jose4JJwtFormat</a>, <a href="JwtFormat.html" class="extype" name="silhouette.jwt.JwtFormat">JwtFormat</a></div>
           </div></div>
         
 
@@ -293,7 +289,7 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
                   <span class="filtertype">Inherited<br />
                   </span>
                   <ol id="linearization">
-                    <li class="in" name="silhouette.jwt.Jose4jJwtProducer"><span>Jose4jJwtProducer</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                    <li class="in" name="silhouette.jwt.JwtWrites"><span>JwtWrites</span></li><li class="in" name="silhouette.util.Writes"><span>Writes</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -317,10 +313,10 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
 
         <div class="values members">
               <h3>Abstract Value Members</h3>
-              <ol><li name="silhouette.jwt.Jose4jJwtProducer#produce" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="produce(claims:org.jose4j.jwt.JwtClaims):String"></a><a id="produce(org.jose4j.jwt.JwtClaims):String"></a>
+              <ol><li name="silhouette.util.Writes#write" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="write(in:A):B"></a><a id="write(JwtClaims):Try[String]"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/Jose4jJwtProducer.html#produce(claims:org.jose4j.jwt.JwtClaims):String" title="Permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html#write(in:A):B" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -329,11 +325,11 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">produce</span><span class="params">(<span name="claims">claims: <a href="https://oss.sonatype.org/service/local/repositories/public/archive/org/bitbucket/b_c/jose4j/0.5.4/jose4j-0.5.4-javadoc.jar/!/index.html#org.jose4j.jwt.JwtClaims" class="extype" target="_top">org.jose4j.jwt.JwtClaims</a></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <span class="name">write</span><span class="params">(<span name="in">in: <a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a></span>)</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
       </span>
       
-      <p class="shortcomment cmt">Produces claims and returns a JWT as string.</p><div class="fullcomment"><div class="comment cmt"><p>Produces claims and returns a JWT as string.
-</p></div><dl class="paramcmts block"><dt class="param">claims</dt><dd class="cmt"><p>The claims to produce.</p></dd><dt>returns</dt><dd class="cmt"><p>The produced JWT string.</p></dd></dl></div>
+      <p class="shortcomment cmt">Transforms from source <code>A</code> to target <code>B</code>.</p><div class="fullcomment"><div class="comment cmt"><p>Transforms from source <code>A</code> to target <code>B</code>.
+</p></div><dl class="paramcmts block"><dt class="param">in</dt><dd class="cmt"><p>The source to transform.</p></dd><dt>returns</dt><dd class="cmt"><p>An instance of <code>B</code>.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a></dd></dl></div>
     </li></ol>
             </div>
 
@@ -343,7 +339,7 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
                 <li name="scala.AnyRef#!=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a><a id="!=(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/Jose4jJwtProducer.html#!=(x$1:Any):Boolean" title="Permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html#!=(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -359,7 +355,7 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
     </li><li name="scala.AnyRef###" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/Jose4jJwtProducer.html###():Int" title="Permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html###():Int" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -375,7 +371,7 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
     </li><li name="scala.AnyRef#==" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a><a id="==(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/Jose4jJwtProducer.html#==(x$1:Any):Boolean" title="Permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html#==(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -388,10 +384,27 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="silhouette.util.Writes#andThen" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="andThen[C](writes:silhouette.util.Writes[B,C]):silhouette.util.Writes[A,C]"></a><a id="andThen[C](Writes[Try[String],C]):Writes[JwtClaims,C]"></a>
+      <span class="permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html#andThen[C](writes:silhouette.util.Writes[B,C]):silhouette.util.Writes[A,C]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">andThen</span><span class="tparams">[<span name="C">C</span>]</span><span class="params">(<span name="writes">writes: <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>[<a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>], <span class="extype" name="silhouette.util.Writes.andThen.C">C</span>]</span>)</span><span class="result">: <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>, <span class="extype" name="silhouette.util.Writes.andThen.C">C</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Composes this <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a> with a transformation function that gets applied to the result of this <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>.</p><div class="fullcomment"><div class="comment cmt"><p>Composes this <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a> with a transformation function that gets applied to the result of this <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>.
+</p></div><dl class="paramcmts block"><dt class="tparam">C</dt><dd class="cmt"><p>The result type of the transformation function.</p></dd><dt class="param">writes</dt><dd class="cmt"><p>The transformation function.</p></dd><dt>returns</dt><dd class="cmt"><p>A new composable <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>.</p></dd></dl><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a></dd></dl></div>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/Jose4jJwtProducer.html#asInstanceOf[T0]:T0" title="Permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html#asInstanceOf[T0]:T0" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -407,7 +420,7 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
     </li><li name="scala.AnyRef#clone" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a><a id="clone():AnyRef"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/Jose4jJwtProducer.html#clone():Object" title="Permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html#clone():Object" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -429,7 +442,7 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
     </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a><a id="eq(AnyRef):Boolean"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/Jose4jJwtProducer.html#eq(x$1:AnyRef):Boolean" title="Permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html#eq(x$1:AnyRef):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -445,7 +458,7 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
     </li><li name="scala.AnyRef#equals" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="equals(x$1:Any):Boolean"></a><a id="equals(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/Jose4jJwtProducer.html#equals(x$1:Any):Boolean" title="Permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html#equals(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -461,7 +474,7 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
     </li><li name="scala.AnyRef#finalize" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/Jose4jJwtProducer.html#finalize():Unit" title="Permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html#finalize():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -483,7 +496,7 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
     </li><li name="scala.AnyRef#getClass" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/Jose4jJwtProducer.html#getClass():Class[_]" title="Permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html#getClass():Class[_]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -499,7 +512,7 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
     </li><li name="scala.AnyRef#hashCode" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/Jose4jJwtProducer.html#hashCode():Int" title="Permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html#hashCode():Int" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -515,7 +528,7 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
     </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/Jose4jJwtProducer.html#isInstanceOf[T0]:Boolean" title="Permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html#isInstanceOf[T0]:Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -531,7 +544,7 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
     </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/Jose4jJwtProducer.html#ne(x$1:AnyRef):Boolean" title="Permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html#ne(x$1:AnyRef):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -547,7 +560,7 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
     </li><li name="scala.AnyRef#notify" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/Jose4jJwtProducer.html#notify():Unit" title="Permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html#notify():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -563,7 +576,7 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/Jose4jJwtProducer.html#notifyAll():Unit" title="Permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html#notifyAll():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -579,7 +592,7 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/Jose4jJwtProducer.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -595,7 +608,7 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
     </li><li name="scala.AnyRef#toString" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/Jose4jJwtProducer.html#toString():String" title="Permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html#toString():String" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -611,7 +624,7 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/Jose4jJwtProducer.html#wait():Unit" title="Permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html#wait():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -633,7 +646,7 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait(x$1:Long,x$2:Int):Unit"></a><a id="wait(Long,Int):Unit"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/Jose4jJwtProducer.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -655,7 +668,7 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait(x$1:Long):Unit"></a><a id="wait(Long):Unit"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/Jose4jJwtProducer.html#wait(x$1:Long):Unit" title="Permalink">
+      <a href="../../silhouette/jwt/JwtWrites.html#wait(x$1:Long):Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -684,7 +697,9 @@ given claims.</p><p>Please visit the [documentation](https://bitbucket.org/b_c/j
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="scala.AnyRef">
+        <div class="parent" name="silhouette.util.Writes">
+              <h3>Inherited from <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>[<a href="JwtClaims.html" class="extype" name="silhouette.jwt.JwtClaims">JwtClaims</a>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]]</h3>
+            </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
               <h3>Inherited from <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Any" class="extype" target="_top">Any</a></h3>

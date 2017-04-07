@@ -263,9 +263,27 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
                         </a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
+                        <a class="trait" href="TransportFormat.html" title="Transport transformer combinator."></a>
+                        <a href="TransportFormat.html" title="Transport transformer combinator.">
+                          TransportFormat
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="TransportReads.html" title="Transforms a string into an instance of T."></a>
+                        <a href="TransportReads.html" title="Transforms a string into an instance of T.">
+                          TransportReads
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
                         <a class="trait" href="TransportSettings.html" title="Marker trait for the transport settings."></a>
                         <a href="TransportSettings.html" title="Marker trait for the transport settings.">
                           TransportSettings
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="TransportWrites.html" title="Transforms an instance of T into a string."></a>
+                        <a href="TransportWrites.html" title="Transforms an instance of T into a string.">
+                          TransportWrites
                         </a>
                       </li><li name="silhouette.jwt" visbl="pub" class="indented2 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="jwt"></a><a id="jwt:jwt"></a>
@@ -630,10 +648,10 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
       <p class="shortcomment cmt">Decorates a framework specific request implementation.</p><div class="fullcomment"><div class="comment cmt"><p>Decorates a framework specific request implementation.</p><p>Frameworks should create an implicit conversion between the implementation of this pipeline and
 the Framework specific request instance.
 </p></div><dl class="paramcmts block"><dt class="tparam">R</dt><dd class="cmt"><p>The type of the request.</p></dd></dl><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../index.html" class="extype" name="silhouette">silhouette</a>] </dd></dl></div>
-    </li><li name="silhouette.http.RequestTransport" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="RequestTransport[A,B]extendsTransport[A,B]"></a><a id="RequestTransport[A,B]:RequestTransport[A,B]"></a>
+    </li><li name="silhouette.http.RequestTransport" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="RequestTransportextendsTransport"></a><a id="RequestTransport:RequestTransport"></a>
       <span class="permalink">
-      <a href="../../silhouette/http/index.html#RequestTransport[A,B]extendsTransport[A,B]" title="Permalink">
+      <a href="../../silhouette/http/index.html#RequestTransportextendsTransport" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -644,11 +662,10 @@ the Framework specific request instance.
       <span class="symbol">
         <a title="The request transport handles payload which can be transported in a request." href="RequestTransport.html">
               <span class="name">RequestTransport</span>
-            </a><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="result"> extends <a href="Transport.html" class="extype" name="silhouette.http.Transport">Transport</a>[<span class="extype" name="silhouette.http.RequestTransport.A">A</span>, <span class="extype" name="silhouette.http.RequestTransport.B">B</span>]</span>
+            </a><span class="result"> extends <a href="Transport.html" class="extype" name="silhouette.http.Transport">Transport</a></span>
       </span>
       
-      <p class="shortcomment cmt">The request transport handles payload which can be transported in a request.</p><div class="fullcomment"><div class="comment cmt"><p>The request transport handles payload which can be transported in a request.
-</p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>The internal type every transport implementation handles.</p></dd><dt class="tparam">B</dt><dd class="cmt"><p>The type of the payload to transport.</p></dd></dl></div>
+      <p class="shortcomment cmt">The request transport handles payload which can be transported in a request.</p>
     </li><li name="silhouette.http.ResponsePipeline" visbl="prt" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="ResponsePipeline[P]extendsAnyRef"></a><a id="ResponsePipeline[P]:ResponsePipeline[P]"></a>
       <span class="permalink">
@@ -669,10 +686,10 @@ the Framework specific request instance.
       <p class="shortcomment cmt">Decorates a framework specific response implementation.</p><div class="fullcomment"><div class="comment cmt"><p>Decorates a framework specific response implementation.</p><p>Frameworks should create an implicit conversion between the implementation of this pipeline and
 the Framework specific response instance.
 </p></div><dl class="paramcmts block"><dt class="tparam">P</dt><dd class="cmt"><p>The type of the response.</p></dd></dl><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../index.html" class="extype" name="silhouette">silhouette</a>] </dd></dl></div>
-    </li><li name="silhouette.http.ResponseTransport" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="ResponseTransport[A,B]extendsTransport[A,B]"></a><a id="ResponseTransport[A,B]:ResponseTransport[A,B]"></a>
+    </li><li name="silhouette.http.ResponseTransport" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="ResponseTransportextendsTransport"></a><a id="ResponseTransport:ResponseTransport"></a>
       <span class="permalink">
-      <a href="../../silhouette/http/index.html#ResponseTransport[A,B]extendsTransport[A,B]" title="Permalink">
+      <a href="../../silhouette/http/index.html#ResponseTransportextendsTransport" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -683,15 +700,14 @@ the Framework specific response instance.
       <span class="symbol">
         <a title="The response transport handles payload which can be transported in a response." href="ResponseTransport.html">
               <span class="name">ResponseTransport</span>
-            </a><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="result"> extends <a href="Transport.html" class="extype" name="silhouette.http.Transport">Transport</a>[<span class="extype" name="silhouette.http.ResponseTransport.A">A</span>, <span class="extype" name="silhouette.http.ResponseTransport.B">B</span>]</span>
+            </a><span class="result"> extends <a href="Transport.html" class="extype" name="silhouette.http.Transport">Transport</a></span>
       </span>
       
-      <p class="shortcomment cmt">The response transport handles payload which can be transported in a response.</p><div class="fullcomment"><div class="comment cmt"><p>The response transport handles payload which can be transported in a response.
-</p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>The internal type every transport implementation handles.</p></dd><dt class="tparam">B</dt><dd class="cmt"><p>The type of the payload to transport.</p></dd></dl></div>
+      <p class="shortcomment cmt">The response transport handles payload which can be transported in a response.</p>
     </li><li name="silhouette.http.Transport" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
-      <a id="Transport[A,B]extendsAnyRef"></a><a id="Transport[A,B]:Transport[A,B]"></a>
+      <a id="TransportextendsAnyRef"></a><a id="Transport:Transport"></a>
       <span class="permalink">
-      <a href="../../silhouette/http/index.html#Transport[A,B]extendsAnyRef" title="Permalink">
+      <a href="../../silhouette/http/index.html#TransportextendsAnyRef" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -702,11 +718,49 @@ the Framework specific response instance.
       <span class="symbol">
         <a title="Defines the way how payload can be transported in an HTTP request or an HTTP response." href="Transport.html">
               <span class="name">Transport</span>
-            </a><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
+            </a><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.AnyRef" class="extype" target="_top">AnyRef</a></span>
       </span>
       
       <p class="shortcomment cmt">Defines the way how payload can be transported in an HTTP request or an HTTP response.</p><div class="fullcomment"><div class="comment cmt"><p>Defines the way how payload can be transported in an HTTP request or an HTTP response.</p><p>The transport is divided into two parts. The <a href="RequestTransport.html" class="extype" name="silhouette.http.RequestTransport">RequestTransport</a> and the <a href="ResponseTransport.html" class="extype" name="silhouette.http.ResponseTransport">ResponseTransport</a>.
-</p></div><dl class="paramcmts block"><dt class="tparam">A</dt><dd class="cmt"><p>The internal type every transport implementation handles.</p></dd><dt class="tparam">B</dt><dd class="cmt"><p>The type of the payload to transport.</p></dd></dl></div>
+</p></div></div>
+    </li><li name="silhouette.http.TransportFormat" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="TransportFormat[T]extendsTransportReads[T]withTransportWrites[T]"></a><a id="TransportFormat[T]:TransportFormat[T]"></a>
+      <span class="permalink">
+      <a href="../../silhouette/http/index.html#TransportFormat[T]extendsTransportReads[T]withTransportWrites[T]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="Transport transformer combinator." href="TransportFormat.html">
+              <span class="name">TransportFormat</span>
+            </a><span class="tparams">[<span name="T">T</span>]</span><span class="result"> extends <a href="TransportReads.html" class="extype" name="silhouette.http.TransportReads">TransportReads</a>[<span class="extype" name="silhouette.http.TransportFormat.T">T</span>] with <a href="TransportWrites.html" class="extype" name="silhouette.http.TransportWrites">TransportWrites</a>[<span class="extype" name="silhouette.http.TransportFormat.T">T</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Transport transformer combinator.</p><div class="fullcomment"><div class="comment cmt"><p>Transport transformer combinator.
+</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>The target type on the read operation and the source type on the write operation.</p></dd></dl></div>
+    </li><li name="silhouette.http.TransportReads" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="TransportReads[T]extendsReads[String,scala.util.Try[T]]"></a><a id="TransportReads[T]:TransportReads[T]"></a>
+      <span class="permalink">
+      <a href="../../silhouette/http/index.html#TransportReads[T]extendsReads[String,scala.util.Try[T]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="Transforms a string into an instance of T." href="TransportReads.html">
+              <span class="name">TransportReads</span>
+            </a><span class="tparams">[<span name="T">T</span>]</span><span class="result"> extends <a href="../util/Reads.html" class="extype" name="silhouette.util.Reads">Reads</a>[<span class="extype" name="scala.Predef.String">String</span>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="silhouette.http.TransportReads.T">T</span>]]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Transforms a string into an instance of <code>T</code>.</p><div class="fullcomment"><div class="comment cmt"><p>Transforms a string into an instance of <code>T</code>.
+</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>The target type on the read operation.</p></dd></dl></div>
     </li><li name="silhouette.http.TransportSettings" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="TransportSettingsextendsAnyRef"></a><a id="TransportSettings:TransportSettings"></a>
       <span class="permalink">
@@ -725,6 +779,25 @@ the Framework specific response instance.
       </span>
       
       <p class="shortcomment cmt">Marker trait for the transport settings.</p>
+    </li><li name="silhouette.http.TransportWrites" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="TransportWrites[T]extendsWrites[T,scala.util.Try[String]]"></a><a id="TransportWrites[T]:TransportWrites[T]"></a>
+      <span class="permalink">
+      <a href="../../silhouette/http/index.html#TransportWrites[T]extendsWrites[T,scala.util.Try[String]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="Transforms an instance of T into a string." href="TransportWrites.html">
+              <span class="name">TransportWrites</span>
+            </a><span class="tparams">[<span name="T">T</span>]</span><span class="result"> extends <a href="../util/Writes.html" class="extype" name="silhouette.util.Writes">Writes</a>[<span class="extype" name="silhouette.http.TransportWrites.T">T</span>, <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.util.Try" class="extype" target="_top">Try</a>[<span class="extype" name="scala.Predef.String">String</span>]]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Transforms an instance of <code>T</code> into a string.</p><div class="fullcomment"><div class="comment cmt"><p>Transforms an instance of <code>T</code> into a string.
+</p></div><dl class="paramcmts block"><dt class="tparam">T</dt><dd class="cmt"><p>The source type on the write operation</p></dd></dl></div>
     </li></ol>
             </div>
 

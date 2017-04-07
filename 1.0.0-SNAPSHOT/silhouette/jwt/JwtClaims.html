@@ -209,9 +209,21 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
                         </a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="trait" href="JwtFormat.html" title="JWT transformer."></a>
-                        <a href="JwtFormat.html" title="JWT transformer.">
+                        <a class="trait" href="JwtFormat.html" title="JWT transformer combinator."></a>
+                        <a href="JwtFormat.html" title="JWT transformer combinator.">
                           JwtFormat
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="JwtReads.html" title="Transforms a string into a JwtClaims object."></a>
+                        <a href="JwtReads.html" title="Transforms a string into a JwtClaims object.">
+                          JwtReads
+                        </a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="JwtWrites.html" title="Transforms a JwtClaims object into a string."></a>
+                        <a href="JwtWrites.html" title="Transforms a JwtClaims object into a string.">
+                          JwtWrites
                         </a>
                       </li>
               </ul>
@@ -236,14 +248,14 @@ including OAuth1, OAuth2, OpenID, Credentials or custom authentication schemes.
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">JwtClaims</span><span class="params">(<span name="issuer">issuer: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="subject">subject: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="audience">audience: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Predef.String">String</span>]] = <span class="symbol">None</span></span>, <span name="expirationTime">expirationTime: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Long" class="extype" target="_top">Long</a>] = <span class="symbol">None</span></span>, <span name="notBefore">notBefore: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Long" class="extype" target="_top">Long</a>] = <span class="symbol">None</span></span>, <span name="issuedAt">issuedAt: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Long" class="extype" target="_top">Long</a>] = <span class="symbol">None</span></span>, <span name="jwtID">jwtID: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="custom">custom: <a href="https://oss.sonatype.org/service/local/repositories/public/archive/org/mdedetrich/scala-json-ast_2.12/1.0.0-M7/scala-json-ast_2.12-1.0.0-M7-javadoc.jar/!/index.html#scala.json.ast.JObject" class="extype" target="_top">JObject</a> = <span class="symbol">JObject()</span></span>)</span><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
+        <span class="name">JwtClaims</span><span class="params">(<span name="issuer">issuer: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="subject">subject: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="audience">audience: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Predef.String">String</span>]] = <span class="symbol">None</span></span>, <span name="expirationTime">expirationTime: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="java.time.Instant">Instant</span>] = <span class="symbol">None</span></span>, <span name="notBefore">notBefore: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="java.time.Instant">Instant</span>] = <span class="symbol">None</span></span>, <span name="issuedAt">issuedAt: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="java.time.Instant">Instant</span>] = <span class="symbol">None</span></span>, <span name="jwtID">jwtID: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="custom">custom: <a href="https://oss.sonatype.org/service/local/repositories/public/archive/org/mdedetrich/scala-json-ast_2.12/1.0.0-M7/scala-json-ast_2.12-1.0.0-M7-javadoc.jar/!/index.html#scala.json.ast.JObject" class="extype" target="_top">JObject</a> = <span class="symbol">JObject()</span></span>)</span><span class="result"> extends <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Product" class="extype" target="_top">Product</a> with <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Serializable" class="extype" target="_top">Serializable</a></span>
       </span>
       </h4>
 
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>JWT reserved claims and also optional custom claims in the form of a JSON object.</p><p>See the [JWT RFC](https://tools.ietf.org/html/rfc7519#section-4) for
 the full description of the claims.
-</p></div><dl class="paramcmts block"><dt class="param">issuer</dt><dd class="cmt"><p>The JWT 'iss' claim.</p></dd><dt class="param">subject</dt><dd class="cmt"><p>The JWT 'sub' claim.</p></dd><dt class="param">audience</dt><dd class="cmt"><p>The JWT 'aud' claim.</p></dd><dt class="param">expirationTime</dt><dd class="cmt"><p>The JWT 'exp' claim in seconds.</p></dd><dt class="param">notBefore</dt><dd class="cmt"><p>The JWT 'nbf' claim in seconds.</p></dd><dt class="param">issuedAt</dt><dd class="cmt"><p>The JWT 'iat' claim in seconds.</p></dd><dt class="param">jwtID</dt><dd class="cmt"><p>The JWT 'jti' claim.</p></dd><dt class="param">custom</dt><dd class="cmt"><p>Some custom claims as JSON.</p></dd></dl><div class="toggleContainer block">
+</p></div><dl class="paramcmts block"><dt class="param">issuer</dt><dd class="cmt"><p>The JWT 'iss' claim.</p></dd><dt class="param">subject</dt><dd class="cmt"><p>The JWT 'sub' claim.</p></dd><dt class="param">audience</dt><dd class="cmt"><p>The JWT 'aud' claim.</p></dd><dt class="param">expirationTime</dt><dd class="cmt"><p>The JWT 'exp' claim as <code>Instant</code> in seconds.</p></dd><dt class="param">notBefore</dt><dd class="cmt"><p>The JWT 'nbf' claim as <code>Instant</code> in seconds.</p></dd><dt class="param">issuedAt</dt><dd class="cmt"><p>The JWT 'iat' claim as <code>Instant</code> in seconds.</p></dd><dt class="param">jwtID</dt><dd class="cmt"><p>The JWT 'jti' claim.</p></dd><dt class="param">custom</dt><dd class="cmt"><p>Some custom claims as JSON.</p></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
@@ -294,9 +306,9 @@ the full description of the claims.
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="silhouette.jwt.JwtClaims#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="&lt;init&gt;(issuer:Option[String],subject:Option[String],audience:Option[List[String]],expirationTime:Option[Long],notBefore:Option[Long],issuedAt:Option[Long],jwtID:Option[String],custom:scala.json.ast.JObject):silhouette.jwt.JwtClaims"></a><a id="&lt;init&gt;:JwtClaims"></a>
+      <a id="&lt;init&gt;(issuer:Option[String],subject:Option[String],audience:Option[List[String]],expirationTime:Option[java.time.Instant],notBefore:Option[java.time.Instant],issuedAt:Option[java.time.Instant],jwtID:Option[String],custom:scala.json.ast.JObject):silhouette.jwt.JwtClaims"></a><a id="&lt;init&gt;:JwtClaims"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/JwtClaims.html#&lt;init&gt;(issuer:Option[String],subject:Option[String],audience:Option[List[String]],expirationTime:Option[Long],notBefore:Option[Long],issuedAt:Option[Long],jwtID:Option[String],custom:scala.json.ast.JObject):silhouette.jwt.JwtClaims" title="Permalink">
+      <a href="../../silhouette/jwt/JwtClaims.html#&lt;init&gt;(issuer:Option[String],subject:Option[String],audience:Option[List[String]],expirationTime:Option[java.time.Instant],notBefore:Option[java.time.Instant],issuedAt:Option[java.time.Instant],jwtID:Option[String],custom:scala.json.ast.JObject):silhouette.jwt.JwtClaims" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -305,10 +317,10 @@ the full description of the claims.
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">JwtClaims</span><span class="params">(<span name="issuer">issuer: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="subject">subject: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="audience">audience: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Predef.String">String</span>]] = <span class="symbol">None</span></span>, <span name="expirationTime">expirationTime: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Long" class="extype" target="_top">Long</a>] = <span class="symbol">None</span></span>, <span name="notBefore">notBefore: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Long" class="extype" target="_top">Long</a>] = <span class="symbol">None</span></span>, <span name="issuedAt">issuedAt: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Long" class="extype" target="_top">Long</a>] = <span class="symbol">None</span></span>, <span name="jwtID">jwtID: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="custom">custom: <a href="https://oss.sonatype.org/service/local/repositories/public/archive/org/mdedetrich/scala-json-ast_2.12/1.0.0-M7/scala-json-ast_2.12-1.0.0-M7-javadoc.jar/!/index.html#scala.json.ast.JObject" class="extype" target="_top">JObject</a> = <span class="symbol">JObject()</span></span>)</span>
+        <span class="name">JwtClaims</span><span class="params">(<span name="issuer">issuer: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="subject">subject: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="audience">audience: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Predef.String">String</span>]] = <span class="symbol">None</span></span>, <span name="expirationTime">expirationTime: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="java.time.Instant">Instant</span>] = <span class="symbol">None</span></span>, <span name="notBefore">notBefore: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="java.time.Instant">Instant</span>] = <span class="symbol">None</span></span>, <span name="issuedAt">issuedAt: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="java.time.Instant">Instant</span>] = <span class="symbol">None</span></span>, <span name="jwtID">jwtID: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>, <span name="custom">custom: <a href="https://oss.sonatype.org/service/local/repositories/public/archive/org/mdedetrich/scala-json-ast_2.12/1.0.0-M7/scala-json-ast_2.12-1.0.0-M7-javadoc.jar/!/index.html#scala.json.ast.JObject" class="extype" target="_top">JObject</a> = <span class="symbol">JObject()</span></span>)</span>
       </span>
       
-      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">issuer</dt><dd class="cmt"><p>The JWT 'iss' claim.</p></dd><dt class="param">subject</dt><dd class="cmt"><p>The JWT 'sub' claim.</p></dd><dt class="param">audience</dt><dd class="cmt"><p>The JWT 'aud' claim.</p></dd><dt class="param">expirationTime</dt><dd class="cmt"><p>The JWT 'exp' claim in seconds.</p></dd><dt class="param">notBefore</dt><dd class="cmt"><p>The JWT 'nbf' claim in seconds.</p></dd><dt class="param">issuedAt</dt><dd class="cmt"><p>The JWT 'iat' claim in seconds.</p></dd><dt class="param">jwtID</dt><dd class="cmt"><p>The JWT 'jti' claim.</p></dd><dt class="param">custom</dt><dd class="cmt"><p>Some custom claims as JSON.</p></dd></dl></div>
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">issuer</dt><dd class="cmt"><p>The JWT 'iss' claim.</p></dd><dt class="param">subject</dt><dd class="cmt"><p>The JWT 'sub' claim.</p></dd><dt class="param">audience</dt><dd class="cmt"><p>The JWT 'aud' claim.</p></dd><dt class="param">expirationTime</dt><dd class="cmt"><p>The JWT 'exp' claim as <code>Instant</code> in seconds.</p></dd><dt class="param">notBefore</dt><dd class="cmt"><p>The JWT 'nbf' claim as <code>Instant</code> in seconds.</p></dd><dt class="param">issuedAt</dt><dd class="cmt"><p>The JWT 'iat' claim as <code>Instant</code> in seconds.</p></dd><dt class="param">jwtID</dt><dd class="cmt"><p>The JWT 'jti' claim.</p></dd><dt class="param">custom</dt><dd class="cmt"><p>Some custom claims as JSON.</p></dd></dl></div>
     </li></ol>
             </div>
 
@@ -454,9 +466,9 @@ the full description of the claims.
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="silhouette.jwt.JwtClaims#expirationTime" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="expirationTime:Option[Long]"></a>
+      <a id="expirationTime:Option[java.time.Instant]"></a><a id="expirationTime:Option[Instant]"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/JwtClaims.html#expirationTime:Option[Long]" title="Permalink">
+      <a href="../../silhouette/jwt/JwtClaims.html#expirationTime:Option[java.time.Instant]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -465,7 +477,7 @@ the full description of the claims.
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">expirationTime</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Long" class="extype" target="_top">Long</a>]</span>
+        <span class="name">expirationTime</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="java.time.Instant">Instant</span>]</span>
       </span>
       
       
@@ -524,9 +536,9 @@ the full description of the claims.
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="silhouette.jwt.JwtClaims#issuedAt" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="issuedAt:Option[Long]"></a>
+      <a id="issuedAt:Option[java.time.Instant]"></a><a id="issuedAt:Option[Instant]"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/JwtClaims.html#issuedAt:Option[Long]" title="Permalink">
+      <a href="../../silhouette/jwt/JwtClaims.html#issuedAt:Option[java.time.Instant]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -535,7 +547,7 @@ the full description of the claims.
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">issuedAt</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Long" class="extype" target="_top">Long</a>]</span>
+        <span class="name">issuedAt</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="java.time.Instant">Instant</span>]</span>
       </span>
       
       
@@ -588,9 +600,9 @@ the full description of the claims.
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="silhouette.jwt.JwtClaims#notBefore" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="notBefore:Option[Long]"></a>
+      <a id="notBefore:Option[java.time.Instant]"></a><a id="notBefore:Option[Instant]"></a>
       <span class="permalink">
-      <a href="../../silhouette/jwt/JwtClaims.html#notBefore:Option[Long]" title="Permalink">
+      <a href="../../silhouette/jwt/JwtClaims.html#notBefore:Option[java.time.Instant]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -599,7 +611,7 @@ the full description of the claims.
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">notBefore</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Long" class="extype" target="_top">Long</a>]</span>
+        <span class="name">notBefore</span><span class="result">: <a href="http://scala-lang.org/files/archive/api/2.12.1/index.html#scala.Option" class="extype" target="_top">Option</a>[<span class="extype" name="java.time.Instant">Instant</span>]</span>
       </span>
       
       
