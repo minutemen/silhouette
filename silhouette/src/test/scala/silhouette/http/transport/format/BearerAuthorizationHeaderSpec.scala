@@ -41,7 +41,7 @@ class BearerAuthorizationHeaderSpec extends Specification {
 
   "The `write` method" should {
     "return a 'Bearer' auth header for the given credentials" in new Context {
-      format.write("some.long.token") must be equalTo s"Bearer some.long.token"
+      format.write("some.long.token") must beSuccessfulTry(s"Bearer some.long.token")
     }
   }
 

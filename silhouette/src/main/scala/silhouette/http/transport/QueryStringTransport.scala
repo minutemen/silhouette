@@ -17,8 +17,7 @@
  */
 package silhouette.http.transport
 
-import silhouette.http.{ RequestPipeline, RequestTransport, TransportSettings }
-import silhouette.util.Format
+import silhouette.http._
 
 /**
  * The settings for the header transport.
@@ -33,17 +32,14 @@ final case class QueryStringTransportSettings(name: String) extends TransportSet
  * A query string does only exists for a request. So this is the only implementation.
  *
  * @param settings The transport settings.
- * @param format   The format to transform between the transport specific value and the payload.
  */
-final case class QueryStringRequestTransport[B](settings: QueryStringTransportSettings)(
-  implicit
-  protected val format: Format[String, B]
-) extends RequestTransport[String, B] {
+final case class QueryStringRequestTransport(settings: QueryStringTransportSettings)
+  extends RequestTransport {
 
   /**
    * The type of the concrete implementation of this abstract type.
    */
-  override type Self = QueryStringRequestTransport[B]
+  override type Self = QueryStringRequestTransport
 
   /**
    * The settings type.
@@ -65,8 +61,8 @@ final case class QueryStringRequestTransport[B](settings: QueryStringTransportSe
    * @tparam R The type of the request.
    * @return Some value or None if no payload could be found in request.
    */
-  override def retrieve[R](request: RequestPipeline[R]): Option[B] =
-    request.queryParam(settings.name).headOption.map(read)
+  override def retrieve[R](request: RequestPipeline[R]): Option[String] =
+    request.queryParam(settings.name).headOption
 
   /**
    * Adds a query param with the given payload to the request.
@@ -76,6 +72,6 @@ final case class QueryStringRequestTransport[B](settings: QueryStringTransportSe
    * @tparam R The type of the request.
    * @return The manipulated request pipeline.
    */
-  override def embed[R](payload: B, request: RequestPipeline[R]): RequestPipeline[R] =
+  override def embed[R](payload: String, request: RequestPipeline[R]): RequestPipeline[R] =
     request.withQueryParams(settings.name -> payload)
 }

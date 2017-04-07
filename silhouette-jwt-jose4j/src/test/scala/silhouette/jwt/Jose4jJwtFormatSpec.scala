@@ -17,7 +17,8 @@
  */
 package silhouette.jwt
 
-import java.time.ZonedDateTime
+import java.time.Clock
+import java.time.temporal.ChronoUnit
 
 import org.jose4j.jwa.AlgorithmConstraints
 import org.jose4j.jws.AlgorithmIdentifiers._
@@ -53,15 +54,15 @@ class Jose4jJwtFormatSpec extends Specification with WithBouncyCastle {
     }
 
     "generate a JWT with an `exp` claim" in new Context {
-      generate(JwtClaims(expirationTime = Some(ZonedDateTime.now().toEpochSecond)))
+      generate(JwtClaims(expirationTime = Some(Clock.systemUTC().instant())))
     }
 
     "generate a JWT with a `nbf` claim" in new Context {
-      generate(JwtClaims(notBefore = Some(ZonedDateTime.now().toEpochSecond)))
+      generate(JwtClaims(notBefore = Some(Clock.systemUTC().instant())))
     }
 
     "generate a JWT with an `iat` claim" in new Context {
-      generate(JwtClaims(issuedAt = Some(ZonedDateTime.now().toEpochSecond)))
+      generate(JwtClaims(issuedAt = Some(Clock.systemUTC().instant())))
     }
 
     "generate a JWT with a `jti` claim" in new Context {
@@ -77,9 +78,9 @@ class Jose4jJwtFormatSpec extends Specification with WithBouncyCastle {
         issuer = Some("test"),
         subject = Some("test"),
         audience = Some(List("test1", "test2")),
-        expirationTime = Some(ZonedDateTime.now().toEpochSecond),
-        notBefore = Some(ZonedDateTime.now().toEpochSecond),
-        issuedAt = Some(ZonedDateTime.now().toEpochSecond),
+        expirationTime = Some(Clock.systemUTC().instant()),
+        notBefore = Some(Clock.systemUTC().instant()),
+        issuedAt = Some(Clock.systemUTC().instant()),
         jwtID = Some("test"),
         custom = customClaims
       ))
@@ -191,7 +192,11 @@ class Jose4jJwtFormatSpec extends Specification with WithBouncyCastle {
     protected def generate(claims: JwtClaims): MatchResult[Any] = {
       generator.write(claims) must beSuccessfulTry.like {
         case jwt =>
-          generator.read(jwt) must beSuccessfulTry.withValue(claims)
+          generator.read(jwt) must beSuccessfulTry.withValue(claims.copy(
+            expirationTime = claims.expirationTime.map(_.truncatedTo(ChronoUnit.SECONDS)),
+            notBefore = claims.notBefore.map(_.truncatedTo(ChronoUnit.SECONDS)),
+            issuedAt = claims.issuedAt.map(_.truncatedTo(ChronoUnit.SECONDS))
+          ))
       }
     }
 
