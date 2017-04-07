@@ -15,25 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette
+package silhouette.authenticator
 
-import io.circe.generic.semiauto._
-import io.circe.{ Decoder, Encoder }
+import silhouette.Authenticator
+import silhouette.http.RequestPipeline
 
-/**
- * Represents a linked login for an identity (i.e. a local username/password or a Facebook/Google account).
- *
- * The login info contains the data about the provider that authenticated that identity.
- *
- * @param providerID  The ID of the provider.
- * @param providerKey A unique key which identifies a user on this provider (userID, email, ...).
- */
-case class LoginInfo(providerID: String, providerKey: String)
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * The companion object.
+ * Adds the ability to validate an [[Authenticator]].
  */
-object LoginInfo {
-  implicit val loginInfoDecoder: Decoder[LoginInfo] = deriveDecoder
-  implicit val loginInfoEncoder: Encoder[LoginInfo] = deriveEncoder
+trait AuthenticatorValidator {
+
+  /**
+   * Checks if the authenticator is valid.
+   *
+   * @param authenticator The authenticator to validate.
+   * @param request       The request pipeline.
+   * @param ec            The execution context to perform the async operations.
+   * @tparam R The type of the request.
+   * @return True if the authenticator is valid, false otherwise.
+   */
+  def isValid[R](authenticator: Authenticator)(
+    implicit
+    request: RequestPipeline[R],
+    ec: ExecutionContext
+  ): Future[Boolean]
 }

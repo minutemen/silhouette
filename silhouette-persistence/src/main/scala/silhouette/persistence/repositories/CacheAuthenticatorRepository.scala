@@ -19,22 +19,20 @@ package silhouette.persistence.repositories
 
 import javax.inject.Inject
 
-import silhouette.StorableAuthenticator
+import silhouette.Authenticator
 import silhouette.persistence.CacheLayer
 import silhouette.repositories.AuthenticatorRepository
 
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
-import scala.reflect.ClassTag
 
 /**
  * Implementation of the authenticator repository which uses the cache layer to persist the authenticator.
  *
  * @param cacheLayer The cache layer implementation.
- * @tparam T The type of the authenticator to store.
  */
-class CacheAuthenticatorRepository[T <: StorableAuthenticator: ClassTag] @Inject() (cacheLayer: CacheLayer)
-  extends AuthenticatorRepository[T] {
+class CacheAuthenticatorRepository @Inject() (cacheLayer: CacheLayer)
+  extends AuthenticatorRepository {
 
   /**
    * Finds the authenticator for the given ID.
@@ -42,7 +40,7 @@ class CacheAuthenticatorRepository[T <: StorableAuthenticator: ClassTag] @Inject
    * @param id The authenticator ID.
    * @return The found authenticator or None if no authenticator could be found for the given ID.
    */
-  override def find(id: String): Future[Option[T]] = cacheLayer.find[T](id)
+  override def find(id: String): Future[Option[Authenticator]] = cacheLayer.find[Authenticator](id)
 
   /**
    * Adds a new authenticator.
@@ -50,7 +48,8 @@ class CacheAuthenticatorRepository[T <: StorableAuthenticator: ClassTag] @Inject
    * @param authenticator The authenticator to add.
    * @return The added authenticator.
    */
-  override def add(authenticator: T): Future[T] = cacheLayer.save[T](authenticator.id, authenticator, Duration.Inf)
+  override def add(authenticator: Authenticator): Future[Authenticator] =
+    cacheLayer.save[Authenticator](authenticator.id, authenticator, Duration.Inf)
 
   /**
    * Updates an already existing authenticator.
@@ -58,7 +57,8 @@ class CacheAuthenticatorRepository[T <: StorableAuthenticator: ClassTag] @Inject
    * @param authenticator The authenticator to update.
    * @return The updated authenticator.
    */
-  override def update(authenticator: T): Future[T] = cacheLayer.save[T](authenticator.id, authenticator, Duration.Inf)
+  override def update(authenticator: Authenticator): Future[Authenticator] =
+    cacheLayer.save[Authenticator](authenticator.id, authenticator, Duration.Inf)
 
   /**
    * Removes the authenticator for the given ID.

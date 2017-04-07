@@ -17,78 +17,74 @@
  */
 package silhouette.services
 
-import silhouette.http.{ RequestPipeline, ResponsePipeline }
+import silhouette.authenticator.AuthenticatorFormat
+import silhouette.http.{ RequestPipeline, RequestTransport, ResponsePipeline }
 import silhouette.{ Authenticator, ExecutionContextProvider, LoginInfo }
 
 import scala.concurrent.Future
+import scala.json.ast.JObject
 
 /**
  * Handles authenticators for the Silhouette library.
- *
- * @tparam T The type of the authenticator this service is responsible for.
  */
-trait AuthenticatorService[T <: Authenticator] extends ExecutionContextProvider {
+trait AuthenticatorService extends ExecutionContextProvider {
 
   /**
    * Creates a new authenticator for the specified login info.
    *
    * @param loginInfo The login info for which the authenticator should be created.
+   * @param payload   Some custom payload an authenticator can transport.
    * @param request   The request pipeline.
    * @tparam R The type of the request.
    * @return An authenticator.
    */
-  def create[R](loginInfo: LoginInfo)(implicit request: RequestPipeline[R]): Future[T]
+  def create[R](loginInfo: LoginInfo, payload: Option[JObject] = None)(
+    implicit
+    request: RequestPipeline[R]
+  ): Future[Authenticator]
 
   /**
    * Retrieves the authenticator from request.
    *
-   * @param request The request pipeline to retrieve the authenticator from.
+   * An authenticator can be located in different parts of the request and by specifying different
+   * request transports it's possible to retrieve the authenticator from this different request
+   * parts.
+   *
+   * A transport itself extracts the authenticator from request as a string. But With the help of a
+   * [[silhouette.authenticator.AuthenticatorFormat]], it's possible to transform this string into
+   * an [[Authenticator]]. Formats are composable transformers. This means a transformation from a
+   * string into an [[Authenticator]] can run through a chain of different transformers, each of
+   * them applying a different transformation.
+   *
+   * By combining the transports with the transformation pipeline, it makes it now possible to extract
+   * different authenticator types from different request parts.
+   *
+   * If multiple transports are given, then the first found authenticator will be used.
+   *
+   * @param transports The transports, with the appropriate transformers, the request should be retrieved from.
+   * @param request    The request pipeline to retrieve the authenticator from.
    * @tparam R The type of the request.
    * @return Some authenticator or None if no authenticator could be found in request.
    */
-  def retrieve[R](implicit request: RequestPipeline[R]): Future[Option[T]]
+  def retrieve[R](transports: (RequestTransport, AuthenticatorFormat)*)(
+    implicit
+    request: RequestPipeline[R]
+  ): Future[Option[Authenticator]]
 
   /**
-   * Initializes an authenticator and instead of embedding into the the request or response, it returns
-   * the serialized value.
+   * Embeds an authenticator into the response.
    *
-   * @param authenticator The authenticator instance.
+   * @param authenticator The authenticator to embed.
+   * @param response      The response pipeline to manipulate.
    * @param request       The request pipeline.
-   * @tparam R The type of the request.
-   * @return The serialized authenticator value.
-   */
-  def init[R](authenticator: T)(implicit request: RequestPipeline[R]): Future[T#Value]
-
-  /**
-   * Embeds authenticator specific artifacts into the response.
-   *
-   * @param value    The authenticator value to embed.
-   * @param response The response pipeline to manipulate.
-   * @param request  The request pipeline.
    * @tparam R The type of the request.
    * @tparam P The type of the response.
    * @return The manipulated response pipeline.
    */
-  def embed[R, P](value: T#Value, response: ResponsePipeline[P])(
+  def embed[R, P](authenticator: Authenticator, response: ResponsePipeline[P])(
     implicit
-    request: RequestPipeline[R]): Future[ResponsePipeline[P]]
-
-  /**
-   * Embeds authenticator specific artifacts into the request.
-   *
-   * This method can be used to embed an authenticator in a existing request. This can be useful
-   * for testing. So before accessing a endpoint we can embed the authenticator in the request
-   * to lead the action to believe that the request is a new request which contains a valid
-   * authenticator.
-   *
-   * If an existing authenticator exists, then it will be overridden.
-   *
-   * @param value   The authenticator value to embed.
-   * @param request The request pipeline.
-   * @tparam R The type of the request.
-   * @return The manipulated request pipeline.
-   */
-  def embed[R](value: T#Value, request: RequestPipeline[R]): RequestPipeline[R]
+    request: RequestPipeline[R]
+  ): Future[ResponsePipeline[P]]
 
   /**
    * Touches an authenticator.
@@ -103,7 +99,7 @@ trait AuthenticatorService[T <: Authenticator] extends ExecutionContextProvider 
    * @param authenticator The authenticator to touch.
    * @return The touched authenticator on the left or the untouched authenticator on the right.
    */
-  def touch(authenticator: T): Either[T, T]
+  def touch(authenticator: Authenticator): Either[Authenticator, Authenticator]
 
   /**
    * Updates a touched authenticator.
@@ -119,9 +115,10 @@ trait AuthenticatorService[T <: Authenticator] extends ExecutionContextProvider 
    * @tparam P The type of the response.
    * @return The original or a manipulated response pipeline.
    */
-  def update[R, P](authenticator: T, response: ResponsePipeline[P])(
+  def update[R, P](authenticator: Authenticator, response: ResponsePipeline[P])(
     implicit
-    request: RequestPipeline[R]): Future[ResponsePipeline[P]]
+    request: RequestPipeline[R]
+  ): Future[ResponsePipeline[P]]
 
   /**
    * Renews the expiration of an authenticator without embedding it into the response.
@@ -132,9 +129,9 @@ trait AuthenticatorService[T <: Authenticator] extends ExecutionContextProvider 
    * @param authenticator The authenticator to renew.
    * @param request       The request pipeline.
    * @tparam R The type of the request.
-   * @return The serialized expression of the authenticator.
+   * @return The renewed authenticator.
    */
-  def renew[R](authenticator: T)(implicit request: RequestPipeline[R]): Future[T#Value]
+  def renew[R](authenticator: Authenticator)(implicit request: RequestPipeline[R]): Future[Authenticator]
 
   /**
    * Renews the expiration of an authenticator.
@@ -150,9 +147,10 @@ trait AuthenticatorService[T <: Authenticator] extends ExecutionContextProvider 
    * @tparam P The type of the response.
    * @return The original or a manipulated response pipeline.
    */
-  def renew[R, P](authenticator: T, response: ResponsePipeline[P])(
+  def renew[R, P](authenticator: Authenticator, response: ResponsePipeline[P])(
     implicit
-    request: RequestPipeline[R]): Future[ResponsePipeline[P]]
+    request: RequestPipeline[R]
+  ): Future[ResponsePipeline[P]]
 
   /**
    * Manipulates the response and removes authenticator specific artifacts before sending it to the client.
@@ -164,9 +162,10 @@ trait AuthenticatorService[T <: Authenticator] extends ExecutionContextProvider 
    * @tparam P The type of the response.
    * @return The manipulated response pipeline.
    */
-  def discard[R, P](authenticator: T, response: ResponsePipeline[P])(
+  def discard[R, P](authenticator: Authenticator, response: ResponsePipeline[P])(
     implicit
-    request: RequestPipeline[R]): Future[ResponsePipeline[P]]
+    request: RequestPipeline[R]
+  ): Future[ResponsePipeline[P]]
 }
 
 /**

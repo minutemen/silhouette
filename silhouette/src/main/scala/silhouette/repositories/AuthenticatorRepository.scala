@@ -17,16 +17,14 @@
  */
 package silhouette.repositories
 
-import silhouette.StorableAuthenticator
+import silhouette.Authenticator
 
 import scala.concurrent.Future
 
 /**
  * A trait that provides the means to persist authenticator information for the Silhouette module.
- *
- * @tparam T The type of the authenticator to store.
  */
-trait AuthenticatorRepository[T <: StorableAuthenticator] {
+trait AuthenticatorRepository {
 
   /**
    * Finds the authenticator for the given ID.
@@ -34,7 +32,7 @@ trait AuthenticatorRepository[T <: StorableAuthenticator] {
    * @param id The authenticator ID.
    * @return The found authenticator or None if no authenticator could be found for the given ID.
    */
-  def find(id: String): Future[Option[T]]
+  def find(id: String): Future[Option[Authenticator]]
 
   /**
    * Adds a new authenticator.
@@ -42,7 +40,7 @@ trait AuthenticatorRepository[T <: StorableAuthenticator] {
    * @param authenticator The authenticator to add.
    * @return The added authenticator.
    */
-  def add(authenticator: T): Future[T]
+  def add(authenticator: Authenticator): Future[Authenticator]
 
   /**
    * Updates an already existing authenticator.
@@ -50,7 +48,7 @@ trait AuthenticatorRepository[T <: StorableAuthenticator] {
    * @param authenticator The authenticator to update.
    * @return The updated authenticator.
    */
-  def update(authenticator: T): Future[T]
+  def update(authenticator: Authenticator): Future[Authenticator]
 
   /**
    * Removes the authenticator for the given ID.

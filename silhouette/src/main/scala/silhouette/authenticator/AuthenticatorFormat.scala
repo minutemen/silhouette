@@ -15,25 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette
+package silhouette.authenticator
 
-import io.circe.generic.semiauto._
-import io.circe.{ Decoder, Encoder }
+import silhouette.Authenticator
+import silhouette.util.{ Reads, Writes }
 
-/**
- * Represents a linked login for an identity (i.e. a local username/password or a Facebook/Google account).
- *
- * The login info contains the data about the provider that authenticated that identity.
- *
- * @param providerID  The ID of the provider.
- * @param providerKey A unique key which identifies a user on this provider (userID, email, ...).
- */
-case class LoginInfo(providerID: String, providerKey: String)
+import scala.concurrent.Future
 
 /**
- * The companion object.
+ * Transforms a string into an [[Authenticator]].
  */
-object LoginInfo {
-  implicit val loginInfoDecoder: Decoder[LoginInfo] = deriveDecoder
-  implicit val loginInfoEncoder: Encoder[LoginInfo] = deriveEncoder
-}
+trait AuthenticatorReads extends Reads[String, Future[Authenticator]]
+
+/**
+ * Transforms an [[Authenticator]] into a string.
+ */
+trait AuthenticatorWrites extends Writes[Authenticator, Future[String]]
+
+/**
+ * Authenticator transformer combinator.
+ */
+trait AuthenticatorFormat extends AuthenticatorReads with AuthenticatorWrites

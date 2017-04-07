@@ -17,135 +17,45 @@
  */
 package silhouette
 
-import java.time.ZonedDateTime
+import java.time.Instant
 
-import silhouette.Authenticator.Implicits._
+import silhouette.authenticator.AuthenticatorValidator
+import silhouette.http.RequestPipeline
 
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.json.ast.JObject
 
 /**
  * An authenticator tracks an authenticated user.
+ *
+ * @param id                 The ID of the authenticator.
+ * @param loginInfo          The linked login info for an identity.
+ * @param lastUsedDateTime   The last used date/time.
+ * @param expirationDateTime The expiration date/time.
+ * @param fingerprint        Maybe a fingerprint of the user.
+ * @param payload            Some custom payload an authenticator can transport.
  */
-trait Authenticator {
+final case class Authenticator(
+  id: String,
+  loginInfo: LoginInfo,
+  lastUsedDateTime: Instant,
+  expirationDateTime: Instant,
+  fingerprint: Option[String] = None,
+  payload: Option[JObject] = None) {
 
   /**
-   * The Type of the generated value an authenticator will be serialized to.
-   */
-  type Value
-
-  /**
-   * The type of the settings an authenticator can handle.
-   */
-  type Settings
-
-  /**
-   * Gets the linked login info for an identity.
+   * Checks if the authenticator is valid.
    *
-   * @return The linked login info for an identity.
+   * @param validators The list of validators to validate the authenticator with.
+   * @param request    The request pipeline.
+   * @param ec         The execution context to perform the async operations.
+   * @return True if the authenticator is valid, false otherwise.
    */
-  def loginInfo: LoginInfo
-
-  /**
-   * Checks if the authenticator valid.
-   *
-   * @return True if the authenticator valid, false otherwise.
-   */
-  def isValid: Boolean
-}
-
-/**
- * The `Authenticator` companion object.
- */
-object Authenticator {
-
-  /**
-   * Some implicits.
-   */
-  object Implicits {
-
-    /**
-     * Defines additional methods on an `DateTime` instance.
-     *
-     * @param dateTime The `DateTime` instance on which the additional methods should be defined.
-     */
-    implicit class RichDateTime(dateTime: ZonedDateTime) {
-
-      /**
-       * Adds a duration to a date/time.
-       *
-       * @param duration The duration to add.
-       * @return A date/time instance with the added duration.
-       */
-      def +(duration: FiniteDuration): ZonedDateTime = {
-        dateTime.plusSeconds(duration.toSeconds)
-      }
-
-      /**
-       * Subtracts a duration from a date/time.
-       *
-       * @param duration The duration to subtract.
-       * @return A date/time instance with the subtracted duration.
-       */
-      def -(duration: FiniteDuration): ZonedDateTime = {
-        dateTime.minusSeconds(duration.toSeconds)
-      }
-    }
+  def isValid[R](validators: Set[AuthenticatorValidator])(
+    implicit
+    request: RequestPipeline[R],
+    ec: ExecutionContext
+  ): Future[Boolean] = {
+    Future.sequence(validators.map(_.isValid(this))).map(!_.exists(!_))
   }
-}
-
-/**
- * An authenticator which can be stored in a backing store.
- */
-trait StorableAuthenticator extends Authenticator {
-
-  /**
-   * Gets the ID to reference the authenticator in the backing store.
-   *
-   * @return The ID to reference the authenticator in the backing store.
-   */
-  def id: String
-}
-
-/**
- * An authenticator that may expire.
- */
-trait ExpirableAuthenticator extends Authenticator {
-
-  /**
-   * The last used date/time.
-   */
-  val lastUsedDateTime: ZonedDateTime
-
-  /**
-   * The expiration date/time.
-   */
-  val expirationDateTime: ZonedDateTime
-
-  /**
-   * The duration an authenticator can be idle before it timed out.
-   */
-  val idleTimeout: Option[FiniteDuration]
-
-  /**
-   * Checks if the authenticator isn't expired and isn't timed out.
-   *
-   * @return True if the authenticator isn't expired and isn't timed out.
-   */
-  override def isValid: Boolean = !isExpired && !isTimedOut
-
-  /**
-   * Checks if the authenticator is expired. This is an absolute timeout since the creation of
-   * the authenticator.
-   *
-   * @return True if the authenticator is expired, false otherwise.
-   */
-  def isExpired: Boolean = expirationDateTime.isBefore(ZonedDateTime.now())
-
-  /**
-   * Checks if the time elapsed since the last time the authenticator was used, is longer than
-   * the maximum idle timeout specified in the properties.
-   *
-   * @return True if sliding window expiration is activated and the authenticator is timed out, false otherwise.
-   */
-  def isTimedOut: Boolean = idleTimeout.isDefined && (lastUsedDateTime + idleTimeout.get).isBefore(ZonedDateTime.now())
 }
