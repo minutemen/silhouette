@@ -19,35 +19,19 @@ package silhouette.jwt
 
 import silhouette.util.{ Reads, Writes }
 
-import scala.json.ast.JObject
 import scala.util.Try
 
 /**
- * JWT reserved claims and also optional custom claims in the form of a JSON object.
- *
- * See the [JWT RFC](https://tools.ietf.org/html/rfc7519#section-4) for
- * the full description of the claims.
- *
- * @param issuer         The JWT 'iss' claim.
- * @param subject        The JWT 'sub' claim.
- * @param audience       The JWT 'aud' claim.
- * @param expirationTime The JWT 'exp' claim in seconds.
- * @param notBefore      The JWT 'nbf' claim in seconds.
- * @param issuedAt       The JWT 'iat' claim in seconds.
- * @param jwtID          The JWT 'jti' claim.
- * @param custom         Some custom claims as JSON.
+ * Transforms a string into a [[JwtClaims]] object.
  */
-case class JwtClaims(
-  issuer: Option[String] = None,
-  subject: Option[String] = None,
-  audience: Option[List[String]] = None,
-  expirationTime: Option[Long] = None,
-  notBefore: Option[Long] = None,
-  issuedAt: Option[Long] = None,
-  jwtID: Option[String] = None,
-  custom: JObject = JObject())
+trait JwtReads extends Reads[String, Try[JwtClaims]]
 
 /**
- * JWT transformer.
+ * Transforms a [[JwtClaims]] object into a string.
  */
-trait JwtFormat extends Reads[String, Try[JwtClaims]] with Writes[JwtClaims, Try[String]]
+trait JwtWrites extends Writes[JwtClaims, Try[String]]
+
+/**
+ * JWT transformer combinator.
+ */
+trait JwtFormat extends JwtReads with JwtWrites

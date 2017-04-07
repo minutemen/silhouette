@@ -81,7 +81,7 @@ class HeaderTransportSpec extends Specification {
     /**
      * The header transport to test.
      */
-    val transport = HeaderTransport[String](settings)
+    val transport = HeaderTransport(settings)
 
     /**
      * A fake request.

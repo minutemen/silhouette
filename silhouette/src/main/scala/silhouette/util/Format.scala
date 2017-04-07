@@ -17,83 +17,54 @@
  */
 package silhouette.util
 
-import scala.util.{ Success, Try }
-
 /**
- * Represents a reader that transform an instance of A to B.
+ * Represents a reader that transform an instance of `A` to `B`.
  *
  * @tparam A The source type.
  * @tparam B The target type.
  */
-trait Reads[A, B] {
+trait Reads[A, B] { self =>
 
   /**
-   * Transforms from source A to target B.
+   * Transforms from source `A` to target `B`.
    *
    * @param in The source to transform.
-   * @return An instance of B.
+   * @return An instance of `B`.
    */
   def read(in: A): B
+
+  /**
+   * Composes this [[Reads]] with a transformation function that gets applied to the result of this [[Reads]].
+   *
+   * @param reads The transformation function.
+   * @tparam C The result type of the transformation function.
+   * @return A new composable [[Reads]].
+   */
+  def andThen[C](reads: Reads[B, C]): Reads[A, C] = (in: A) => reads.read(self.read(in))
 }
 
 /**
- * Represents a writer that transform an instance of A to B.
+ * Represents a writer that transform an instance of `A` to `B`.
  *
  * @tparam A The source type.
  * @tparam B The target type.
  */
-trait Writes[A, B] {
+trait Writes[A, B] { self =>
 
   /**
-   * Transforms from source A to target B.
+   * Transforms from source `A` to target `B`.
    *
    * @param in The source to transform.
-   * @return An instance of B.
+   * @return An instance of `B`.
    */
   def write(in: A): B
-}
-
-/**
- * Represents a transform operation which transforms between A and B.
- *
- * This is a default format which assumes that the read operation can throw an [[scala.Exception]] and the
- * write operation doesn't throw an exception. This is the most common case. For special cases you
- * should declare a specific format.
- *
- * @tparam A The source type on the read operation and the target type on the write operation.
- * @tparam B The target type on the read operation and the source type on the write operation.
- */
-trait Format[A, B] extends Reads[A, Try[B]] with Writes[B, A]
-
-/**
- * Some default formats.
- */
-trait DefaultFormats {
 
   /**
-   * Transforms from [[scala.Predef.String]] to [[scala.Predef.String]].
+   * Composes this [[Writes]] with a transformation function that gets applied to the result of this [[Writes]].
+   *
+   * @param writes The transformation function.
+   * @tparam C The result type of the transformation function.
+   * @return A new composable [[Writes]].
    */
-  implicit val stringFormat: Format[String, String] = new Format[String, String] {
-
-    /**
-     * Transforms from source A to target B.
-     *
-     * @param in The source to transform.
-     * @return An instance of B.
-     */
-    override def read(in: String): Try[String] = Success(in)
-
-    /**
-     * Transforms from source A to target B.
-     *
-     * @param in The source to transform.
-     * @return An instance of B.
-     */
-    override def write(in: String): String = in
-  }
+  def andThen[C](writes: Writes[B, C]): Writes[A, C] = (in: A) => writes.write(self.write(in))
 }
-
-/**
- * Provides the implicit default formats.
- */
-object Format extends DefaultFormats

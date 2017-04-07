@@ -21,7 +21,7 @@ import io.circe.parser.parse
 import io.circe.{ Json, ParsingFailure }
 import silhouette.exceptions.{ TransformException, UnsupportedContentTypeException }
 import silhouette.http.client.DefaultBodyFormat._
-import silhouette.util.Format
+import silhouette.util.{ Reads, Writes }
 
 import scala.io.Codec
 import scala.util.{ Failure, Success, Try }
@@ -51,11 +51,25 @@ private[silhouette] object Body {
 }
 
 /**
- * Represents a transformation from [[Body]] to an instance of T.
+ * Transforms a [[Body]] into an instance of `T`.
  *
- * @tparam T The target type.
+ * @tparam T The target type on the read operation.
  */
-private[silhouette] trait BodyFormat[T] extends Format[Body, T]
+private[silhouette] trait BodyReads[T] extends Reads[Body, Try[T]]
+
+/**
+ * Transforms an instance of `T` into a [[Body]].
+ *
+ * @tparam T The source type on the write operation
+ */
+private[silhouette] trait BodyWrites[T] extends Writes[T, Body]
+
+/**
+ * Body transformer combinator.
+ *
+ * @tparam T The target type on the read operation and the source type on the write operation.
+ */
+private[silhouette] trait BodyFormat[T] extends BodyReads[T] with BodyWrites[T]
 
 /**
  * The only aim of this object is to provide a default implicit [[BodyFormat]], that uses

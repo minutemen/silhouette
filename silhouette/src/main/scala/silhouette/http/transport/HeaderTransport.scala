@@ -18,7 +18,6 @@
 package silhouette.http.transport
 
 import silhouette.http._
-import silhouette.util.Format
 
 /**
  * The settings for the header transport.
@@ -30,19 +29,15 @@ final case class HeaderTransportSettings(name: String) extends TransportSettings
 /**
  * The header transport.
  *
- * @tparam B The type of the payload.
  * @param settings The transport settings.
- * @param format   The format to transform between the transport specific value and the payload.
  */
-final case class HeaderTransport[B](settings: HeaderTransportSettings)(
-  implicit
-  protected val format: Format[String, B]
-) extends RequestTransport[String, B] with ResponseTransport[String, B] {
+final case class HeaderTransport(settings: HeaderTransportSettings)
+  extends RequestTransport with ResponseTransport {
 
   /**
    * The type of the concrete implementation of this abstract type.
    */
-  override type Self = HeaderTransport[B]
+  override type Self = HeaderTransport
 
   /**
    * The settings type.
@@ -64,8 +59,8 @@ final case class HeaderTransport[B](settings: HeaderTransportSettings)(
    * @tparam R The type of the request.
    * @return Some value or None if no payload could be found in request.
    */
-  override def retrieve[R](request: RequestPipeline[R]): Option[B] =
-    request.header(settings.name).headOption.map(read)
+  override def retrieve[R](request: RequestPipeline[R]): Option[String] =
+    request.header(settings.name).headOption
 
   /**
    * Adds a header with the given payload to the request.
@@ -75,7 +70,7 @@ final case class HeaderTransport[B](settings: HeaderTransportSettings)(
    * @tparam R The type of the request.
    * @return The manipulated request pipeline.
    */
-  override def embed[R](payload: B, request: RequestPipeline[R]): RequestPipeline[R] =
+  override def embed[R](payload: String, request: RequestPipeline[R]): RequestPipeline[R] =
     request.withHeaders(settings.name -> payload)
 
   /**
@@ -86,7 +81,7 @@ final case class HeaderTransport[B](settings: HeaderTransportSettings)(
    * @tparam P The type of the response.
    * @return The manipulated response pipeline.
    */
-  override def embed[P](payload: B, response: ResponsePipeline[P]): ResponsePipeline[P] =
+  override def embed[P](payload: String, response: ResponsePipeline[P]): ResponsePipeline[P] =
     response.withHeaders(settings.name -> payload)
 
   /**

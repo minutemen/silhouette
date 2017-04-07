@@ -81,7 +81,7 @@ class SessionTransportSpec extends Specification {
     /**
      * The session transport to test.
      */
-    val transport = SessionTransport[String](settings)
+    val transport = SessionTransport(settings)
 
     /**
      * A fake request.

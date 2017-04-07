@@ -18,7 +18,6 @@
 package silhouette.http.transport
 
 import silhouette.http._
-import silhouette.util.Format
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -45,17 +44,14 @@ final case class CookieTransportSettings(
  * The cookie transport.
  *
  * @param settings The transport settings.
- * @param format   The format to transform between the transport specific value and the payload.
  */
-final case class CookieTransport[B](settings: CookieTransportSettings)(
-  implicit
-  protected val format: Format[String, B]
-) extends RequestTransport[String, B] with ResponseTransport[String, B] {
+final case class CookieTransport(settings: CookieTransportSettings)
+  extends RequestTransport with ResponseTransport {
 
   /**
    * The type of the concrete implementation of this abstract type.
    */
-  override type Self = CookieTransport[B]
+  override type Self = CookieTransport
 
   /**
    * The settings type.
@@ -77,7 +73,7 @@ final case class CookieTransport[B](settings: CookieTransportSettings)(
    * @tparam R The type of the request.
    * @return Some value or None if no payload could be found in request.
    */
-  override def retrieve[R](request: RequestPipeline[R]): Option[B] =
+  override def retrieve[R](request: RequestPipeline[R]): Option[String] =
     request.cookie(settings.name).map(_.value)
 
   /**
@@ -88,7 +84,7 @@ final case class CookieTransport[B](settings: CookieTransportSettings)(
    * @tparam R The type of the request.
    * @return The manipulated request pipeline.
    */
-  override def embed[R](payload: B, request: RequestPipeline[R]): RequestPipeline[R] =
+  override def embed[R](payload: String, request: RequestPipeline[R]): RequestPipeline[R] =
     request.withCookies(cookie(payload))
 
   /**
@@ -99,7 +95,7 @@ final case class CookieTransport[B](settings: CookieTransportSettings)(
    * @tparam P The type of the response.
    * @return The manipulated response pipeline.
    */
-  override def embed[P](payload: B, response: ResponsePipeline[P]): ResponsePipeline[P] =
+  override def embed[P](payload: String, response: ResponsePipeline[P]): ResponsePipeline[P] =
     response.withCookies(cookie(payload))
 
   /**

@@ -20,15 +20,15 @@ package silhouette.http.transport.format
 import silhouette.Credentials
 import silhouette.crypto.Base64
 import silhouette.exceptions.TransformException
+import silhouette.http.TransportFormat
 import silhouette.http.transport.format.BasicAuthHeaderFormat._
-import silhouette.util.Format
 
 import scala.util.{ Failure, Success, Try }
 
 /**
  * Handles the transformation of the "basic" `Authorization` header.
  */
-final class BasicAuthHeaderFormat extends Format[String, Credentials] {
+final class BasicAuthHeaderFormat extends TransportFormat[Credentials] {
 
   /**
    * Transforms the "basic" `Authorization` header value into some [[Credentials]].
@@ -53,8 +53,8 @@ final class BasicAuthHeaderFormat extends Format[String, Credentials] {
    * @param credentials The credentials to encode.
    * @return The "basic" `Authorization` header value.
    */
-  override def write(credentials: Credentials): String = {
-    s"Basic ${Base64.encode(s"${credentials.identifier}:${credentials.password}")}"
+  override def write(credentials: Credentials): Try[String] = {
+    Try(s"Basic ${Base64.encode(s"${credentials.identifier}:${credentials.password}")}")
   }
 }
 

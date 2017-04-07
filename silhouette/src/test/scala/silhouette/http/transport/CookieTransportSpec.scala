@@ -91,7 +91,7 @@ class CookieTransportSpec extends Specification {
     /**
      * The cookie transport to test.
      */
-    val transport = CookieTransport[String](settings)
+    val transport = CookieTransport(settings)
 
     /**
      * A fake request.

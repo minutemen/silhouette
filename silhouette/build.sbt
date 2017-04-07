@@ -23,6 +23,7 @@ libraryDependencies ++= Seq(
   Library.inject,
   Library.commonCodec,
   Library.Circe.core,
+  Library.Circe.generic,
   Library.Circe.parser,
   Library.scalaXml
 )

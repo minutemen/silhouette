@@ -17,6 +17,8 @@
  */
 package silhouette.jwt
 
+import java.time.Instant
+
 import org.jose4j.jwt.{ NumericDate, JwtClaims => JJwtClaims }
 import silhouette.exceptions.JwtException
 import silhouette.jwt.Jose4JJwtFormat._
@@ -58,9 +60,12 @@ final class Jose4JJwtFormat(
           case Some(Nil) => None
           case s         => s
         },
-        expirationTime = Option(claims.getExpirationTime).map(_.getValue),
-        notBefore = Option(claims.getNotBefore).map(_.getValue),
-        issuedAt = Option(claims.getIssuedAt).map(_.getValue),
+        expirationTime = Option(claims.getExpirationTime).map(_.getValue)
+          .map(seconds => Instant.ofEpochSecond(seconds)),
+        notBefore = Option(claims.getNotBefore).map(_.getValue)
+          .map(seconds => Instant.ofEpochSecond(seconds)),
+        issuedAt = Option(claims.getIssuedAt).map(_.getValue)
+          .map(seconds => Instant.ofEpochSecond(seconds)),
         jwtID = Option(claims.getJwtId),
         custom = claims.getClaimsMap(ReservedClaims.asJava).asScala match {
           case l if l.isEmpty => JObject()
@@ -88,9 +93,9 @@ final class Jose4JJwtFormat(
       claims.issuer.foreach(result.setIssuer)
       claims.subject.foreach(result.setSubject)
       claims.audience.foreach(v => result.setAudience(v.asJava))
-      claims.expirationTime.foreach(v => result.setExpirationTime(NumericDate.fromSeconds(v)))
-      claims.notBefore.foreach(v => result.setNotBefore(NumericDate.fromSeconds(v)))
-      claims.issuedAt.foreach(v => result.setIssuedAt(NumericDate.fromSeconds(v)))
+      claims.expirationTime.foreach(v => result.setExpirationTime(NumericDate.fromSeconds(v.getEpochSecond)))
+      claims.notBefore.foreach(v => result.setNotBefore(NumericDate.fromSeconds(v.getEpochSecond)))
+      claims.issuedAt.foreach(v => result.setIssuedAt(NumericDate.fromSeconds(v.getEpochSecond)))
       claims.jwtID.foreach(result.setJwtId)
       transformCustomClaims(claims.custom).asScala.foreach {
         case (k, v) =>
