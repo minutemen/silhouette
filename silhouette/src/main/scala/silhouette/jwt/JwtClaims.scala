@@ -44,4 +44,5 @@ case class JwtClaims(
   notBefore: Option[Instant] = None,
   issuedAt: Option[Instant] = None,
   jwtID: Option[String] = None,
-  custom: JObject = JObject())
+  custom: JObject = JObject()
+)

@@ -37,7 +37,8 @@ import scala.xml._
 private[silhouette] final case class Body(
   contentType: ContentType,
   codec: Codec = Body.DefaultCodec,
-  data: Array[Byte])
+  data: Array[Byte]
+)
 
 /**
  * The companion object of the [[Body]].

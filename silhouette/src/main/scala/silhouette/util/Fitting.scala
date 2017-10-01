@@ -38,23 +38,23 @@ import scala.util.{ Failure, Success, Try }
 sealed trait Fitting[A] {
 
   /**
-   * Converts a fitting to an [[Option]].
+   * Converts a fitting to an [[scala.Option]].
    *
-   * @return The resulting [[Option]].
+   * @return The resulting [[scala.Option]].
    */
   def toOption: Option[A]
 
   /**
-   * Converts a fitting to a [[Try]].
+   * Converts a fitting to a [[scala.util.Try]].
    *
-   * @return The resulting [[Try]].
+   * @return The resulting [[scala.util.Try]].
    */
   def toTry: Try[A]
 
   /**
-   * Converts a fitting to a [[Future]].
+   * Converts a fitting to a [[scala.concurrent.Future]].
    *
-   * @return The resulting [[Future]].
+   * @return The resulting [[scala.concurrent.Future]].
    */
   def toFuture: Future[A]
 
@@ -70,11 +70,11 @@ sealed trait Fitting[A] {
   /**
    * Takes a [[Writes]] that converts the fitting value `A` into an `Option[B]`.
    *
-   * @param reads The [[Writes]] to convert the value.
+   * @param writes The [[Writes]] to convert the value.
    * @tparam B The type to convert to.
    * @return A converted [[Fitting]].
    */
-  def andThenOption[B](reads: Writes[A, Option[B]]): Fitting[B]
+  def andThenOption[B](writes: Writes[A, Option[B]]): Fitting[B]
 
   /**
    * Takes a [[Reads]] that converts the fitting value `A` into an `Try[B]`.
@@ -88,11 +88,11 @@ sealed trait Fitting[A] {
   /**
    * Takes a [[Writes]] that converts the fitting value `A` into an `Try[B]`.
    *
-   * @param reads The [[Writes]] to convert the value.
+   * @param writes The [[Writes]] to convert the value.
    * @tparam B The type to convert to.
    * @return A converted [[Fitting]].
    */
-  def andThenTry[B](reads: Writes[A, Try[B]]): Fitting[B]
+  def andThenTry[B](writes: Writes[A, Try[B]]): Fitting[B]
 
   /**
    * Takes a [[Reads]] that converts the fitting value `A` into an `Future[B]`.
@@ -106,11 +106,11 @@ sealed trait Fitting[A] {
   /**
    * Takes a [[Writes]] that converts the fitting value `A` into an `Future[B]`.
    *
-   * @param reads The [[Writes]] to convert the value.
+   * @param writes The [[Writes]] to convert the value.
    * @tparam B The type to convert to.
    * @return A converted [[Fitting]].
    */
-  def andThenFuture[B](reads: Writes[A, Future[B]]): Future[Fitting[B]]
+  def andThenFuture[B](writes: Writes[A, Future[B]]): Future[Fitting[B]]
 }
 
 /**
@@ -129,10 +129,10 @@ final case class SuccessfulFitting[A](value: A) extends Fitting[A] {
   override def andThenFuture[B](reads: Reads[A, Future[B]]): Future[Fitting[B]] =
     futureToFutureFitting(reads.read(value))
 
-  override def andThenOption[B](reads: Writes[A, Option[B]]): Fitting[B] = optionToFitting(reads.write(value))
-  override def andThenTry[B](reads: Writes[A, Try[B]]): Fitting[B] = tryToFitting(reads.write(value))
-  override def andThenFuture[B](reads: Writes[A, Future[B]]): Future[Fitting[B]] =
-    futureToFutureFitting(reads.write(value))
+  override def andThenOption[B](writes: Writes[A, Option[B]]): Fitting[B] = optionToFitting(writes.write(value))
+  override def andThenTry[B](writes: Writes[A, Try[B]]): Fitting[B] = tryToFitting(writes.write(value))
+  override def andThenFuture[B](writes: Writes[A, Future[B]]): Future[Fitting[B]] =
+    futureToFutureFitting(writes.write(value))
 }
 
 /**
@@ -151,9 +151,9 @@ final case class FaultyFitting[A](error: FittingError) extends Fitting[A] {
   override def andThenFuture[B](reads: Reads[A, Future[B]]): Future[Fitting[B]] =
     Future.successful(FaultyFitting(error))
 
-  override def andThenOption[B](reads: Writes[A, Option[B]]): Fitting[B] = FaultyFitting(error)
-  override def andThenTry[B](reads: Writes[A, Try[B]]): Fitting[B] = FaultyFitting(error)
-  override def andThenFuture[B](reads: Writes[A, Future[B]]): Future[Fitting[B]] =
+  override def andThenOption[B](writes: Writes[A, Option[B]]): Fitting[B] = FaultyFitting(error)
+  override def andThenTry[B](writes: Writes[A, Try[B]]): Fitting[B] = FaultyFitting(error)
+  override def andThenFuture[B](writes: Writes[A, Future[B]]): Future[Fitting[B]] =
     Future.successful(FaultyFitting(error))
 }
 
@@ -193,8 +193,8 @@ object Fitting {
   /**
    * Converts an `Option[T]` to a `Fitting[T]`.
    *
-   * @param value The [[Option]] to convert.
-   * @tparam T The type of the [[Option]] value.
+   * @param value The [[scala.Option]] to convert.
+   * @tparam T The type of the [[scala.Option]] value.
    * @return The resulting [[Fitting]].
    */
   implicit def optionToFitting[T](value: Option[T]): Fitting[T] = value match {
@@ -205,8 +205,8 @@ object Fitting {
   /**
    * Converts a `Try[T]` to a `Fitting[T]`.
    *
-   * @param value The [[Try]] to convert.
-   * @tparam T The type of the [[Try]] value.
+   * @param value The [[scala.util.Try]] to convert.
+   * @tparam T The type of the [[scala.util.Try]] value.
    * @return The resulting [[Fitting]].
    */
   implicit def tryToFitting[T](value: Try[T]): Fitting[T] = value match {
@@ -217,8 +217,8 @@ object Fitting {
   /**
    * Converts a `Future[T]` to a `Future[Fitting[T]]`.
    *
-   * @param value The [[Future]] to convert.
-   * @tparam T The type of the [[Future]] value.
+   * @param value The [[scala.concurrent.Future]] to convert.
+   * @tparam T The type of the [[scala.concurrent.Future]] value.
    * @return The resulting [[Fitting]].
    */
   implicit def futureToFutureFitting[T](value: Future[T]): Future[Fitting[T]] = value.map { v =>
@@ -228,29 +228,29 @@ object Fitting {
   }
 
   /**
-   * Converts a fitting to an [[Option]].
+   * Converts a fitting to an [[scala.Option]].
    *
    * @param fitting The fitting to convert.
-   * @tparam T The type of the [[Option]] value.
-   * @return The resulting [[Option]].
+   * @tparam T The type of the [[scala.Option]] value.
+   * @return The resulting [[scala.Option]].
    */
   implicit def fittingToOption[T](fitting: Fitting[T]): Option[T] = fitting.toOption
 
   /**
-   * Converts a fitting to a [[Try]].
+   * Converts a fitting to a [[scala.util.Try]].
    *
    * @param fitting The fitting to convert.
-   * @tparam T The type of the [[Try]] value.
-   * @return The resulting [[Try]].
+   * @tparam T The type of the [[scala.util.Try]] value.
+   * @return The resulting [[scala.util.Try]].
    */
   implicit def fittingToTry[T](fitting: Fitting[T]): Try[T] = fitting.toTry
 
   /**
-   * Converts a fitting to a [[Future]].
+   * Converts a fitting to a [[scala.concurrent.Future]].
    *
    * @param fitting The fitting to convert.
-   * @tparam T The type of the [[Future]] value.
-   * @return The resulting [[Future]].
+   * @tparam T The type of the [[scala.concurrent.Future]] value.
+   * @return The resulting [[scala.concurrent.Future]].
    */
   implicit def fittingToFuture[T](fitting: Fitting[T]): Future[T] = fitting.toFuture
 
@@ -287,12 +287,28 @@ object Fitting {
    * connect types of `Future[Fitting[A]]` to types of `Future[Fitting[B]]`.
    *
    * @param value The type to monkey patch.
-   * @tparam A The type of the [[Future]].
+   * @tparam A The type of the [[scala.concurrent.Future]].
    */
   implicit class FutureFitting[A](value: Future[Fitting[A]]) {
     def andThenFuture[B](reads: Reads[A, Future[B]]): Future[Fitting[B]] = value.flatMap {
       case SuccessfulFitting(v) => futureToFutureFitting(reads.read(v))
       case FaultyFitting(e)     => Future.failed(e.value)
     }
+    def andThenFuture[B](writes: Writes[A, Future[B]]): Future[Fitting[B]] = value.flatMap {
+      case SuccessfulFitting(v) => futureToFutureFitting(writes.write(v))
+      case FaultyFitting(e)     => Future.failed(e.value)
+    }
   }
+
+  /**
+   * Helper to connect a `Reads[A, Future[B]]` directly to a [[scala.concurrent.Future]].
+   *
+   * We already have an implicit converter that converts a `Future[A]` to a `Future[Fitting[A]]` and an implicit
+   * class which adds a `andThenFuture` method to  a `Future[Fitting[A]]`. But this cannot be applied to a `Future[A]`
+   * alone, because Scala cannot chain implicits. So we do this manually here.
+   *
+   * @param value The type to monkey patch.
+   * @tparam A The type of the [[scala.concurrent.Future]].
+   */
+  implicit class RichFuture[A](value: Future[A]) extends FutureFitting(futureToFutureFitting(value))
 }

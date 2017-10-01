@@ -41,6 +41,13 @@ trait Reads[A, B] { self =>
    * @return A new composable [[Reads]].
    */
   def andThen[C](reads: Reads[B, C]): Reads[A, C] = (in: A) => reads.read(self.read(in))
+
+  /**
+   * If used in a format combinator, this method helps to treat the format combinator as [[Reads]].
+   *
+   * @return This [[Reads]] instance.
+   */
+  def asReads: Reads[A, B] = self
 }
 
 /**
@@ -67,4 +74,11 @@ trait Writes[A, B] { self =>
    * @return A new composable [[Writes]].
    */
   def andThen[C](writes: Writes[B, C]): Writes[A, C] = (in: A) => writes.write(self.write(in))
+
+  /**
+   * If used in a format combinator, this method helps to treat the format combinator as [[Writes]].
+   *
+   * @return This [[Writes]] instance.
+   */
+  def asWrites: Writes[A, B] = self
 }

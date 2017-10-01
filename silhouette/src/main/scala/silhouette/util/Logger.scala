@@ -49,7 +49,6 @@ final class Logger private (underlying: SLF4JLogger) {
 
   def error(message: => String): Unit = if (isErrorEnabled) underlying.error(message)
   def error(message: => String, cause: Throwable): Unit = if (isErrorEnabled) underlying.error(message, cause)
-
 }
 
 /**

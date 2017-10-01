@@ -38,9 +38,9 @@ final class BasicAuthHeaderFormat extends TransportFormat[Credentials] {
    */
   override def read(header: String): Try[Credentials] = {
     if (header.startsWith("Basic ")) {
-      Base64.decode(header.replace("Basic ", "")).split(":", 2).toList match {
-        case List(identifier, password) => Success(Credentials(identifier, password))
-        case _                          => Failure(new TransformException(InvalidBasicAuthHeader))
+      Base64.decode(header.replace("Basic ", "")).split(":", 2) match {
+        case Array(identifier, password) => Success(Credentials(identifier, password))
+        case _                           => Failure(new TransformException(InvalidBasicAuthHeader))
       }
     } else {
       Failure(new TransformException(MissingBasicAuthIdentifier))

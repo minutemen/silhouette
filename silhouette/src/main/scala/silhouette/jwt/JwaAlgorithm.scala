@@ -139,5 +139,5 @@ case class JwsEcConfiguration[T](algorithm: JwsEcAlgorithm[T], publicKey: ECPubl
 case class JwsRsaPssConfiguration[T](
   algorithm: JwsRsaPssAlgorithm[T],
   publicKey: RSAPublicKey,
-  privateKey: RSAPrivateKey)
-  extends JwsConfiguration[T]
+  privateKey: RSAPrivateKey
+) extends JwsConfiguration[T]
