@@ -17,12 +17,19 @@
  */
 package silhouette.services
 
-import silhouette.authenticator.AuthenticatorFormat
-import silhouette.http.{ RequestPipeline, RequestTransport, ResponsePipeline }
+import silhouette.http.{ RequestPipeline, ResponsePipeline }
 import silhouette.{ Authenticator, ExecutionContextProvider, LoginInfo }
 
 import scala.concurrent.Future
 import scala.json.ast.JObject
+
+/**
+ * A pipeline which tries to transforms a request into an authenticator.
+ *
+ * @param pipeline The transformation pipeline.
+ * @tparam R The type of the request.
+ */
+case class RetrievalPipeline[R](pipeline: RequestPipeline[R] => Future[Option[Authenticator]])
 
 /**
  * Handles authenticators for the Silhouette library.
@@ -50,23 +57,24 @@ trait AuthenticatorService extends ExecutionContextProvider {
    * request transports it's possible to retrieve the authenticator from this different request
    * parts.
    *
-   * A transport itself extracts the authenticator from request as a string. But With the help of a
-   * [[silhouette.authenticator.AuthenticatorFormat]], it's possible to transform this string into
-   * an [[Authenticator]]. Formats are composable transformers. This means a transformation from a
-   * string into an [[Authenticator]] can run through a chain of different transformers, each of
+   * A transport itself extracts the authenticator related artefacts from the request as a string. But
+   * With the help of a [[silhouette.authenticator.AuthenticatorFormat]], it's possible to transform
+   * this string into an [[Authenticator]]. Formats are composable transformers. This means a transformation
+   * from a string into an [[Authenticator]] can run through a chain of different transformers, each of
    * them applying a different transformation.
    *
-   * By combining the transports with the transformation pipeline, it makes it now possible to extract
-   * different authenticator types from different request parts.
+   * By combining the transports with the authenticator transformation pipeline, it makes it now possible
+   * to extract different authenticator types from different request parts.
    *
-   * If multiple transports are given, then the first found authenticator will be used.
+   * The retrieval pipeline is such a transformation pipeline. This method can accept multiple retrieval
+   * pipeline, where each tries to transform a request into an authenticator.If multiple pipelines are given,
+   * then the first found authenticator will be used.
    *
-   * @param transports The transports, with the appropriate transformers, the request should be retrieved from.
-   * @param request    The request pipeline to retrieve the authenticator from.
+   * @param retrievalPipeline The retrieval pipeline which tries to transforms the request into an authenticator.
    * @tparam R The type of the request.
    * @return Some authenticator or None if no authenticator could be found in request.
    */
-  def retrieve[R](transports: (RequestTransport, AuthenticatorFormat)*)(
+  def retrieve[R](retrievalPipeline: RetrievalPipeline[R]*)(
     implicit
     request: RequestPipeline[R]
   ): Future[Option[Authenticator]]

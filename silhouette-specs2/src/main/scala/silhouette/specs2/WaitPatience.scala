@@ -23,7 +23,6 @@ import org.specs2.mutable.Specification
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.languageFeature.implicitConversions
 
 /**
  * Helper to wait with patience to a result.

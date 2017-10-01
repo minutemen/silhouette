@@ -17,7 +17,7 @@
  */
 package silhouette.authenticator.validator
 
-import java.time.{ Clock, ZonedDateTime }
+import java.time.Clock
 
 import silhouette.http.RequestPipeline
 import silhouette.Authenticator

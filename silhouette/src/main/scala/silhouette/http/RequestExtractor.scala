@@ -19,8 +19,6 @@ package silhouette.http
 
 import silhouette.util.Logging
 
-import scala.language.implicitConversions
-
 /**
  * Adds the ability to extract values from a request.
  *

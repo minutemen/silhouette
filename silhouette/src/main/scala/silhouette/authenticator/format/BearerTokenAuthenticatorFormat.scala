@@ -25,19 +25,26 @@ import silhouette.authenticator.format.BearerTokenAuthenticatorFormat._
 import silhouette.exceptions.AuthenticatorException
 import silhouette.repositories.AuthenticatorRepository
 
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * A format which transforms an authenticator into a bearer token and vice versa.
+ *
+ * A bearer token represents a string that cannot store authenticator related data in it. Instead it needs
+ * a mapping between this string and the authenticator related data, which is commonly handled through a
+ * persistence layer like a database or a cache.
  *
  * We do not persist the authenticator in the write method, because the format isn't the right place to manage
  * the persistence of the token. This means writing a token should not always persist a token. In contrast,
  * the read method must always utilize the persistence layer.
  *
  * @param repository The repository to retrieve the authenticator from.
+ * @param ex The execution context.
  */
-final case class BearerTokenAuthenticatorFormat @Inject() (repository: AuthenticatorRepository)
-  extends AuthenticatorFormat {
+final case class BearerTokenAuthenticatorFormat @Inject() (repository: AuthenticatorRepository)(
+  implicit
+  ex: ExecutionContext
+) extends AuthenticatorFormat {
 
   /**
    * Transforms a bearer token into an [[Authenticator]].
@@ -62,6 +69,6 @@ final case class BearerTokenAuthenticatorFormat @Inject() (repository: Authentic
  * The companion object.
  */
 object BearerTokenAuthenticatorFormat {
-  val MissingAuthenticator = "[Silhouette][BearerTokenAuthenticatorFormat] Cannot get authenticator for id `%s` " +
-    "from repository"
+  val MissingAuthenticator: String = "[Silhouette][BearerTokenAuthenticatorFormat] Cannot get authenticator for " +
+    "id `%s` from repository"
 }

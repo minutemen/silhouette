@@ -1,6 +1,6 @@
 Silhouette
 ==========
-[![Build Status](https://travis-ci.org/minutemen/silhouette.png)](https://travis-ci.org/minutemen/silhouette) [![Coverage Status](https://coveralls.io/repos/minutemen/silhouette/badge.svg?branch=master&service=github)](https://coveralls.io/github/minutemen/silhouette?branch=master) [![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/minutemen/silhouette?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Build Status](https://travis-ci.org/minutemen/silhouette.png)](https://travis-ci.org/minutemen/silhouette) [![Coverage Status](https://coveralls.io/repos/minutemen/silhouette/badge.svg?branch=master&service=github)](https://coveralls.io/github/minutemen/silhouette?branch=master) [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/minutemen/silhouette?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![OpenCollective](https://opencollective.com/silhouette/backers/badge.svg)](#backers) 
 [![OpenCollective](https://opencollective.com/silhouette/sponsors/badge.svg)](#sponsors)
 
