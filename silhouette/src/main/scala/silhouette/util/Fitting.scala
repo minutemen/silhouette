@@ -292,11 +292,15 @@ object Fitting {
   implicit class FutureFitting[A](value: Future[Fitting[A]]) {
     def andThenFuture[B](reads: Reads[A, Future[B]]): Future[Fitting[B]] = value.flatMap {
       case SuccessfulFitting(v) => futureToFutureFitting(reads.read(v))
-      case FaultyFitting(e)     => Future.failed(e.value)
+      case FaultyFitting(e)     => Future.successful(FaultyFitting[B](e))
+    }.recover {
+      case e => FaultyFitting[B](ThrowableError(e))
     }
     def andThenFuture[B](writes: Writes[A, Future[B]]): Future[Fitting[B]] = value.flatMap {
       case SuccessfulFitting(v) => futureToFutureFitting(writes.write(v))
-      case FaultyFitting(e)     => Future.failed(e.value)
+      case FaultyFitting(e)     => Future.successful(FaultyFitting[B](e))
+    }.recover {
+      case e => FaultyFitting[B](ThrowableError(e))
     }
   }
 
