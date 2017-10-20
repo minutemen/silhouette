@@ -15,13 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.exceptions
+package silhouette
+
+import silhouette.exceptions.SilhouetteException
 
 /**
- * An exception thrown when there is an error during authenticator initialization.
+ * An exception for all authenticator related errors.
  *
  * @param msg   The exception message.
  * @param cause The exception cause.
  */
-class AuthenticatorInitializationException(msg: String, cause: Option[Throwable] = None)
-  extends AuthenticatorException(msg, cause)
+class AuthenticatorException(msg: String, cause: Option[Throwable] = None)
+  extends SilhouetteException(msg, cause)

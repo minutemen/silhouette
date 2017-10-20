@@ -30,6 +30,12 @@ val silhouette = Project(
   dependencies = Seq(silhouetteSpecs2 % Test)
 )
 
+val silhouetteAuthenticator = Project(
+  id = "silhouette-authenticator",
+  base = file("silhouette-authenticator"),
+  dependencies = Seq(silhouette, silhouetteSpecs2 % Test)
+)
+
 val silhouetteCryptoJca = Project(
   id = "silhouette-crypto-jca",
   base = file("silhouette-crypto-jca"),
@@ -59,6 +65,7 @@ val root = Project(
   base = file("."),
   aggregate = Seq(
     silhouette,
+    silhouetteAuthenticator,
     silhouetteCryptoJca,
     silhouetteJwtJose4j,
     silhouetteSpecs2,

@@ -15,37 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.authenticator.validator
+package silhouette.authenticator
 
-import java.time.Clock
-
-import silhouette.http.RequestPipeline
 import silhouette.Authenticator
-import silhouette.authenticator.AuthenticatorValidator
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * A validator that checks if an authenticator is expired.
- *
- * @param clock The clock implementation to validate against.
+ * Adds the ability to validate an [[Authenticator]].
  */
-final case class ExpirationValidator(clock: Clock) extends AuthenticatorValidator {
+trait Validator {
 
   /**
    * Checks if the authenticator is valid.
    *
    * @param authenticator The authenticator to validate.
-   * @param request       The request pipeline.
    * @param ec            The execution context to perform the async operations.
-   * @tparam R The type of the request.
    * @return True if the authenticator is valid, false otherwise.
    */
-  override def isValid[R](authenticator: Authenticator)(
+  def isValid(authenticator: Authenticator)(
     implicit
-    request: RequestPipeline[R],
     ec: ExecutionContext
-  ): Future[Boolean] = Future.successful {
-    authenticator.expirationDateTime.isBefore(clock.instant())
-  }
+  ): Future[Boolean]
 }

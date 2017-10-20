@@ -15,8 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette
+package silhouette.authenticator
 
+import silhouette.{ Authenticator, Identity }
 import silhouette.http.RequestPipeline
 
 import scala.concurrent.{ ExecutionContext, Future }

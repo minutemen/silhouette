@@ -15,21 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.util
+package silhouette.authenticator
 
-import silhouette.http.RequestPipeline
+import silhouette.Authenticator
+import silhouette.util
+
+import scala.concurrent.Future
 
 /**
- * A generator which creates a fingerprint to identify a user.
+ * Transforms a string into an [[Authenticator]].
  */
-trait FingerprintGenerator {
+trait Reads extends util.Reads[String, Future[Authenticator]]
 
-  /**
-   * Generates a fingerprint from request.
-   *
-   * @param request The request pipeline.
-   * @tparam R The type of the request.
-   * @return The generated fingerprint.
-   */
-  def generate[R](implicit request: RequestPipeline[R]): String
-}
+/**
+ * Transforms an [[Authenticator]] into a string.
+ */
+trait Writes extends util.Writes[Authenticator, Future[String]]
+
+/**
+ * Authenticator transformer combinator.
+ */
+trait Format extends Reads with Writes

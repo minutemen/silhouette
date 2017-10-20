@@ -15,13 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.exceptions
+package silhouette.util
 
 /**
- * An exception thrown when there is an error during authenticator discarding.
+ * A target is a container type that can write into a target.
  *
- * @param msg   The exception message.
- * @param cause The exception cause.
+ * @tparam T The type of the target.
  */
-class AuthenticatorDiscardingException(msg: String, cause: Option[Throwable] = None)
-  extends AuthenticatorException(msg, cause)
+trait Target[T] {
+
+  /**
+   * Writes to a target.
+   *
+   * @return The target.
+   */
+  def write: T
+}

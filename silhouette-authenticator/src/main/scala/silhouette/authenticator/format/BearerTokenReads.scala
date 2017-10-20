@@ -17,34 +17,26 @@
  */
 package silhouette.authenticator.format
 
-import javax.inject.Inject
-
-import silhouette.Authenticator
-import silhouette.authenticator.AuthenticatorFormat
-import silhouette.authenticator.format.BearerTokenAuthenticatorFormat._
-import silhouette.exceptions.AuthenticatorException
-import silhouette.repositories.AuthenticatorRepository
+import silhouette.authenticator.Reads
+import silhouette.authenticator.format.BearerTokenReads._
+import silhouette.{ Authenticator, AuthenticatorException }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * A format which transforms an authenticator into a bearer token and vice versa.
+ * A reads which transforms a bearer token into an authenticator.
  *
  * A bearer token represents a string that cannot store authenticator related data in it. Instead it needs
  * a mapping between this string and the authenticator related data, which is commonly handled through a
  * persistence layer like a database or a cache.
  *
- * We do not persist the authenticator in the write method, because the format isn't the right place to manage
- * the persistence of the token. This means writing a token should not always persist a token. In contrast,
- * the read method must always utilize the persistence layer.
- *
- * @param repository The repository to retrieve the authenticator from.
+ * @param reader The reader to retrieve the authenticator.
  * @param ex The execution context.
  */
-final case class BearerTokenAuthenticatorFormat @Inject() (repository: AuthenticatorRepository)(
+final case class BearerTokenReads(reader: String => Future[Option[Authenticator]])(
   implicit
   ex: ExecutionContext
-) extends AuthenticatorFormat {
+) extends Reads {
 
   /**
    * Transforms a bearer token into an [[Authenticator]].
@@ -52,23 +44,15 @@ final case class BearerTokenAuthenticatorFormat @Inject() (repository: Authentic
    * @param token The bearer token to transform.
    * @return An authenticator on success, an error on failure.
    */
-  override def read(token: String): Future[Authenticator] = repository.find(token).map(_.getOrElse(
+  override def read(token: String): Future[Authenticator] = reader(token).map(_.getOrElse(
     throw new AuthenticatorException(MissingAuthenticator.format(token))
   ))
-
-  /**
-   * Transforms an [[Authenticator]] into a bearer token.
-   *
-   * @param authenticator The authenticator to transform.
-   * @return A bearer token on success, an error on failure.
-   */
-  override def write(authenticator: Authenticator): Future[String] = Future.successful(authenticator.id)
 }
 
 /**
  * The companion object.
  */
-object BearerTokenAuthenticatorFormat {
-  val MissingAuthenticator: String = "[Silhouette][BearerTokenAuthenticatorFormat] Cannot get authenticator for " +
-    "id `%s` from repository"
+object BearerTokenReads {
+  val MissingAuthenticator: String = "[Silhouette][BearerTokenReads] Cannot get authenticator for " +
+    "id `%s` from given reader"
 }

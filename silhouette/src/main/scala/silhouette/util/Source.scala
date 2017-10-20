@@ -15,13 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.exceptions
+package silhouette.util
 
 /**
- * An exception thrown when there is an error during authenticator creation.
+ * A source is a container type that can read a value from a source.
  *
- * @param msg   The exception message.
- * @param cause The exception cause.
+ * @tparam S The type of the value.
  */
-class AuthenticatorCreationException(msg: String, cause: Option[Throwable] = None)
-  extends AuthenticatorException(msg, cause)
+trait Source[S] {
+
+  /**
+   * Reads from source.
+   *
+   * @return The read value.
+   */
+  def read: S
+}

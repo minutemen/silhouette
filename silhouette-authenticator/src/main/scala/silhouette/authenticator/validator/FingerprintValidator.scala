@@ -17,43 +17,34 @@
  */
 package silhouette.authenticator.validator
 
-import java.time.Clock
-
 import silhouette.Authenticator
-import silhouette.authenticator.AuthenticatorValidator
-import silhouette.http.RequestPipeline
+import silhouette.authenticator.Validator
 
-import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * A validator that checks if an authenticator has timed out after a certain time if it hasn't been used.
+ * A validator that checks if the stored fingerprint is the same as the current fingerprint.
  *
- * An Authenticator can use a sliding window expiration. This means that the Authenticator times out
- * after a certain time if it hasn't been used. So it checks if the time elapsed since the last time
- * the authenticator was used, is longer than the maximum idle timeout specified in the properties
- * of the validator.
+ * If the authenticator has no fingerprint stored, then this validator returns always true.
  *
- * @param idleTimeout The duration an authenticator can be idle before it timed out.
- * @param clock       The clock implementation to validate against.
+ * @param fingerprint The fingerprint to check against.
  */
-final case class SlidingWindowValidator(idleTimeout: FiniteDuration, clock: Clock)
-  extends AuthenticatorValidator {
+final case class FingerprintValidator(fingerprint: String) extends Validator {
 
   /**
    * Checks if the authenticator is valid.
    *
    * @param authenticator The authenticator to validate.
-   * @param request       The request pipeline.
    * @param ec            The execution context to perform the async operations.
-   * @tparam R The type of the request.
    * @return True if the authenticator is valid, false otherwise.
    */
-  override def isValid[R](authenticator: Authenticator)(
+  override def isValid(authenticator: Authenticator)(
     implicit
-    request: RequestPipeline[R],
     ec: ExecutionContext
   ): Future[Boolean] = Future.successful {
-    authenticator.lastUsedDateTime.plusSeconds(idleTimeout.toSeconds).isBefore(clock.instant())
+    authenticator.fingerprint match {
+      case None    => true
+      case Some(f) => f == fingerprint
+    }
   }
 }

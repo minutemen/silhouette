@@ -20,14 +20,13 @@ package silhouette.authenticator.format
 import java.time.Instant
 import javax.inject.Inject
 
+import silhouette.authenticator.Format
+import silhouette.authenticator.format.JwtAuthenticatorFormat._
 import io.circe.jawn.decode
 import io.circe.syntax._
-import silhouette.authenticator.AuthenticatorFormat
-import silhouette.authenticator.format.JwtAuthenticatorFormat._
 import silhouette.crypto.Base64
-import silhouette.exceptions.AuthenticatorException
-import silhouette.jwt.{ JwtClaims, JwtFormat }
-import silhouette.{ Authenticator, LoginInfo }
+import silhouette.jwt
+import silhouette.{ Authenticator, AuthenticatorException, LoginInfo }
 
 import scala.concurrent.Future
 import scala.json.ast.{ JObject, JString }
@@ -39,10 +38,10 @@ import scala.util.{ Failure, Success, Try }
  * @param jwtFormat The JWT transformer.
  * @param settings  The JWT transformer settings.
  */
-final case class JwtAuthenticatorFormat @Inject() (
-  jwtFormat: JwtFormat,
+final case class JwtFormat @Inject() (
+  jwtFormat: jwt.JwtFormat,
   settings: JwtAuthenticatorFormatSettings
-) extends AuthenticatorFormat {
+) extends Format {
 
   /**
    * Transforms a JWT into an [[Authenticator]].
@@ -79,7 +78,7 @@ final case class JwtAuthenticatorFormat @Inject() (
    * @return A JWT on success, an error on failure.
    */
   override def write(authenticator: Authenticator): Future[String] = Future.fromTry {
-    jwtFormat.write(JwtClaims(
+    jwtFormat.write(jwt.JwtClaims(
       issuer = settings.issuer,
       subject = Some(Base64.encode(authenticator.loginInfo.asJson.toString())),
       audience = settings.audience,
