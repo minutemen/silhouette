@@ -18,14 +18,14 @@
 package silhouette.util
 
 /**
- * A target is a container type that can write into a target.
+ * A target is a container type that can write some payload to a target.
  *
  * @tparam T The type of the target.
  */
 trait Target[T] {
 
   /**
-   * Writes to a target.
+   * Writes some payload to a target.
    *
    * @return The target.
    */

@@ -44,11 +44,11 @@ class CookieTransportSpec extends Specification {
     }
   }
 
-  "The `embed` method" should {
-    "embed a cookie into the request" in new Context {
+  "The `smuggle` method" should {
+    "smuggle a cookie into the request" in new Context {
       override val request = FakeRequest()
 
-      transport.embed("payload", requestPipeline).cookie("test") must beSome.like {
+      transport.smuggle("payload", requestPipeline).cookie("test") must beSome.like {
         case cookie =>
           cookie.value must be equalTo "payload"
       }

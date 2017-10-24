@@ -44,11 +44,11 @@ class HeaderTransportSpec extends Specification {
     }
   }
 
-  "The `embed` method" should {
-    "embed a header into the request" in new Context {
+  "The `smuggle` method" should {
+    "smuggle a header into the request" in new Context {
       override val request = FakeRequest()
 
-      transport.embed("payload", requestPipeline).header("test").head must be equalTo "payload"
+      transport.smuggle("payload", requestPipeline).header("test").head must be equalTo "payload"
     }
   }
 
@@ -57,14 +57,6 @@ class HeaderTransportSpec extends Specification {
       override val response = FakeResponse()
 
       transport.embed("payload", responsePipeline).header("test").head must be equalTo "payload"
-    }
-  }
-
-  "The `discard` method" should {
-    "return the unchanged response" in new Context {
-      override val response = FakeResponse()
-
-      transport.discard(responsePipeline) should be equalTo responsePipeline
     }
   }
 

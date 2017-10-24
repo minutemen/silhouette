@@ -18,9 +18,10 @@
 package silhouette.http.transport
 
 import silhouette.http._
+import silhouette.util.{ Source, Target }
 
 /**
- * The settings for the header transport.
+ * The settings for the query string transport.
  *
  * @param name The name of the query param in which the payload will be transported.
  */
@@ -29,17 +30,16 @@ final case class QueryStringTransportSettings(name: String) extends TransportSet
 /**
  * The query string transport.
  *
- * A query string does only exists for a request. So this is the only implementation.
- *
  * @param settings The transport settings.
  */
-final case class QueryStringRequestTransport(settings: QueryStringTransportSettings)
-  extends RequestTransport {
+final case class QueryStringTransport(settings: QueryStringTransportSettings)
+  extends RetrieveFromRequest
+  with SmuggleIntoRequest {
 
   /**
    * The type of the concrete implementation of this abstract type.
    */
-  override type Self = QueryStringRequestTransport
+  override type Self = QueryStringTransport
 
   /**
    * The settings type.
@@ -67,11 +67,54 @@ final case class QueryStringRequestTransport(settings: QueryStringTransportSetti
   /**
    * Adds a query param with the given payload to the request.
    *
-   * @param payload The payload to embed.
+   * @param payload The payload to smuggle into the request.
    * @param request The request pipeline.
    * @tparam R The type of the request.
    * @return The manipulated request pipeline.
    */
-  override def embed[R](payload: String, request: RequestPipeline[R]): RequestPipeline[R] =
+  override def smuggle[R](payload: String, request: RequestPipeline[R]): RequestPipeline[R] =
     request.withQueryParams(settings.name -> payload)
+}
+
+/**
+ * A source that tries to retrieve some payload, stored in a query param, from the given request.
+ *
+ * @param name             The name of the query param in which the payload will be transported.
+ * @param requestPipeline  The request pipeline.
+ * @tparam R The type of the request.
+ */
+case class RetrieveFromQueryString[R](name: String)(
+  implicit
+  requestPipeline: RequestPipeline[R]
+) extends Source[Option[String]] {
+
+  /**
+   * Retrieves payload from the query string.
+   *
+   * @return The retrieved payload.
+   */
+  override def read: Option[String] =
+    QueryStringTransport(QueryStringTransportSettings(name)).retrieve(requestPipeline)
+}
+
+/**
+ * A target that smuggles a query param with the given payload into the given request.
+ *
+ * @param payload          The payload to embed.
+ * @param name             The name of the query param in which the payload will be transported.
+ * @param requestPipeline  The request pipeline.
+ * @tparam R The type of the response.
+ */
+final case class SmuggleIntoQueryString[R](payload: String, name: String)(
+  implicit
+  requestPipeline: RequestPipeline[R]
+) extends Target[RequestPipeline[R]] {
+
+  /**
+   * Smuggles payload into the query string.
+   *
+   * @return The request pipeline.
+   */
+  override def write: RequestPipeline[R] =
+    QueryStringTransport(QueryStringTransportSettings(name)).smuggle(payload, requestPipeline)
 }

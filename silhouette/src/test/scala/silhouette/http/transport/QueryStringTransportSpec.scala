@@ -22,7 +22,7 @@ import org.specs2.specification.Scope
 import silhouette.http._
 
 /**
- * Test case for the [[QueryStringRequestTransport]] class.
+ * Test case for the [[QueryStringTransport]] class.
  */
 class QueryStringTransportSpec extends Specification {
 
@@ -44,11 +44,11 @@ class QueryStringTransportSpec extends Specification {
     }
   }
 
-  "The `embed` method" should {
-    "embed a query param into the request" in new Context {
+  "The `smuggle` method" should {
+    "smuggle a query param into the request" in new Context {
       override val request = FakeRequest()
 
-      transport.embed("payload", requestPipeline).queryParam("test").head must be equalTo "payload"
+      transport.smuggle("payload", requestPipeline).queryParam("test").head must be equalTo "payload"
     }
   }
 
@@ -65,7 +65,7 @@ class QueryStringTransportSpec extends Specification {
     /**
      * The query string transport to test.
      */
-    val transport = QueryStringRequestTransport(settings)
+    val transport = QueryStringTransport(settings)
 
     /**
      * A fake request.

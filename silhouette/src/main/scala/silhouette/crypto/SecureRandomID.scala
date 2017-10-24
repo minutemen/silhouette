@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.util
+package silhouette.crypto
 
 import java.security.SecureRandom
 
@@ -24,21 +24,24 @@ import org.apache.commons.codec.binary.Hex
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * A generator which uses SecureRandom to generate cryptographically strong IDs.
+ * A generator which uses [[SecureRandom]] to generate cryptographically strong IDs.
  *
  * @param idSizeInBytes The size of the ID length in bytes.
  * @param ec The execution context to handle the asynchronous operations.
  */
-class SecureRandomIDGenerator(idSizeInBytes: Int = 128)(implicit ec: ExecutionContext) extends IDGenerator {
+class SecureRandomID(idSizeInBytes: Int = 128)(implicit ec: ExecutionContext) extends SecureID[Future[String]] {
 
   /**
-   * Generates a new ID using SecureRandom.
+   * Gets a new secure ID using [[SecureRandom]].
+   *
+   * Generating secure IDs can block the application, while the system waits for resources. Therefore we
+   * return a future so that the application doesn't get blocked while waiting for the generated ID.
    *
    * @return The generated ID.
    */
-  override def generate: Future[String] = {
+  override def get: Future[String] = {
     val randomValue = new Array[Byte](idSizeInBytes)
-    Future(SecureRandomIDGenerator.random.nextBytes(randomValue)).map { _ =>
+    Future(SecureRandomID.random.nextBytes(randomValue)).map { _ =>
       Hex.encodeHexString(randomValue)
     }
   }
@@ -47,7 +50,7 @@ class SecureRandomIDGenerator(idSizeInBytes: Int = 128)(implicit ec: ExecutionCo
 /**
  * The companion object.
  */
-object SecureRandomIDGenerator {
+object SecureRandomID {
 
   /**
    * A cryptographically strong random number generator (RNG).

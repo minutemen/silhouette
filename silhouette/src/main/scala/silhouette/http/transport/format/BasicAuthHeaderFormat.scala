@@ -20,7 +20,7 @@ package silhouette.http.transport.format
 import silhouette.Credentials
 import silhouette.crypto.Base64
 import silhouette.exceptions.TransformException
-import silhouette.http.TransportFormat
+import silhouette.http.Format
 import silhouette.http.transport.format.BasicAuthHeaderFormat._
 
 import scala.util.{ Failure, Success, Try }
@@ -28,7 +28,7 @@ import scala.util.{ Failure, Success, Try }
 /**
  * Handles the transformation of the "basic" `Authorization` header.
  */
-final class BasicAuthHeaderFormat extends TransportFormat[Credentials] {
+final class BasicAuthHeaderFormat extends Format[Credentials] {
 
   /**
    * Transforms the "basic" `Authorization` header value into some [[Credentials]].

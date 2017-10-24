@@ -17,29 +17,33 @@
  */
 package silhouette
 
-import java.time.Instant
+import java.time.{ Clock, Instant }
 
+import silhouette.Authenticator.Implicits._
 import silhouette.authenticator.Validator
+import silhouette.http.RequestPipeline
 
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.json.ast.JObject
 
 /**
  * An authenticator tracks an authenticated user.
  *
- * @param id                 The ID of the authenticator.
- * @param loginInfo          The linked login info for an identity.
- * @param lastUsedDateTime   The last used date/time.
- * @param expirationDateTime The expiration date/time.
- * @param fingerprint        Maybe a fingerprint of the user.
- * @param payload            Some custom payload an authenticator can transport.
+ * @param id          The ID of the authenticator.
+ * @param loginInfo   The linked login info for an identity.
+ * @param lastUsed    The instant of time the authenticator was last used.
+ * @param expires     The instant of time the authenticator expires.
+ * @param tags        A list of tags to tag the authenticator.
+ * @param fingerprint Maybe a fingerprint of the user.
+ * @param payload     Some custom payload an authenticator can transport.
  */
 case class Authenticator(
   id: String,
   loginInfo: LoginInfo,
-  lastUsedDateTime: Instant,
-  expirationDateTime: Instant,
+  lastUsed: Instant,
+  expires: Instant,
+  tags: Seq[String] = Seq(),
   fingerprint: Option[String] = None,
   payload: Option[JObject] = None) {
 
@@ -51,31 +55,88 @@ case class Authenticator(
   /**
    * Copies the authenticator and touches it.
    *
-   * @param id                 The ID of the authenticator.
-   * @param loginInfo          The linked login info for an identity.
-   * @param lastUsedDateTime   The last used date/time.
-   * @param expirationDateTime The expiration date/time.
-   * @param fingerprint        Maybe a fingerprint of the user.
-   * @param payload            Some custom payload an authenticator can transport.
+   * @param id          The ID of the authenticator.
+   * @param loginInfo   The linked login info for an identity.
+   * @param lastUsed    The instant of time the authenticator was last used.
+   * @param expires     The instant of time the authenticator expires.
+   * @param tags        A list of tags to tag the authenticator.
+   * @param fingerprint Maybe a fingerprint of the user.
+   * @param payload     Some custom payload an authenticator can transport.
    * @return The new touched authenticator.
    */
-  def copy(
-    id: String,
-    loginInfo: LoginInfo,
-    lastUsedDateTime: Instant,
-    expirationDateTime: Instant,
-    fingerprint: Option[String] = None,
-    payload: Option[JObject] = None
+  def touch(
+    id: String = id,
+    loginInfo: LoginInfo = loginInfo,
+    lastUsed: Instant = lastUsed,
+    expires: Instant = expires,
+    tags: Seq[String] = tags,
+    fingerprint: Option[String] = fingerprint,
+    payload: Option[JObject] = payload
   ): Authenticator = new Authenticator(
     id,
     loginInfo,
-    lastUsedDateTime,
-    expirationDateTime,
+    lastUsed,
+    expires,
+    tags,
     fingerprint,
     payload
   ) {
     override protected val touched = true
   }
+
+  /**
+   * Gets the duration the authenticator expires in.
+   *
+   * @param clock The clock instance.
+   * @return The duration the authenticator expires in.
+   */
+  def expiresIn(clock: Clock): FiniteDuration = expires - clock.instant()
+
+  /**
+   * Gets the duration the authenticator was last used at.
+   *
+   * @param clock The clock instance.
+   * @return The duration the authenticator was last used at.
+   */
+  def lastUsedAt(clock: Clock): FiniteDuration = clock.instant() - lastUsed
+
+  /**
+   * Returns a copy of this authenticator with new tags added.
+   *
+   * @param tag The new tag to add.
+   * @return A copy of this authenticator with new tags added.
+   */
+  def withTag(tag: String): Authenticator = copy(tags = tags :+ tag)
+
+  /**
+   * Returns a copy of this authenticator with a default fingerprint.
+   *
+   * @param requestPipeline The request pipeline.
+   * @return A copy of this authenticator with a default fingerprint.
+   */
+  def withFingerPrint[R]()(implicit requestPipeline: RequestPipeline[R]): Authenticator =
+    copy(fingerprint = Some(requestPipeline.fingerprint))
+
+  /**
+   * Returns a copy of this authenticator with a custom fingerprint.
+   *
+   * @param requestPipeline      The request pipeline.
+   * @param fingerprintGenerator The fingerprint generator.
+   * @return A copy of this authenticator with a custom fingerprint.
+   */
+  def withFingerPrint[R](fingerprintGenerator: R => String)(
+    implicit
+    requestPipeline: RequestPipeline[R]
+  ): Authenticator =
+    copy(fingerprint = Some(requestPipeline.fingerprint(fingerprintGenerator)))
+
+  /**
+   * Indicates if this authenticator is tagged with the given tag.
+   *
+   * @param tag The tag to check for.
+   * @return True if this authenticator is tagged with he given tag, false otherwise.
+   */
+  def isTaggedWith(tag: String): Boolean = tags.contains(tag)
 
   /**
    * Indicates if the authenticator was touched.
@@ -105,6 +166,28 @@ case class Authenticator(
 object Authenticator {
 
   /**
+   * Creates a new authenticator.
+   *
+   * This method sets the `lastUsed` property based on the current instant and the `expires` property based on the
+   * current instant plus the expiry duration.
+   *
+   * @param id        The ID of the authenticator.
+   * @param loginInfo The linked login info for an identity.
+   * @param expiry    The authentication expiry.
+   * @param clock     The clock implementation to get the current time.
+   * @return An authenticator instance.
+   */
+  def apply(id: String, loginInfo: LoginInfo, expiry: FiniteDuration, clock: Clock): Authenticator = {
+    val now = clock.instant()
+    Authenticator(
+      id,
+      loginInfo,
+      lastUsed = now,
+      expires = now + expiry
+    )
+  }
+
+  /**
    * Some implicits.
    */
   object Implicits {
@@ -112,28 +195,38 @@ object Authenticator {
     /**
      * Defines additional methods on an `DateTime` instance.
      *
-     * @param instant The `Instant` instance on which the additional methods should be defined.
+     * @param instant The [[java.time.Instant]] instance on which the additional methods should be defined.
      */
     implicit class RichInstant(instant: Instant) {
 
       /**
-       * Adds a duration to a date/time.
+       * Adds a duration to an instant.
        *
        * @param duration The duration to add.
        * @return An [[Instant]] instance with the added duration.
        */
       def +(duration: FiniteDuration): Instant = {
-        instant.plusSeconds(duration.toSeconds)
+        instant.plusMillis(duration.toMillis)
       }
 
       /**
-       * Subtracts a duration from a date/time.
+       * Subtracts an instant from an instant and returns the duration of it.
+       *
+       * @param sub The instant to subtract.
+       * @return An [[Instant]] instance with the added instance.
+       */
+      def -(sub: Instant): FiniteDuration = {
+        FiniteDuration(instant.minusMillis(sub.toEpochMilli).toEpochMilli, MILLISECONDS)
+      }
+
+      /**
+       * Subtracts a duration from an instant.
        *
        * @param duration The duration to subtract.
        * @return A [[Instant]] instance with the subtracted duration.
        */
       def -(duration: FiniteDuration): Instant = {
-        instant.minusSeconds(duration.toSeconds)
+        instant.minusMillis(duration.toMillis)
       }
     }
   }

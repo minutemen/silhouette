@@ -15,22 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.util
-
-import scala.concurrent.Future
+package silhouette.crypto
 
 /**
- * A generator which creates an ID.
+ * Represents a secure (in a cryptographically sense) ID.
  */
-trait IDGenerator {
+trait SecureID[T] {
 
   /**
-   * Generates an ID.
+   * Gets a secure ID.
    *
-   * Generating secure IDs can block the application, while the system waits for resources. Therefore we
-   * return a future so that the application doesn't get blocked while waiting for the generated ID.
-   *
-   * @return The generated ID.
+   * @return The secure ID.
    */
-  def generate: Future[String]
+  def get: T
 }

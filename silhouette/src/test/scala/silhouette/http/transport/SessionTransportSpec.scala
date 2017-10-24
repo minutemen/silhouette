@@ -44,11 +44,11 @@ class SessionTransportSpec extends Specification {
     }
   }
 
-  "The `embed` method" should {
-    "embed a session value into the request" in new Context {
+  "The `smuggle` method" should {
+    "smuggle a session value into the request" in new Context {
       override val request = FakeRequest()
 
-      transport.embed("payload", requestPipeline).session("test") must be equalTo "payload"
+      transport.smuggle("payload", requestPipeline).session("test") must be equalTo "payload"
     }
   }
 

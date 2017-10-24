@@ -42,6 +42,6 @@ final case class ExpirationValidator(clock: Clock) extends Validator {
     implicit
     ec: ExecutionContext
   ): Future[Boolean] = Future.successful {
-    authenticator.expirationDateTime.isBefore(clock.instant())
+    authenticator.expires.isBefore(clock.instant())
   }
 }

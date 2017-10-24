@@ -50,6 +50,6 @@ final case class SlidingWindowValidator(idleTimeout: FiniteDuration, clock: Cloc
     implicit
     ec: ExecutionContext
   ): Future[Boolean] = Future.successful {
-    authenticator.lastUsedDateTime.plusSeconds(idleTimeout.toSeconds).isBefore(clock.instant())
+    authenticator.lastUsed.plusSeconds(idleTimeout.toSeconds).isBefore(clock.instant())
   }
 }

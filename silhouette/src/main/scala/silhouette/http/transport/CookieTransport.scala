@@ -18,6 +18,7 @@
 package silhouette.http.transport
 
 import silhouette.http._
+import silhouette.util.{ Source, Target }
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -46,7 +47,10 @@ final case class CookieTransportSettings(
  * @param settings The transport settings.
  */
 final case class CookieTransport(settings: CookieTransportSettings)
-  extends RequestTransport with ResponseTransport {
+  extends RetrieveFromRequest
+  with SmuggleIntoRequest
+  with EmbedIntoResponse
+  with DiscardFromResponse {
 
   /**
    * The type of the concrete implementation of this abstract type.
@@ -71,7 +75,7 @@ final case class CookieTransport(settings: CookieTransportSettings)
    *
    * @param request The request pipeline to retrieve the payload from.
    * @tparam R The type of the request.
-   * @return Some value or None if no payload could be found in request.
+   * @return Some payload or None if no payload could be found in request.
    */
   override def retrieve[R](request: RequestPipeline[R]): Option[String] =
     request.cookie(settings.name).map(_.value)
@@ -79,33 +83,33 @@ final case class CookieTransport(settings: CookieTransportSettings)
   /**
    * Adds a cookie with the given payload to the request.
    *
-   * @param payload The payload to embed.
+   * @param payload The payload to smuggle into the request.
    * @param request The request pipeline.
    * @tparam R The type of the request.
    * @return The manipulated request pipeline.
    */
-  override def embed[R](payload: String, request: RequestPipeline[R]): RequestPipeline[R] =
+  override def smuggle[R](payload: String, request: RequestPipeline[R]): RequestPipeline[R] =
     request.withCookies(cookie(payload))
 
   /**
    * Adds a cookie with the given payload to the response.
    *
-   * @param payload  The payload to embed.
+   * @param payload  The payload to embed into the response.
    * @param response The response pipeline to manipulate.
-   * @tparam P The type of the response.
+   * @tparam R The type of the response.
    * @return The manipulated response pipeline.
    */
-  override def embed[P](payload: String, response: ResponsePipeline[P]): ResponsePipeline[P] =
+  override def embed[R](payload: String, response: ResponsePipeline[R]): ResponsePipeline[R] =
     response.withCookies(cookie(payload))
 
   /**
    * Discards the cookie on the client.
    *
    * @param response The response pipeline to manipulate.
-   * @tparam P The type of the response.
+   * @tparam R The type of the response.
    * @return The manipulated response pipeline.
    */
-  override def discard[P](response: ResponsePipeline[P]): ResponsePipeline[P] = {
+  override def discard[R](response: ResponsePipeline[R]): ResponsePipeline[R] = {
     val discardingCookie = cookie(value = "").copy(maxAge = Some(-86400))
     response.withCookies(discardingCookie)
   }
@@ -125,4 +129,86 @@ final case class CookieTransport(settings: CookieTransportSettings)
     secure = settings.secure,
     httpOnly = settings.httpOnly
   )
+}
+
+/**
+ * A source that tries to retrieve some payload, stored in a cookie, from the given request.
+ *
+ * @param name             The name of the cookie to retrieve to payload from.
+ * @param requestPipeline  The request pipeline.
+ * @tparam R The type of the request.
+ */
+final case class RetrieveFromCookie[R](name: String)(
+  implicit
+  requestPipeline: RequestPipeline[R]
+) extends Source[Option[String]] {
+
+  /**
+   * Retrieves payload from a cookie.
+   *
+   * @return The retrieved payload.
+   */
+  override def read: Option[String] = CookieTransport(CookieTransportSettings(name)).retrieve(requestPipeline)
+}
+
+/**
+ * A target that smuggles a cookie with the given payload into the given request.
+ *
+ * @param payload          The payload to embed.
+ * @param settings         The transport settings.
+ * @param requestPipeline  The request pipeline.
+ * @tparam R The type of the response.
+ */
+final case class SmuggleIntoCookie[R](payload: String, settings: CookieTransportSettings)(
+  implicit
+  requestPipeline: RequestPipeline[R]
+) extends Target[RequestPipeline[R]] {
+
+  /**
+   * Smuggles payload into a cookie.
+   *
+   * @return The request pipeline.
+   */
+  override def write: RequestPipeline[R] = CookieTransport(settings).smuggle(payload, requestPipeline)
+}
+
+/**
+ * A target that embeds a cookie with the given payload into the given response.
+ *
+ * @param payload          The payload to embed.
+ * @param settings         The transport settings.
+ * @param responsePipeline The response pipeline.
+ * @tparam R The type of the response.
+ */
+final case class EmbedIntoCookie[R](payload: String, settings: CookieTransportSettings)(
+  implicit
+  responsePipeline: ResponsePipeline[R]
+) extends Target[ResponsePipeline[R]] {
+
+  /**
+   * Embeds payload into a cookie.
+   *
+   * @return The response pipeline.
+   */
+  override def write: ResponsePipeline[R] = CookieTransport(settings).embed(payload, responsePipeline)
+}
+
+/**
+ * A target that discards payload stored in a cookie from the given response.
+ *
+ * @param settings         The transport settings.
+ * @param responsePipeline The response pipeline.
+ * @tparam R The type of the response.
+ */
+final case class DiscardFromCookie[R](settings: CookieTransportSettings)(
+  implicit
+  responsePipeline: ResponsePipeline[R]
+) extends Target[ResponsePipeline[R]] {
+
+  /**
+   * Discards payload from a cookie.
+   *
+   * @return The response pipeline.
+   */
+  override def write: ResponsePipeline[R] = CookieTransport(settings).discard(responsePipeline)
 }

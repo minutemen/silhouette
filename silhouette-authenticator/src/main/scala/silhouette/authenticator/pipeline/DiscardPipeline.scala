@@ -15,26 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.http
-
-import silhouette.util.Source
+package silhouette.authenticator.pipeline
 
 /**
- * A source that retrieves a value from a request transport.
  *
- * @param requestTransport The request transport to retrieve the value from.
- * @param requestPipeline  The request pipeline.
- * @tparam R The type of the request.
  */
-case class RequestTransportSource[R](requestTransport: RequestTransport)(
-  implicit
-  requestPipeline: RequestPipeline[R]
-) extends Source[Option[String]] {
+class DiscardPipeline {
 
-  /**
-   * Gets the source.
-   *
-   * @return The source.
-   */
-  override def read: Option[String] = requestTransport.retrieve(requestPipeline)
+  //def
 }

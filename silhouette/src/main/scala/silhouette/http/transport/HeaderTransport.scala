@@ -18,6 +18,7 @@
 package silhouette.http.transport
 
 import silhouette.http._
+import silhouette.util.{ Source, Target }
 
 /**
  * The settings for the header transport.
@@ -32,7 +33,9 @@ final case class HeaderTransportSettings(name: String) extends TransportSettings
  * @param settings The transport settings.
  */
 final case class HeaderTransport(settings: HeaderTransportSettings)
-  extends RequestTransport with ResponseTransport {
+  extends RetrieveFromRequest
+  with SmuggleIntoRequest
+  with EmbedIntoResponse {
 
   /**
    * The type of the concrete implementation of this abstract type.
@@ -57,7 +60,7 @@ final case class HeaderTransport(settings: HeaderTransportSettings)
    *
    * @param request The request pipeline to retrieve the payload from.
    * @tparam R The type of the request.
-   * @return Some value or None if no payload could be found in request.
+   * @return Some payload or None if no payload could be found in request.
    */
   override def retrieve[R](request: RequestPipeline[R]): Option[String] =
     request.header(settings.name).headOption
@@ -65,32 +68,86 @@ final case class HeaderTransport(settings: HeaderTransportSettings)
   /**
    * Adds a header with the given payload to the request.
    *
-   * @param payload The payload to embed.
+   * @param payload The payload to smuggle into the request.
    * @param request The request pipeline.
    * @tparam R The type of the request.
    * @return The manipulated request pipeline.
    */
-  override def embed[R](payload: String, request: RequestPipeline[R]): RequestPipeline[R] =
+  override def smuggle[R](payload: String, request: RequestPipeline[R]): RequestPipeline[R] =
     request.withHeaders(settings.name -> payload)
 
   /**
    * Adds a header with the given payload to the response.
    *
-   * @param payload  The payload to embed.
+   * @param payload  The payload to embed into the response.
    * @param response The response pipeline to manipulate.
-   * @tparam P The type of the response.
+   * @tparam R The type of the response.
    * @return The manipulated response pipeline.
    */
-  override def embed[P](payload: String, response: ResponsePipeline[P]): ResponsePipeline[P] =
+  override def embed[R](payload: String, response: ResponsePipeline[R]): ResponsePipeline[R] =
     response.withHeaders(settings.name -> payload)
+}
+
+/**
+ * A source that tries to retrieve some payload, stored in a header, from the given request.
+ *
+ * @param name             The name of the header in which the payload will be transported.
+ * @param requestPipeline  The request pipeline.
+ * @tparam R The type of the request.
+ */
+case class RetrieveFromHeader[R](name: String)(
+  implicit
+  requestPipeline: RequestPipeline[R]
+) extends Source[Option[String]] {
 
   /**
-   * Headers needn't be removed from response, because they are not persisted on the client. So this
-   * method returns the unchanged response.
+   * Retrieves payload from a header.
    *
-   * @param response The response pipeline to manipulate.
-   * @tparam P The type of the response.
-   * @return The manipulated response pipeline.
+   * @return The retrieved payload.
    */
-  override def discard[P](response: ResponsePipeline[P]): ResponsePipeline[P] = response
+  override def read: Option[String] = HeaderTransport(HeaderTransportSettings(name)).retrieve(requestPipeline)
+}
+
+/**
+ * A target that smuggles a header with the given payload into the given request.
+ *
+ * @param payload          The payload to embed.
+ * @param name             The name of the header in which the payload will be transported.
+ * @param requestPipeline  The request pipeline.
+ * @tparam R The type of the response.
+ */
+final case class SmuggleIntoHeader[R](payload: String, name: String)(
+  implicit
+  requestPipeline: RequestPipeline[R]
+) extends Target[RequestPipeline[R]] {
+
+  /**
+   * Smuggles payload into a header.
+   *
+   * @return The request pipeline.
+   */
+  override def write: RequestPipeline[R] =
+    HeaderTransport(HeaderTransportSettings(name)).smuggle(payload, requestPipeline)
+}
+
+/**
+ * A target that embeds a header with the given payload into the given response.
+ *
+ * @param payload          The payload to embed.
+ * @param name             The name of the header in which the payload will be transported.
+ * @param responsePipeline The response pipeline.
+ * @tparam R The type of the response.
+ */
+case class EmbedIntoHeader[R](payload: String, name: String)(
+  implicit
+  responsePipeline: ResponsePipeline[R]
+) extends Target[ResponsePipeline[R]] {
+
+  /**
+   * Embeds payload into a header.
+   *
+   * @return The response pipeline.
+   */
+  override def write: ResponsePipeline[R] =
+    HeaderTransport(HeaderTransportSettings(name)).embed(payload, responsePipeline)
 }

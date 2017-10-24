@@ -29,7 +29,7 @@ import silhouette.jwt
 import silhouette.{ Authenticator, AuthenticatorException, LoginInfo }
 
 import scala.concurrent.Future
-import scala.json.ast.{ JObject, JString }
+import scala.json.ast.{ JArray, JObject, JString }
 import scala.util.{ Failure, Success, Try }
 
 /**
@@ -55,10 +55,17 @@ final case class JwtFormat @Inject() (
         id = claims.jwtID.getOrElse(throw new AuthenticatorException(MissingClaimValue.format("jwtID"))),
         loginInfo = buildLoginInfo(Base64.decode(claims.subject
           .getOrElse(throw new AuthenticatorException(MissingClaimValue.format("subject"))))).get,
-        lastUsedDateTime = claims.issuedAt
+        lastUsed = claims.issuedAt
           .getOrElse(throw new AuthenticatorException(MissingClaimValue.format("issuedAt"))),
-        expirationDateTime = claims.expirationTime
+        expires = claims.expirationTime
           .getOrElse(throw new AuthenticatorException(MissingClaimValue.format("expirationTime"))),
+        tags = claims.custom.value.get("tags").map {
+          case a: JArray => a.value.map {
+            case s: JString => s.value
+            case v          => throw new AuthenticatorException(UnexpectedJsonValue.format(v, "JString"))
+          }
+          case v => throw new AuthenticatorException(UnexpectedJsonValue.format(v, "JArray"))
+        }.getOrElse(Seq()),
         fingerprint = claims.custom.value.get("fingerprint").map {
           case s: JString => s.value
           case v          => throw new AuthenticatorException(UnexpectedJsonValue.format(v, "JString"))
@@ -82,11 +89,12 @@ final case class JwtFormat @Inject() (
       issuer = settings.issuer,
       subject = Some(Base64.encode(authenticator.loginInfo.asJson.toString())),
       audience = settings.audience,
-      expirationTime = Some(authenticator.expirationDateTime),
+      expirationTime = Some(authenticator.expires),
       notBefore = settings.notBefore,
-      issuedAt = Some(authenticator.lastUsedDateTime),
+      issuedAt = Some(authenticator.lastUsed),
       jwtID = Some(authenticator.id),
       custom = JObject(Seq(
+        Some("tags" -> JArray(authenticator.tags.map(JString).toVector)),
         authenticator.fingerprint.map("fingerprint" -> JString(_)),
         authenticator.payload.map("payload" -> _)
       ).flatten.toMap)

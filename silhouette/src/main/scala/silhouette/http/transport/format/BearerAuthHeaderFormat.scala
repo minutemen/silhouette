@@ -18,7 +18,7 @@
 package silhouette.http.transport.format
 
 import silhouette.exceptions.TransformException
-import silhouette.http.TransportFormat
+import silhouette.http.Format
 import silhouette.http.transport.format.BearerAuthHeaderFormat._
 
 import scala.util.{ Failure, Success, Try }
@@ -26,7 +26,7 @@ import scala.util.{ Failure, Success, Try }
 /**
  * Handles the transformation of the "bearer" `Authorization` header.
  */
-final class BearerAuthHeaderFormat extends TransportFormat[String] {
+final class BearerAuthHeaderFormat extends Format[String] {
 
   /**
    * Transforms the "bearer" `Authorization` header value into some token.

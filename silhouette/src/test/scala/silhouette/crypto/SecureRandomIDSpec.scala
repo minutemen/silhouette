@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.util
+package silhouette.crypto
 
 import org.specs2.control.NoLanguageFeatures
 import org.specs2.mutable.Specification
@@ -26,22 +26,20 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 
 /**
- * Test case for the [[SecureRandomIDGenerator]] class.
+ * Test case for the [[SecureRandomID]] class.
  */
-class SecureRandomIDGeneratorSpec extends Specification with NoLanguageFeatures {
+class SecureRandomIDSpec extends Specification with NoLanguageFeatures {
 
   "The generator" should {
     "return a 128 byte length secure random number" in {
-      val generator = new SecureRandomIDGenerator()
-      val id = Await.result(generator.generate, 10 seconds)
+      val id = Await.result(new SecureRandomID().get, 10 seconds)
 
       id must have size (128 * 2)
       id must beMatching("[a-f0-9]+")
     }
 
     "return a 265 byte length secure random number" in {
-      val generator = new SecureRandomIDGenerator(256)
-      val id = Await.result(generator.generate, 10 seconds)
+      val id = Await.result(new SecureRandomID(256).get, 10 seconds)
 
       id must have size (256 * 2)
       id must beMatching("[a-f0-9]+")

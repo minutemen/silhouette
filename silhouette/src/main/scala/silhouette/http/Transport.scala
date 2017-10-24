@@ -17,7 +17,7 @@
  */
 package silhouette.http
 
-import silhouette.util.{ Reads, Writes }
+import silhouette.util
 
 import scala.util.Try
 
@@ -26,21 +26,21 @@ import scala.util.Try
  *
  * @tparam T The target type on the read operation.
  */
-trait TransportReads[T] extends Reads[String, Try[T]]
+trait Reads[T] extends util.Reads[String, Try[T]]
 
 /**
  * Transforms an instance of `T` into a string.
  *
  * @tparam T The source type on the write operation
  */
-trait TransportWrites[T] extends Writes[T, Try[String]]
+trait Writes[T] extends util.Writes[T, Try[String]]
 
 /**
  * Transport transformer combinator.
  *
  * @tparam T The target type on the read operation and the source type on the write operation.
  */
-trait TransportFormat[T] extends TransportReads[T] with TransportWrites[T]
+trait Format[T] extends Reads[T] with Writes[T]
 
 /**
  * Marker trait for the transport settings.
@@ -81,45 +81,67 @@ trait Transport {
 /**
  * The request transport handles payload which can be transported in a request.
  */
-trait RequestTransport extends Transport {
+trait RequestTransport extends Transport
+
+/**
+ * A request transport which can retrieve payload from a request.
+ */
+trait RetrieveFromRequest extends RequestTransport {
 
   /**
    * Retrieves payload from the given request.
    *
    * @param request The request pipeline to retrieve the payload from.
    * @tparam R The type of the request.
-   * @return Some value or None if no payload could be found in request.
+   * @return Some payload or None if no payload could be found in request.
    */
   def retrieve[R](request: RequestPipeline[R]): Option[String]
+}
+
+/**
+ * A request transport which can smuggle some payload into a request.
+ */
+trait SmuggleIntoRequest extends RequestTransport {
 
   /**
-   * Embeds payload into the request.
+   * Smuggles payload into the request.
    *
-   * This method can be used to embed payload in an existing request. This can be useful
+   * This method can be used to smuggle payload into an existing request. This can be useful
    * for testing. Already existing payload will be overridden.
    *
-   * @param payload The payload to embed.
+   * @param payload The payload to smuggle into the request.
    * @param request The request pipeline.
    * @tparam R The type of the request.
    * @return The manipulated request pipeline.
    */
-  def embed[R](payload: String, request: RequestPipeline[R]): RequestPipeline[R]
+  def smuggle[R](payload: String, request: RequestPipeline[R]): RequestPipeline[R]
 }
 
 /**
  * The response transport handles payload which can be transported in a response.
  */
-trait ResponseTransport extends Transport {
+trait ResponseTransport extends Transport
+
+/**
+ * A response transport which can embed payload into a response.
+ */
+trait EmbedIntoResponse extends ResponseTransport {
 
   /**
    * Embeds payload into the response.
    *
-   * @param payload  The payload to embed.
+   * @param payload  The payload to embed into the response.
    * @param response The response pipeline to manipulate.
    * @tparam P The type of the response.
    * @return The manipulated response pipeline.
    */
   def embed[P](payload: String, response: ResponsePipeline[P]): ResponsePipeline[P]
+}
+
+/**
+ * A response transport which can discard payload from a response.
+ */
+trait DiscardFromResponse extends ResponseTransport {
 
   /**
    * Manipulates the response so that it removes payload stored on the client.

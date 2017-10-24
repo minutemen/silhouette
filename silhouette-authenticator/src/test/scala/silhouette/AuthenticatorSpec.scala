@@ -1,0 +1,174 @@
+/**
+ * Licensed to the Minutemen Group under one or more contributor license
+ * agreements. See the COPYRIGHT file distributed with this work for
+ * additional information regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you
+ * may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package silhouette
+
+import java.time.{ Clock, Instant, ZoneId }
+
+import org.specs2.concurrent.ExecutionEnv
+import org.specs2.mock.Mockito
+import org.specs2.mutable.Specification
+import org.specs2.specification.Scope
+import silhouette.authenticator.Validator
+import silhouette.specs2.WaitPatience
+
+import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.json.ast.{ JObject, JTrue }
+
+/**
+ * Test case for the [[Authenticator]] class.
+ *
+ * @param ev The execution environment.
+ */
+class AuthenticatorSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
+
+  "The `touch` method" should {
+    "touch the authenticator when setting a new `id`" in new Context {
+      authenticator.isTouched must beFalse
+
+      val newID = "new-test-id"
+      val newAuthenticator = authenticator.touch(id = newID)
+
+      newAuthenticator.isTouched must beTrue
+      newAuthenticator.id must be equalTo newID
+    }
+
+    "touch the authenticator when setting a new `loginInfo`" in new Context {
+      authenticator.isTouched must beFalse
+
+      val newLoginInfo = LoginInfo("new-test", "new-test")
+      val newAuthenticator = authenticator.touch(loginInfo = newLoginInfo)
+
+      newAuthenticator.isTouched must beTrue
+      newAuthenticator.loginInfo must be equalTo newLoginInfo
+    }
+
+    "touch the authenticator when setting a new `lastUsed`" in new Context {
+      authenticator.isTouched must beFalse
+
+      val newLastUsed = Instant.now()
+      val newAuthenticator = authenticator.touch(lastUsed = newLastUsed)
+
+      newAuthenticator.isTouched must beTrue
+      newAuthenticator.lastUsed must be equalTo newLastUsed
+    }
+
+    "touch the authenticator when setting a new `expires`" in new Context {
+      authenticator.isTouched must beFalse
+
+      val newExpires = Instant.now()
+      val newAuthenticator = authenticator.touch(expires = newExpires)
+
+      newAuthenticator.isTouched must beTrue
+      newAuthenticator.expires must be equalTo newExpires
+    }
+
+    "touch the authenticator when setting a new `fingerprint`" in new Context {
+      authenticator.isTouched must beFalse
+
+      val newFingerprint = Some("new-fingerprint")
+      val newAuthenticator = authenticator.touch(fingerprint = newFingerprint)
+
+      newAuthenticator.isTouched must beTrue
+      newAuthenticator.fingerprint must be equalTo newFingerprint
+    }
+
+    "touch the authenticator when setting a new `payload`" in new Context {
+      authenticator.isTouched must beFalse
+
+      val newPayload = Some(JObject(Map("test" -> JTrue)))
+      val newAuthenticator = authenticator.touch(payload = newPayload)
+
+      newAuthenticator.isTouched must beTrue
+      newAuthenticator.payload must be equalTo newPayload
+    }
+  }
+
+  "The `expiresIn` method" should {
+    "return the duration the authenticator expires in" in new Context {
+      authenticator.expiresIn(Clock.fixed(instant.minusSeconds(10), UTC)) must be equalTo 10.seconds
+    }
+
+    "return a negative duration if the authenticator is already expired" in new Context {
+      authenticator.expiresIn(Clock.fixed(instant.plusSeconds(10), UTC)) must be equalTo -10.seconds
+    }
+  }
+
+  "The `lastUsedAt` method" should {
+    "return the duration the authenticator was last used at" in new Context {
+      authenticator.lastUsedAt(Clock.fixed(instant.plusSeconds(10), UTC)) must be equalTo 10.seconds
+    }
+
+    "return a negative duration if the authenticator wasn't used" in new Context {
+      authenticator.lastUsedAt(Clock.fixed(instant.minusSeconds(10), UTC)) must be equalTo -10.seconds
+    }
+  }
+
+  "The `isValid` method" should {
+    "return false if at least one validator fails" in new Context {
+      val validator1 = mock[Validator].smart
+      val validator2 = mock[Validator].smart
+      validator1.isValid(authenticator) returns Future.successful(true)
+      validator2.isValid(authenticator) returns Future.successful(false)
+      val validators = Set(validator1, validator2)
+
+      authenticator.isValid(validators) must beFalse.awaitWithPatience
+    }
+
+    "return true if all validators are successful" in new Context {
+      val validator1 = mock[Validator].smart
+      val validator2 = mock[Validator].smart
+      validator1.isValid(authenticator) returns Future.successful(true)
+      validator2.isValid(authenticator) returns Future.successful(true)
+      val validators = Set(validator1, validator2)
+
+      authenticator.isValid(validators) must beTrue.awaitWithPatience
+    }
+  }
+
+  /**
+   * The context.
+   */
+  trait Context extends Scope {
+
+    /**
+     * The UTC time zone.
+     */
+    val UTC = ZoneId.of("UTC")
+
+    /**
+     * An instant of time.
+     */
+    val instant = Instant.parse("2017-10-22T20:50:45.0Z")
+
+    /**
+     * A clock instance.
+     */
+    val clock: Clock = Clock.fixed(instant, UTC)
+
+    /**
+     * The authenticator instance to test.
+     */
+    val authenticator = Authenticator(
+      id = "test-id",
+      loginInfo = LoginInfo("test", "test"),
+      lastUsed = clock.instant(),
+      expires = clock.instant()
+    )
+  }
+}

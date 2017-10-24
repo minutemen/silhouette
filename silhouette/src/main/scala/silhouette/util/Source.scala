@@ -18,16 +18,16 @@
 package silhouette.util
 
 /**
- * A source is a container type that can read a value from a source.
+ * A source is a container type that can read some payload from a source.
  *
- * @tparam S The type of the value.
+ * @tparam S The type of the payload.
  */
 trait Source[S] {
 
   /**
    * Reads from source.
    *
-   * @return The read value.
+   * @return The read payload.
    */
   def read: S
 }
