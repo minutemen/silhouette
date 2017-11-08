@@ -23,13 +23,14 @@ import silhouette.authenticator.Validator
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * A validator that checks if the stored fingerprint is the same as the current fingerprint.
+ * A validator that checks if an [[Authenticator]] is located in a store.
  *
- * If the [[Authenticator]] has no fingerprint stored, then this validator returns always true.
+ * If an authenticator for the given [[Authenticator]] was found in the store, then the validator returns true,
+ * otherwise it returns false. The validator can be used as a blacklist or whitelist validator.
  *
- * @param fingerprint The fingerprint to check against.
+ * @param reader A reader to read the [[Authenticator]] from a persistence layer like a database or a cache.
  */
-final case class FingerprintValidator(fingerprint: String) extends Validator {
+final case class StoreValidator(reader: Authenticator => Future[Option[Authenticator]]) extends Validator {
 
   /**
    * Checks if the [[Authenticator]] is valid.
@@ -41,10 +42,8 @@ final case class FingerprintValidator(fingerprint: String) extends Validator {
   override def isValid(authenticator: Authenticator)(
     implicit
     ec: ExecutionContext
-  ): Future[Boolean] = Future.successful {
-    authenticator.fingerprint match {
-      case None    => true
-      case Some(f) => f == fingerprint
-    }
+  ): Future[Boolean] = reader(authenticator).map {
+    case Some(_) => true
+    case None    => false
   }
 }

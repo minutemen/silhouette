@@ -53,24 +53,6 @@ final case class CookieTransport(settings: CookieTransportSettings)
   with DiscardFromResponse {
 
   /**
-   * The type of the concrete implementation of this abstract type.
-   */
-  override type Self = CookieTransport
-
-  /**
-   * The settings type.
-   */
-  override type Settings = CookieTransportSettings
-
-  /**
-   * Gets a transport initialized with a new settings object.
-   *
-   * @param f A function which gets the settings passed and returns different settings.
-   * @return An instance of the transport initialized with new settings.
-   */
-  override def withSettings(f: (Settings) => Settings): Self = new Self(f(settings))
-
-  /**
    * Retrieves the payload, stored in a cookie, from request.
    *
    * @param request The request pipeline to retrieve the payload from.

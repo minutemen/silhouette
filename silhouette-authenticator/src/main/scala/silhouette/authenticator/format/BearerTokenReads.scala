@@ -30,7 +30,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  * a mapping between this string and the authenticator related data, which is commonly handled through a
  * persistence layer like a database or a cache.
  *
- * @param reader The reader to retrieve the authenticator.
+ * @param reader The reader to retrieve the [[Authenticator]] for the given token from persistence layer.
  * @param ex The execution context.
  */
 final case class BearerTokenReads(reader: String => Future[Option[Authenticator]])(
@@ -53,6 +53,5 @@ final case class BearerTokenReads(reader: String => Future[Option[Authenticator]
  * The companion object.
  */
 object BearerTokenReads {
-  val MissingAuthenticator: String = "[Silhouette][BearerTokenReads] Cannot get authenticator for " +
-    "id `%s` from given reader"
+  val MissingAuthenticator: String = "Cannot get authenticator for token `%s` from given reader"
 }

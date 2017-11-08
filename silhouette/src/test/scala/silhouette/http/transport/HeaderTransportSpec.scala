@@ -26,9 +26,9 @@ import silhouette.http._
  */
 class HeaderTransportSpec extends Specification {
 
-  "The `withSettings` method" should {
-    "allow to override the settings" in new Context {
-      transport.withSettings(_.copy("not-name")).settings.name must be equalTo "not-name"
+  "The `copy` method" should {
+    "allow to override the name" in new Context {
+      transport.copy("not-name").name must be equalTo "not-name"
     }
   }
 
@@ -66,14 +66,9 @@ class HeaderTransportSpec extends Specification {
   trait Context extends Scope {
 
     /**
-     * The header transport settings.
-     */
-    val settings = HeaderTransportSettings(name = "test")
-
-    /**
      * The header transport to test.
      */
-    val transport = HeaderTransport(settings)
+    val transport = HeaderTransport("test")
 
     /**
      * A fake request.

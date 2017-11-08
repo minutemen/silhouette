@@ -15,17 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Dependencies._
+package silhouette.jwt
 
-libraryDependencies ++= Seq(
-  Library.jsonAst,
-  Library.slf4jApi,
-  Library.inject,
-  Library.commonCodec,
-  Library.Circe.core,
-  Library.Circe.generic,
-  Library.Circe.parser,
-  Library.scalaXml,
-  Library.scalaLogging
-)
-enablePlugins(Doc)
+import silhouette.util
+
+import scala.util.Try
+
+/**
+ * Transforms a string into a [[Claims]] object.
+ */
+trait Reads extends util.Reads[String, Try[Claims]]
+
+/**
+ * Transforms a [[Claims]] object into a string.
+ */
+trait Writes extends util.Writes[Claims, Try[String]]

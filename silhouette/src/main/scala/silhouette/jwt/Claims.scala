@@ -36,7 +36,7 @@ import scala.json.ast.JObject
  * @param jwtID          The JWT 'jti' claim.
  * @param custom         Some custom claims as JSON.
  */
-case class JwtClaims(
+case class Claims(
   issuer: Option[String] = None,
   subject: Option[String] = None,
   audience: Option[List[String]] = None,

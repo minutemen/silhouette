@@ -20,15 +20,15 @@ package silhouette.http.transport.format
 import silhouette.Credentials
 import silhouette.crypto.Base64
 import silhouette.exceptions.TransformException
-import silhouette.http.Format
 import silhouette.http.transport.format.BasicAuthHeaderFormat._
+import silhouette.http.{ Reads, Writes }
 
 import scala.util.{ Failure, Success, Try }
 
 /**
  * Handles the transformation of the "basic" `Authorization` header.
  */
-final class BasicAuthHeaderFormat extends Format[Credentials] {
+final case class BasicAuthHeaderFormat() extends Reads[Credentials] with Writes[Credentials] {
 
   /**
    * Transforms the "basic" `Authorization` header value into some [[Credentials]].
@@ -53,8 +53,8 @@ final class BasicAuthHeaderFormat extends Format[Credentials] {
    * @param credentials The credentials to encode.
    * @return The "basic" `Authorization` header value.
    */
-  override def write(credentials: Credentials): Try[String] = {
-    Try(s"Basic ${Base64.encode(s"${credentials.identifier}:${credentials.password}")}")
+  override def write(credentials: Credentials): String = {
+    s"Basic ${Base64.encode(s"${credentials.identifier}:${credentials.password}")}"
   }
 }
 
@@ -62,7 +62,6 @@ final class BasicAuthHeaderFormat extends Format[Credentials] {
  * The companion object of the [[BasicAuthHeaderFormat]] class.
  */
 object BasicAuthHeaderFormat {
-  val MissingBasicAuthIdentifier = "[Silhouette][BasicAuthHeaderFormat] Header doesn't start with 'Basic '"
-  val InvalidBasicAuthHeader = "[Silhouette][BasicAuthHeaderFormat] A basic auth header must consists of two " +
-    "parts divided by a colon"
+  val MissingBasicAuthIdentifier = "Header doesn't start with 'Basic '"
+  val InvalidBasicAuthHeader = "A basic auth header must consists of two parts divided by a colon"
 }

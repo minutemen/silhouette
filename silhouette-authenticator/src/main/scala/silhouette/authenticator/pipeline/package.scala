@@ -15,23 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.jwt
-
-import silhouette.util.{ Reads, Writes }
-
-import scala.util.Try
+package silhouette.authenticator
 
 /**
- * Transforms a string into a [[JwtClaims]] object.
+ * An authenticator pipeline represents a step in the authentication process which is composed of multiple single steps.
  */
-trait JwtReads extends Reads[String, Try[JwtClaims]]
-
-/**
- * Transforms a [[JwtClaims]] object into a string.
- */
-trait JwtWrites extends Writes[JwtClaims, Try[String]]
-
-/**
- * JWT transformer combinator.
- */
-trait JwtFormat extends JwtReads with JwtWrites
+package object pipeline

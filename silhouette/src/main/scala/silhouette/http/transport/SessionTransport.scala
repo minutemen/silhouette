@@ -21,40 +21,15 @@ import silhouette.http._
 import silhouette.util.{ Source, Target }
 
 /**
- * The settings for the header transport.
+ * The session transport.
  *
  * @param key The session key in which the payload will be transported.
  */
-final case class SessionTransportSettings(key: String) extends TransportSettings
-
-/**
- * The session transport.
- *
- * @param settings The transport settings.
- */
-final case class SessionTransport(settings: SessionTransportSettings)
+final case class SessionTransport(key: String)
   extends RetrieveFromRequest
   with SmuggleIntoRequest
   with EmbedIntoResponse
   with DiscardFromResponse {
-
-  /**
-   * The type of the concrete implementation of this abstract type.
-   */
-  override type Self = SessionTransport
-
-  /**
-   * The settings type.
-   */
-  override type Settings = SessionTransportSettings
-
-  /**
-   * Gets a transport initialized with a new settings object.
-   *
-   * @param f A function which gets the settings passed and returns different settings.
-   * @return An instance of the transport initialized with new settings.
-   */
-  override def withSettings(f: (Settings) => Settings): Self = new Self(f(settings))
 
   /**
    * Retrieves the payload, stored in the session, from request.
@@ -64,7 +39,7 @@ final case class SessionTransport(settings: SessionTransportSettings)
    * @return Some value or None if no payload could be found in request.
    */
   override def retrieve[R](request: RequestPipeline[R]): Option[String] =
-    request.session.get(settings.key)
+    request.session.get(key)
 
   /**
    * Adds a session key with the given payload to the request.
@@ -75,7 +50,7 @@ final case class SessionTransport(settings: SessionTransportSettings)
    * @return The manipulated request pipeline.
    */
   override def smuggle[R](payload: String, request: RequestPipeline[R]): RequestPipeline[R] =
-    request.withSession(settings.key -> payload)
+    request.withSession(key -> payload)
 
   /**
    * Adds a session key with the given payload to the response.
@@ -86,7 +61,7 @@ final case class SessionTransport(settings: SessionTransportSettings)
    * @return The manipulated response pipeline.
    */
   override def embed[R](payload: String, response: ResponsePipeline[R]): ResponsePipeline[R] =
-    response.withSession(settings.key -> payload)
+    response.withSession(key -> payload)
 
   /**
    * Discards the session key on the client.
@@ -96,7 +71,7 @@ final case class SessionTransport(settings: SessionTransportSettings)
    * @return The manipulated response pipeline.
    */
   override def discard[R](response: ResponsePipeline[R]): ResponsePipeline[R] =
-    response.withoutSession(settings.key)
+    response.withoutSession(key)
 }
 
 /**
@@ -116,7 +91,7 @@ final case class RetrieveFromSession[R](key: String)(
    *
    * @return The retrieved payload.
    */
-  override def read: Option[String] = SessionTransport(SessionTransportSettings(key)).retrieve(requestPipeline)
+  override def read: Option[String] = SessionTransport(key).retrieve(requestPipeline)
 }
 
 /**
@@ -137,8 +112,7 @@ final case class SmuggleIntoSession[R](payload: String, key: String)(
    *
    * @return The request pipeline.
    */
-  override def write: RequestPipeline[R] =
-    SessionTransport(SessionTransportSettings(key)).smuggle(payload, requestPipeline)
+  override def write: RequestPipeline[R] = SessionTransport(key).smuggle(payload, requestPipeline)
 }
 
 /**
@@ -159,8 +133,7 @@ final case class EmbedIntoSession[R](payload: String, key: String)(
    *
    * @return The response pipeline.
    */
-  override def write: ResponsePipeline[R] =
-    SessionTransport(SessionTransportSettings(key)).embed(payload, responsePipeline)
+  override def write: ResponsePipeline[R] = SessionTransport(key).embed(payload, responsePipeline)
 }
 
 /**
@@ -180,6 +153,5 @@ final case class DiscardFromSession[R](key: String)(
    *
    * @return The response pipeline.
    */
-  override def write: ResponsePipeline[R] =
-    SessionTransport(SessionTransportSettings(key)).discard(responsePipeline)
+  override def write: ResponsePipeline[R] = SessionTransport(key).discard(responsePipeline)
 }

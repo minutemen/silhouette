@@ -15,17 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Dependencies._
+package silhouette
 
-libraryDependencies ++= Seq(
-  Library.jsonAst,
-  Library.slf4jApi,
-  Library.inject,
-  Library.commonCodec,
-  Library.Circe.core,
-  Library.Circe.generic,
-  Library.Circe.parser,
-  Library.scalaXml,
-  Library.scalaLogging
-)
-enablePlugins(Doc)
+/**
+ * JWT related interfaces and implementations.
+ */
+package object jwt {
+
+  /**
+   * The reserved claims.
+   */
+  val ReservedClaims: Set[String] = Set("iss", "sub", "aud", "exp", "nbf", "iat", "jti")
+}

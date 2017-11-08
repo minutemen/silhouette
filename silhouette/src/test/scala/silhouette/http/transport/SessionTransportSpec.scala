@@ -26,9 +26,9 @@ import silhouette.http._
  */
 class SessionTransportSpec extends Specification {
 
-  "The `withSettings` method" should {
-    "allow to override the settings" in new Context {
-      transport.withSettings(_.copy("not-name")).settings.key must be equalTo "not-name"
+  "The `copy` method" should {
+    "allow to override the key" in new Context {
+      transport.copy("not-key").key must be equalTo "not-key"
     }
   }
 
@@ -74,14 +74,9 @@ class SessionTransportSpec extends Specification {
   trait Context extends Scope {
 
     /**
-     * The session transport settings.
-     */
-    val settings = SessionTransportSettings(key = "test")
-
-    /**
      * The session transport to test.
      */
-    val transport = SessionTransport(settings)
+    val transport = SessionTransport("test")
 
     /**
      * A fake request.

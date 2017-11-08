@@ -31,8 +31,3 @@ trait Reads extends util.Reads[String, Future[Authenticator]]
  * Transforms an [[Authenticator]] into a string.
  */
 trait Writes extends util.Writes[Authenticator, Future[String]]
-
-/**
- * Authenticator transformer combinator.
- */
-trait Format extends Reads with Writes

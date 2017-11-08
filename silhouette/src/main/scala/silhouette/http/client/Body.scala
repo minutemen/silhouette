@@ -151,5 +151,5 @@ private[silhouette] object DefaultBodyFormat {
   /**
    * The error messages.
    */
-  val UnsupportedContentType: String = "[Silhouette][DefaultBodyFormat] Expected %s but found %s"
+  val UnsupportedContentType: String = "Expected %s but found %s"
 }

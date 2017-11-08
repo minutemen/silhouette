@@ -41,6 +41,14 @@ sealed trait State[I <: Identity]
 final case class MissingAuthenticator[I <: Identity]() extends State[I]
 
 /**
+ * Represents a state where a faulty authenticator was found.
+ *
+ * @param cause An exception that indicates the cause.
+ * @tparam I The type of the identity.
+ */
+final case class FaultyAuthenticator[I <: Identity](cause: Throwable) extends State[I]
+
+/**
  * Represents a state where in invalid authenticator was found.
  *
  * @param authenticator The found authenticator.
@@ -63,7 +71,7 @@ final case class MissingIdentity[I <: Identity](authenticator: Authenticator) ex
  * @param identity      The found identity.
  * @tparam I The type of the identity.
  */
-final case class NotAuthorized[I <: Identity](authenticator: Authenticator, identity: Identity) extends State[I]
+final case class NotAuthorized[I <: Identity](authenticator: Authenticator, identity: I) extends State[I]
 
 /**
  * Represents a state where an identity is authenticated and authorized.
@@ -72,4 +80,4 @@ final case class NotAuthorized[I <: Identity](authenticator: Authenticator, iden
  * @param identity      The found identity.
  * @tparam I The type of the identity.
  */
-final case class Authenticated[I <: Identity](authenticator: Authenticator, identity: Identity) extends State[I]
+final case class Authenticated[I <: Identity](authenticator: Authenticator, identity: I) extends State[I]

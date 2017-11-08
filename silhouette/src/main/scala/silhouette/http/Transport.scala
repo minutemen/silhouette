@@ -33,14 +33,7 @@ trait Reads[T] extends util.Reads[String, Try[T]]
  *
  * @tparam T The source type on the write operation
  */
-trait Writes[T] extends util.Writes[T, Try[String]]
-
-/**
- * Transport transformer combinator.
- *
- * @tparam T The target type on the read operation and the source type on the write operation.
- */
-trait Format[T] extends Reads[T] with Writes[T]
+trait Writes[T] extends util.Writes[T, String]
 
 /**
  * Marker trait for the transport settings.
@@ -52,31 +45,7 @@ trait TransportSettings
  *
  * The transport is divided into two parts. The [[RequestTransport]] and the [[ResponseTransport]].
  */
-trait Transport {
-
-  /**
-   * The type of the concrete implementation of this abstract type.
-   */
-  type Self
-
-  /**
-   * The settings type.
-   */
-  type Settings <: TransportSettings
-
-  /**
-   * The transport settings.
-   */
-  protected val settings: Settings
-
-  /**
-   * Gets a transport initialized with a new settings object.
-   *
-   * @param f A function which gets the settings passed and returns different settings.
-   * @return An instance of the transport initialized with new settings.
-   */
-  def withSettings(f: Settings => Settings): Self
-}
+trait Transport
 
 /**
  * The request transport handles payload which can be transported in a request.

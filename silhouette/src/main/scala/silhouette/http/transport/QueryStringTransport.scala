@@ -21,38 +21,11 @@ import silhouette.http._
 import silhouette.util.{ Source, Target }
 
 /**
- * The settings for the query string transport.
- *
- * @param name The name of the query param in which the payload will be transported.
- */
-final case class QueryStringTransportSettings(name: String) extends TransportSettings
-
-/**
  * The query string transport.
- *
- * @param settings The transport settings.
  */
-final case class QueryStringTransport(settings: QueryStringTransportSettings)
+final case class QueryStringTransport(name: String)
   extends RetrieveFromRequest
   with SmuggleIntoRequest {
-
-  /**
-   * The type of the concrete implementation of this abstract type.
-   */
-  override type Self = QueryStringTransport
-
-  /**
-   * The settings type.
-   */
-  override type Settings = QueryStringTransportSettings
-
-  /**
-   * Gets a transport initialized with a new settings object.
-   *
-   * @param f A function which gets the settings passed and returns different settings.
-   * @return An instance of the transport initialized with new settings.
-   */
-  override def withSettings(f: (Settings) => Settings): Self = new Self(f(settings))
 
   /**
    * Retrieves the payload, stored in the query string, from request.
@@ -62,7 +35,7 @@ final case class QueryStringTransport(settings: QueryStringTransportSettings)
    * @return Some value or None if no payload could be found in request.
    */
   override def retrieve[R](request: RequestPipeline[R]): Option[String] =
-    request.queryParam(settings.name).headOption
+    request.queryParam(name).headOption
 
   /**
    * Adds a query param with the given payload to the request.
@@ -73,7 +46,7 @@ final case class QueryStringTransport(settings: QueryStringTransportSettings)
    * @return The manipulated request pipeline.
    */
   override def smuggle[R](payload: String, request: RequestPipeline[R]): RequestPipeline[R] =
-    request.withQueryParams(settings.name -> payload)
+    request.withQueryParams(name -> payload)
 }
 
 /**
@@ -93,8 +66,7 @@ case class RetrieveFromQueryString[R](name: String)(
    *
    * @return The retrieved payload.
    */
-  override def read: Option[String] =
-    QueryStringTransport(QueryStringTransportSettings(name)).retrieve(requestPipeline)
+  override def read: Option[String] = QueryStringTransport(name).retrieve(requestPipeline)
 }
 
 /**
@@ -115,6 +87,5 @@ final case class SmuggleIntoQueryString[R](payload: String, name: String)(
    *
    * @return The request pipeline.
    */
-  override def write: RequestPipeline[R] =
-    QueryStringTransport(QueryStringTransportSettings(name)).smuggle(payload, requestPipeline)
+  override def write: RequestPipeline[R] = QueryStringTransport(name).smuggle(payload, requestPipeline)
 }

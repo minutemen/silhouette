@@ -26,9 +26,9 @@ import silhouette.http._
  */
 class QueryStringTransportSpec extends Specification {
 
-  "The `withSettings` method" should {
-    "allow to override the settings" in new Context {
-      transport.withSettings(_.copy("not-name")).settings.name must be equalTo "not-name"
+  "The `copy` method" should {
+    "allow to override the name" in new Context {
+      transport.copy("not-name").name must be equalTo "not-name"
     }
   }
 
@@ -58,14 +58,9 @@ class QueryStringTransportSpec extends Specification {
   trait Context extends Scope {
 
     /**
-     * The query string transport settings.
-     */
-    val settings = QueryStringTransportSettings(name = "test")
-
-    /**
      * The query string transport to test.
      */
-    val transport = QueryStringTransport(settings)
+    val transport = QueryStringTransport("test")
 
     /**
      * A fake request.

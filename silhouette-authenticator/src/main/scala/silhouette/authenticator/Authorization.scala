@@ -18,29 +18,42 @@
 package silhouette.authenticator
 
 import silhouette.{ Authenticator, Identity }
-import silhouette.http.RequestPipeline
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * A trait to define Authorization objects that let you hook
- * an authorization implementation in secured endpoints.
+ * A trait to define Authorization objects that let you hook an authorization implementation into an
+ * authentication pipeline.
  *
  * @tparam I The type of the identity.
- * @tparam A The type of the authenticator.
  */
-trait Authorization[I <: Identity, A <: Authenticator] {
+trait Authorization[I <: Identity] {
 
   /**
-   * Checks whether the user is authorized to execute an endpoint or not.
+   * Checks whether the user is authorized or not.
    *
    * @param identity      The current identity instance.
    * @param authenticator The current authenticator instance.
-   * @param request       The request pipeline.
-   * @tparam R The type of the request.
    * @return True if the user is authorized, false otherwise.
    */
-  def isAuthorized[R](identity: I, authenticator: A)(implicit request: RequestPipeline[R]): Future[Boolean]
+  def isAuthorized(identity: I, authenticator: Authenticator): Future[Boolean]
+}
+
+/**
+ * An authorization that returns always true.
+ *
+ * @tparam I The type of the identity.
+ */
+case class Authorized[I <: Identity]() extends Authorization[I] {
+
+  /**
+   * Checks whether the user is authorized or not.
+   *
+   * @param identity      The current identity instance.
+   * @param authenticator The current authenticator instance.
+   * @return True if the user is authorized, false otherwise.
+   */
+  override def isAuthorized(identity: I, authenticator: Authenticator): Future[Boolean] = Future.successful(true)
 }
 
 /**
@@ -54,22 +67,18 @@ object Authorization {
    * @param self The `Authorization` instance on which the additional methods should be defined.
    * @param ec   The execution context to handle the asynchronous operations.
    */
-  implicit final class RichAuthorization[I <: Identity, A <: Authenticator](self: Authorization[I, A])(
+  implicit final class RichAuthorization[I <: Identity](self: Authorization[I])(
     implicit
-    ec: ExecutionContext) {
+    ec: ExecutionContext
+  ) {
 
     /**
      * Performs a logical negation on an `Authorization` result.
      *
      * @return An `Authorization` which performs a logical negation on an `Authorization` result.
      */
-    def unary_! : Authorization[I, A] = new Authorization[I, A] {
-      def isAuthorized[R](identity: I, authenticator: A)(
-        implicit
-        request: RequestPipeline[R]): Future[Boolean] = {
-
-        self.isAuthorized(identity, authenticator).map(x => !x)
-      }
+    def unary_! : Authorization[I] = (identity: I, authenticator: Authenticator) => {
+      self.isAuthorized(identity, authenticator).map(x => !x)
     }
 
     /**
@@ -78,18 +87,13 @@ object Authorization {
      * @param authorization The right hand operand.
      * @return An authorization which performs a logical AND operation with two `Authorization` instances.
      */
-    def &&(authorization: Authorization[I, A]): Authorization[I, A] = new Authorization[I, A] {
-      def isAuthorized[R](identity: I, authenticator: A)(
-        implicit
-        request: RequestPipeline[R]): Future[Boolean] = {
-
-        val leftF = self.isAuthorized(identity, authenticator)
-        val rightF = authorization.isAuthorized(identity, authenticator)
-        for {
-          left <- leftF
-          right <- rightF
-        } yield left && right
-      }
+    def &&(authorization: Authorization[I]): Authorization[I] = (identity: I, authenticator: Authenticator) => {
+      val leftF = self.isAuthorized(identity, authenticator)
+      val rightF = authorization.isAuthorized(identity, authenticator)
+      for {
+        left <- leftF
+        right <- rightF
+      } yield left && right
     }
 
     /**
@@ -98,18 +102,13 @@ object Authorization {
      * @param authorization The right hand operand.
      * @return An authorization which performs a logical OR operation with two `Authorization` instances.
      */
-    def ||(authorization: Authorization[I, A]): Authorization[I, A] = new Authorization[I, A] {
-      def isAuthorized[R](identity: I, authenticator: A)(
-        implicit
-        request: RequestPipeline[R]): Future[Boolean] = {
-
-        val leftF = self.isAuthorized(identity, authenticator)
-        val rightF = authorization.isAuthorized(identity, authenticator)
-        for {
-          left <- leftF
-          right <- rightF
-        } yield left || right
-      }
+    def ||(authorization: Authorization[I]): Authorization[I] = (identity: I, authenticator: Authenticator) => {
+      val leftF = self.isAuthorized(identity, authenticator)
+      val rightF = authorization.isAuthorized(identity, authenticator)
+      for {
+        left <- leftF
+        right <- rightF
+      } yield left || right
     }
   }
 }

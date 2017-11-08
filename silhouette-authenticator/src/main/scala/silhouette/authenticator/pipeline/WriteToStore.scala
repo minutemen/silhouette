@@ -17,10 +17,26 @@
  */
 package silhouette.authenticator.pipeline
 
-/**
- *
- */
-class DiscardPipeline {
+import silhouette.Authenticator
+import silhouette.authenticator.WritePipeline
 
-  //def
+import scala.concurrent.Future
+
+/**
+ * Writes an authenticator to the store.
+ *
+ * This write can be an insert, an update or a delete to a persistence layer like a database or a cache.
+ *
+ * @param writer A writer to write the authenticator to a persistence layer like a database or a cache.
+ */
+case class WriteToStore(writer: Authenticator => Future[Authenticator])
+  extends WritePipeline[Future[Authenticator]] {
+
+  /**
+   * Apply the pipeline.
+   *
+   * @param authenticator The authenticator.
+   * @return The authenticator returned from the writer function.
+   */
+  override def apply(authenticator: Authenticator): Future[Authenticator] = writer(authenticator)
 }

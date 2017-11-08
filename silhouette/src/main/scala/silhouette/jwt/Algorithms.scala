@@ -21,7 +21,7 @@ import java.security.interfaces.{ ECPrivateKey, ECPublicKey, RSAPrivateKey, RSAP
 import javax.crypto.SecretKey
 
 /**
- * Base trait for a JWA(JSON Web Algorithms) algorithm.
+ * Base trait for a JWA(JSON Web Algorithm).
  *
  * A JWA algorithm can be used with the JSON Web Signature ([JWS](https://tools.ietf.org/html/rfc7515)),
  * JSON Web Encryption ([JWE](https://tools.ietf.org/html/rfc7516)), and JSON Web Key

@@ -17,31 +17,22 @@
  */
 package silhouette.authenticator.format
 
-import java.time.Instant
-import javax.inject.Inject
-
-import silhouette.authenticator.Format
-import silhouette.authenticator.format.JwtAuthenticatorFormat._
 import io.circe.jawn.decode
-import io.circe.syntax._
+import silhouette.authenticator.Reads
+import silhouette.authenticator.format.JwtReads._
 import silhouette.crypto.Base64
-import silhouette.jwt
-import silhouette.{ Authenticator, AuthenticatorException, LoginInfo }
+import silhouette.{ Authenticator, AuthenticatorException, LoginInfo, jwt }
 
 import scala.concurrent.Future
 import scala.json.ast.{ JArray, JObject, JString }
 import scala.util.{ Failure, Success, Try }
 
 /**
- * A format which transforms an authenticator into a JWT and vice versa.
+ * A reads which transforms a JWT into an [[Authenticator]].
  *
- * @param jwtFormat The JWT transformer.
- * @param settings  The JWT transformer settings.
+ * @param jwtReads The JWT reads implementation.
  */
-final case class JwtFormat @Inject() (
-  jwtFormat: jwt.JwtFormat,
-  settings: JwtAuthenticatorFormatSettings
-) extends Format {
+final case class JwtReads(jwtReads: jwt.Reads) extends Reads {
 
   /**
    * Transforms a JWT into an [[Authenticator]].
@@ -50,7 +41,7 @@ final case class JwtFormat @Inject() (
    * @return An authenticator on success, an error on failure.
    */
   override def read(jwt: String): Future[Authenticator] = Future.fromTry {
-    jwtFormat.read(jwt).map { claims =>
+    jwtReads.read(jwt).map { claims =>
       Authenticator(
         id = claims.jwtID.getOrElse(throw new AuthenticatorException(MissingClaimValue.format("jwtID"))),
         loginInfo = buildLoginInfo(Base64.decode(claims.subject
@@ -79,29 +70,6 @@ final case class JwtFormat @Inject() (
   }
 
   /**
-   * Transforms an [[Authenticator]] into a JWT.
-   *
-   * @param authenticator The authenticator to transform.
-   * @return A JWT on success, an error on failure.
-   */
-  override def write(authenticator: Authenticator): Future[String] = Future.fromTry {
-    jwtFormat.write(jwt.JwtClaims(
-      issuer = settings.issuer,
-      subject = Some(Base64.encode(authenticator.loginInfo.asJson.toString())),
-      audience = settings.audience,
-      expirationTime = Some(authenticator.expires),
-      notBefore = settings.notBefore,
-      issuedAt = Some(authenticator.lastUsed),
-      jwtID = Some(authenticator.id),
-      custom = JObject(Seq(
-        Some("tags" -> JArray(authenticator.tags.map(JString).toVector)),
-        authenticator.fingerprint.map("fingerprint" -> JString(_)),
-        authenticator.payload.map("payload" -> _)
-      ).flatten.toMap)
-    ))
-  }
-
-  /**
    * Builds the login info from Json.
    *
    * @param str The string representation of the login info.
@@ -120,21 +88,8 @@ final case class JwtFormat @Inject() (
 /**
  * The companion object.
  */
-object JwtAuthenticatorFormat {
-  val JsonParseError = "[Silhouette][JwtAuthenticatorFormat] Cannot parse Json: %s"
-  val UnexpectedJsonValue = "[Silhouette][JwtAuthenticatorFormat] Unexpected Json value: %s; expected %s"
-  val MissingClaimValue = "[Silhouette][JwtAuthenticatorFormat] Cannot get value for claim `%s` from JWT"
+object JwtReads {
+  val JsonParseError = "Cannot parse Json: %s"
+  val UnexpectedJsonValue = "Unexpected Json value: %s; expected %s"
+  val MissingClaimValue = "Cannot get value for claim `%s` from JWT"
 }
-
-/**
- * The settings for the Jwt authenticator format.
- *
- * @param issuer    The JWT 'iss' claim.
- * @param audience  The JWT 'aud' claim.
- * @param notBefore The JWT 'nbf' claim.
- */
-case class JwtAuthenticatorFormatSettings(
-  issuer: Option[String] = None,
-  audience: Option[List[String]] = None,
-  notBefore: Option[Instant] = None
-)

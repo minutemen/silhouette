@@ -26,9 +26,9 @@ import silhouette.http._
  */
 class CookieTransportSpec extends Specification {
 
-  "The `withSettings` method" should {
+  "The `copy` method" should {
     "allow to override the settings" in new Context {
-      transport.withSettings(_.copy("not-name")).settings.name must be equalTo "not-name"
+      transport.copy(transport.settings.copy("not-name")).settings.name must be equalTo "not-name"
     }
   }
 

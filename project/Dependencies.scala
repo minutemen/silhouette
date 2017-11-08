@@ -49,5 +49,6 @@ object Dependencies {
     val jsonAst = "org.mdedetrich" %% "scala-json-ast" % "1.0.0-M7"
     val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15on" % "1.56"
     val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
+    val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2"
   }
 }

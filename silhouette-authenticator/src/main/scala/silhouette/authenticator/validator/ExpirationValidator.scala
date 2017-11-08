@@ -25,18 +25,18 @@ import silhouette.authenticator.Validator
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * A validator that checks if an authenticator is expired.
+ * A validator that checks if an [[Authenticator]] is expired.
  *
  * @param clock The clock implementation to validate against.
  */
 final case class ExpirationValidator(clock: Clock) extends Validator {
 
   /**
-   * Checks if the authenticator is valid.
+   * Checks if the [[Authenticator]] is valid.
    *
-   * @param authenticator The authenticator to validate.
+   * @param authenticator The [[Authenticator]] to validate.
    * @param ec            The execution context to perform the async operations.
-   * @return True if the authenticator is valid, false otherwise.
+   * @return True if the [[Authenticator]] is valid, false otherwise.
    */
   override def isValid(authenticator: Authenticator)(
     implicit

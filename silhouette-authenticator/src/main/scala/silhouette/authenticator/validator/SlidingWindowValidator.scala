@@ -26,25 +26,24 @@ import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * A validator that checks if an authenticator has timed out after a certain time if it hasn't been used.
+ * A validator that checks if an [[Authenticator]] has timed out after a certain time if it hasn't been used.
  *
- * An Authenticator can use a sliding window expiration. This means that the Authenticator times out
+ * An [[Authenticator]] can use a sliding window expiration. This means that the [[Authenticator]] times out
  * after a certain time if it hasn't been used. So it checks if the time elapsed since the last time
- * the authenticator was used, is longer than the maximum idle timeout specified in the properties
+ * the [[Authenticator]] was used, is longer than the maximum idle timeout specified in the properties
  * of the validator.
  *
- * @param idleTimeout The duration an authenticator can be idle before it timed out.
+ * @param idleTimeout The duration an [[Authenticator]] can be idle before it timed out.
  * @param clock       The clock implementation to validate against.
  */
-final case class SlidingWindowValidator(idleTimeout: FiniteDuration, clock: Clock)
-  extends Validator {
+final case class SlidingWindowValidator(idleTimeout: FiniteDuration, clock: Clock) extends Validator {
 
   /**
-   * Checks if the authenticator is valid.
+   * Checks if the [[Authenticator]] is valid.
    *
-   * @param authenticator The authenticator to validate.
+   * @param authenticator The [[Authenticator]] to validate.
    * @param ec            The execution context to perform the async operations.
-   * @return True if the authenticator is valid, false otherwise.
+   * @return True if the [[Authenticator]] is valid, false otherwise.
    */
   override def isValid(authenticator: Authenticator)(
     implicit
