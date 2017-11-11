@@ -45,22 +45,16 @@ case class DiscardStatefulCookie[R](
   /**
    * Apply the pipeline.
    *
-   * We touch the response to indicate that an operation on an authenticator was made. Please
-   * see [[ResponsePipeline.touched]] for more details.
-   *
    * @param authenticator The authenticator.
    * @return The response pipeline that discards the authenticator client side.
    */
   override def apply(authenticator: Authenticator): Future[ResponsePipeline[R]] = {
-    WriteToStore(writer)(authenticator).map(_ => DiscardFromCookie(settings)(responsePipeline.touch).write)
+    WriteToStore(writer)(authenticator).map(_ => DiscardFromCookie(settings).write)
   }
 }
 
 /**
  * Discards a stateless cookie.
- *
- * We touch the response to indicate that an operation on an authenticator was made. Please
- * see [[ResponsePipeline.touched]] for more details.
  *
  * @param settings         The cookie transport settings.
  * @param responsePipeline The response pipeline.
@@ -77,6 +71,5 @@ case class DiscardStatelessCookie[R](settings: CookieTransportSettings)(
    * @param authenticator The authenticator.
    * @return The response pipeline that discards the authenticator client side.
    */
-  override def apply(authenticator: Authenticator): ResponsePipeline[R] =
-    DiscardFromCookie(settings)(responsePipeline.touch).write
+  override def apply(authenticator: Authenticator): ResponsePipeline[R] = DiscardFromCookie(settings).write
 }

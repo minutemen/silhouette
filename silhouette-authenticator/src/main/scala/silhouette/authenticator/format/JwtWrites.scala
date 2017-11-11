@@ -53,9 +53,9 @@ final case class JwtWrites(
       issuer = issuer,
       subject = Some(Base64.encode(authenticator.loginInfo.asJson.toString())),
       audience = audience,
-      expirationTime = Some(authenticator.expires),
+      expirationTime = authenticator.expires,
       notBefore = notBefore,
-      issuedAt = Some(authenticator.lastUsed),
+      issuedAt = authenticator.lastTouched,
       jwtID = Some(authenticator.id),
       custom = JObject(Seq(
         Some("tags" -> JArray(authenticator.tags.map(JString).toVector)),

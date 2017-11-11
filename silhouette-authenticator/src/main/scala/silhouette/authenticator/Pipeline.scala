@@ -50,7 +50,7 @@ trait AuthenticationPipeline[S, I <: Identity] extends (Source[S] => Future[Stat
    *
    * @param value The instance to patch.
    */
-  implicit class AuthenticatorFuture(value: Future[Authenticator]) {
+  final implicit class AuthenticatorFuture(value: Future[Authenticator]) {
     def toState(
       implicit
       ec: ExecutionContext
@@ -63,7 +63,7 @@ trait AuthenticationPipeline[S, I <: Identity] extends (Source[S] => Future[Stat
    *
    * @param value The instance to patch.
    */
-  implicit class OptionalAuthenticatorFuture(value: Future[Option[Authenticator]]) {
+  final implicit class OptionalAuthenticatorFuture(value: Future[Option[Authenticator]]) {
     def toState(
       implicit
       ec: ExecutionContext
@@ -76,7 +76,7 @@ trait AuthenticationPipeline[S, I <: Identity] extends (Source[S] => Future[Stat
    *
    * @param value The instance to patch.
    */
-  implicit class AuthenticatorFitting(value: Future[Fitting[Authenticator]]) {
+  final implicit class AuthenticatorFitting(value: Future[Fitting[Authenticator]]) {
     def toState(
       implicit
       ec: ExecutionContext
@@ -116,7 +116,7 @@ trait AuthenticationPipeline[S, I <: Identity] extends (Source[S] => Future[Stat
    * @tparam T The type of the future value.
    * @return The authentication [[State]].
    */
-  protected def toState[T](future: Future[T], transformer: T => Future[State[I]])(
+  final protected def toState[T](future: Future[T], transformer: T => Future[State[I]])(
     implicit
     ec: ExecutionContext
   ): Future[State[I]] = {
@@ -130,7 +130,7 @@ trait AuthenticationPipeline[S, I <: Identity] extends (Source[S] => Future[Stat
    * @param ec                 The execution context.
    * @return The authentication [[State]].
    */
-  protected def toState(maybeAuthenticator: Option[Authenticator])(
+  final protected def toState(maybeAuthenticator: Option[Authenticator])(
     implicit
     ec: ExecutionContext
   ): Future[State[I]] = {
@@ -147,7 +147,7 @@ trait AuthenticationPipeline[S, I <: Identity] extends (Source[S] => Future[Stat
    * @param ec            The execution context.
    * @return The authentication [[State]].
    */
-  protected def toState(authenticator: Authenticator)(
+  final protected def toState(authenticator: Authenticator)(
     implicit
     ec: ExecutionContext
   ): Future[State[I]] = {

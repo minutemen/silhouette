@@ -30,83 +30,71 @@ import scala.json.ast.JObject
 /**
  * An authenticator tracks an authenticated user.
  *
+ * The authenticator can use sliding window expiration. This means that the authenticator times
+ * out after a certain time if it wasn't used. This can be controlled with the [[lastTouched]]
+ * property and the [[silhouette.authenticator.validator.SlidingWindowValidator]].
+ *
+ * The expiry of the authenticator can be controlled with the [[expires]] property and the
+ * [[silhouette.authenticator.validator.ExpirationValidator]].
+ *
+ * The authenticator can store an identity-related fingerprint that can be used to build an additional
+ * security mechanism, by validating the fingerprint on subsequent requests. This can be controlled with
+ * the [[fingerprint]] property and the [[silhouette.authenticator.validator.FingerprintValidator]].
+ *
  * @param id          The ID of the authenticator.
  * @param loginInfo   The linked login info for an identity.
- * @param lastUsed    The instant of time the authenticator was last used.
- * @param expires     The instant of time the authenticator expires.
- * @param tags        A list of tags to tag the authenticator.
+ * @param lastTouched Maybe the instant of time the authenticator was last touched.
+ * @param expires     Maybe the instant of time the authenticator expires.
  * @param fingerprint Maybe a fingerprint of the user.
+ * @param tags        A list of tags to tag the authenticator.
  * @param payload     Some custom payload an authenticator can transport.
  */
-case class Authenticator(
+final case class Authenticator(
   id: String,
   loginInfo: LoginInfo,
-  lastUsed: Instant,
-  expires: Instant,
-  tags: Seq[String] = Seq(),
+  lastTouched: Option[Instant] = None,
+  expires: Option[Instant] = None,
   fingerprint: Option[String] = None,
+  tags: Seq[String] = Seq(),
   payload: Option[JObject] = None) {
-
-  /**
-   * A marker flag which indicates that an authenticator value was changed.
-   */
-  protected val touched = false
-
-  /**
-   * Copies the authenticator and touches it.
-   *
-   * @param id          The ID of the authenticator.
-   * @param loginInfo   The linked login info for an identity.
-   * @param lastUsed    The instant of time the authenticator was last used.
-   * @param expires     The instant of time the authenticator expires.
-   * @param tags        A list of tags to tag the authenticator.
-   * @param fingerprint Maybe a fingerprint of the user.
-   * @param payload     Some custom payload an authenticator can transport.
-   * @return The new touched authenticator.
-   */
-  def touch(
-    id: String = id,
-    loginInfo: LoginInfo = loginInfo,
-    lastUsed: Instant = lastUsed,
-    expires: Instant = expires,
-    tags: Seq[String] = tags,
-    fingerprint: Option[String] = fingerprint,
-    payload: Option[JObject] = payload
-  ): Authenticator = new Authenticator(
-    id,
-    loginInfo,
-    lastUsed,
-    expires,
-    tags,
-    fingerprint,
-    payload
-  ) {
-    override protected val touched = true
-  }
 
   /**
    * Gets the duration the authenticator expires in.
    *
    * @param clock The clock instance.
-   * @return The duration the authenticator expires in.
+   * @return If it returns None then the authenticator doesn't expire, otherwise it returns the duration the
+   *         authenticator expires in.
    */
-  def expiresIn(clock: Clock): FiniteDuration = expires - clock.instant()
+  def expiresIn(clock: Clock): Option[FiniteDuration] = expires.map(_ - clock.instant())
 
   /**
-   * Gets the duration the authenticator was last used at.
+   * Gets the duration the authenticator was last touched at.
    *
    * @param clock The clock instance.
-   * @return The duration the authenticator was last used at.
+   * @return If it returns None then it wasn't touched, otherwise it returns the duration the authenticator
+   *         was last touched at.
    */
-  def lastUsedAt(clock: Clock): FiniteDuration = clock.instant() - lastUsed
+  def lastTouchedAt(clock: Clock): Option[FiniteDuration] = lastTouched.map(clock.instant() - _)
 
   /**
-   * Returns a copy of this authenticator with new tags added.
+   * Touches an authenticator.
    *
-   * @param tag The new tag to add.
-   * @return A copy of this authenticator with new tags added.
+   * This enables sliding windows functionality for an authenticator.
+   *
+   * @param clock The clock instance.
+   * @return A touched authenticator.
    */
-  def withTag(tag: String): Authenticator = copy(tags = tags :+ tag)
+  def touch(clock: Clock): Authenticator = copy(lastTouched = Some(clock.instant()))
+
+  /**
+   * Returns a copy of this authenticator with an expire instant of time.
+   *
+   * @param expiry    The authentication expiry.
+   * @param clock     The clock implementation to get the current time.
+   * @return A copy of this authenticator with an expire instant of time.
+   */
+  def withExpiry(expiry: FiniteDuration, clock: Clock): Authenticator =
+    copy(expires = Some(clock.instant() + expiry))
 
   /**
    * Returns a copy of this authenticator with a default fingerprint.
@@ -131,19 +119,27 @@ case class Authenticator(
     copy(fingerprint = Some(requestPipeline.fingerprint(fingerprintGenerator)))
 
   /**
-   * Indicates if this authenticator is tagged with the given tag.
+   * Returns a copy of this authenticator with new tags added.
    *
-   * @param tag The tag to check for.
-   * @return True if this authenticator is tagged with he given tag, false otherwise.
+   * @param tag The new tag to add.
+   * @return A copy of this authenticator with new tags added.
    */
-  def isTaggedWith(tag: String): Boolean = tags.contains(tag)
+  def withTag(tag: String): Authenticator = copy(tags = tags :+ tag)
 
   /**
    * Indicates if the authenticator was touched.
    *
    * @return True if the authenticator was touched, false otherwise.
    */
-  def isTouched: Boolean = touched
+  def isTouched: Boolean = lastTouched.isDefined
+
+  /**
+   * Indicates if this authenticator is tagged with the given tag.
+   *
+   * @param tag The tag to check for.
+   * @return True if this authenticator is tagged with he given tag, false otherwise.
+   */
+  def isTaggedWith(tag: String): Boolean = tags.contains(tag)
 
   /**
    * Checks if the authenticator is valid.
@@ -166,28 +162,6 @@ case class Authenticator(
 object Authenticator {
 
   /**
-   * Creates a new authenticator.
-   *
-   * This method sets the `lastUsed` property based on the current instant and the `expires` property based on the
-   * current instant plus the expiry duration.
-   *
-   * @param id        The ID of the authenticator.
-   * @param loginInfo The linked login info for an identity.
-   * @param expiry    The authentication expiry.
-   * @param clock     The clock implementation to get the current time.
-   * @return An authenticator instance.
-   */
-  def apply(id: String, loginInfo: LoginInfo, expiry: FiniteDuration, clock: Clock): Authenticator = {
-    val now = clock.instant()
-    Authenticator(
-      id,
-      loginInfo,
-      lastUsed = now,
-      expires = now + expiry
-    )
-  }
-
-  /**
    * Some implicits.
    */
   object Implicits {
@@ -203,7 +177,7 @@ object Authenticator {
        * Adds a duration to an instant.
        *
        * @param duration The duration to add.
-       * @return An [[Instant]] instance with the added duration.
+       * @return An [[java.time.Instant]] instance with the added duration.
        */
       def +(duration: FiniteDuration): Instant = {
         instant.plusMillis(duration.toMillis)
@@ -213,7 +187,7 @@ object Authenticator {
        * Subtracts an instant from an instant and returns the duration of it.
        *
        * @param sub The instant to subtract.
-       * @return An [[Instant]] instance with the added instance.
+       * @return An [[java.time.Instant]] instance with the added instance.
        */
       def -(sub: Instant): FiniteDuration = {
         FiniteDuration(instant.minusMillis(sub.toEpochMilli).toEpochMilli, MILLISECONDS)
@@ -223,7 +197,7 @@ object Authenticator {
        * Subtracts a duration from an instant.
        *
        * @param duration The duration to subtract.
-       * @return A [[Instant]] instance with the subtracted duration.
+       * @return A [[java.time.Instant]] instance with the subtracted duration.
        */
       def -(duration: FiniteDuration): Instant = {
         instant.minusMillis(duration.toMillis)

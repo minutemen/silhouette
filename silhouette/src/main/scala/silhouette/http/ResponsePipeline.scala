@@ -33,23 +33,6 @@ protected[silhouette] trait ResponsePipeline[R] {
   val response: R
 
   /**
-   * A marker flag which indicates that an operation on an authenticator was processed and
-   * therefore it shouldn't be updated automatically.
-   *
-   * Due the fact that the update method gets called on every subsequent request to update the
-   * authenticator related data in the backing store and in the result, it isn't possible to
-   * discard or renew the authenticator simultaneously. This is because the "update" method would
-   * override the result created by the "renew" or "discard" method, because it will be executed
-   * as last in the chain.
-   *
-   * As example:
-   * If we discard the session in a Silhouette endpoint then it will be removed from session. But
-   * at the end the update method will embed the session again, because it gets called with the
-   * result of the endpoint.
-   */
-  protected[silhouette] val touched = false
-
-  /**
    * Gets all headers.
    *
    * The HTTP RFC2616 allows duplicate response headers with the same name. Therefore we must define a
@@ -260,11 +243,4 @@ protected[silhouette] trait ResponsePipeline[R] {
    * @return The framework specific response implementation.
    */
   def unbox: R
-
-  /**
-   * Touches a response.
-   *
-   * @return A touched response pipeline.
-   */
-  protected[silhouette] def touch: ResponsePipeline[R]
 }

@@ -56,7 +56,7 @@ protected[silhouette] case class FakeResponsePipeline(response: FakeResponse = F
    *
    * @inheritdoc
    *
-   *  @param headers The headers to add.
+   * @param headers The headers to add.
    * @return A new response pipeline instance with the added headers.
    */
   override def withHeaders(headers: (String, String)*): ResponsePipeline[FakeResponse] = {
@@ -142,13 +142,4 @@ protected[silhouette] case class FakeResponsePipeline(response: FakeResponse = F
    * @return The framework specific response implementation.
    */
   override def unbox: FakeResponse = response
-
-  /**
-   * Touches a response.
-   *
-   * @return A touched response pipeline.
-   */
-  override protected[silhouette] def touch: ResponsePipeline[FakeResponse] = new FakeResponsePipeline(response) {
-    override protected[silhouette] val touched = true
-  }
 }

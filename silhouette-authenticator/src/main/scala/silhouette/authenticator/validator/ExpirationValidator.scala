@@ -27,6 +27,8 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * A validator that checks if an [[Authenticator]] is expired.
  *
+ * If the [[Authenticator.expires]] property isn't set, then this validator returns always true.
+ *
  * @param clock The clock implementation to validate against.
  */
 final case class ExpirationValidator(clock: Clock) extends Validator {
@@ -42,6 +44,6 @@ final case class ExpirationValidator(clock: Clock) extends Validator {
     implicit
     ec: ExecutionContext
   ): Future[Boolean] = Future.successful {
-    authenticator.expires.isBefore(clock.instant())
+    authenticator.expires.forall(_.isBefore(clock.instant()))
   }
 }

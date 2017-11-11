@@ -90,7 +90,7 @@ trait RequestExtractor[R] extends LazyLogging {
    */
   protected def fromFormUrlEncoded(name: String, parts: Option[Parts]): Option[String] = {
     isAllowed(RequestPart.FormUrlEncodedBody, parts) {
-      bodyExtractor.fromJson(name).flatMap {
+      bodyExtractor.fromFormUrlEncoded(name).flatMap {
         case (body, maybeValue) =>
           logger.debug(s"Try to extract value with name `$name` from form url encoded body: $body")
           maybeValue

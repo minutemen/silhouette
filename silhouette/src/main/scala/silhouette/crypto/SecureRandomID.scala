@@ -24,7 +24,7 @@ import org.apache.commons.codec.binary.Hex
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * A generator which uses [[SecureRandom]] to generate cryptographically strong IDs.
+ * A generator which uses [[java.security.SecureRandom]] to generate cryptographically strong IDs.
  *
  * @param idSizeInBytes The size of the ID length in bytes.
  * @param ec The execution context to handle the asynchronous operations.
@@ -32,7 +32,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 class SecureRandomID(idSizeInBytes: Int = 128)(implicit ec: ExecutionContext) extends SecureID[Future[String]] {
 
   /**
-   * Gets a new secure ID using [[SecureRandom]].
+   * Gets a new secure ID using [[java.security.SecureRandom]].
    *
    * Generating secure IDs can block the application, while the system waits for resources. Therefore we
    * return a future so that the application doesn't get blocked while waiting for the generated ID.

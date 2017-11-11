@@ -45,14 +45,11 @@ final case class DiscardStatefulSession[R](
   /**
    * Apply the pipeline.
    *
-   * We touch the response to indicate that an operation on an authenticator was made. Please
-   * see [[ResponsePipeline.touched]] for more details.
-   *
    * @param authenticator The authenticator.
    * @return The response pipeline that discards the authenticator client side.
    */
   override def apply(authenticator: Authenticator): Future[ResponsePipeline[R]] = {
-    WriteToStore(writer)(authenticator).map(_ => DiscardFromSession(key)(responsePipeline.touch).write)
+    WriteToStore(writer)(authenticator).map(_ => DiscardFromSession(key).write)
   }
 }
 
@@ -71,12 +68,8 @@ final case class DiscardStatelessSession[R](key: String)(
   /**
    * Apply the pipeline.
    *
-   * We touch the response to indicate that an operation on an authenticator was made. Please
-   * see [[ResponsePipeline.touched]] for more details.
-   *
    * @param authenticator The authenticator.
    * @return The response pipeline that discards the authenticator client side.
    */
-  override def apply(authenticator: Authenticator): ResponsePipeline[R] =
-    DiscardFromSession(key)(responsePipeline.touch).write
+  override def apply(authenticator: Authenticator): ResponsePipeline[R] = DiscardFromSession(key).write
 }

@@ -46,10 +46,8 @@ final case class JwtReads(jwtReads: jwt.Reads) extends Reads {
         id = claims.jwtID.getOrElse(throw new AuthenticatorException(MissingClaimValue.format("jwtID"))),
         loginInfo = buildLoginInfo(Base64.decode(claims.subject
           .getOrElse(throw new AuthenticatorException(MissingClaimValue.format("subject"))))).get,
-        lastUsed = claims.issuedAt
-          .getOrElse(throw new AuthenticatorException(MissingClaimValue.format("issuedAt"))),
-        expires = claims.expirationTime
-          .getOrElse(throw new AuthenticatorException(MissingClaimValue.format("expirationTime"))),
+        lastTouched = claims.issuedAt,
+        expires = claims.expirationTime,
         tags = claims.custom.value.get("tags").map {
           case a: JArray => a.value.map {
             case s: JString => s.value

@@ -29,9 +29,11 @@ import scala.concurrent.{ ExecutionContext, Future }
  * A validator that checks if an [[Authenticator]] has timed out after a certain time if it hasn't been used.
  *
  * An [[Authenticator]] can use a sliding window expiration. This means that the [[Authenticator]] times out
- * after a certain time if it hasn't been used. So it checks if the time elapsed since the last time
- * the [[Authenticator]] was used, is longer than the maximum idle timeout specified in the properties
+ * after a certain time if it hasn't been used. So it checks if the time elapsed since the last time the
+ * [[Authenticator]] was used, is longer than the maximum idle timeout specified as [[idleTimeout]] argument
  * of the validator.
+ *
+ * If the [[Authenticator.lastTouched]] property isn't set, then this validator returns always true.
  *
  * @param idleTimeout The duration an [[Authenticator]] can be idle before it timed out.
  * @param clock       The clock implementation to validate against.
@@ -49,6 +51,6 @@ final case class SlidingWindowValidator(idleTimeout: FiniteDuration, clock: Cloc
     implicit
     ec: ExecutionContext
   ): Future[Boolean] = Future.successful {
-    authenticator.lastUsed.plusSeconds(idleTimeout.toSeconds).isBefore(clock.instant())
+    authenticator.lastTouched.forall(_.plusSeconds(idleTimeout.toSeconds).isBefore(clock.instant()))
   }
 }

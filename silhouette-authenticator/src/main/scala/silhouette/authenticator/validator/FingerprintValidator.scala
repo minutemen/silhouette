@@ -42,9 +42,6 @@ final case class FingerprintValidator(fingerprint: String) extends Validator {
     implicit
     ec: ExecutionContext
   ): Future[Boolean] = Future.successful {
-    authenticator.fingerprint match {
-      case None    => true
-      case Some(f) => f == fingerprint
-    }
+    authenticator.fingerprint.forall(_ == fingerprint)
   }
 }

@@ -28,7 +28,6 @@ import silhouette.specs2.WaitPatience
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.json.ast.{ JObject, JTrue }
 
 /**
  * Test case for the [[Authenticator]] class.
@@ -37,85 +36,27 @@ import scala.json.ast.{ JObject, JTrue }
  */
 class AuthenticatorSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
 
-  "The `touch` method" should {
-    "touch the authenticator when setting a new `id`" in new Context {
-      authenticator.isTouched must beFalse
-
-      val newID = "new-test-id"
-      val newAuthenticator = authenticator.touch(id = newID)
-
-      newAuthenticator.isTouched must beTrue
-      newAuthenticator.id must be equalTo newID
-    }
-
-    "touch the authenticator when setting a new `loginInfo`" in new Context {
-      authenticator.isTouched must beFalse
-
-      val newLoginInfo = LoginInfo("new-test", "new-test")
-      val newAuthenticator = authenticator.touch(loginInfo = newLoginInfo)
-
-      newAuthenticator.isTouched must beTrue
-      newAuthenticator.loginInfo must be equalTo newLoginInfo
-    }
-
-    "touch the authenticator when setting a new `lastUsed`" in new Context {
-      authenticator.isTouched must beFalse
-
-      val newLastUsed = Instant.now()
-      val newAuthenticator = authenticator.touch(lastUsed = newLastUsed)
-
-      newAuthenticator.isTouched must beTrue
-      newAuthenticator.lastUsed must be equalTo newLastUsed
-    }
-
-    "touch the authenticator when setting a new `expires`" in new Context {
-      authenticator.isTouched must beFalse
-
-      val newExpires = Instant.now()
-      val newAuthenticator = authenticator.touch(expires = newExpires)
-
-      newAuthenticator.isTouched must beTrue
-      newAuthenticator.expires must be equalTo newExpires
-    }
-
-    "touch the authenticator when setting a new `fingerprint`" in new Context {
-      authenticator.isTouched must beFalse
-
-      val newFingerprint = Some("new-fingerprint")
-      val newAuthenticator = authenticator.touch(fingerprint = newFingerprint)
-
-      newAuthenticator.isTouched must beTrue
-      newAuthenticator.fingerprint must be equalTo newFingerprint
-    }
-
-    "touch the authenticator when setting a new `payload`" in new Context {
-      authenticator.isTouched must beFalse
-
-      val newPayload = Some(JObject(Map("test" -> JTrue)))
-      val newAuthenticator = authenticator.touch(payload = newPayload)
-
-      newAuthenticator.isTouched must beTrue
-      newAuthenticator.payload must be equalTo newPayload
-    }
-  }
-
   "The `expiresIn` method" should {
     "return the duration the authenticator expires in" in new Context {
-      authenticator.expiresIn(Clock.fixed(instant.minusSeconds(10), UTC)) must be equalTo 10.seconds
+      authenticator.copy(expires = Some(instant)).expiresIn(Clock.fixed(instant.minusSeconds(10), UTC)) must
+        beSome(10.seconds)
     }
 
     "return a negative duration if the authenticator is already expired" in new Context {
-      authenticator.expiresIn(Clock.fixed(instant.plusSeconds(10), UTC)) must be equalTo -10.seconds
+      authenticator.copy(expires = Some(instant)).expiresIn(Clock.fixed(instant.plusSeconds(10), UTC)) must
+        beSome(-10.seconds)
     }
   }
 
-  "The `lastUsedAt` method" should {
-    "return the duration the authenticator was last used at" in new Context {
-      authenticator.lastUsedAt(Clock.fixed(instant.plusSeconds(10), UTC)) must be equalTo 10.seconds
+  "The `lastTouchedAt` method" should {
+    "return the duration the authenticator was last touched at" in new Context {
+      authenticator.copy(lastTouched = Some(instant)).lastTouchedAt(Clock.fixed(instant.plusSeconds(10), UTC)) must
+        beSome(10.seconds)
     }
 
     "return a negative duration if the authenticator wasn't used" in new Context {
-      authenticator.lastUsedAt(Clock.fixed(instant.minusSeconds(10), UTC)) must be equalTo -10.seconds
+      authenticator.copy(lastTouched = Some(instant)).lastTouchedAt(Clock.fixed(instant.minusSeconds(10), UTC)) must
+        beSome(-10.seconds)
     }
   }
 
@@ -166,9 +107,7 @@ class AuthenticatorSpec(implicit ev: ExecutionEnv) extends Specification with Mo
      */
     val authenticator = Authenticator(
       id = "test-id",
-      loginInfo = LoginInfo("test", "test"),
-      lastUsed = clock.instant(),
-      expires = clock.instant()
+      loginInfo = LoginInfo("test", "test")
     )
   }
 }
