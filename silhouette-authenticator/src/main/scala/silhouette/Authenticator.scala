@@ -31,7 +31,7 @@ import scala.json.ast.JObject
  * An authenticator tracks an authenticated user.
  *
  * The authenticator can use sliding window expiration. This means that the authenticator times
- * out after a certain time if it wasn't used. This can be controlled with the [[lastTouched]]
+ * out after a certain time if it wasn't used. This can be controlled with the [[touched]]
  * property and the [[silhouette.authenticator.validator.SlidingWindowValidator]].
  *
  * The expiry of the authenticator can be controlled with the [[expires]] property and the
@@ -43,7 +43,7 @@ import scala.json.ast.JObject
  *
  * @param id          The ID of the authenticator.
  * @param loginInfo   The linked login info for an identity.
- * @param lastTouched Maybe the instant of time the authenticator was last touched.
+ * @param touched     Maybe the instant of time the authenticator was last touched.
  * @param expires     Maybe the instant of time the authenticator expires.
  * @param fingerprint Maybe a fingerprint of the user.
  * @param tags        A list of tags to tag the authenticator.
@@ -52,7 +52,7 @@ import scala.json.ast.JObject
 final case class Authenticator(
   id: String,
   loginInfo: LoginInfo,
-  lastTouched: Option[Instant] = None,
+  touched: Option[Instant] = None,
   expires: Option[Instant] = None,
   fingerprint: Option[String] = None,
   tags: Seq[String] = Seq(),
@@ -74,7 +74,7 @@ final case class Authenticator(
    * @return If it returns None then it wasn't touched, otherwise it returns the duration the authenticator
    *         was last touched at.
    */
-  def lastTouchedAt(clock: Clock): Option[FiniteDuration] = lastTouched.map(clock.instant() - _)
+  def touchedAt(clock: Clock): Option[FiniteDuration] = touched.map(clock.instant() - _)
 
   /**
    * Touches an authenticator.
@@ -84,13 +84,13 @@ final case class Authenticator(
    * @param clock The clock instance.
    * @return A touched authenticator.
    */
-  def touch(clock: Clock): Authenticator = copy(lastTouched = Some(clock.instant()))
+  def touch(clock: Clock): Authenticator = copy(touched = Some(clock.instant()))
 
   /**
    * Returns a copy of this authenticator with an expire instant of time.
    *
-   * @param expiry    The authentication expiry.
-   * @param clock     The clock implementation to get the current time.
+   * @param expiry The authentication expiry.
+   * @param clock  The clock implementation to get the current time.
    * @return A copy of this authenticator with an expire instant of time.
    */
   def withExpiry(expiry: FiniteDuration, clock: Clock): Authenticator =
@@ -131,7 +131,7 @@ final case class Authenticator(
    *
    * @return True if the authenticator was touched, false otherwise.
    */
-  def isTouched: Boolean = lastTouched.isDefined
+  def isTouched: Boolean = touched.isDefined
 
   /**
    * Indicates if this authenticator is tagged with the given tag.

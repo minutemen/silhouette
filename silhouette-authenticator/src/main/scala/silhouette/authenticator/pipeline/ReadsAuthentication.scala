@@ -18,25 +18,25 @@
 package silhouette.authenticator.pipeline
 
 import silhouette.authenticator._
-import silhouette.authenticator.format.JwtReads
 import silhouette.util.Fitting._
 import silhouette.util.Source
-import silhouette.{ Identity, LoginInfo, jwt }
+import silhouette.{ Identity, LoginInfo }
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.language.postfixOps
 
 /**
- * An authentication pipeline which reads a serialized JWT from a source and transforms it to an authentication state.
+ * An authentication pipeline which reads a serialized representation of an authenticator from a source and
+ * transforms it to an authentication state.
  *
- * @param jwtReads       The JWT reads implementation used to unserialize the JWT.
+ * @param reads          The reads which transforms a string into an authenticator.
  * @param identityReader The reader to retrieve the [[Identity]] for the [[LoginInfo]] stored in the
  *                       [[silhouette.Authenticator]] from the persistence layer.
  * @param validators     The list of validators to apply to the [[silhouette.Authenticator]].
  * @param authorization  The [[Authorization]] to apply to the [[Identity]].
  */
-final case class JwtAuthentication[I <: Identity](
-  jwtReads: jwt.Reads,
+final case class ReadsAuthentication[I <: Identity](
+  reads: Reads,
   identityReader: LoginInfo => Future[Option[I]],
   override val validators: Set[Validator] = Set(),
   override val authorization: Authorization[I] = Authorized()
@@ -51,7 +51,5 @@ final case class JwtAuthentication[I <: Identity](
    * @param source The source to read the authenticator from.
    * @return An authentication state.
    */
-  override def apply(source: Source[Option[String]]): Future[State[I]] = {
-    source.read andThenFuture JwtReads(jwtReads) toState
-  }
+  override def apply(source: Source[Option[String]]): Future[State[I]] = source.read andThenFuture reads toState
 }

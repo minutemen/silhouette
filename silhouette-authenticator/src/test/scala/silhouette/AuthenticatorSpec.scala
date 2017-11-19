@@ -48,14 +48,14 @@ class AuthenticatorSpec(implicit ev: ExecutionEnv) extends Specification with Mo
     }
   }
 
-  "The `lastTouchedAt` method" should {
+  "The `touchedAt` method" should {
     "return the duration the authenticator was last touched at" in new Context {
-      authenticator.copy(lastTouched = Some(instant)).lastTouchedAt(Clock.fixed(instant.plusSeconds(10), UTC)) must
+      authenticator.copy(touched = Some(instant)).touchedAt(Clock.fixed(instant.plusSeconds(10), UTC)) must
         beSome(10.seconds)
     }
 
     "return a negative duration if the authenticator wasn't used" in new Context {
-      authenticator.copy(lastTouched = Some(instant)).lastTouchedAt(Clock.fixed(instant.minusSeconds(10), UTC)) must
+      authenticator.copy(touched = Some(instant)).touchedAt(Clock.fixed(instant.minusSeconds(10), UTC)) must
         beSome(-10.seconds)
     }
   }

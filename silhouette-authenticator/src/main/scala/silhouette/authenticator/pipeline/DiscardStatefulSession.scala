@@ -27,18 +27,18 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Discards a stateful session.
  *
- * @param key              The session key in which the authenticator is transported.
- * @param writer           A writer to discard the authenticator from a persistence layer like a database or a cache.
- * @param responsePipeline The response pipeline.
- * @param ec               The execution context.
+ * @param authenticatorWriter A writer to discard the authenticator from a backing store.
+ * @param responsePipeline    The response pipeline from which the authenticator should be discarded.
+ * @param sessionKey          The session key in which the authenticator is transported.
+ * @param ec                  The execution context.
  * @tparam R The type of the response.
  */
 final case class DiscardStatefulSession[R](
-  key: String,
-  writer: Authenticator => Future[Authenticator]
+  authenticatorWriter: Authenticator => Future[Authenticator],
+  responsePipeline: ResponsePipeline[R],
+  sessionKey: String
 )(
   implicit
-  responsePipeline: ResponsePipeline[R],
   ec: ExecutionContext
 ) extends WritePipeline[Future[ResponsePipeline[R]]] {
 
@@ -49,27 +49,6 @@ final case class DiscardStatefulSession[R](
    * @return The response pipeline that discards the authenticator client side.
    */
   override def apply(authenticator: Authenticator): Future[ResponsePipeline[R]] = {
-    WriteToStore(writer)(authenticator).map(_ => DiscardFromSession(key).write)
+    authenticatorWriter(authenticator).map(_ => DiscardFromSession(sessionKey)(responsePipeline).write)
   }
-}
-
-/**
- * Discards a stateless session.
- *
- * @param key              The session key in which the authenticator is transported.
- * @param responsePipeline The response pipeline.
- * @tparam R The type of the response.
- */
-final case class DiscardStatelessSession[R](key: String)(
-  implicit
-  responsePipeline: ResponsePipeline[R]
-) extends WritePipeline[ResponsePipeline[R]] {
-
-  /**
-   * Apply the pipeline.
-   *
-   * @param authenticator The authenticator.
-   * @return The response pipeline that discards the authenticator client side.
-   */
-  override def apply(authenticator: Authenticator): ResponsePipeline[R] = DiscardFromSession(key).write
 }

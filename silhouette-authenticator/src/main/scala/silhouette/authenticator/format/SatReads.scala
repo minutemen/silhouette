@@ -17,31 +17,31 @@
  */
 package silhouette.authenticator.format
 
-import silhouette.authenticator.Reads
-import silhouette.authenticator.format.BearerTokenReads._
+import silhouette.authenticator.StatefulReads
+import silhouette.authenticator.format.SatReads._
 import silhouette.{ Authenticator, AuthenticatorException }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * A reads which transforms a bearer token into an authenticator.
+ * A reads which transforms a SAT (simple authentication token) into an authenticator.
  *
- * A bearer token represents a string that cannot store authenticator related data in it. Instead it needs
- * a mapping between this string and the authenticator related data, which is commonly handled through a
- * persistence layer like a database or a cache.
+ * A simple authentication token represents a string that cannot store authenticator related data in it. Instead
+ * it needs a mapping between this string and the authenticator related data, which is commonly handled through a
+ * backing store.
  *
  * @param reader The reader to retrieve the [[Authenticator]] for the given token from persistence layer.
- * @param ex The execution context.
+ * @param ex     The execution context.
  */
-final case class BearerTokenReads(reader: String => Future[Option[Authenticator]])(
+final case class SatReads(reader: String => Future[Option[Authenticator]])(
   implicit
   ex: ExecutionContext
-) extends Reads {
+) extends StatefulReads {
 
   /**
-   * Transforms a bearer token into an [[Authenticator]].
+   * Transforms a simple authentication token into an [[Authenticator]].
    *
-   * @param token The bearer token to transform.
+   * @param token The simple authentication token to transform.
    * @return An authenticator on success, an error on failure.
    */
   override def read(token: String): Future[Authenticator] = reader(token).map(_.getOrElse(
@@ -52,6 +52,6 @@ final case class BearerTokenReads(reader: String => Future[Option[Authenticator]
 /**
  * The companion object.
  */
-object BearerTokenReads {
+object SatReads {
   val MissingAuthenticator: String = "Cannot get authenticator for token `%s` from given reader"
 }

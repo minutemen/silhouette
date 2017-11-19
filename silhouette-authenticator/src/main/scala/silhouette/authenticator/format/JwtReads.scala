@@ -18,8 +18,8 @@
 package silhouette.authenticator.format
 
 import io.circe.jawn.decode
-import silhouette.authenticator.Reads
 import silhouette.authenticator.format.JwtReads._
+import silhouette.authenticator.{ StatefulReads, StatelessReads }
 import silhouette.crypto.Base64
 import silhouette.{ Authenticator, AuthenticatorException, LoginInfo, jwt }
 
@@ -30,9 +30,15 @@ import scala.util.{ Failure, Success, Try }
 /**
  * A reads which transforms a JWT into an [[Authenticator]].
  *
+ * Because of the fact that a JWT itself stores a complete serialized form of the authenticator, it's normally not
+ * needed to use a backing store, because on subsequent requests the authenticator can be fully unserialized from the
+ * JWT. But this has the disadvantage that a JWT cannot be easily invalidated. But with a backing store that creates a
+ * mapping between the JWT and a stored instance, it's possible to invalidate the authenticators server side. Therefore
+ * this reads can be used in a stateless and a stateful manner.
+ *
  * @param jwtReads The JWT reads implementation.
  */
-final case class JwtReads(jwtReads: jwt.Reads) extends Reads {
+final case class JwtReads(jwtReads: jwt.Reads) extends StatelessReads with StatefulReads {
 
   /**
    * Transforms a JWT into an [[Authenticator]].
@@ -46,7 +52,7 @@ final case class JwtReads(jwtReads: jwt.Reads) extends Reads {
         id = claims.jwtID.getOrElse(throw new AuthenticatorException(MissingClaimValue.format("jwtID"))),
         loginInfo = buildLoginInfo(Base64.decode(claims.subject
           .getOrElse(throw new AuthenticatorException(MissingClaimValue.format("subject"))))).get,
-        lastTouched = claims.issuedAt,
+        touched = claims.issuedAt,
         expires = claims.expirationTime,
         tags = claims.custom.value.get("tags").map {
           case a: JArray => a.value.map {

@@ -33,7 +33,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  * [[Authenticator]] was used, is longer than the maximum idle timeout specified as [[idleTimeout]] argument
  * of the validator.
  *
- * If the [[Authenticator.lastTouched]] property isn't set, then this validator returns always true.
+ * If the [[Authenticator.touched]] property isn't set, then this validator returns always true.
  *
  * @param idleTimeout The duration an [[Authenticator]] can be idle before it timed out.
  * @param clock       The clock implementation to validate against.
@@ -51,6 +51,6 @@ final case class SlidingWindowValidator(idleTimeout: FiniteDuration, clock: Cloc
     implicit
     ec: ExecutionContext
   ): Future[Boolean] = Future.successful {
-    authenticator.lastTouched.forall(_.plusSeconds(idleTimeout.toSeconds).isBefore(clock.instant()))
+    authenticator.touched.forall(_.plusSeconds(idleTimeout.toSeconds).isBefore(clock.instant()))
   }
 }

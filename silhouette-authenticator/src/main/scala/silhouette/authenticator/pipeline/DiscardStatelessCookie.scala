@@ -17,26 +17,20 @@
  */
 package silhouette.authenticator.pipeline
 
-import java.time.Clock
-
 import silhouette.Authenticator
-import silhouette.authenticator.TransformPipeline
-
-import scala.concurrent.Future
+import silhouette.authenticator.WritePipeline
+import silhouette.http.ResponsePipeline
+import silhouette.http.transport.{ CookieTransportSettings, DiscardFromCookie }
 
 /**
- * Pipeline which touches an authenticator.
+ * Discards a stateless cookie.
  *
- * The authenticator can use sliding window expiration. This means that the authenticator times
- * out after a certain time if it wasn't used. This pipeline touches an authenticator to indicate
- * that it was used. It will only touch authenticators that was previously touched, because sliding
- * window expiration is an opt-in feature which isn't enabled by default. So you can always mixin
- * this pipeline and it will only touch the authenticator if touching is explicitly enabled by the
- * authenticator on creation.
- *
- * @param clock The clock instance.
+ * @param responsePipeline The response pipeline from which the authenticator should be discarded.
+ * @param cookieSettings   The cookie transport settings.
+ * @tparam R The type of the response.
  */
-final case class TouchPipeline(clock: Clock) extends TransformPipeline {
+case class DiscardStatelessCookie[R](responsePipeline: ResponsePipeline[R], cookieSettings: CookieTransportSettings)
+  extends WritePipeline[ResponsePipeline[R]] {
 
   /**
    * Apply the pipeline.
@@ -44,11 +38,6 @@ final case class TouchPipeline(clock: Clock) extends TransformPipeline {
    * @param authenticator The authenticator.
    * @return The response pipeline that discards the authenticator client side.
    */
-  override def apply(authenticator: Authenticator): Future[Authenticator] = Future.successful {
-    if (authenticator.isTouched) {
-      authenticator.touch(clock)
-    } else {
-      authenticator
-    }
-  }
+  override def apply(authenticator: Authenticator): ResponsePipeline[R] =
+    DiscardFromCookie(cookieSettings)(responsePipeline).write
 }

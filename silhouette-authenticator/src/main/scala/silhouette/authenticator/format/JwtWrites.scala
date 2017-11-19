@@ -20,7 +20,7 @@ package silhouette.authenticator.format
 import java.time.Instant
 
 import io.circe.syntax._
-import silhouette.authenticator.Writes
+import silhouette.authenticator.{ StatefulWrites, StatelessWrites }
 import silhouette.crypto.Base64
 import silhouette.{ Authenticator, jwt }
 
@@ -29,6 +29,12 @@ import scala.json.ast.{ JArray, JObject, JString }
 
 /**
  * A format which transforms an [[Authenticator]] into a JWT.
+ *
+ * Because of the fact that a JWT itself stores a complete serialized form of the authenticator, it's normally not
+ * needed to use a backing store, because on subsequent requests the authenticator can be fully unserialized from the
+ * JWT. But this has the disadvantage that a JWT cannot be easily invalidated. But with a backing store that creates a
+ * mapping between the JWT and a stored instance, it's possible to invalidate the authenticators server side. Therefore
+ * this write can be used in a stateless and a stateful manner.
  *
  * @param writes    The JWT writes.
  * @param issuer    The JWT 'iss' claim.
@@ -40,7 +46,7 @@ final case class JwtWrites(
   issuer: Option[String] = None,
   audience: Option[List[String]] = None,
   notBefore: Option[Instant] = None
-) extends Writes {
+) extends StatelessWrites with StatefulWrites {
 
   /**
    * Transforms an [[Authenticator]] into a JWT.
@@ -55,7 +61,7 @@ final case class JwtWrites(
       audience = audience,
       expirationTime = authenticator.expires,
       notBefore = notBefore,
-      issuedAt = authenticator.lastTouched,
+      issuedAt = authenticator.touched,
       jwtID = Some(authenticator.id),
       custom = JObject(Seq(
         Some("tags" -> JArray(authenticator.tags.map(JString).toVector)),

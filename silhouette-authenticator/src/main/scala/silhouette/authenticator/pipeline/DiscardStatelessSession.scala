@@ -19,24 +19,25 @@ package silhouette.authenticator.pipeline
 
 import silhouette.Authenticator
 import silhouette.authenticator.WritePipeline
-
-import scala.concurrent.Future
+import silhouette.http.ResponsePipeline
+import silhouette.http.transport.DiscardFromSession
 
 /**
- * Writes an authenticator to the store.
+ * Discards a stateless session.
  *
- * This write can be an insert, an update or a delete to a persistence layer like a database or a cache.
- *
- * @param writer A writer to write the authenticator to a persistence layer like a database or a cache.
+ * @param key              The session key in which the authenticator is transported.
+ * @param responsePipeline The response pipeline from which the authenticator should be discarded.
+ * @tparam R The type of the response.
  */
-case class WriteToStore(writer: Authenticator => Future[Authenticator])
-  extends WritePipeline[Future[Authenticator]] {
+final case class DiscardStatelessSession[R](key: String, responsePipeline: ResponsePipeline[R])
+  extends WritePipeline[ResponsePipeline[R]] {
 
   /**
    * Apply the pipeline.
    *
    * @param authenticator The authenticator.
-   * @return The authenticator returned from the writer function.
+   * @return The response pipeline that discards the authenticator client side.
    */
-  override def apply(authenticator: Authenticator): Future[Authenticator] = writer(authenticator)
+  override def apply(authenticator: Authenticator): ResponsePipeline[R] =
+    DiscardFromSession(key)(responsePipeline).write
 }

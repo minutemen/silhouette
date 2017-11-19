@@ -90,6 +90,8 @@ case class RetrieveFromHeader[R](name: String)(
 /**
  * A source that tries to retrieve a bearer token, stored in a header, from the given request.
  *
+ * Reads from header in the form "Authorization: Bearer some.token".
+ *
  * @param name             The name of the header in which the payload will be transported; Defaults to Authorization.
  * @param requestPipeline  The request pipeline.
  * @tparam R The type of the request.
@@ -115,6 +117,8 @@ case class RetrieveBearerTokenFromHeader[R](name: String = "Authorization")(
 
 /**
  * A source that tries to retrieve basic credentials, stored in a header, from the given request.
+ *
+ * Reads from header in the form "Authorization: Basic user:password".
  *
  * @param name             The name of the header in which the payload will be transported; Defaults to Authorization.
  * @param requestPipeline  The request pipeline.
@@ -163,6 +167,8 @@ final case class SmuggleIntoHeader[R](payload: String, name: String)(
 /**
  * A target that smuggles a header with the a bearer token into the given request.
  *
+ * Smuggles a header in the form "Authorization: Bearer some.token".
+ *
  * @param token            The bearer token to embed.
  * @param name             The name of the header in which the payload will be transported; Defaults to Authorization.
  * @param requestPipeline  The request pipeline.
@@ -183,6 +189,8 @@ final case class SmuggleBearerTokenIntoHeader[R](token: String, name: String = "
 
 /**
  * A target that smuggles a header with the basic credentials into the given request.
+ *
+ * Smuggles a header in the form "Authorization: Basic user:password".
  *
  * @param credentials      The credentials to embed.
  * @param name             The name of the header in which the payload will be transported; Defaults to Authorization.
@@ -226,12 +234,14 @@ case class EmbedIntoHeader[R](payload: String, name: String)(
 /**
  * A target that embeds a header with the given bearer token into the given response.
  *
+ * Embeds a header in the form "Authorization: Bearer some.token".
+ *
  * @param token            The bearer token to embed.
  * @param name             The name of the header in which the payload will be transported; Defaults to Authorization.
  * @param responsePipeline The response pipeline.
  * @tparam R The type of the response.
  */
-case class EmbedBearerTokenIntoHeader[R](token: String, name: String)(
+case class EmbedBearerTokenIntoHeader[R](token: String, name: String = "Authorization")(
   implicit
   responsePipeline: ResponsePipeline[R]
 ) extends Target[ResponsePipeline[R]] {
@@ -247,12 +257,14 @@ case class EmbedBearerTokenIntoHeader[R](token: String, name: String)(
 /**
  * A target that embeds a header with the given basic credentials into the given response.
  *
+ * Embeds a header in the form "Authorization: Basic user:password".
+ *
  * @param credentials      The credentials to embed.
  * @param name             The name of the header in which the payload will be transported; Defaults to Authorization.
  * @param responsePipeline The response pipeline.
  * @tparam R The type of the response.
  */
-case class EmbedBasicCredentialsIntoHeader[R](credentials: Credentials, name: String)(
+case class EmbedBasicCredentialsIntoHeader[R](credentials: Credentials, name: String = "Authorization")(
   implicit
   responsePipeline: ResponsePipeline[R]
 ) extends Target[ResponsePipeline[R]] {

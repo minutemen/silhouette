@@ -27,18 +27,18 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Discards a stateful cookie.
  *
- * @param settings         The cookie transport settings.
- * @param writer           A writer to discard the authenticator from a persistence layer like a database or a cache.
- * @param responsePipeline The response pipeline.
- * @param ec               The execution context.
+ * @param authenticatorWriter A writer to discard the authenticator from a backing store.
+ * @param responsePipeline    The response pipeline from which the authenticator should be discarded.
+ * @param cookieSettings      The cookie transport settings.
+ * @param ec                  The execution context.
  * @tparam R The type of the response.
  */
 case class DiscardStatefulCookie[R](
-  settings: CookieTransportSettings,
-  writer: Authenticator => Future[Authenticator]
+  authenticatorWriter: Authenticator => Future[Authenticator],
+  responsePipeline: ResponsePipeline[R],
+  cookieSettings: CookieTransportSettings
 )(
   implicit
-  responsePipeline: ResponsePipeline[R],
   ec: ExecutionContext
 ) extends WritePipeline[Future[ResponsePipeline[R]]] {
 
@@ -49,27 +49,6 @@ case class DiscardStatefulCookie[R](
    * @return The response pipeline that discards the authenticator client side.
    */
   override def apply(authenticator: Authenticator): Future[ResponsePipeline[R]] = {
-    WriteToStore(writer)(authenticator).map(_ => DiscardFromCookie(settings).write)
+    authenticatorWriter(authenticator).map(_ => DiscardFromCookie(cookieSettings)(responsePipeline).write)
   }
-}
-
-/**
- * Discards a stateless cookie.
- *
- * @param settings         The cookie transport settings.
- * @param responsePipeline The response pipeline.
- * @tparam R The type of the response.
- */
-case class DiscardStatelessCookie[R](settings: CookieTransportSettings)(
-  implicit
-  responsePipeline: ResponsePipeline[R]
-) extends WritePipeline[ResponsePipeline[R]] {
-
-  /**
-   * Apply the pipeline.
-   *
-   * @param authenticator The authenticator.
-   * @return The response pipeline that discards the authenticator client side.
-   */
-  override def apply(authenticator: Authenticator): ResponsePipeline[R] = DiscardFromCookie(settings).write
 }
