@@ -17,23 +17,7 @@
  */
 package silhouette.http
 
-import silhouette.util
-
-import scala.util.Try
-
-/**
- * Transforms a string into an instance of `T`.
- *
- * @tparam T The target type on the read operation.
- */
-trait Reads[T] extends util.Reads[String, Try[T]]
-
-/**
- * Transforms an instance of `T` into a string.
- *
- * @tparam T The source type on the write operation
- */
-trait Writes[T] extends util.Writes[T, String]
+import silhouette.util.{ Reads, Writes }
 
 /**
  * Marker trait for the transport settings.
@@ -121,3 +105,34 @@ trait DiscardFromResponse extends ResponseTransport {
    */
   def discard[P](response: ResponsePipeline[P]): ResponsePipeline[P]
 }
+
+/**
+ * A reads that tries to retrieve some payload from the request.
+ *
+ * @tparam R The type of the request.
+ * @tparam P The type of the payload.
+ */
+trait RetrieveReads[R, P] extends Reads[RequestPipeline[R], Option[P]]
+
+/**
+ * A writes that smuggles some payload into the request.
+ *
+ * @tparam R The type of the request.
+ * @tparam P The type of the payload.
+ */
+trait SmuggleWrites[R, P] extends Writes[(P, RequestPipeline[R]), RequestPipeline[R]]
+
+/**
+ * A writes that embeds some payload into the response.
+ *
+ * @tparam R The type of the response.
+ * @tparam P The type of the payload.
+ */
+trait EmbedWrites[R, P] extends Writes[(P, ResponsePipeline[R]), ResponsePipeline[R]]
+
+/**
+ * A writes that discards some payload from the response.
+ *
+ * @tparam R The type of the response.
+ */
+trait DiscardWrites[R] extends Writes[ResponsePipeline[R], ResponsePipeline[R]]

@@ -21,14 +21,14 @@ import silhouette.Credentials
 import silhouette.crypto.Base64
 import silhouette.exceptions.TransformException
 import silhouette.http.transport.format.BasicAuthHeaderFormat._
-import silhouette.http.{ Reads, Writes }
+import silhouette.util.{ Reads, Writes }
 
 import scala.util.{ Failure, Success, Try }
 
 /**
  * Handles the transformation of the "basic" `Authorization` header.
  */
-final case class BasicAuthHeaderFormat() extends Reads[Credentials] with Writes[Credentials] {
+final case class BasicAuthHeaderFormat() extends Reads[String, Try[Credentials]] with Writes[Credentials, String] {
 
   /**
    * Transforms the "basic" `Authorization` header value into some [[Credentials]].

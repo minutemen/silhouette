@@ -18,15 +18,14 @@
 package silhouette.authenticator
 
 import silhouette.util.Fitting.futureFittingToFutureOption
-import silhouette.util.{ Fitting, Source }
-import silhouette.{ Authenticator, Identity, LoginInfo }
+import silhouette.{ Authenticator, Identity, LoginInfo, util }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * An authenticator pipeline represents a step in the authentication process which is composed of multiple single steps.
  */
-trait Pipeline
+sealed trait Pipeline
 
 /**
  * Pipeline to authenticate an identity by transforming a source into an authentication state.
@@ -42,7 +41,7 @@ trait Pipeline
  * @tparam S The type of the source.
  * @tparam I The type of the identity.
  */
-trait AuthenticationPipeline[S, I <: Identity] extends (Source[S] => Future[State[I]]) with Pipeline { self =>
+trait AuthenticationPipeline[S, I <: Identity] extends util.Reads[S, Future[State[I]]] with Pipeline { self =>
 
   /**
    * Monkey patches a `Future[Authenticator]` to add a `toState` method which allows to transforms an [[Authenticator]]
@@ -76,7 +75,7 @@ trait AuthenticationPipeline[S, I <: Identity] extends (Source[S] => Future[Stat
    *
    * @param value The instance to patch.
    */
-  final implicit class AuthenticatorFitting(value: Future[Fitting[Authenticator]]) {
+  final implicit class AuthenticatorFitting(value: Future[util.Fitting[Authenticator]]) {
     def toState(
       implicit
       ec: ExecutionContext
@@ -97,14 +96,6 @@ trait AuthenticationPipeline[S, I <: Identity] extends (Source[S] => Future[Stat
    * The [[Authorization]] to apply to the [[Identity]].
    */
   val authorization: Authorization[I] = Authorized[I]()
-
-  /**
-   * Apply the pipeline.
-   *
-   * @param source The source to read the authenticator from.
-   * @return An authentication state.
-   */
-  def apply(source: Source[S]): Future[State[I]]
 
   /**
    * Transforms the given future into an authentication state by applying another transformation on the result
@@ -167,11 +158,12 @@ trait AuthenticationPipeline[S, I <: Identity] extends (Source[S] => Future[Stat
 /**
  * Pipeline which transforms an authenticator into another authenticator.
  */
-trait TransformPipeline extends (Authenticator => Future[Authenticator])
+trait TransformPipeline extends util.Writes[Authenticator, Future[Authenticator]]
 
 /**
- * Pipeline which writes an authenticator to a target.
+ * Pipeline which merges an [[Authenticator]] and a target `T` into a target `T` that contains the given
+ * [[Authenticator]].
  *
  * @tparam T The type of the target.
  */
-trait WritePipeline[T] extends (Authenticator => T)
+trait WritePipeline[T] extends util.Writes[(Authenticator, T), Future[T]]

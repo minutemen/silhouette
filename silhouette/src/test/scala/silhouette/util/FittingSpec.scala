@@ -29,6 +29,8 @@ import scala.util.{ Failure, Success, Try }
 /**
  * Test case for the [[Fitting]] trait.
  *
+ * TODO: implement tests for reads to fitting methods
+ *
  * @param ev The execution environment.
  */
 class FittingSpec(implicit ev: ExecutionEnv) extends Specification with WaitPatience {

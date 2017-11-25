@@ -18,7 +18,7 @@
 package silhouette.authenticator.format
 
 import silhouette.Authenticator
-import silhouette.authenticator.{ StatelessWrites, WritePipeline }
+import silhouette.authenticator.StatelessWrites
 
 import scala.concurrent.Future
 
@@ -27,8 +27,8 @@ import scala.concurrent.Future
  *
  * A simple authentication token represents a string that cannot store authenticator related data in it. Instead
  * it needs a mapping between this string and the authenticator related data, which is commonly handled through a
- * backing store. This writes doesn't store the authenticator directly. This should be done in a [[WritePipeline]]
- * instead.
+ * backing store. This writes doesn't store the authenticator directly. This should be done in a
+ * [[silhouette.authenticator.WritePipeline]] instead.
  */
 final case class SatWrites() extends StatelessWrites {
 

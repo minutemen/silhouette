@@ -19,7 +19,6 @@ package silhouette.authenticator.pipeline
 
 import silhouette.authenticator._
 import silhouette.util.Fitting._
-import silhouette.util.Source
 import silhouette.{ Identity, LoginInfo }
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -51,5 +50,5 @@ final case class ReadsAuthentication[I <: Identity](
    * @param source The source to read the authenticator from.
    * @return An authentication state.
    */
-  override def apply(source: Source[Option[String]]): Future[State[I]] = source.read andThenFuture reads toState
+  override def read(source: Option[String]): Future[State[I]] = source andThenFuture reads toState
 }

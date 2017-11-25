@@ -17,20 +17,26 @@
  */
 package silhouette.authenticator.pipeline
 
+import java.time.Clock
+
 import silhouette.Authenticator
-import silhouette.authenticator.WritePipeline
-import silhouette.http.ResponsePipeline
-import silhouette.http.transport.DiscardFromSession
+import silhouette.authenticator.TransformPipeline
+
+import scala.concurrent.Future
 
 /**
- * Discards a stateless session.
+ * Pipeline which touches an authenticator.
  *
- * @param key              The session key in which the authenticator is transported.
- * @param responsePipeline The response pipeline from which the authenticator should be discarded.
- * @tparam R The type of the response.
+ * The authenticator can use sliding window expiration. This means that the authenticator times
+ * out after a certain time if it wasn't used. This pipeline touches an authenticator to indicate
+ * that it was used. It will only touch an authenticator if it was previously touched, because sliding
+ * window expiration is an opt-in feature which isn't enabled by default. So you can always mixin
+ * this pipeline and it will only touch the authenticator if touching is explicitly enabled by the
+ * authenticator on its creation.
+ *
+ * @param clock The clock instance.
  */
-final case class DiscardStatelessSession[R](key: String, responsePipeline: ResponsePipeline[R])
-  extends WritePipeline[ResponsePipeline[R]] {
+final case class Touch(clock: Clock) extends TransformPipeline {
 
   /**
    * Apply the pipeline.
@@ -38,6 +44,11 @@ final case class DiscardStatelessSession[R](key: String, responsePipeline: Respo
    * @param authenticator The authenticator.
    * @return The response pipeline that discards the authenticator client side.
    */
-  override def apply(authenticator: Authenticator): ResponsePipeline[R] =
-    DiscardFromSession(key)(responsePipeline).write
+  override def write(authenticator: Authenticator): Future[Authenticator] = Future.successful {
+    if (authenticator.isTouched) {
+      authenticator.touch(clock)
+    } else {
+      authenticator
+    }
+  }
 }

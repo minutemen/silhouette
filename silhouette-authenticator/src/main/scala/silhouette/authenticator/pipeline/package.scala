@@ -18,6 +18,7 @@
 package silhouette.authenticator
 
 /**
- * An authenticator pipeline represents a step in the authentication process which is composed of multiple single steps.
+ * An authenticator pipeline represents a step in the authentication process which may be composed of multiple single
+ * steps.
  */
 package object pipeline

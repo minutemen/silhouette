@@ -37,10 +37,20 @@ trait Reads[A, B] { self =>
    * Composes this [[Reads]] with a transformation function that gets applied to the result of this [[Reads]].
    *
    * @param reads The transformation function.
-   * @tparam C The result type of the transformation function.
+   * @tparam C The result type of the new transformation function.
    * @return A new composable [[Reads]].
    */
   def andThen[C](reads: Reads[B, C]): Reads[A, C] = (in: A) => reads.read(self.read(in))
+
+  /**
+   * Build a new [[Reads]] by applying a function to the transformation result of this [[Reads]].
+   *
+   * @param f The function to apply to the result of this [[Reads]].
+   * @tparam C The result type of the new transformation function.
+   * @return A new [[Reads]] of type `Reads[A, C]` resulting from applying the given function to the result of this
+   *         [[Reads]].
+   */
+  def mapR[C](f: B => C): Reads[A, C] = (in: A) => f(self.read(in))
 
   /**
    * If used in a format combinator, this method helps to treat the format combinator as [[Reads]].
@@ -70,10 +80,20 @@ trait Writes[A, B] { self =>
    * Composes this [[Writes]] with a transformation function that gets applied to the result of this [[Writes]].
    *
    * @param writes The transformation function.
-   * @tparam C The result type of the transformation function.
+   * @tparam C The result type of the new transformation function.
    * @return A new composable [[Writes]].
    */
   def andThen[C](writes: Writes[B, C]): Writes[A, C] = (in: A) => writes.write(self.write(in))
+
+  /**
+   * Build a new [[Writes]] by applying a function to the transformation result of this [[Writes]].
+   *
+   * @param f The function to apply to the result of this [[Writes]].
+   * @tparam C The result type of the new transformation function.
+   * @return A new [[Writes]] of type `Writes[A, C]` resulting from applying the given function to the result of this
+   *         [[Writes]].
+   */
+  def mapW[C](f: B => C): Writes[A, C] = (in: A) => f(self.write(in))
 
   /**
    * If used in a format combinator, this method helps to treat the format combinator as [[Writes]].

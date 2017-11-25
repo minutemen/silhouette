@@ -18,7 +18,6 @@
 package silhouette.http.transport
 
 import silhouette.http._
-import silhouette.util.{ Source, Target }
 
 /**
  * The session transport.
@@ -75,83 +74,77 @@ final case class SessionTransport(key: String)
 }
 
 /**
- * A source that tries to retrieve some payload, stored in a session key, from the given request.
+ * A reads that tries to retrieve some payload, stored in a session key, from the given request.
  *
- * @param key             The session key in which the payload will be transported.
- * @param requestPipeline The request pipeline.
+ * @param key The session key in which the payload will be transported.
  * @tparam R The type of the request.
  */
-final case class RetrieveFromSession[R](key: String)(
-  implicit
-  requestPipeline: RequestPipeline[R]
-) extends Source[Option[String]] {
+final case class RetrieveFromSession[R](key: String) extends RetrieveReads[R, String] {
 
   /**
-   * Retrieves payload from a session.
+   * Reads payload from a session key stored in the given request.
    *
+   * @param requestPipeline The request pipeline.
    * @return The retrieved payload.
    */
-  override def read: Option[String] = SessionTransport(key).retrieve(requestPipeline)
+  override def read(requestPipeline: RequestPipeline[R]): Option[String] =
+    SessionTransport(key).retrieve(requestPipeline)
 }
 
 /**
- * A target that smuggles a session key with the given payload into the given request.
+ * A writes that smuggles a session key with the given payload into the given request.
  *
- * @param payload          The payload to embed.
- * @param key              The session key in which the payload will be transported.
- * @param requestPipeline  The request pipeline.
+ * @param key The session key in which the payload will be transported.
  * @tparam R The type of the response.
  */
-final case class SmuggleIntoSession[R](payload: String, key: String)(
-  implicit
-  requestPipeline: RequestPipeline[R]
-) extends Target[RequestPipeline[R]] {
+final case class SmuggleIntoSession[R](key: String) extends SmuggleWrites[R, String] {
 
   /**
-   * Smuggles payload into a session.
+   * Merges some payload and a [[RequestPipeline]] into a [[RequestPipeline]] that contains a session key with the
+   * given payload as value.
    *
-   * @return The request pipeline.
+   * @param in A tuple consisting of the payload to embed in the session and the [[RequestPipeline]] in which the
+   *           session key should be embedded.
+   * @return The request pipeline with the smuggled session key.
    */
-  override def write: RequestPipeline[R] = SessionTransport(key).smuggle(payload, requestPipeline)
+  override def write(in: (String, RequestPipeline[R])): RequestPipeline[R] =
+    SessionTransport(key).smuggle[R] _ tupled in
 }
 
 /**
- * A target that embeds a session key with the given payload into the given response.
+ * A writes that embeds a session key with the given payload into the given response.
  *
- * @param payload          The payload to embed.
- * @param key              The session key in which the payload will be transported.
- * @param responsePipeline The response pipeline.
+ * @param key The session key in which the payload will be transported.
  * @tparam R The type of the response.
  */
-final case class EmbedIntoSession[R](payload: String, key: String)(
-  implicit
-  responsePipeline: ResponsePipeline[R]
-) extends Target[ResponsePipeline[R]] {
+final case class EmbedIntoSession[R](key: String) extends EmbedWrites[R, String] {
 
   /**
-   * Embeds payload into a session.
+   * Merges some payload and a [[ResponsePipeline]] into a [[ResponsePipeline]] that contains a session key with the
+   * given payload as value.
    *
-   * @return The response pipeline.
+   * @param in A tuple consisting of the payload to embed in the session and the [[ResponsePipeline]] in which the
+   *           session key should be embedded.
+   * @return The response pipeline with the embedded session key.
    */
-  override def write: ResponsePipeline[R] = SessionTransport(key).embed(payload, responsePipeline)
+  override def write(in: (String, ResponsePipeline[R])): ResponsePipeline[R] =
+    SessionTransport(key).embed[R] _ tupled in
 }
 
 /**
- * A target that discards payload stored in a session from the given response.
+ * A writes that discards payload stored in the session from the given response.
  *
- * @param key              The session key in which the payload will be transported.
- * @param responsePipeline The response pipeline.
+ * @param key The session key from which the payload should be discarded.
  * @tparam R The type of the response.
  */
-final case class DiscardFromSession[R](key: String)(
-  implicit
-  responsePipeline: ResponsePipeline[R]
-) extends Target[ResponsePipeline[R]] {
+final case class DiscardFromSession[R](key: String) extends DiscardWrites[R] {
 
   /**
-   * Discards payload from a session.
+   * Takes a [[ResponsePipeline]] and discards the payload stored in the given session key.
    *
-   * @return The response pipeline.
+   * @param responsePipeline The response pipeline from which the session key should be discarded.
+   * @return The response pipeline without the given session key.
    */
-  override def write: ResponsePipeline[R] = SessionTransport(key).discard(responsePipeline)
+  override def write(responsePipeline: ResponsePipeline[R]): ResponsePipeline[R] =
+    SessionTransport(key).discard(responsePipeline)
 }

@@ -22,7 +22,9 @@ import silhouette.Credentials
 import silhouette.http._
 import silhouette.http.transport.format.{ BasicAuthHeaderFormat, BearerAuthHeaderFormat }
 import silhouette.util.Fitting._
-import silhouette.util.{ Source, Target }
+
+import scala.language.postfixOps
+import scala.util.{ Failure, Success }
 
 /**
  * The header transport.
@@ -68,211 +70,204 @@ final case class HeaderTransport(name: String)
 }
 
 /**
- * A source that tries to retrieve some payload, stored in a header, from the given request.
+ * A reads that tries to retrieve some payload, stored in a header, from the given request.
  *
- * @param name             The name of the header in which the payload will be transported.
- * @param requestPipeline  The request pipeline.
+ * @param name The name of the header in which the payload will be transported.
  * @tparam R The type of the request.
  */
-case class RetrieveFromHeader[R](name: String)(
-  implicit
-  requestPipeline: RequestPipeline[R]
-) extends Source[Option[String]] {
+final case class RetrieveFromHeader[R](name: String) extends RetrieveReads[R, String] {
 
   /**
-   * Retrieves payload from a header.
+   * Reads payload from a request header.
    *
+   * @param requestPipeline The request pipeline.
    * @return The retrieved payload.
    */
-  override def read: Option[String] = HeaderTransport(name).retrieve(requestPipeline)
+  override def read(requestPipeline: RequestPipeline[R]): Option[String] =
+    HeaderTransport(name).retrieve(requestPipeline)
 }
 
 /**
- * A source that tries to retrieve a bearer token, stored in a header, from the given request.
+ * A reads that tries to retrieve a bearer token, stored in a header, from the given request.
  *
  * Reads from header in the form "Authorization: Bearer some.token".
  *
- * @param name             The name of the header in which the payload will be transported; Defaults to Authorization.
- * @param requestPipeline  The request pipeline.
+ * @param name The name of the header in which the payload will be transported; Defaults to Authorization.
  * @tparam R The type of the request.
  */
-case class RetrieveBearerTokenFromHeader[R](name: String = "Authorization")(
-  implicit
-  requestPipeline: RequestPipeline[R]
-) extends Source[Option[String]] with LazyLogging {
+final case class RetrieveBearerTokenFromHeader[R](name: String = "Authorization")
+  extends RetrieveReads[R, String]
+  with LazyLogging {
 
   /**
-   * Retrieves payload from a header.
+   * Reads payload from a header.
    *
+   * @param requestPipeline The request pipeline.
    * @return The retrieved payload.
    */
-  override def read: Option[String] = {
-    RetrieveFromHeader(name)
-      .read
-      .andThenTry(BearerAuthHeaderFormat().asReads)
-      .toTry
-      .fold(e => { logger.info(e.getMessage, e); None }, v => Some(v))
-  }
+  override def read(requestPipeline: RequestPipeline[R]): Option[String] =
+    RetrieveFromHeader[R](name)(requestPipeline) andThenTry BearerAuthHeaderFormat() toTry match {
+      case Success(v) => Some(v)
+      case Failure(e) =>
+        logger.info(e.getMessage, e)
+        None
+    }
 }
 
 /**
- * A source that tries to retrieve basic credentials, stored in a header, from the given request.
+ * A reads that tries to retrieve basic credentials, stored in a header, from the given request.
  *
  * Reads from header in the form "Authorization: Basic user:password".
  *
- * @param name             The name of the header in which the payload will be transported; Defaults to Authorization.
- * @param requestPipeline  The request pipeline.
+ * @param name The name of the header in which the payload will be transported; Defaults to Authorization.
  * @tparam R The type of the request.
  */
-case class RetrieveBasicCredentialsFromHeader[R](name: String = "Authorization")(
-  implicit
-  requestPipeline: RequestPipeline[R]
-) extends Source[Option[Credentials]] with LazyLogging {
+final case class RetrieveBasicCredentialsFromHeader[R](name: String = "Authorization")
+  extends RetrieveReads[R, Credentials]
+  with LazyLogging {
 
   /**
-   * Retrieves payload from a header.
+   * Reads payload from a header.
    *
+   * @param requestPipeline The request pipeline.
    * @return The retrieved payload.
    */
-  override def read: Option[Credentials] = {
-    RetrieveFromHeader(name)
-      .read
-      .andThenTry(BasicAuthHeaderFormat().asReads)
-      .toTry
-      .fold(e => { logger.info(e.getMessage, e); None }, v => Some(v))
-  }
+  override def read(requestPipeline: RequestPipeline[R]): Option[Credentials] =
+    RetrieveFromHeader[R](name)(requestPipeline) andThenTry BasicAuthHeaderFormat() toTry match {
+      case Success(v) => Some(v)
+      case Failure(e) =>
+        logger.info(e.getMessage, e)
+        None
+    }
 }
 
 /**
- * A target that smuggles a header with the given payload into the given request.
+ * A writes that smuggles a header with the given payload into the given request.
  *
- * @param payload          The payload to embed.
- * @param name             The name of the header in which the payload will be transported.
- * @param requestPipeline  The request pipeline.
+ * @param name The name of the header in which the payload will be transported.
  * @tparam R The type of the response.
  */
-final case class SmuggleIntoHeader[R](payload: String, name: String)(
-  implicit
-  requestPipeline: RequestPipeline[R]
-) extends Target[RequestPipeline[R]] {
+final case class SmuggleIntoHeader[R](name: String) extends SmuggleWrites[R, String] {
 
   /**
-   * Smuggles payload into a header.
+   * Merges some payload and a [[RequestPipeline]] into a [[RequestPipeline]] that contains a header with the
+   * given payload as value.
    *
-   * @return The request pipeline.
+   * @param in A tuple consisting of the payload to smuggle in a header and the [[RequestPipeline]] in which the header
+   *           should be smuggled.
+   * @return The request pipeline with the smuggled header.
    */
-  override def write: RequestPipeline[R] = HeaderTransport(name).smuggle(payload, requestPipeline)
+  override def write(in: (String, RequestPipeline[R])): RequestPipeline[R] =
+    HeaderTransport(name).smuggle[R] _ tupled in
 }
 
 /**
- * A target that smuggles a header with the a bearer token into the given request.
+ * A writes that smuggles a header with a bearer token into the given request.
  *
  * Smuggles a header in the form "Authorization: Bearer some.token".
  *
- * @param token            The bearer token to embed.
- * @param name             The name of the header in which the payload will be transported; Defaults to Authorization.
- * @param requestPipeline  The request pipeline.
+ * @param name The name of the header in which the payload will be transported; Defaults to Authorization.
  * @tparam R The type of the response.
  */
-final case class SmuggleBearerTokenIntoHeader[R](token: String, name: String = "Authorization")(
-  implicit
-  requestPipeline: RequestPipeline[R]
-) extends Target[RequestPipeline[R]] {
+final case class SmuggleBearerTokenIntoHeader[R](name: String = "Authorization")
+  extends SmuggleWrites[R, String] {
 
   /**
-   * Smuggles a bearer token into a header.
+   * Merges some token and a [[RequestPipeline]] into a [[RequestPipeline]] that contains a bearer token header with
+   * the given token as value.
    *
-   * @return The request pipeline.
+   * @param in A tuple consisting of the token to smuggle in a bearer token header and the [[RequestPipeline]] in
+   *           which the header should be smuggled.
+   * @return The request pipeline with the smuggled header.
    */
-  override def write: RequestPipeline[R] = SmuggleIntoHeader(BearerAuthHeaderFormat().write(token), name).write
+  override def write(in: (String, RequestPipeline[R])): RequestPipeline[R] =
+    BearerAuthHeaderFormat().mapW(value => value -> in._2) andThen SmuggleIntoHeader[R](name) write in._1
 }
 
 /**
- * A target that smuggles a header with the basic credentials into the given request.
+ * A writes that smuggles a header with basic credentials into the given request.
  *
  * Smuggles a header in the form "Authorization: Basic user:password".
  *
- * @param credentials      The credentials to embed.
- * @param name             The name of the header in which the payload will be transported; Defaults to Authorization.
- * @param requestPipeline  The request pipeline.
+ * @param name The name of the header in which the payload will be transported; Defaults to Authorization.
  * @tparam R The type of the response.
  */
-final case class SmuggleBasicCredentialsIntoHeader[R](credentials: Credentials, name: String = "Authorization")(
-  implicit
-  requestPipeline: RequestPipeline[R]
-) extends Target[RequestPipeline[R]] {
+final case class SmuggleBasicCredentialsIntoHeader[R](name: String = "Authorization")
+  extends SmuggleWrites[R, Credentials] {
 
   /**
-   * Smuggles basic credentials into a header.
+   * Merges some credentials and a [[RequestPipeline]] into a [[RequestPipeline]] that contains a basic auth header
+   * with the given credentials as value.
    *
-   * @return The request pipeline.
+   * @param in A tuple consisting of the credentials to smuggle in a basic auth header and the [[RequestPipeline]] in
+   *           which the header should be smuggled.
+   * @return The request pipeline with the smuggled header.
    */
-  override def write: RequestPipeline[R] = SmuggleIntoHeader(BasicAuthHeaderFormat().write(credentials), name).write
+  override def write(in: (Credentials, RequestPipeline[R])): RequestPipeline[R] =
+    BasicAuthHeaderFormat().mapW(value => value -> in._2) andThen SmuggleIntoHeader[R](name) write in._1
 }
 
 /**
- * A target that embeds a header with the given payload into the given response.
+ * A writes that embeds a header with the given payload into the given response.
  *
- * @param payload          The payload to embed.
- * @param name             The name of the header in which the payload will be transported.
- * @param responsePipeline The response pipeline.
+ * @param name The name of the header in which the payload will be transported.
  * @tparam R The type of the response.
  */
-case class EmbedIntoHeader[R](payload: String, name: String)(
-  implicit
-  responsePipeline: ResponsePipeline[R]
-) extends Target[ResponsePipeline[R]] {
+final case class EmbedIntoHeader[R](name: String) extends EmbedWrites[R, String] {
 
   /**
-   * Embeds payload into a header.
+   * Merges some payload and a [[ResponsePipeline]] into a [[ResponsePipeline]] that contains a header with the
+   * given payload as value.
    *
-   * @return The response pipeline.
+   * @param in A tuple consisting of the payload to embed in a header and the [[ResponsePipeline]] in which the header
+   *           should be embedded.
+   * @return The response pipeline with the embedded header.
    */
-  override def write: ResponsePipeline[R] = HeaderTransport(name).embed(payload, responsePipeline)
+  override def write(in: (String, ResponsePipeline[R])): ResponsePipeline[R] =
+    HeaderTransport(name).embed[R] _ tupled in
 }
 
 /**
- * A target that embeds a header with the given bearer token into the given response.
+ * A writes that embeds a header with the given bearer token into the given response.
  *
  * Embeds a header in the form "Authorization: Bearer some.token".
  *
- * @param token            The bearer token to embed.
- * @param name             The name of the header in which the payload will be transported; Defaults to Authorization.
- * @param responsePipeline The response pipeline.
+ * @param name The name of the header in which the payload will be transported; Defaults to Authorization.
  * @tparam R The type of the response.
  */
-case class EmbedBearerTokenIntoHeader[R](token: String, name: String = "Authorization")(
-  implicit
-  responsePipeline: ResponsePipeline[R]
-) extends Target[ResponsePipeline[R]] {
+final case class EmbedBearerTokenIntoHeader[R](name: String = "Authorization") extends EmbedWrites[R, String] {
 
   /**
-   * Embeds a bearer token into a header.
+   * Merges some token and a [[ResponsePipeline]] into a [[ResponsePipeline]] that contains a bearer token header with
+   * the given token as value.
    *
-   * @return The response pipeline.
+   * @param in A tuple consisting of the token to embed in a bearer token header and the [[ResponsePipeline]] in
+   *           which the header should be embedded.
+   * @return The response pipeline with the embedded header.
    */
-  override def write: ResponsePipeline[R] = EmbedIntoHeader(BearerAuthHeaderFormat().write(token), name).write
+  override def write(in: (String, ResponsePipeline[R])): ResponsePipeline[R] =
+    BearerAuthHeaderFormat().mapW(value => value -> in._2) andThen EmbedIntoHeader[R](name) write in._1
 }
 
 /**
- * A target that embeds a header with the given basic credentials into the given response.
+ * A writes that embeds a header with the given basic credentials into the given response.
  *
  * Embeds a header in the form "Authorization: Basic user:password".
  *
- * @param credentials      The credentials to embed.
- * @param name             The name of the header in which the payload will be transported; Defaults to Authorization.
- * @param responsePipeline The response pipeline.
+ * @param name The name of the header in which the payload will be transported; Defaults to Authorization.
  * @tparam R The type of the response.
  */
-case class EmbedBasicCredentialsIntoHeader[R](credentials: Credentials, name: String = "Authorization")(
-  implicit
-  responsePipeline: ResponsePipeline[R]
-) extends Target[ResponsePipeline[R]] {
+final case class EmbedBasicCredentialsIntoHeader[R](name: String = "Authorization")
+  extends EmbedWrites[R, Credentials] {
 
   /**
-   * Embeds a bearer token into a header.
+   * Merges some credentials and a [[ResponsePipeline]] into a [[ResponsePipeline]] that contains a basic auth header
+   * with the given credentials as value.
    *
-   * @return The response pipeline.
+   * @param in A tuple consisting of the credentials to embed in a basic auth header and the [[ResponsePipeline]] in
+   *           which the header should be embedded.
+   * @return The response pipeline with the embedded header.
    */
-  override def write: ResponsePipeline[R] = EmbedIntoHeader(BasicAuthHeaderFormat().write(credentials), name).write
+  override def write(in: (Credentials, ResponsePipeline[R])): ResponsePipeline[R] =
+    BasicAuthHeaderFormat().mapW(value => value -> in._2) andThen EmbedIntoHeader[R](name) write in._1
 }

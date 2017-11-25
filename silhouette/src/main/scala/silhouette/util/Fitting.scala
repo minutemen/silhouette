@@ -191,6 +191,68 @@ case object NoneError extends FittingError {
 object Fitting {
 
   /**
+   * Converts a `Reads[A, Option[B]])` into a function that accepts `A` and returns a `Fitting[B]`.
+   *
+   * @param reads The reads to convert.
+   * @tparam A The source type.
+   * @tparam B The target type.
+   * @return A function that accepts `A` and returns a `Fitting[B]`.
+   */
+  implicit def optionReadsToFitting[A, B](reads: Reads[A, Option[B]]): A => Fitting[B] = (in: A) => reads.read(in)
+
+  /**
+   * Converts a `Reads[A, Try[B]])` into a function that accepts `A` and returns a `Fitting[B]`.
+   *
+   * @param reads The reads to convert.
+   * @tparam A The source type.
+   * @tparam B The target type.
+   * @return A function that accepts `A` and returns a `Fitting[B]`.
+   */
+  implicit def tryReadsToFitting[A, B](reads: Reads[A, Try[B]]): A => Fitting[B] = (in: A) => reads.read(in)
+
+  /**
+   * Converts a `Reads[A, Future[B]])` into a function that accepts `A` and returns a `Future[Fitting[B]]`.
+   *
+   * @param reads The reads to convert.
+   * @tparam A The source type.
+   * @tparam B The target type.
+   * @return A function that accepts `A` and returns a `Future[Fitting[B]]`.
+   */
+  implicit def futureReadsToFitting[A, B](reads: Reads[A, Future[B]]): A => Future[Fitting[B]] =
+    (in: A) => reads.read(in)
+
+  /**
+   * Converts a `Writes[A, Option[B]])` into a function that accepts `A` and returns a `Fitting[B]`.
+   *
+   * @param writes The writes to convert.
+   * @tparam A The source type.
+   * @tparam B The target type.
+   * @return A function that accepts `A` and returns a `Fitting[B]`.
+   */
+  implicit def optionWritesToFitting[A, B](writes: Writes[A, Option[B]]): A => Fitting[B] = (in: A) => writes.write(in)
+
+  /**
+   * Converts a `Writes[A, Try[B]])` into a function that accepts `A` and returns a `Fitting[B]`.
+   *
+   * @param writes The writes to convert.
+   * @tparam A The source type.
+   * @tparam B The target type.
+   * @return A function that accepts `A` and returns a `Fitting[B]`.
+   */
+  implicit def tryWritesToFitting[A, B](writes: Writes[A, Try[B]]): A => Fitting[B] = (in: A) => writes.write(in)
+
+  /**
+   * Converts a `Writes[A, Future[B]])` into a function that accepts `A` and returns a `Future[Fitting[B]]`.
+   *
+   * @param writes The writes to convert.
+   * @tparam A The source type.
+   * @tparam B The target type.
+   * @return A function that accepts `A` and returns a `Future[Fitting[B]]`.
+   */
+  implicit def futureWritesToFitting[A, B](writes: Writes[A, Future[B]]): A => Future[Fitting[B]] =
+    (in: A) => writes.write(in)
+
+  /**
    * Converts an `Option[T]` to a `Fitting[T]`.
    *
    * @param value The [[scala.Option]] to convert.
