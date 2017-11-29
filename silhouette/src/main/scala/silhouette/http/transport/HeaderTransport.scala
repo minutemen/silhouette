@@ -17,14 +17,12 @@
  */
 package silhouette.http.transport
 
-import com.typesafe.scalalogging.LazyLogging
 import silhouette.Credentials
 import silhouette.http._
 import silhouette.http.transport.format.{ BasicAuthHeaderFormat, BearerAuthHeaderFormat }
 import silhouette.util.Fitting._
 
 import scala.language.postfixOps
-import scala.util.{ Failure, Success }
 
 /**
  * The header transport.
@@ -96,8 +94,7 @@ final case class RetrieveFromHeader[R](name: String) extends RetrieveReads[R, St
  * @tparam R The type of the request.
  */
 final case class RetrieveBearerTokenFromHeader[R](name: String = "Authorization")
-  extends RetrieveReads[R, String]
-  with LazyLogging {
+  extends RetrieveReads[R, String] {
 
   /**
    * Reads payload from a header.
@@ -106,12 +103,7 @@ final case class RetrieveBearerTokenFromHeader[R](name: String = "Authorization"
    * @return The retrieved payload.
    */
   override def read(requestPipeline: RequestPipeline[R]): Option[String] =
-    RetrieveFromHeader[R](name)(requestPipeline) andThenTry BearerAuthHeaderFormat() toTry match {
-      case Success(v) => Some(v)
-      case Failure(e) =>
-        logger.info(e.getMessage, e)
-        None
-    }
+    RetrieveFromHeader[R](name)(requestPipeline) andThenTry BearerAuthHeaderFormat() toOption
 }
 
 /**
@@ -123,8 +115,7 @@ final case class RetrieveBearerTokenFromHeader[R](name: String = "Authorization"
  * @tparam R The type of the request.
  */
 final case class RetrieveBasicCredentialsFromHeader[R](name: String = "Authorization")
-  extends RetrieveReads[R, Credentials]
-  with LazyLogging {
+  extends RetrieveReads[R, Credentials] {
 
   /**
    * Reads payload from a header.
@@ -133,12 +124,7 @@ final case class RetrieveBasicCredentialsFromHeader[R](name: String = "Authoriza
    * @return The retrieved payload.
    */
   override def read(requestPipeline: RequestPipeline[R]): Option[Credentials] =
-    RetrieveFromHeader[R](name)(requestPipeline) andThenTry BasicAuthHeaderFormat() toTry match {
-      case Success(v) => Some(v)
-      case Failure(e) =>
-        logger.info(e.getMessage, e)
-        None
-    }
+    RetrieveFromHeader[R](name)(requestPipeline) andThenTry BasicAuthHeaderFormat() toOption
 }
 
 /**

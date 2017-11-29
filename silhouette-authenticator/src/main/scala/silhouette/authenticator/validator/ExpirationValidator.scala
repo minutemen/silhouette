@@ -22,6 +22,7 @@ import java.time.Clock
 import silhouette.Authenticator
 import silhouette.authenticator.Validator
 
+import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
@@ -44,6 +45,6 @@ final case class ExpirationValidator(clock: Clock) extends Validator {
     implicit
     ec: ExecutionContext
   ): Future[Boolean] = Future.successful {
-    authenticator.expires.forall(_.isBefore(clock.instant()))
+    authenticator.expiresIn(clock).forall(_ > 0.millis)
   }
 }

@@ -23,7 +23,9 @@ import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
+import silhouette.Authenticator.Implicits._
 import silhouette.authenticator.Validator
+import silhouette.http.{ FakeRequest, FakeRequestPipeline, RequestPipeline }
 import silhouette.specs2.WaitPatience
 
 import scala.concurrent.Future
@@ -57,6 +59,68 @@ class AuthenticatorSpec(implicit ev: ExecutionEnv) extends Specification with Mo
     "return a negative duration if the authenticator wasn't used" in new Context {
       authenticator.copy(touched = Some(instant)).touchedAt(Clock.fixed(instant.minusSeconds(10), UTC)) must
         beSome(-10.seconds)
+    }
+  }
+
+  "The `touch` method" should {
+    "touch an authenticator" in new Context {
+      authenticator.touch(clock).touched must beSome(instant)
+    }
+  }
+
+  "The `withExpiry` method" should {
+    "set an authenticator expiry" in new Context {
+      authenticator.withExpiry(10.hours, clock).expires must beSome(clock.instant() + 10.hours)
+    }
+  }
+
+  "The `withFingerPrint` method" should {
+    "set a default fingerprint" in new Context {
+      implicit val request: RequestPipeline[FakeRequest] = FakeRequestPipeline()
+
+      authenticator.withFingerPrint().fingerprint must beSome(request.fingerprint)
+    }
+
+    "set a custom fingerprint" in new Context {
+      val fingerPrintGenerator = (_: FakeRequest) => "test.fingerprint"
+      implicit val request: RequestPipeline[FakeRequest] = FakeRequestPipeline()
+
+      authenticator.withFingerPrint(fingerPrintGenerator).fingerprint must
+        beSome(request.fingerprint(fingerPrintGenerator))
+    }
+  }
+
+  "The `withTags` method" should {
+    "add new tags" in new Context {
+      authenticator.withTags("test1", "test2").tags should be equalTo Seq("test1", "test2")
+    }
+  }
+
+  "The `isTouched` method" should {
+    "return true if the authenticator was touched" in new Context {
+      authenticator.touch(clock).isTouched should beTrue
+    }
+
+    "return false if the authenticator was not touched" in new Context {
+      authenticator.isTouched should beFalse
+    }
+  }
+
+  "The `isTaggedWith` method" should {
+    "return true if the authenticator was tagged with the given tag" in new Context {
+      authenticator.withTags("test").isTaggedWith("test") should beTrue
+    }
+
+    "return true if the authenticator was tagged with all the given tags" in new Context {
+      authenticator.withTags("test1", "test2", "test3").isTaggedWith("test1", "test2") should beTrue
+    }
+
+    "return false if the authenticator was not tagged with the given tag" in new Context {
+      authenticator.withTags("test").isTaggedWith("test1") should beFalse
+    }
+
+    "return false if the authenticator was not tagged with any of the given tags" in new Context {
+      authenticator.withTags("test1", "test2").isTaggedWith("test1", "test3") should beFalse
     }
   }
 

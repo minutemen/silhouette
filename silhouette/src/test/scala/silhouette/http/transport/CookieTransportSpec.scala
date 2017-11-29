@@ -78,6 +78,50 @@ class CookieTransportSpec extends Specification {
     }
   }
 
+  "The `RetrieveFromCookie` reads" should {
+    "read some payload from a cookie stored in the request" in new Context {
+      RetrieveFromCookie("test").read(requestPipeline) must beSome("payload")
+    }
+
+    "return None if no cookie with the give name exists" in new Context {
+      RetrieveFromCookie("noz-existing").read(requestPipeline) must beNone
+    }
+  }
+
+  "The `SmuggleIntoCookie` writes" should {
+    "smuggle a cookie into the request" in new Context {
+      SmuggleIntoCookie(settings)
+        .write(("payload", requestPipeline))
+        .cookie("test") must beSome.like {
+          case cookie =>
+            cookie.value must be equalTo "payload"
+        }
+    }
+  }
+
+  "The `EmbedIntoCookie` writes" should {
+    "embed a cookie into the response" in new Context {
+      EmbedIntoCookie(settings)
+        .write(("payload", responsePipeline))
+        .cookie("test") must beSome.like {
+          case cookie =>
+            cookie.value must be equalTo "payload"
+        }
+    }
+  }
+
+  "The `DiscardFromCookie` writes" should {
+    "discard a cookie" in new Context {
+      DiscardFromCookie(settings)
+        .write(responsePipeline)
+        .cookie("test") must beSome.like {
+          case cookie =>
+            cookie.value must be equalTo ""
+            cookie.maxAge must beSome(-86400)
+        }
+    }
+  }
+
   /**
    * The context.
    */

@@ -28,9 +28,9 @@ import scala.concurrent.{ ExecutionContext, Future }
  * If an authenticator for the given [[Authenticator]] was found in the store, then the validator returns true,
  * otherwise it returns false. The validator can be used as a blacklist or whitelist validator.
  *
- * @param reader A reader to read the [[Authenticator]] from a backing store.
+ * @param validator A validator to validate the [[Authenticator]] against a backing store.
  */
-final case class BackingStoreValidator(reader: Authenticator => Future[Option[Authenticator]]) extends Validator {
+final case class BackingStoreValidator(validator: Authenticator => Future[Boolean]) extends Validator {
 
   /**
    * Checks if the [[Authenticator]] is valid.
@@ -42,8 +42,5 @@ final case class BackingStoreValidator(reader: Authenticator => Future[Option[Au
   override def isValid(authenticator: Authenticator)(
     implicit
     ec: ExecutionContext
-  ): Future[Boolean] = reader(authenticator).map {
-    case Some(_) => true
-    case None    => false
-  }
+  ): Future[Boolean] = validator(authenticator)
 }

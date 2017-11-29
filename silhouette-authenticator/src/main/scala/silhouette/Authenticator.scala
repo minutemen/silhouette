@@ -89,7 +89,7 @@ final case class Authenticator(
   /**
    * Returns a copy of this authenticator with an expire instant of time.
    *
-   * @param expiry The authentication expiry.
+   * @param expiry The duration an authenticator expires in.
    * @param clock  The clock implementation to get the current time.
    * @return A copy of this authenticator with an expire instant of time.
    */
@@ -121,10 +121,10 @@ final case class Authenticator(
   /**
    * Returns a copy of this authenticator with new tags added.
    *
-   * @param tag The new tag to add.
+   * @param tags The new tags to add.
    * @return A copy of this authenticator with new tags added.
    */
-  def withTag(tag: String): Authenticator = copy(tags = tags :+ tag)
+  def withTags(tags: String*): Authenticator = copy(tags = this.tags ++ tags)
 
   /**
    * Indicates if the authenticator was touched.
@@ -134,12 +134,12 @@ final case class Authenticator(
   def isTouched: Boolean = touched.isDefined
 
   /**
-   * Indicates if this authenticator is tagged with the given tag.
+   * Indicates if this authenticator is tagged with all the given tags.
    *
-   * @param tag The tag to check for.
-   * @return True if this authenticator is tagged with he given tag, false otherwise.
+   * @param tags The tags to check for.
+   * @return True if this authenticator is tagged with all the given tags, false otherwise.
    */
-  def isTaggedWith(tag: String): Boolean = tags.contains(tag)
+  def isTaggedWith(tags: String*): Boolean = tags.forall(this.tags.contains)
 
   /**
    * Checks if the authenticator is valid.

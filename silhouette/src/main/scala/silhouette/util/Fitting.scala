@@ -17,6 +17,7 @@
  */
 package silhouette.util
 
+import com.typesafe.scalalogging.LazyLogging
 import silhouette.util.Fitting._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -141,8 +142,13 @@ final case class SuccessfulFitting[A](value: A) extends Fitting[A] {
  * @param error The error type.
  * @tparam A The type of the value the fitting does handle.
  */
-final case class FaultyFitting[A](error: FittingError) extends Fitting[A] {
-  override def toOption: Option[A] = None
+final case class FaultyFitting[A](error: FittingError) extends Fitting[A] with LazyLogging {
+  override def toOption: Option[A] = error match {
+    case ThrowableError(e) =>
+      logger.debug("ThrowableError to None conversion", e)
+      None
+    case NoneError => None
+  }
   override def toTry: Try[A] = Failure(error.value)
   override def toFuture: Future[A] = Future.failed(error.value)
 

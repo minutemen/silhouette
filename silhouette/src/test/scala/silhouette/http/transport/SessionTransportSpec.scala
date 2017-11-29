@@ -68,6 +68,38 @@ class SessionTransportSpec extends Specification {
     }
   }
 
+  "The `RetrieveFromSession` reads" should {
+    "return some payload from the session with the given key" in new Context {
+      RetrieveFromSession("test").read(requestPipeline) must beSome("payload")
+    }
+
+    "return None if no session with the give key exists" in new Context {
+      RetrieveFromSession("not-existing").read(requestPipeline) must beNone
+    }
+  }
+
+  "The `SmuggleIntoSession` writes" should {
+    "smuggle a session value into the request" in new Context {
+      SmuggleIntoSession("test")
+        .write(("payload", requestPipeline))
+        .session("test") must be equalTo "payload"
+    }
+  }
+
+  "The `EmbedIntoSession` writes" should {
+    "embed a session value into the response" in new Context {
+      EmbedIntoSession("test")
+        .write(("payload", responsePipeline))
+        .session("test") must be equalTo "payload"
+    }
+  }
+
+  "The `DiscardFromSession` writes" should {
+    "remove the session for the given key" in new Context {
+      DiscardFromSession("test").write(responsePipeline).session must beEmpty
+    }
+  }
+
   /**
    * The context.
    */

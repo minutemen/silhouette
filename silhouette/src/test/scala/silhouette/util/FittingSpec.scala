@@ -29,8 +29,6 @@ import scala.util.{ Failure, Success, Try }
 /**
  * Test case for the [[Fitting]] trait.
  *
- * TODO: implement tests for reads to fitting methods
- *
  * @param ev The execution environment.
  */
 class FittingSpec(implicit ev: ExecutionEnv) extends Specification with WaitPatience {
@@ -292,27 +290,27 @@ class FittingSpec(implicit ev: ExecutionEnv) extends Specification with WaitPati
     // *****************
 
     "convert a `Some[A]` to an `Option[A]`" in new Context {
-      Some("test").toOption should beSome("test")
+      Some("test").toOption must beSome("test")
     }
 
     "convert a `None` to an `Option[A]`" in new Context {
-      None.toOption should beNone
+      None.toOption must beNone
     }
 
     "convert a `Some[A]` to a `Try[A]`" in new Context {
-      Some("test").toTry should beSuccessfulTry("test")
+      Some("test").toTry must beSuccessfulTry("test")
     }
 
     "convert a `None` to a `Try[A]`" in new Context {
-      None.toTry should beFailedTry(NoneError.value)
+      None.toTry must beFailedTry(NoneError.value)
     }
 
     "convert a `Some[A]` to a `Future[A]`" in new Context {
-      Some("test").toFuture should beEqualTo("test").awaitWithPatience
+      Some("test").toFuture must beEqualTo("test").awaitWithPatience
     }
 
     "convert a `None` to a `Future[A]`" in new Context {
-      None.toFuture should throwA(NoneError.value).awaitWithPatience
+      None.toFuture must throwA(NoneError.value).awaitWithPatience
     }
 
     // *****************
@@ -320,27 +318,27 @@ class FittingSpec(implicit ev: ExecutionEnv) extends Specification with WaitPati
     // *****************
 
     "convert a `Success[A]` to an `Option[A]`" in new Context {
-      Success("test").toOption should beSome("test")
+      Success("test").toOption must beSome("test")
     }
 
     "convert a `Failure` to an `Option[A]`" in new Context {
-      Failure(exception).toOption should beNone
+      Failure(exception).toOption must beNone
     }
 
     "convert a `Success[A]` to a `Try[A]`" in new Context {
-      Success("test").toTry should beSuccessfulTry("test")
+      Success("test").toTry must beSuccessfulTry("test")
     }
 
     "convert a `Failure` to a `Try[A]`" in new Context {
-      Failure(exception).toTry should beFailedTry(exception)
+      Failure(exception).toTry must beFailedTry(exception)
     }
 
     "convert a `Success[A]` to a `Future[A]`" in new Context {
-      Success("test").toFuture should beEqualTo("test").awaitWithPatience
+      Success("test").toFuture must beEqualTo("test").awaitWithPatience
     }
 
     "convert a `Failure` to a `Future[A]`" in new Context {
-      Failure(exception).toFuture should throwA(exception).awaitWithPatience
+      Failure(exception).toFuture must throwA(exception).awaitWithPatience
     }
 
     // *****************
@@ -359,6 +357,50 @@ class FittingSpec(implicit ev: ExecutionEnv) extends Specification with WaitPati
         case FaultyFitting(e) =>
           e must be equalTo ThrowableError(exception)
       }.awaitWithPatience
+    }
+
+    // *****************
+    // Reads -> Fitting implicits
+    // *****************
+
+    "provide an implicit that converts a `Reads[A, Option[B]]` into a `A` => `Fitting[B]`" in new Context {
+      def apply[A, B](value: Reads[A, Option[B]]): A => Fitting[B] = value
+
+      apply(optionFormat)("test") must be equalTo SuccessfulFitting("test")
+    }
+
+    "provide an implicit that converts a `Reads[A, Try[B]]` into a `A` => `Fitting[B]`" in new Context {
+      def apply[A, B](value: Reads[A, Try[B]]): A => Fitting[B] = value
+
+      apply(tryFormat)("test") must be equalTo SuccessfulFitting("test")
+    }
+
+    "provide an implicit that converts a `Reads[A, Future[B]]` into a `A` => `Fitting[B]`" in new Context {
+      def apply[A, B](value: Reads[A, Future[B]]): A => Future[Fitting[B]] = value
+
+      apply(futureFormat)("test") must beEqualTo(SuccessfulFitting("test")).awaitWithPatience
+    }
+
+    // *****************
+    // Writes -> Fitting implicits
+    // *****************
+
+    "provide an implicit that converts a `Writes[A, Option[B]]` into a `A` => `Fitting[B]`" in new Context {
+      def apply[A, B](value: Writes[A, Option[B]]): A => Fitting[B] = value
+
+      apply(optionFormat)("test") must be equalTo SuccessfulFitting("test")
+    }
+
+    "provide an implicit that converts a `Writes[A, Try[B]]` into a `A` => `Fitting[B]`" in new Context {
+      def apply[A, B](value: Writes[A, Try[B]]): A => Fitting[B] = value
+
+      apply(tryFormat)("test") must be equalTo SuccessfulFitting("test")
+    }
+
+    "provide an implicit that converts a `Writes[A, Future[B]]` into a `A` => `Fitting[B]`" in new Context {
+      def apply[A, B](value: Writes[A, Future[B]]): A => Future[Fitting[B]] = value
+
+      apply(futureFormat)("test") must beEqualTo(SuccessfulFitting("test")).awaitWithPatience
     }
 
     // *****************

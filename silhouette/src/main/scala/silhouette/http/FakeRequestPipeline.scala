@@ -38,7 +38,7 @@ protected[silhouette] case class FakeRequest(
  *
  * @param request The request this pipeline handles.
  */
-protected[silhouette] case class FakeRequestPipeline(request: FakeRequest = FakeRequest())
+final protected[silhouette] case class FakeRequestPipeline(request: FakeRequest = FakeRequest())
   extends RequestPipeline[FakeRequest] {
 
   /**

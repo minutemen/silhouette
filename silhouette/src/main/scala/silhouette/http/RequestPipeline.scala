@@ -325,9 +325,9 @@ protected[silhouette] trait RequestPipeline[R] extends RequestExtractor[R] {
    */
   def fingerprint: String = {
     Hash.sha1(new StringBuilder()
-      .append(headers.getOrElse("User-Agent", "")).append(":")
-      .append(headers.getOrElse("Accept-Language", "")).append(":")
-      .append(headers.getOrElse("Accept-Charset", "")).append(":")
+      .append(headers.getOrElse("User-Agent", Seq("")).mkString(",")).append(":")
+      .append(headers.getOrElse("Accept-Language", Seq("")).mkString(",")).append(":")
+      .append(headers.getOrElse("Accept-Charset", Seq("")).mkString(","))
       .toString()
     )
   }

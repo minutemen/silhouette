@@ -22,6 +22,7 @@ libraryDependencies ++= Seq(
   Library.Specs2.matcherExtra,
   Library.Specs2.mock,
   Library.mockito,
-  Library.bouncyCastle
+  Library.bouncyCastle,
+  Library.logbackClassic
 )
 enablePlugins(Doc)

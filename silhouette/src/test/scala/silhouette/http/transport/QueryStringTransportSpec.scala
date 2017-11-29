@@ -52,6 +52,24 @@ class QueryStringTransportSpec extends Specification {
     }
   }
 
+  "The `RetrieveFromQueryString` reads" should {
+    "return some payload from the query param with the given name" in new Context {
+      RetrieveFromQueryString("test").read(requestPipeline) must beSome("payload")
+    }
+
+    "return None if no query param with the give name exists" in new Context {
+      RetrieveFromQueryString("not-existing").read(requestPipeline) must beNone
+    }
+  }
+
+  "The `SmuggleIntoQueryString` writes" should {
+    "smuggle a query param into the request" in new Context {
+      SmuggleIntoQueryString("test")
+        .write(("payload", requestPipeline))
+        .queryParam("test").head must be equalTo "payload"
+    }
+  }
+
   /**
    * The context.
    */

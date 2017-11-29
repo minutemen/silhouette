@@ -19,6 +19,8 @@ package silhouette.http
 
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
+import silhouette.crypto.Hash
+import silhouette.crypto.Hash._
 
 /**
  * Test case for the [[FakeRequestPipeline]] class.
@@ -217,6 +219,62 @@ class FakeRequestPipelineSpec extends Specification {
         "test1" -> Seq("value3"),
         "test2" -> Seq("value2")
       )
+    }
+  }
+
+  "The default `fingerprint` method" should {
+    "return fingerprint including the `User-Agent` header" in new Context {
+      val userAgent = "test-user-agent"
+      requestPipeline.withHeaders("User-Agent" -> userAgent).fingerprint must be equalTo Hash.sha1(userAgent + "::")
+    }
+
+    "return fingerprint including the `Accept-Language` header" in new Context {
+      val acceptLanguage = "test-accept-language"
+      requestPipeline.withHeaders("Accept-Language" -> acceptLanguage).fingerprint must
+        be equalTo Hash.sha1(":" + acceptLanguage + ":")
+    }
+
+    "return fingerprint including the `Accept-Charset` header" in new Context {
+      val acceptCharset = "test-accept-charset"
+      requestPipeline.withHeaders("Accept-Charset" -> acceptCharset).fingerprint must
+        be equalTo Hash.sha1("::" + acceptCharset)
+    }
+
+    "return fingerprint including all values" in new Context {
+      val userAgent = "test-user-agent"
+      val acceptLanguage = "test-accept-language"
+      val acceptCharset = "test-accept-charset"
+      requestPipeline.withHeaders(
+        "User-Agent" -> userAgent,
+        "Accept-Language" -> acceptLanguage,
+        "Accept-Charset" -> acceptCharset
+      ).fingerprint must be equalTo Hash.sha1(
+          userAgent + ":" + acceptLanguage + ":" + acceptCharset
+        )
+    }
+  }
+
+  "The custom `fingerprint` method" should {
+    "return a fingerprint created by a generator function" in new Context {
+      val userAgent = "test-user-agent"
+      val acceptLanguage = "test-accept-language"
+      val acceptCharset = "test-accept-charset"
+      val acceptEncoding = "test-accept-encoding"
+      requestPipeline.withHeaders(
+        "User-Agent" -> userAgent,
+        "Accept-Language" -> acceptLanguage,
+        "Accept-Charset" -> acceptCharset,
+        "Accept-Encoding" -> "gzip",
+        "Accept-Encoding" -> "deflate"
+      ).fingerprint(request => Hash.sha1(new StringBuilder()
+          .append(request.headers.getOrElse("User-Agent", Seq("")).mkString(",")).append(":")
+          .append(request.headers.getOrElse("Accept-Language", Seq("")).mkString(",")).append(":")
+          .append(request.headers.getOrElse("Accept-Charset", Seq("")).mkString(",")).append(":")
+          .append(request.headers.getOrElse("Accept-Encoding", Seq("")).mkString(","))
+          .toString()
+        )) must be equalTo Hash.sha1(
+          userAgent + ":" + acceptLanguage + ":" + acceptCharset + ":gzip,deflate"
+        )
     }
   }
 

@@ -35,7 +35,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  * @param statefulWriter      A writer to write the stateful [[Authenticator]] to a backing store.
  * @param authenticatorWrites A writes that transforms the [[Authenticator]] into a serialized form of
  *                            the [[Authenticator]].
- * @param embedWrites         A writes that embeds the [[Authenticator]] into the [[ResponsePipeline]].
+ * @param embedWrites         A writes that embeds the [[Authenticator]] into the [[silhouette.http.ResponsePipeline]].
  * @param ec                  The execution context.
  * @tparam R The type of the response.
  */
@@ -49,11 +49,11 @@ final case class EmbedStateful[R](
 ) extends WritePipeline[ResponsePipeline[R]] {
 
   /**
-   * Merges an [[Authenticator]] and a target [[ResponsePipeline]] into a target [[ResponsePipeline]] that contains
-   * the given [[Authenticator]] in a serialized form.
+   * Merges an [[Authenticator]] and a target [[silhouette.http.ResponsePipeline]] into a target
+   * [[silhouette.http.ResponsePipeline]] that contains the given [[Authenticator]] in a serialized form.
    *
-   * @param in A tuple consisting of the [[Authenticator]] to embed and the [[ResponsePipeline]] in which the
-   *           [[Authenticator]] should be embedded.
+   * @param in A tuple consisting of the [[Authenticator]] to embed and the [[silhouette.http.ResponsePipeline]] in
+   *           which the [[Authenticator]] should be embedded.
    * @return The response pipeline with the embedded [[Authenticator]].
    */
   override def write(in: (Authenticator, ResponsePipeline[R])): Future[ResponsePipeline[R]] = {

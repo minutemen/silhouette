@@ -34,7 +34,7 @@ protected[silhouette] case class FakeResponse(
  *
  * @param response The response this pipeline handles.
  */
-protected[silhouette] case class FakeResponsePipeline(response: FakeResponse = FakeResponse())
+final protected[silhouette] case class FakeResponsePipeline(response: FakeResponse = FakeResponse())
   extends ResponsePipeline[FakeResponse] {
 
   /**
