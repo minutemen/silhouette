@@ -21,4 +21,4 @@ libraryDependencies ++= Seq(
   Library.inject
 )
 
-enablePlugins(Doc)
+//enablePlugins(Doc)

@@ -21,4 +21,4 @@ libraryDependencies ++= Seq(
   Library.commonCodec
 )
 
-enablePlugins(Doc)
+//enablePlugins(Doc)

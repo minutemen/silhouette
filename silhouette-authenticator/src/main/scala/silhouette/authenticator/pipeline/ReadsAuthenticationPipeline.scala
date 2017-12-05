@@ -17,8 +17,8 @@
  */
 package silhouette.authenticator.pipeline
 
+import silhouette.Fitting._
 import silhouette.authenticator._
-import silhouette.util.Fitting._
 import silhouette.{ Identity, LoginInfo }
 
 import scala.concurrent.{ ExecutionContext, Future }

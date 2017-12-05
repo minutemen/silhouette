@@ -20,7 +20,6 @@ package silhouette.persistence.repositories
 import silhouette.exceptions.ConfigurationException
 import silhouette.persistence.daos.{ AuthInfoDAO, DelegableAuthInfoDAO }
 import silhouette.persistence.repositories.DelegableAuthInfoRepository._
-import silhouette.repositories.AuthInfoRepository
 import silhouette.{ AuthInfo, LoginInfo }
 
 import scala.concurrent.{ ExecutionContext, Future }

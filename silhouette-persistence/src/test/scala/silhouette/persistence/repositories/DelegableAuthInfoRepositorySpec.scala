@@ -23,10 +23,10 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.exceptions.ConfigurationException
+import silhouette.password.PasswordInfo
 import silhouette.persistence.daos.InMemoryAuthInfoDAO
 import silhouette.persistence.repositories.DelegableAuthInfoRepository._
 import silhouette.specs2.WaitPatience
-import silhouette.util.PasswordInfo
 import silhouette.{ AuthInfo, LoginInfo }
 
 import scala.concurrent.Await

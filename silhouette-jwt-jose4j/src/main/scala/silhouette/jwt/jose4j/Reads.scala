@@ -20,8 +20,8 @@ package silhouette.jwt.jose4j
 import java.time.Instant
 
 import org.jose4j.jwt.JwtClaims
-import silhouette.exceptions.JwtException
 import silhouette.jwt
+import silhouette.jwt.exceptions.JwtException
 import silhouette.jwt.jose4j.Reads._
 
 import scala.collection.JavaConverters._

@@ -18,7 +18,8 @@
 package silhouette.jwt.jose4j
 
 import org.jose4j.jwt.{ JwtClaims, NumericDate }
-import silhouette.exceptions.JwtException
+import silhouette.jwt
+import silhouette.jwt.exceptions.JwtException
 import silhouette.jwt.jose4j.Writes._
 
 import scala.collection.JavaConverters._
@@ -33,7 +34,7 @@ import scala.util.Try
  *
  * @param producer The JWT producer.
  */
-final case class Writes(producer: Producer) extends silhouette.jwt.Writes {
+final case class Writes(producer: Producer) extends jwt.Writes {
 
   /**
    * Transforms a JWT claims object into a JWT as string.

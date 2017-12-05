@@ -21,4 +21,4 @@ libraryDependencies ++= Seq(
   Library.jbcrypt
 )
 
-enablePlugins(Doc)
+//enablePlugins(Doc)

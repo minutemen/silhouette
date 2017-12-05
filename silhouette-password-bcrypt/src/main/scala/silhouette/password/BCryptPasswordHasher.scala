@@ -19,7 +19,6 @@ package silhouette.password
 
 import org.mindrot.jbcrypt.BCrypt
 import silhouette.password.BCryptPasswordHasher._
-import silhouette.util.{ PasswordHasher, PasswordInfo }
 
 /**
  * Implementation of the password hasher based on BCrypt.

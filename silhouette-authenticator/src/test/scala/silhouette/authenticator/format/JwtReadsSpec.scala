@@ -24,12 +24,13 @@ import org.specs2.concurrent.ExecutionEnv
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
+import silhouette.authenticator.exceptions.AuthenticatorException
 import silhouette.authenticator.{ StatefulReads, StatelessReads }
 import silhouette.authenticator.format.JwtReads._
 import silhouette.crypto.Base64
 import silhouette.jwt.{ Claims, Reads }
 import silhouette.specs2.WaitPatience
-import silhouette.{ Authenticator, AuthenticatorException, LoginInfo }
+import silhouette.{ Authenticator, LoginInfo }
 
 import scala.json.ast._
 import scala.util.{ Failure, Try }

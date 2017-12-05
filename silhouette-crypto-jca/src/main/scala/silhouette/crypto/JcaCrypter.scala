@@ -22,7 +22,7 @@ import javax.crypto.Cipher
 import javax.crypto.spec.{ IvParameterSpec, SecretKeySpec }
 
 import silhouette.crypto.JcaCrypter._
-import silhouette.exceptions.CryptoException
+import silhouette.crypto.exceptions.CryptoException
 
 /**
  * Crypter implementation based on JCA (Java Cryptography Architecture).
