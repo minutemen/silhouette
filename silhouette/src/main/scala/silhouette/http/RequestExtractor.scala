@@ -17,16 +17,14 @@
  */
 package silhouette.http
 
-import silhouette.util.Logging
-
-import scala.language.implicitConversions
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * Adds the ability to extract values from a request.
  *
  * @tparam R The type of the request.
  */
-trait RequestExtractor[R] extends Logging {
+trait RequestExtractor[R] extends LazyLogging {
   self: RequestPipeline[R] =>
 
   /**
@@ -64,7 +62,7 @@ trait RequestExtractor[R] extends Logging {
    */
   protected def fromQueryString(name: String, parts: Option[Parts]): Option[String] = {
     isAllowed(RequestPart.QueryString, parts) {
-      logger.debug(s"[Silhouette] Try to extract value with name `$name` from query string: $rawQueryString")
+      logger.debug(s"Try to extract value with name `$name` from query string: $rawQueryString")
       queryParam(name).headOption
     }
   }
@@ -78,7 +76,7 @@ trait RequestExtractor[R] extends Logging {
    */
   protected def fromHeaders(name: String, parts: Option[Parts]): Option[String] = {
     isAllowed(RequestPart.Headers, parts) {
-      logger.debug(s"[Silhouette] Try to extract value with name `$name` from headers: $headers")
+      logger.debug(s"Try to extract value with name `$name` from headers: $headers")
       header(name).headOption
     }
   }
@@ -92,9 +90,9 @@ trait RequestExtractor[R] extends Logging {
    */
   protected def fromFormUrlEncoded(name: String, parts: Option[Parts]): Option[String] = {
     isAllowed(RequestPart.FormUrlEncodedBody, parts) {
-      bodyExtractor.fromJson(name).flatMap {
+      bodyExtractor.fromFormUrlEncoded(name).flatMap {
         case (body, maybeValue) =>
-          logger.debug(s"[Silhouette] Try to extract value with name `$name` from form url encoded body: $body")
+          logger.debug(s"Try to extract value with name `$name` from form url encoded body: $body")
           maybeValue
       }
     }
@@ -111,7 +109,7 @@ trait RequestExtractor[R] extends Logging {
     isAllowed(RequestPart.JsonBody, parts) {
       bodyExtractor.fromJson(name).flatMap {
         case (body, maybeValue) =>
-          logger.debug(s"[Silhouette] Try to extract value with name `$name` from Json body: $body")
+          logger.debug(s"Try to extract value with name `$name` from Json body: $body")
           maybeValue
       }
     }
@@ -128,7 +126,7 @@ trait RequestExtractor[R] extends Logging {
     isAllowed(RequestPart.XMLBody, parts) {
       bodyExtractor.fromJson(name).flatMap {
         case (body, maybeValue) =>
-          logger.debug(s"[Silhouette] Try to extract value with name `$name` from Xml body: $body")
+          logger.debug(s"Try to extract value with name `$name` from Xml body: $body")
           maybeValue
       }
     }

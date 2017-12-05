@@ -37,7 +37,8 @@ import scala.xml._
 private[silhouette] final case class Body(
   contentType: ContentType,
   codec: Codec = Body.DefaultCodec,
-  data: Array[Byte])
+  data: Array[Byte]
+)
 
 /**
  * The companion object of the [[Body]].
@@ -150,5 +151,5 @@ private[silhouette] object DefaultBodyFormat {
   /**
    * The error messages.
    */
-  val UnsupportedContentType: String = "[Silhouette][DefaultBodyFormat] Expected %s but found %s"
+  val UnsupportedContentType: String = "Expected %s but found %s"
 }

@@ -23,31 +23,14 @@ package silhouette.http
  * Frameworks should create an implicit conversion between the implementation of this pipeline and
  * the Framework specific response instance.
  *
- * @tparam P The type of the response.
+ * @tparam R The type of the response.
  */
-protected[silhouette] trait ResponsePipeline[P] {
+protected[silhouette] trait ResponsePipeline[R] {
 
   /**
    * The framework specific response implementation.
    */
-  val response: P
-
-  /**
-   * A marker flag which indicates that an operation on an authenticator was processed and
-   * therefore it shouldn't be updated automatically.
-   *
-   * Due the fact that the update method gets called on every subsequent request to update the
-   * authenticator related data in the backing store and in the result, it isn't possible to
-   * discard or renew the authenticator simultaneously. This is because the "update" method would
-   * override the result created by the "renew" or "discard" method, because it will be executed
-   * as last in the chain.
-   *
-   * As example:
-   * If we discard the session in a Silhouette endpoint then it will be removed from session. But
-   * at the end the update method will embed the session again, because it gets called with the
-   * result of the endpoint.
-   */
-  protected[silhouette] val touched = false
+  val response: R
 
   /**
    * Gets all headers.
@@ -122,7 +105,7 @@ protected[silhouette] trait ResponsePipeline[P] {
    * @param headers The headers to set.
    * @return A new response pipeline instance with the set headers.
    */
-  def withHeaders(headers: (String, String)*): ResponsePipeline[P]
+  def withHeaders(headers: (String, String)*): ResponsePipeline[R]
 
   /**
    * Gets the list of cookies.
@@ -187,7 +170,7 @@ protected[silhouette] trait ResponsePipeline[P] {
    * @param cookies The cookies to set.
    * @return A new response pipeline instance with the set cookies.
    */
-  def withCookies(cookies: Cookie*): ResponsePipeline[P]
+  def withCookies(cookies: Cookie*): ResponsePipeline[R]
 
   /**
    * Gets the session data.
@@ -244,7 +227,7 @@ protected[silhouette] trait ResponsePipeline[P] {
    * @param data The session data to set.
    * @return A new response pipeline instance with the set session data.
    */
-  def withSession(data: (String, String)*): ResponsePipeline[P]
+  def withSession(data: (String, String)*): ResponsePipeline[R]
 
   /**
    * Creates a new response pipeline without the given session keys.
@@ -252,19 +235,12 @@ protected[silhouette] trait ResponsePipeline[P] {
    * @param keys The session keys to remove.
    * @return A new response pipeline instance with the removed session data.
    */
-  def withoutSession(keys: String*): ResponsePipeline[P]
+  def withoutSession(keys: String*): ResponsePipeline[R]
 
   /**
    * Unboxes the framework specific response implementation.
    *
    * @return The framework specific response implementation.
    */
-  def unbox: P
-
-  /**
-   * Touches a response.
-   *
-   * @return A touched response pipeline.
-   */
-  protected[silhouette] def touch: ResponsePipeline[P]
+  def unbox: R
 }

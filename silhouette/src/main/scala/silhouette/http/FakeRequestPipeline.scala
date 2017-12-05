@@ -25,7 +25,7 @@ import java.net.URLEncoder
  * @param headers     The headers.
  * @param cookies     The cookies.
  * @param session     The session.
- * @param queryParams The query params
+ * @param queryParams The query params.
  */
 protected[silhouette] case class FakeRequest(
   headers: Map[String, Seq[String]] = Map(),
@@ -38,7 +38,7 @@ protected[silhouette] case class FakeRequest(
  *
  * @param request The request this pipeline handles.
  */
-protected[silhouette] case class FakeRequestPipeline(request: FakeRequest = FakeRequest())
+final protected[silhouette] case class FakeRequestPipeline(request: FakeRequest = FakeRequest())
   extends RequestPipeline[FakeRequest] {
 
   /**

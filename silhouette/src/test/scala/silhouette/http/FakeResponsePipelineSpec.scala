@@ -170,12 +170,6 @@ class FakeResponsePipelineSpec extends Specification {
     }
   }
 
-  "The touch method" should {
-    "touch a response" in new Context {
-      responsePipeline.touch.touched must beTrue
-    }
-  }
-
   /**
    * The context.
    */

@@ -109,10 +109,9 @@ class JcaCookieSigner(settings: JcaCookieSignerSettings) extends CookieSigner {
  */
 object JcaCookieSigner {
 
-  val BadSignature = "[Silhouette][JcaCookieSigner] Bad signature"
-  val UnknownVersion = "[Silhouette][JcaCookieSigner] Unknown version: %s"
-  val InvalidMessageFormat = "[Silhouette][JcaCookieSigner] Invalid message format; " +
-    "Expected [VERSION]-[SIGNATURE]-[DATA]"
+  val BadSignature = "Bad signature"
+  val UnknownVersion = "Unknown version: %s"
+  val InvalidMessageFormat = "Invalid message format; Expected [VERSION]-[SIGNATURE]-[DATA]"
 }
 
 /**

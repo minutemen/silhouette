@@ -53,7 +53,7 @@ class BasicAuthorizationHeaderSpec extends Specification {
 
   "The `write` method" should {
     "return a 'Basic' auth header for the given credentials" in new Context {
-      format.write(Credentials("user", "pass")) must beSuccessfulTry(s"Basic ${Base64.encode(s"user:pass")}")
+      format.write(Credentials("user", "pass")) must be equalTo s"Basic ${Base64.encode(s"user:pass")}"
     }
   }
 

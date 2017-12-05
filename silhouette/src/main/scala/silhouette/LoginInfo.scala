@@ -17,6 +17,9 @@
  */
 package silhouette
 
+import io.circe.generic.semiauto._
+import io.circe.{ Decoder, Encoder }
+
 /**
  * Represents a linked login for an identity (i.e. a local username/password or a Facebook/Google account).
  *
@@ -26,3 +29,11 @@ package silhouette
  * @param providerKey A unique key which identifies a user on this provider (userID, email, ...).
  */
 case class LoginInfo(providerID: String, providerKey: String)
+
+/**
+ * The companion object.
+ */
+object LoginInfo {
+  implicit val loginInfoDecoder: Decoder[LoginInfo] = deriveDecoder
+  implicit val loginInfoEncoder: Encoder[LoginInfo] = deriveEncoder
+}

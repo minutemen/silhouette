@@ -17,6 +17,9 @@
  */
 package silhouette.http
 
+import silhouette.crypto.Hash
+import silhouette.crypto.Hash._
+
 /**
  * Decorates a framework specific request implementation.
  *
@@ -306,6 +309,36 @@ protected[silhouette] trait RequestPipeline[R] extends RequestExtractor[R] {
    * @return A new request pipeline instance with the set query params.
    */
   def withQueryParams(params: (String, String)*): RequestPipeline[R]
+
+  /**
+   * Generates a default fingerprint from common request headers.
+   *
+   * A generator which creates a SHA1 fingerprint from `User-Agent`, `Accept-Language` and `Accept-Charset` headers.
+   *
+   * The `Accept` header would also be a good candidate, but this header makes problems in applications
+   * which uses content negotiation. So the default fingerprint generator doesn't include it.
+   *
+   * The same with `Accept-Encoding`. But in Chromium/Blink based browser the content of this header may
+   * be changed during requests.
+   *
+   * @return A default fingerprint from the request.
+   */
+  def fingerprint: String = {
+    Hash.sha1(new StringBuilder()
+      .append(headers.getOrElse("User-Agent", Seq("")).mkString(",")).append(":")
+      .append(headers.getOrElse("Accept-Language", Seq("")).mkString(",")).append(":")
+      .append(headers.getOrElse("Accept-Charset", Seq("")).mkString(","))
+      .toString()
+    )
+  }
+
+  /**
+   * Generates a fingerprint from request.
+   *
+   * @param generator A generator function to create a fingerprint from request.
+   * @return A fingerprint of the client.
+   */
+  def fingerprint(generator: R => String): String = generator(request)
 
   /**
    * Unboxes the framework specific request implementation.

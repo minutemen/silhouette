@@ -20,15 +20,15 @@ package silhouette.http.transport.format
 import silhouette.Credentials
 import silhouette.crypto.Base64
 import silhouette.exceptions.TransformException
-import silhouette.http.TransportFormat
 import silhouette.http.transport.format.BasicAuthHeaderFormat._
+import silhouette.util.{ Reads, Writes }
 
 import scala.util.{ Failure, Success, Try }
 
 /**
  * Handles the transformation of the "basic" `Authorization` header.
  */
-final class BasicAuthHeaderFormat extends TransportFormat[Credentials] {
+final case class BasicAuthHeaderFormat() extends Reads[String, Try[Credentials]] with Writes[Credentials, String] {
 
   /**
    * Transforms the "basic" `Authorization` header value into some [[Credentials]].
@@ -38,9 +38,9 @@ final class BasicAuthHeaderFormat extends TransportFormat[Credentials] {
    */
   override def read(header: String): Try[Credentials] = {
     if (header.startsWith("Basic ")) {
-      Base64.decode(header.replace("Basic ", "")).split(":", 2).toList match {
-        case List(identifier, password) => Success(Credentials(identifier, password))
-        case _                          => Failure(new TransformException(InvalidBasicAuthHeader))
+      Base64.decode(header.replace("Basic ", "")).split(":", 2) match {
+        case Array(identifier, password) => Success(Credentials(identifier, password))
+        case _                           => Failure(new TransformException(InvalidBasicAuthHeader))
       }
     } else {
       Failure(new TransformException(MissingBasicAuthIdentifier))
@@ -53,8 +53,8 @@ final class BasicAuthHeaderFormat extends TransportFormat[Credentials] {
    * @param credentials The credentials to encode.
    * @return The "basic" `Authorization` header value.
    */
-  override def write(credentials: Credentials): Try[String] = {
-    Try(s"Basic ${Base64.encode(s"${credentials.identifier}:${credentials.password}")}")
+  override def write(credentials: Credentials): String = {
+    s"Basic ${Base64.encode(s"${credentials.identifier}:${credentials.password}")}"
   }
 }
 
@@ -62,7 +62,6 @@ final class BasicAuthHeaderFormat extends TransportFormat[Credentials] {
  * The companion object of the [[BasicAuthHeaderFormat]] class.
  */
 object BasicAuthHeaderFormat {
-  val MissingBasicAuthIdentifier = "[Silhouette][BasicAuthHeaderFormat] Header doesn't start with 'Basic '"
-  val InvalidBasicAuthHeader = "[Silhouette][BasicAuthHeaderFormat] A basic auth header must consists of two " +
-    "parts divided by a colon"
+  val MissingBasicAuthIdentifier = "Header doesn't start with 'Basic '"
+  val InvalidBasicAuthHeader = "A basic auth header must consists of two parts divided by a colon"
 }

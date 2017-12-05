@@ -22,13 +22,13 @@ import org.specs2.specification.Scope
 import silhouette.http._
 
 /**
- * Test case for the [[QueryStringRequestTransport]] class.
+ * Test case for the [[QueryStringTransport]] class.
  */
 class QueryStringTransportSpec extends Specification {
 
-  "The `withSettings` method" should {
-    "allow to override the settings" in new Context {
-      transport.withSettings(_.copy("not-name")).settings.name must be equalTo "not-name"
+  "The `copy` method" should {
+    "allow to override the name" in new Context {
+      transport.copy("not-name").name must be equalTo "not-name"
     }
   }
 
@@ -44,11 +44,29 @@ class QueryStringTransportSpec extends Specification {
     }
   }
 
-  "The `embed` method" should {
-    "embed a query param into the request" in new Context {
+  "The `smuggle` method" should {
+    "smuggle a query param into the request" in new Context {
       override val request = FakeRequest()
 
-      transport.embed("payload", requestPipeline).queryParam("test").head must be equalTo "payload"
+      transport.smuggle("payload", requestPipeline).queryParam("test").head must be equalTo "payload"
+    }
+  }
+
+  "The `RetrieveFromQueryString` reads" should {
+    "return some payload from the query param with the given name" in new Context {
+      RetrieveFromQueryString("test").read(requestPipeline) must beSome("payload")
+    }
+
+    "return None if no query param with the give name exists" in new Context {
+      RetrieveFromQueryString("not-existing").read(requestPipeline) must beNone
+    }
+  }
+
+  "The `SmuggleIntoQueryString` writes" should {
+    "smuggle a query param into the request" in new Context {
+      SmuggleIntoQueryString("test")
+        .write(("payload", requestPipeline))
+        .queryParam("test").head must be equalTo "payload"
     }
   }
 
@@ -58,14 +76,9 @@ class QueryStringTransportSpec extends Specification {
   trait Context extends Scope {
 
     /**
-     * The query string transport settings.
-     */
-    val settings = QueryStringTransportSettings(name = "test")
-
-    /**
      * The query string transport to test.
      */
-    val transport = QueryStringRequestTransport(settings)
+    val transport = QueryStringTransport("test")
 
     /**
      * A fake request.

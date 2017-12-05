@@ -25,6 +25,7 @@ libraryDependencies ++= Seq(
   Library.Circe.core,
   Library.Circe.generic,
   Library.Circe.parser,
-  Library.scalaXml
+  Library.scalaXml,
+  Library.scalaLogging
 )
 enablePlugins(Doc)

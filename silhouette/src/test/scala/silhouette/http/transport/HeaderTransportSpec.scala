@@ -19,6 +19,8 @@ package silhouette.http.transport
 
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
+import silhouette.Credentials
+import silhouette.crypto.Base64
 import silhouette.http._
 
 /**
@@ -26,9 +28,9 @@ import silhouette.http._
  */
 class HeaderTransportSpec extends Specification {
 
-  "The `withSettings` method" should {
-    "allow to override the settings" in new Context {
-      transport.withSettings(_.copy("not-name")).settings.name must be equalTo "not-name"
+  "The `copy` method" should {
+    "allow to override the name" in new Context {
+      transport.copy("not-name").name must be equalTo "not-name"
     }
   }
 
@@ -44,11 +46,11 @@ class HeaderTransportSpec extends Specification {
     }
   }
 
-  "The `embed` method" should {
-    "embed a header into the request" in new Context {
+  "The `smuggle` method" should {
+    "smuggle a header into the request" in new Context {
       override val request = FakeRequest()
 
-      transport.embed("payload", requestPipeline).header("test").head must be equalTo "payload"
+      transport.smuggle("payload", requestPipeline).header("test").head must be equalTo "payload"
     }
   }
 
@@ -60,11 +62,97 @@ class HeaderTransportSpec extends Specification {
     }
   }
 
-  "The `discard` method" should {
-    "return the unchanged response" in new Context {
-      override val response = FakeResponse()
+  "The `RetrieveFromHeader` reads" should {
+    "return some payload from the header with the given name" in new Context {
+      RetrieveFromHeader("test").read(requestPipeline) must beSome("payload")
+    }
 
-      transport.discard(responsePipeline) should be equalTo responsePipeline
+    "return None if no header with the give name exists" in new Context {
+      RetrieveFromHeader("not-existing").read(requestPipeline) must beNone
+    }
+  }
+
+  "The `RetrieveBearerTokenFromHeader` reads" should {
+    "return some bearer token from the header with the given name" in new Context {
+      override val request = FakeRequest(headers = Map("Authorization" -> Seq("Bearer token")))
+
+      RetrieveBearerTokenFromHeader().read(requestPipeline) must beSome("token")
+    }
+
+    "return None if no header with the give name exists" in new Context {
+      RetrieveBearerTokenFromHeader("not-existing").read(requestPipeline) must beNone
+    }
+
+    "return None if the header couldn't be extracted successfully" in new Context {
+      override val request = FakeRequest(headers = Map("Authorization" -> Seq("wrong token")))
+
+      RetrieveBearerTokenFromHeader().read(requestPipeline) must beNone
+    }
+  }
+
+  "The `RetrieveBasicCredentialsFromHeader` reads" should {
+    "return some basic credentials from the header with the given name" in new Context {
+      override val request = FakeRequest(headers = Map("Authorization" -> Seq(s"Basic ${Base64.encode(s"user:pass")}")))
+
+      RetrieveBasicCredentialsFromHeader().read(requestPipeline) must beSome(Credentials("user", "pass"))
+    }
+
+    "return None if no header with the give name exists" in new Context {
+      RetrieveBasicCredentialsFromHeader("not-existing").read(requestPipeline) must beNone
+    }
+
+    "return None if the header couldn't be extracted successfully" in new Context {
+      override val request = FakeRequest(headers = Map("Authorization" -> Seq("wrong: credentials")))
+
+      RetrieveBasicCredentialsFromHeader().read(requestPipeline) must beNone
+    }
+  }
+
+  "The `SmuggleIntoHeader` writes" should {
+    "smuggle a header into the request" in new Context {
+      SmuggleIntoHeader("test")
+        .write(("payload", requestPipeline))
+        .header("test").head must be equalTo "payload"
+    }
+  }
+
+  "The `SmuggleBearerTokenIntoHeader` writes" should {
+    "smuggle a bearer token header into the request" in new Context {
+      SmuggleBearerTokenIntoHeader()
+        .write(("token", requestPipeline))
+        .header("Authorization").head must be equalTo "Bearer token"
+    }
+  }
+
+  "The `SmuggleBasicCredentialsIntoHeader` writes" should {
+    "smuggle a basic auth header into the request" in new Context {
+      SmuggleBasicCredentialsIntoHeader()
+        .write((Credentials("user", "pass"), requestPipeline))
+        .header("Authorization").head must be equalTo s"Basic ${Base64.encode(s"user:pass")}"
+    }
+  }
+
+  "The `EmbedIntoHeader` writes" should {
+    "embed a header into the request" in new Context {
+      EmbedIntoHeader("test")
+        .write(("payload", responsePipeline))
+        .header("test").head must be equalTo "payload"
+    }
+  }
+
+  "The `SmuggleBearerTokenIntoHeader` writes" should {
+    "embed a bearer token header into the request" in new Context {
+      EmbedBearerTokenIntoHeader()
+        .write(("token", responsePipeline))
+        .header("Authorization").head must be equalTo "Bearer token"
+    }
+  }
+
+  "The `EmbedBasicCredentialsIntoHeader` writes" should {
+    "embed a basic auth header into the request" in new Context {
+      EmbedBasicCredentialsIntoHeader()
+        .write((Credentials("user", "pass"), responsePipeline))
+        .header("Authorization").head must be equalTo s"Basic ${Base64.encode(s"user:pass")}"
     }
   }
 
@@ -74,14 +162,9 @@ class HeaderTransportSpec extends Specification {
   trait Context extends Scope {
 
     /**
-     * The header transport settings.
-     */
-    val settings = HeaderTransportSettings(name = "test")
-
-    /**
      * The header transport to test.
      */
-    val transport = HeaderTransport(settings)
+    val transport = HeaderTransport("test")
 
     /**
      * A fake request.

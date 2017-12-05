@@ -100,10 +100,10 @@ class JcaCrypter(settings: JcaCrypterSettings) extends Crypter {
  */
 object JcaCrypter {
 
-  val UnderlyingIVBug = "[Silhouette][JcaCrypter] Cannot get IV! There must be a bug in your underlying JCE " +
+  val UnderlyingIVBug = "Cannot get IV! There must be a bug in your underlying JCE " +
     "implementation; The AES/CTR/NoPadding transformation should always provide an IV"
-  val UnexpectedFormat = "[Silhouette][JcaCrypter] Unexpected format; expected [VERSION]-[ENCRYPTED STRING]"
-  val UnknownVersion = "[Silhouette][JcaCrypter] Unknown version: %s"
+  val UnexpectedFormat = "Unexpected format; expected [VERSION]-[ENCRYPTED STRING]"
+  val UnknownVersion = "Unknown version: %s"
 }
 
 /**
