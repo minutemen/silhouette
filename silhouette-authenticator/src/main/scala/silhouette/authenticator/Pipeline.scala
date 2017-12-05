@@ -111,7 +111,7 @@ trait AuthenticationPipeline[S, I <: Identity] extends util.Reads[S, Future[Stat
     implicit
     ec: ExecutionContext
   ): Future[State[I]] = {
-    future.flatMap(transformer).recover { case e: Throwable => FaultyAuthenticator[I](e) }
+    future.flatMap(transformer).recover { case e: Throwable => Failure[I](e) }
   }
 
   /**

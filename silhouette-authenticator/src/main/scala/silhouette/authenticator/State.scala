@@ -34,19 +34,19 @@ import silhouette.{ Authenticator, Identity }
 sealed trait State[I <: Identity]
 
 /**
+ * Represents a state where a failure occurred in the authentication process.
+ *
+ * @param cause An exception that indicates the cause.
+ * @tparam I The type of the identity.
+ */
+final case class Failure[I <: Identity](cause: Throwable) extends State[I]
+
+/**
  * Represents a state where no authenticator was found.
  *
  * @tparam I The type of the identity.
  */
 final case class MissingAuthenticator[I <: Identity]() extends State[I]
-
-/**
- * Represents a state where a faulty authenticator was found.
- *
- * @param cause An exception that indicates the cause.
- * @tparam I The type of the identity.
- */
-final case class FaultyAuthenticator[I <: Identity](cause: Throwable) extends State[I]
 
 /**
  * Represents a state where in invalid authenticator was found.

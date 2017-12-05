@@ -18,30 +18,26 @@
 package silhouette.authenticator.pipeline
 
 import silhouette.Authenticator
-import silhouette.authenticator.{ StatefulWrites, WritePipeline }
+import silhouette.authenticator.{ StatelessWrites, WritePipeline }
 import silhouette.http.{ EmbedWrites, ResponsePipeline }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * Uses a stateful approach to embed the [[Authenticator]] into the response.
+ * Uses a stateless approach to embed the [[Authenticator]] into the response.
  *
- * The stateful approach stores the [[Authenticator]] instance itself in a server side backing store. On subsequent
- * requests the [[Authenticator]] ID which is stored in the serialized [[Authenticator]] can be validated against the
- * backing store. This stateful approach could also be named “server side session”.
+ * The stateless approach stores a serialized form of the [[Authenticator]] in the [[silhouette.http.ResponsePipeline]].
+ * It doesn't need a backing store and it's more scalable. This stateless approach could also be named “client side
+ * session”.
  *
- * Note: If deploying to multiple nodes, the backing store will need to synchronize.
- *
- * @param statefulWriter      A writer to write the stateful [[Authenticator]] to a backing store.
  * @param authenticatorWrites A writes that transforms the [[Authenticator]] into a serialized form of
  *                            the [[Authenticator]].
  * @param embedWrites         A writes that embeds the [[Authenticator]] into the [[silhouette.http.ResponsePipeline]].
  * @param ec                  The execution context.
  * @tparam R The type of the response.
  */
-final case class EmbedStateful[R](
-  statefulWriter: Authenticator => Future[Authenticator],
-  authenticatorWrites: StatefulWrites,
+final case class EmbedStatelessPipeline[R](
+  authenticatorWrites: StatelessWrites,
   embedWrites: EmbedWrites[R, String]
 )(
   implicit
@@ -56,11 +52,6 @@ final case class EmbedStateful[R](
    *           which the [[Authenticator]] should be embedded.
    * @return The response pipeline with the embedded [[Authenticator]].
    */
-  override def write(in: (Authenticator, ResponsePipeline[R])): Future[ResponsePipeline[R]] = {
-    statefulWriter(in._1).flatMap { authenticator =>
-      authenticatorWrites.write(authenticator).map { payload =>
-        embedWrites.write(payload -> in._2)
-      }
-    }
-  }
+  override def write(in: (Authenticator, ResponsePipeline[R])): Future[ResponsePipeline[R]] =
+    authenticatorWrites.write(in._1).map(payload => embedWrites.write(payload -> in._2))
 }

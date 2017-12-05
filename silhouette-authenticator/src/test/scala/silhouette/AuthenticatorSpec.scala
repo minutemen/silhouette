@@ -171,7 +171,7 @@ class AuthenticatorSpec(implicit ev: ExecutionEnv) extends Specification with Mo
      */
     val authenticator = Authenticator(
       id = "test-id",
-      loginInfo = LoginInfo("test", "test")
+      loginInfo = LoginInfo("credentials", "john@doe.com")
     )
   }
 }

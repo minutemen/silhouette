@@ -32,9 +32,9 @@ import scala.language.postfixOps
  * @param identityReader The reader to retrieve the [[Identity]] for the [[LoginInfo]] stored in the
  *                       [[silhouette.Authenticator]] from the persistence layer.
  * @param validators     The list of validators to apply to the [[silhouette.Authenticator]].
- * @param authorization  The [[Authorization]] to apply to the [[Identity]].
+ * @param authorization  The [[Authorization]] to apply to the [[silhouette.Authenticator]] and the [[Identity]].
  */
-final case class ReadsAuthentication[I <: Identity](
+final case class ReadsAuthenticationPipeline[I <: Identity](
   reads: Reads,
   identityReader: LoginInfo => Future[Option[I]],
   override val validators: Set[Validator] = Set(),

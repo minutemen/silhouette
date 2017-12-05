@@ -44,7 +44,7 @@ trait Authorization[I <: Identity] {
  *
  * @tparam I The type of the identity.
  */
-case class Authorized[I <: Identity]() extends Authorization[I] {
+final case class Authorized[I <: Identity]() extends Authorization[I] {
 
   /**
    * Checks whether the user is authorized or not.
@@ -54,6 +54,23 @@ case class Authorized[I <: Identity]() extends Authorization[I] {
    * @return True if the user is authorized, false otherwise.
    */
   override def isAuthorized(identity: I, authenticator: Authenticator): Future[Boolean] = Future.successful(true)
+}
+
+/**
+ * An authorization that returns always false.
+ *
+ * @tparam I The type of the identity.
+ */
+final case class Unauthorized[I <: Identity]() extends Authorization[I] {
+
+  /**
+   * Checks whether the user is authorized or not.
+   *
+   * @param identity      The current identity instance.
+   * @param authenticator The current authenticator instance.
+   * @return True if the user is authorized, false otherwise.
+   */
+  override def isAuthorized(identity: I, authenticator: Authenticator): Future[Boolean] = Future.successful(false)
 }
 
 /**

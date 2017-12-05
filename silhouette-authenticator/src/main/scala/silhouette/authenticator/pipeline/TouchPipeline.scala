@@ -36,7 +36,7 @@ import scala.concurrent.Future
  *
  * @param clock The clock instance.
  */
-final case class Touch(clock: Clock) extends TransformPipeline {
+final case class TouchPipeline(clock: Clock) extends TransformPipeline {
 
   /**
    * Apply the pipeline.

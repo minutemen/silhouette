@@ -36,7 +36,7 @@ import scala.json.ast.{ JArray, JObject, JString }
  * mapping between the JWT and a stored instance, it's possible to invalidate the authenticators server side. Therefore
  * this write can be used in a stateless and a stateful manner.
  *
- * @param writes    The JWT writes.
+ * @param writes    The underlying JWT writes implementation.
  * @param issuer    The JWT 'iss' claim.
  * @param audience  The JWT 'aud' claim.
  * @param notBefore The JWT 'nbf' claim.

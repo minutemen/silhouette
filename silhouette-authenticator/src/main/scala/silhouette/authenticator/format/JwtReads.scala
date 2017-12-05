@@ -36,7 +36,7 @@ import scala.util.{ Failure, Success, Try }
  * mapping between the JWT and a stored instance, it's possible to invalidate the authenticators server side. Therefore
  * this reads can be used in a stateless and a stateful manner.
  *
- * @param jwtReads The JWT reads implementation.
+ * @param jwtReads The underlying JWT reads implementation.
  */
 final case class JwtReads(jwtReads: jwt.Reads) extends StatelessReads with StatefulReads {
 
