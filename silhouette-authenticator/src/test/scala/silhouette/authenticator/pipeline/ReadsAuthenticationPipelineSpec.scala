@@ -22,8 +22,9 @@ import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import silhouette.authenticator._
+import silhouette.authenticator.exceptions.AuthenticatorException
 import silhouette.specs2.WaitPatience
-import silhouette.{ Authenticator, AuthenticatorException, Identity, LoginInfo }
+import silhouette.{ Authenticator, Identity, LoginInfo }
 
 import scala.concurrent.Future
 

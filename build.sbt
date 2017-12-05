@@ -17,69 +17,67 @@
  */
 import sbt._
 
-lazy val buildVersions: TaskKey[Unit] = taskKey[Unit]("Show some build versions")
+lazy val buildVersions = taskKey[Unit]("Show some build versions")
 
-val silhouetteSpecs2 = Project(
-  id = "silhouette-specs2",
-  base = file("silhouette-specs2")
-)
+lazy val `silhouette-authenticator` = (project in file("silhouette-authenticator"))
+  .dependsOn(`silhouette-core`, `silhouette-crypto`, `silhouette-http`, `silhouette-jwt`, `silhouette-specs2` % Test)
 
-val silhouette = Project(
-  id = "silhouette",
-  base = file("silhouette"),
-  dependencies = Seq(silhouetteSpecs2 % Test)
-)
+lazy val `silhouette-core` = (project in file("silhouette-core"))
+  .dependsOn(`silhouette-specs2` % Test)
 
-val silhouetteAuthenticator = Project(
-  id = "silhouette-authenticator",
-  base = file("silhouette-authenticator"),
-  dependencies = Seq(silhouette, silhouetteSpecs2 % Test)
-)
+lazy val `silhouette-crypto` = (project in file("silhouette-crypto"))
+  .dependsOn(`silhouette-core`, `silhouette-specs2` % Test)
 
-val silhouetteCryptoJca = Project(
-  id = "silhouette-crypto-jca",
-  base = file("silhouette-crypto-jca"),
-  dependencies = Seq(silhouette, silhouetteSpecs2 % Test)
-)
+lazy val `silhouette-crypto-jca` = (project in file("silhouette-crypto-jca"))
+  .dependsOn(`silhouette-core`, `silhouette-crypto`, `silhouette-specs2` % Test)
 
-val silhouetteJwtJose4j = Project(
-  id = "silhouette-jwt-jose4j",
-  base = file("silhouette-jwt-jose4j"),
-  dependencies = Seq(silhouette, silhouetteSpecs2 % Test)
-)
+lazy val `silhouette-http` = (project in file("silhouette-http"))
+  .dependsOn(`silhouette-core`, `silhouette-crypto`, `silhouette-specs2` % Test)
 
-val silhouettePasswordBcrypt = Project(
-  id = "silhouette-password-bcrypt",
-  base = file("silhouette-password-bcrypt"),
-  dependencies = Seq(silhouette, silhouetteSpecs2 % Test)
-)
+lazy val `silhouette-jwt` = (project in file("silhouette-jwt"))
+  .dependsOn(`silhouette-core`, `silhouette-specs2` % Test)
 
-val silhouettePersistence = Project(
-  id = "silhouette-persistence",
-  base = file("silhouette-persistence"),
-  dependencies = Seq(silhouette, silhouetteSpecs2 % Test)
-)
+lazy val `silhouette-jwt-jose4j` = (project in file("silhouette-jwt-jose4j"))
+  .dependsOn(`silhouette-core`, `silhouette-crypto`, `silhouette-jwt`, `silhouette-specs2` % Test)
 
-val root = Project(
-  id = "root",
-  base = file("."),
-  aggregate = Seq(
-    silhouette,
-    silhouetteAuthenticator,
-    silhouetteCryptoJca,
-    silhouetteJwtJose4j,
-    silhouetteSpecs2,
-    silhouettePasswordBcrypt,
-    silhouettePersistence
-  ),
-  settings = Defaults.coreDefaultSettings ++
-    Seq(
-      publish := {},
-      buildVersions := {
-        // scalastyle:off println
-        println(s"PROJECT_VERSION ${version.value}")
-        println(s"SCALA_VERSION ${scalaVersion.value}")
-        // scalastyle:on println
-      }
-    )
-)
+lazy val `silhouette-password` = (project in file("silhouette-password"))
+  .dependsOn(`silhouette-core`, `silhouette-crypto`, `silhouette-specs2` % Test)
+
+lazy val `silhouette-password-bcrypt` = (project in file("silhouette-password-bcrypt"))
+  .dependsOn(`silhouette-core`, `silhouette-password`, `silhouette-specs2` % Test)
+
+lazy val `silhouette-provider` = (project in file("silhouette-provider"))
+  .dependsOn(`silhouette-core`, `silhouette-http`, `silhouette-specs2` % Test)
+
+lazy val `silhouette-persistence` = (project in file("silhouette-persistence"))
+  .dependsOn(`silhouette-core`, `silhouette-password`, `silhouette-specs2` % Test)
+
+lazy val `silhouette-specs2` = project in file("silhouette-specs2")
+
+lazy val `silhouette-util` = (project in file("silhouette-util"))
+  .dependsOn(`silhouette-core`, `silhouette-specs2` % Test)
+
+lazy val silhouette = (project in file("."))
+  .aggregate(
+    `silhouette-authenticator`,
+    `silhouette-core`,
+    `silhouette-crypto`,
+    `silhouette-crypto-jca`,
+    `silhouette-http`,
+    `silhouette-jwt`,
+    `silhouette-jwt-jose4j`,
+    `silhouette-password`,
+    `silhouette-password-bcrypt`,
+    `silhouette-provider`,
+    `silhouette-persistence`,
+    `silhouette-specs2`,
+    `silhouette-util`
+  ).settings(
+    publish := {},
+    buildVersions := {
+      // scalastyle:off println
+      println(s"PROJECT_VERSION ${version.value}")
+      println(s"SCALA_VERSION ${scalaVersion.value}")
+      // scalastyle:on println
+    }
+  )

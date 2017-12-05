@@ -20,7 +20,7 @@ package silhouette.crypto
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.crypto.JcaCrypter._
-import silhouette.exceptions.CryptoException
+import silhouette.crypto.exceptions.CryptoException
 
 /**
  * Test case for the [[JcaCrypter]] class.

@@ -18,10 +18,11 @@
 package silhouette.authenticator.format
 
 import io.circe.jawn.decode
+import silhouette.authenticator.exceptions.AuthenticatorException
 import silhouette.authenticator.format.JwtReads._
 import silhouette.authenticator.{ StatefulReads, StatelessReads }
 import silhouette.crypto.Base64
-import silhouette.{ Authenticator, AuthenticatorException, LoginInfo, jwt }
+import silhouette.{ Authenticator, LoginInfo, jwt }
 
 import scala.concurrent.Future
 import scala.json.ast.{ JArray, JObject, JString }

@@ -21,9 +21,9 @@ import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
+import silhouette.authenticator.Authorization._
 import silhouette.specs2.WaitPatience
 import silhouette.{ Authenticator, Identity, LoginInfo }
-import Authorization._
 
 /**
  * Test case for the [[Authorization]] class.

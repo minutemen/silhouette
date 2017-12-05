@@ -19,7 +19,8 @@ package silhouette.authenticator.format
 
 import silhouette.authenticator.StatefulReads
 import silhouette.authenticator.format.SatReads._
-import silhouette.{ Authenticator, AuthenticatorException }
+import silhouette.Authenticator
+import silhouette.authenticator.exceptions.AuthenticatorException
 
 import scala.concurrent.{ ExecutionContext, Future }
 

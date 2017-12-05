@@ -17,8 +17,8 @@
  */
 package silhouette.authenticator
 
-import silhouette.util.Fitting.futureFittingToFutureOption
-import silhouette.{ Authenticator, Identity, LoginInfo, util }
+import silhouette._
+import silhouette.Fitting.futureFittingToFutureOption
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -41,7 +41,7 @@ sealed trait Pipeline
  * @tparam S The type of the source.
  * @tparam I The type of the identity.
  */
-trait AuthenticationPipeline[S, I <: Identity] extends util.Reads[S, Future[State[I]]] with Pipeline { self =>
+trait AuthenticationPipeline[S, I <: Identity] extends silhouette.Reads[S, Future[State[I]]] with Pipeline { self =>
 
   /**
    * Monkey patches a `Future[Authenticator]` to add a `toState` method which allows to transforms an [[Authenticator]]
@@ -75,7 +75,7 @@ trait AuthenticationPipeline[S, I <: Identity] extends util.Reads[S, Future[Stat
    *
    * @param value The instance to patch.
    */
-  final implicit class AuthenticatorFitting(value: Future[util.Fitting[Authenticator]]) {
+  final implicit class AuthenticatorFitting(value: Future[Fitting[Authenticator]]) {
     def toState(
       implicit
       ec: ExecutionContext
@@ -158,7 +158,7 @@ trait AuthenticationPipeline[S, I <: Identity] extends util.Reads[S, Future[Stat
 /**
  * Pipeline which transforms an authenticator into another authenticator.
  */
-trait TransformPipeline extends util.Writes[Authenticator, Future[Authenticator]]
+trait TransformPipeline extends silhouette.Writes[Authenticator, Future[Authenticator]]
 
 /**
  * Pipeline which merges an [[Authenticator]] and a target `T` into a target `T` that contains the given
@@ -166,4 +166,4 @@ trait TransformPipeline extends util.Writes[Authenticator, Future[Authenticator]
  *
  * @tparam T The type of the target.
  */
-trait WritePipeline[T] extends util.Writes[(Authenticator, T), Future[T]]
+trait WritePipeline[T] extends silhouette.Writes[(Authenticator, T), Future[T]]

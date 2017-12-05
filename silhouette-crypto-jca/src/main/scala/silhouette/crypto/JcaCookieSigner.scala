@@ -22,7 +22,7 @@ import javax.crypto.spec.SecretKeySpec
 
 import org.apache.commons.codec.binary.Hex
 import silhouette.crypto.JcaCookieSigner._
-import silhouette.exceptions.CryptoException
+import silhouette.crypto.exceptions.CryptoException
 
 import scala.util.{ Failure, Success, Try }
 

@@ -55,50 +55,11 @@ object BasicSettings extends AutoPlugin {
 }
 
 ////*******************************
-//// Scalariform settings
-////*******************************
-object CodeFormatter extends AutoPlugin {
-
-  import com.typesafe.sbt.SbtScalariform._
-
-  import scalariform.formatter.preferences._
-
-  lazy val BuildConfig = config("build") extend Compile
-  lazy val BuildSbtConfig = config("buildsbt") extend Compile
-
-  lazy val prefs = Seq(
-    ScalariformKeys.preferences := ScalariformKeys.preferences.value
-      .setPreference(FormatXml, false)
-      .setPreference(DoubleIndentClassDeclaration, false)
-      .setPreference(AlignSingleLineCaseStatements, true)
-      .setPreference(DanglingCloseParenthesis, Preserve)
-  )
-
-  override def trigger: PluginTrigger = allRequirements
-
-  override def projectSettings: Seq[Setting[_]] = defaultScalariformSettings ++ prefs ++
-    inConfig(BuildConfig)(configScalariformSettings) ++
-    inConfig(BuildSbtConfig)(configScalariformSettings) ++
-    Seq(
-      scalaSource in BuildConfig := baseDirectory.value / "project",
-      scalaSource in BuildSbtConfig := baseDirectory.value / "project",
-      includeFilter in (BuildConfig, ScalariformKeys.format) := ("*.scala": FileFilter),
-      includeFilter in (BuildSbtConfig, ScalariformKeys.format) := ("*.sbt": FileFilter),
-      ScalariformKeys.format in Compile := {
-        (ScalariformKeys.format in BuildSbtConfig).value
-        (ScalariformKeys.format in BuildConfig).value
-        (ScalariformKeys.format in Compile).value
-      }
-    )
-}
-
-////*******************************
 //// Doc settings
 ////*******************************
-object Doc extends AutoPlugin {
+/*object Doc extends AutoPlugin {
 
-  import com.typesafe.sbt.SbtGhPages.GhPagesKeys._
-  import com.typesafe.sbt.SbtGhPages.ghpages
+  import com.typesafe.sbt.sbtghpages.GhpagesPlugin._
   import com.typesafe.sbt.SbtGit.GitKeys._
   import com.typesafe.sbt.SbtGit.git
   import com.typesafe.sbt.SbtSite.SiteKeys._
@@ -134,10 +95,10 @@ object Doc extends AutoPlugin {
   override def projectSettings: Seq[Setting[_]] =
     unidocSettings ++
     site.settings ++
-    ghpages.settings ++
+    ghpagesProjectSettings ++
     scalaDocSettings ++
     apiDocPublishSettings
-}
+}*/
 
 ////*******************************
 //// Publish settings
@@ -188,7 +149,7 @@ object Publish extends AutoPlugin {
 ////*******************************
 //// Release settings
 ////*******************************
-object Release extends AutoPlugin {
+/*object Release extends AutoPlugin {
 
   import sbtrelease.ReleasePlugin.autoImport._
   import ReleaseTransformations._
@@ -218,3 +179,4 @@ object Release extends AutoPlugin {
     )
   )
 }
+*/

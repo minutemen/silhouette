@@ -28,7 +28,7 @@ import org.jose4j.jwt.consumer.JwtConsumerBuilder
 import org.specs2.matcher.MatchResult
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import silhouette.exceptions.JwtException
+import silhouette.jwt.exceptions.JwtException
 import silhouette.jwt.jose4j.Reads._
 import silhouette.jwt.jose4j.Writes._
 import silhouette.jwt.{ Claims, ReservedClaims }

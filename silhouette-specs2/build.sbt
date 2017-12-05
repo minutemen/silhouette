@@ -25,4 +25,4 @@ libraryDependencies ++= Seq(
   Library.bouncyCastle,
   Library.logbackClassic
 )
-enablePlugins(Doc)
+//enablePlugins(Doc)

@@ -22,4 +22,4 @@ libraryDependencies ++= Seq(
   Library.bouncyCastle % Test
 )
 
-enablePlugins(Doc)
+//enablePlugins(Doc)

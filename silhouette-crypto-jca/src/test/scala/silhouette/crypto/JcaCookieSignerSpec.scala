@@ -22,7 +22,7 @@ import java.util.regex.Pattern
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.crypto.JcaCookieSigner._
-import silhouette.exceptions.CryptoException
+import silhouette.crypto.exceptions.CryptoException
 
 /**
  * Test case for the [[JcaCookieSigner]] class.
