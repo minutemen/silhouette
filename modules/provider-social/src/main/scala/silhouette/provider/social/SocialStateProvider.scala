@@ -19,7 +19,7 @@ package silhouette.provider.social
 
 import io.circe.{ Decoder, Encoder }
 import silhouette.AuthInfo
-import silhouette.http.{ RequestPipeline, ResponsePipeline }
+import silhouette.http.{ RequestPipeline, ResponsePipeline, SilhouetteResponse }
 import silhouette.provider.social.state.StateItem
 
 import scala.concurrent.Future
@@ -33,7 +33,7 @@ import scala.reflect.ClassTag
  * @tparam A The type of the auth info.
  * @tparam S The type of the user state.
  */
-case class StatefulAuthInfo[+A <: AuthInfo, +S <: StateItem](authInfo: A, userState: S)
+case class StatefulAuthInfo[A <: AuthInfo, +S <: StateItem](authInfo: A, userState: S)
 
 /**
  * Extends the [[SocialProvider]] with the ability to handle provider specific state.
@@ -53,14 +53,13 @@ trait SocialStateProvider extends SocialProvider {
    * @param classTag The class tag for the user state item.
    * @tparam S The type of the user state item.
    * @tparam R The type of the request.
-   * @tparam P The type of the response.
    * @return Either a `ResponsePipeline` or the [[StatefulAuthInfo]] from the provider.
    */
-  def authenticate[S <: StateItem, R, P](userState: S)(
+  def authenticate[S <: StateItem, R](userState: S)(
     implicit
     decoder: Decoder[S],
     encoder: Encoder[S],
     request: RequestPipeline[R],
     classTag: ClassTag[S]
-  ): Future[Either[ResponsePipeline[P], StatefulAuthInfo[A, S]]]
+  ): Future[Either[ResponsePipeline[SilhouetteResponse], StatefulAuthInfo[A, S]]]
 }

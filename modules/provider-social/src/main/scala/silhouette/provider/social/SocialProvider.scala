@@ -19,9 +19,9 @@ package silhouette.provider.social
 
 import java.net.URI
 
-import silhouette.http.{ RequestPipeline, ResponsePipeline }
+import silhouette.http.{ HttpClient, RequestPipeline, ResponsePipeline, SilhouetteResponse }
 import silhouette.provider.Provider
-import silhouette.provider.social.SocialProfileBuilder._
+import silhouette.provider.social.SocialProvider._
 import silhouette.{ AuthInfo, ExecutionContextProvider }
 
 import scala.concurrent.Future
@@ -47,6 +47,11 @@ trait SocialProvider extends Provider with SocialProfileBuilder with ExecutionCo
   type Settings
 
   /**
+   * The HTTP client implementation.
+   */
+  protected val httpClient: HttpClient
+
+  /**
    * Gets the provider settings.
    *
    * @return The provider settings.
@@ -70,10 +75,12 @@ trait SocialProvider extends Provider with SocialProfileBuilder with ExecutionCo
    *
    * @param request The request pipeline.
    * @tparam R The type of the request.
-   * @tparam P The type of the response.
    * @return Either a `ResponsePipeline` or the `AuthInfo` from the provider.
    */
-  def authenticate[R, P]()(implicit request: RequestPipeline[R]): Future[Either[ResponsePipeline[P], A]]
+  def authenticate[R]()(
+    implicit
+    request: RequestPipeline[R]
+  ): Future[Either[ResponsePipeline[SilhouetteResponse], A]]
 
   /**
    * Retrieves the user profile for the given auth info.
@@ -92,22 +99,28 @@ trait SocialProvider extends Provider with SocialProfileBuilder with ExecutionCo
   }
 
   /**
-   * Resolves the url to be absolute relative to the request.
+   * Resolves the URI to be absolute relative to the request.
    *
-   * This will pass the url through if its already absolute.
+   * This will pass the URI through if its already absolute.
    *
-   * @param url The url to resolve.
+   * @param uri     The URI to resolve.
    * @param request The current request.
    * @tparam R The type of the request.
    * @return The absolute url.
    */
-  protected def resolveCallbackURL[R](url: String)(
+  protected def resolveCallbackUri[R](uri: URI)(
     implicit
     request: RequestPipeline[R]
-  ): String = URI.create(url) match {
-    case uri if uri.isAbsolute => url
-    case uri =>
-      val scheme = if (request.isSecure) "https://" else "http://"
-      URI.create(scheme + request.host + request.path).resolve(uri).toString
-  }
+  ): URI = if (uri.isAbsolute) uri else request.uri.resolve(uri)
+}
+
+/**
+ * The companion object.
+ */
+object SocialProvider {
+
+  /**
+   * Some error messages.
+   */
+  val UnspecifiedProfileError = "[%s] Error retrieving profile information"
 }

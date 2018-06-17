@@ -33,29 +33,26 @@ protected[silhouette] trait ResponsePipeline[R] {
   val response: R
 
   /**
+   * Gets the HTTP status code.
+   *
+   * @return The HTTP status code.
+   */
+  def status: Status
+
+  /**
    * Gets all headers.
-   *
-   * The HTTP RFC2616 allows duplicate response headers with the same name. Therefore we must define a
-   * header values as sequence of values.
-   *
-   * @see https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
    *
    * @return All headers.
    */
-  def headers: Map[String, Seq[String]]
+  def headers: Seq[Header]
 
   /**
-   * Gets the values for a header.
+   * Gets the header for the given name.
    *
-   * The HTTP RFC2616 allows duplicate response headers with the same name. Therefore we must define a
-   * header values as sequence of values.
-   *
-   * @see https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
-   *
-   * @param name The name of the header for which the values should be returned.
-   * @return A list of header values for the given name or an empty list if no header for the given name could be found.
+   * @param name The name of the header for which the header should be returned.
+   * @return Some header for the given name, None if no header for the given name could be found.
    */
-  def header(name: String): Seq[String] = headers.getOrElse(name, Nil)
+  def header(name: Header.Name): Option[Header] = headers.find(_.name == name)
 
   /**
    * Creates a new response pipeline with the given headers.
@@ -63,49 +60,49 @@ protected[silhouette] trait ResponsePipeline[R] {
    * This method must override any existing header with the same name. If multiple headers with the
    * same name are given to this method, then the values must be composed into a list.
    *
-   * If a response holds the following headers, then this method must implement the following behaviour:
+   * If a request holds the following headers, then this method must implement the following behaviour:
    * {{{
-   *   Map(
-   *     "TEST1" -> Seq("value1", "value2"),
-   *     "TEST2" -> Seq("value1")
+   *   Seq(
+   *     Header("TEST1", Seq("value1", "value2")),
+   *     Header("TEST2", "value1")
    *   )
    * }}}
    *
    * Append a new header:
    * {{{
-   *   withHeaders("TEST3" -> "value1")
+   *   withHeaders(Header("TEST3", "value1"))
    *
-   *   Map(
-   *     "TEST1" -> Seq("value1", "value2"),
-   *     "TEST2" -> Seq("value1"),
-   *     "TEST3" -> Seq("value1")
+   *   Seq(
+   *     Header("TEST1" -> Seq("value1", "value2")),
+   *     Header("TEST2" -> Seq("value1")),
+   *     Header("TEST3" -> Seq("value1"))
    *   )
    * }}}
    *
    * Override the header `TEST1` with a new value:
    * {{{
-   *   withHeaders("TEST1" -> "value3")
+   *   withHeaders(Header("TEST1", "value3"))
    *
-   *   Map(
-   *     "TEST1" -> Seq("value3"),
-   *     "TEST2" -> Seq("value1")
+   *   Seq(
+   *     Header("TEST1", Seq("value3")),
+   *     Header("TEST2", Seq("value1"))
    *   )
    * }}}
    *
    * Compose headers with the same name:
    * {{{
-   *   withHeaders("TEST1" -> "value3", "TEST1" -> "value4")
+   *   withHeaders(Header("TEST1", "value3"), Header("TEST1", Seq("value4", "value5")))
    *
-   *   Map(
-   *     "TEST1" -> Seq("value3", "value4"),
-   *     "TEST2" -> Seq("value1")
+   *   Set(
+   *     Header("TEST1", Seq("value3", "value4", "value5")),
+   *     Header("TEST2", Seq("value1"))
    *   )
    * }}}
    *
    * @param headers The headers to set.
    * @return A new response pipeline instance with the set headers.
    */
-  def withHeaders(headers: (String, String)*): ResponsePipeline[R]
+  def withHeaders(headers: Header*): ResponsePipeline[R]
 
   /**
    * Gets the list of cookies.

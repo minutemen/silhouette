@@ -17,6 +17,8 @@
  */
 package silhouette.http
 
+import java.net.URI
+
 import silhouette.crypto.Hash
 import silhouette.crypto.Hash._
 
@@ -36,50 +38,55 @@ protected[silhouette] trait RequestPipeline[R] extends RequestExtractor[R] {
   val request: R
 
   /**
-   * Gets the host name.
+   * Gets the absolute URI of the request target.
    *
-   * @return The host name.
+   * This must contain the absolute URI of thr request target, because we need this to resolve relative URIs
+   * against this.
+   *
+   * @return The absolute URI of the request target.
    */
-  def host: String
+  def uri: URI
 
   /**
-   * Gets the request path.
+   * Creates a new request pipeline with the given URI.
    *
-   * @return The request path.
+   * This must contain the absolute URI of thr request target, because we need this to resolve relative URIs
+   * against this URI.
+   *
+   * @param uri The absolute URI of the request target.
+   * @return A new request pipeline instance with the set URI.
    */
-  def path: String
+  def withUri(uri: URI): RequestPipeline[R]
 
   /**
-   * Indicates if the request is secure (HTTPS).
+   * Gets the HTTP request method.
    *
-   * @return True if it's a HTTPS request, false if it's a HTTP request.
+   * @return The HTTP request method.
    */
-  def isSecure: Boolean
+  def method: Method
+
+  /**
+   * Creates a new request pipeline with the given HTTP request method.
+   *
+   * @param method The HTTP request method to set.
+   * @return A new request pipeline instance with the set HTTP request method.
+   */
+  def withMethod(method: Method): RequestPipeline[R]
 
   /**
    * Gets all headers.
    *
-   * The HTTP RFC2616 allows duplicate request headers with the same name. Therefore we must define a
-   * header values as sequence of values.
-   *
-   * @see https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
-   *
    * @return All headers.
    */
-  def headers: Map[String, Seq[String]]
+  def headers: Seq[Header]
 
   /**
-   * Gets the values for a header.
+   * Gets the header for the given name.
    *
-   * The HTTP RFC2616 allows duplicate request headers with the same name. Therefore we must define a
-   * header values as sequence of values.
-   *
-   * @see https://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.2
-   *
-   * @param name The name of the header for which the values should be returned.
-   * @return A list of header values for the given name or an empty list if no header for the given name could be found.
+   * @param name The name of the header for which the header should be returned.
+   * @return Some header for the given name, None if no header for the given name could be found.
    */
-  def header(name: String): Seq[String] = headers.getOrElse(name, Nil)
+  def header(name: Header.Name): Option[Header] = headers.find(_.name == name)
 
   /**
    * Creates a new request pipeline with the given headers.
@@ -89,47 +96,47 @@ protected[silhouette] trait RequestPipeline[R] extends RequestExtractor[R] {
    *
    * If a request holds the following headers, then this method must implement the following behaviour:
    * {{{
-   *   Map(
-   *     "TEST1" -> Seq("value1", "value2"),
-   *     "TEST2" -> Seq("value1")
+   *   Seq(
+   *     Header("TEST1", Seq("value1", "value2")),
+   *     Header("TEST2", "value1")
    *   )
    * }}}
    *
    * Append a new header:
    * {{{
-   *   withHeaders("TEST3" -> "value1")
+   *   withHeaders(Header("TEST3", "value1"))
    *
-   *   Map(
-   *     "TEST1" -> Seq("value1", "value2"),
-   *     "TEST2" -> Seq("value1"),
-   *     "TEST3" -> Seq("value1")
+   *   Seq(
+   *     Header("TEST1" -> Seq("value1", "value2")),
+   *     Header("TEST2" -> Seq("value1")),
+   *     Header("TEST3" -> Seq("value1"))
    *   )
    * }}}
    *
    * Override the header `TEST1` with a new value:
    * {{{
-   *   withHeaders("TEST1" -> "value3")
+   *   withHeaders(Header("TEST1", "value3"))
    *
-   *   Map(
-   *     "TEST1" -> Seq("value3"),
-   *     "TEST2" -> Seq("value1")
+   *   Seq(
+   *     Header("TEST1", Seq("value3")),
+   *     Header("TEST2", Seq("value1"))
    *   )
    * }}}
    *
    * Compose headers with the same name:
    * {{{
-   *   withHeaders("TEST1" -> "value3", "TEST1" -> "value4")
+   *   withHeaders(Header("TEST1", "value3"), Header("TEST1", Seq("value4", "value5")))
    *
-   *   Map(
-   *     "TEST1" -> Seq("value3", "value4"),
-   *     "TEST2" -> Seq("value1")
+   *   Set(
+   *     Header("TEST1", Seq("value3", "value4", "value5")),
+   *     Header("TEST2", Seq("value1"))
    *   )
    * }}}
    *
    * @param headers The headers to set.
    * @return A new request pipeline instance with the set headers.
    */
-  def withHeaders(headers: (String, String)*): RequestPipeline[R]
+  def withHeaders(headers: Header*): RequestPipeline[R]
 
   /**
    * Gets the list of cookies.
@@ -346,9 +353,9 @@ protected[silhouette] trait RequestPipeline[R] extends RequestExtractor[R] {
    */
   def fingerprint: String = {
     Hash.sha1(new StringBuilder()
-      .append(headers.getOrElse("User-Agent", Seq("")).mkString(",")).append(":")
-      .append(headers.getOrElse("Accept-Language", Seq("")).mkString(",")).append(":")
-      .append(headers.getOrElse("Accept-Charset", Seq("")).mkString(","))
+      .append(headers.find(_.name == Header.Name.`User-Agent`).map(_.value).getOrElse("")).append(":")
+      .append(headers.find(_.name == Header.Name.`Accept-Language`).map(_.value).getOrElse("")).append(":")
+      .append(headers.find(_.name == Header.Name.`Accept-Charset`).map(_.value).getOrElse(""))
       .toString()
     )
   }
@@ -360,6 +367,13 @@ protected[silhouette] trait RequestPipeline[R] extends RequestExtractor[R] {
    * @return A fingerprint of the client.
    */
   def fingerprint(generator: R => String): String = generator(request)
+
+  /**
+   * Indicates if the request is a secure HTTPS request.
+   *
+   * @return True if the request is a secure HTTPS request, false otherwise.
+   */
+  def isSecure: Boolean = uri.getScheme == "https"
 
   /**
    * Unboxes the framework specific request implementation.

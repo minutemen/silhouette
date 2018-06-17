@@ -19,62 +19,123 @@ import sbt._
 
 lazy val buildVersions = taskKey[Unit]("Show some build versions")
 
-lazy val `silhouette-authenticator` = (project in file("modules/authenticator"))
-  .dependsOn(`silhouette-core`, `silhouette-crypto`, `silhouette-http`, `silhouette-jwt`, `silhouette-specs2` % Test)
-
-lazy val `silhouette-core` = (project in file("modules/core"))
-  .dependsOn(`silhouette-specs2` % Test)
-
-lazy val `silhouette-crypto` = (project in file("modules/crypto"))
-  .dependsOn(`silhouette-core`, `silhouette-specs2` % Test)
-
-lazy val `silhouette-crypto-jca` = (project in file("modules/crypto-jca"))
-  .dependsOn(`silhouette-core`, `silhouette-crypto`, `silhouette-specs2` % Test)
-
-lazy val `silhouette-http` = (project in file("modules/http"))
-  .dependsOn(`silhouette-core`, `silhouette-crypto`, `silhouette-specs2` % Test)
-
-lazy val `silhouette-jwt` = (project in file("modules/jwt"))
-  .dependsOn(`silhouette-core`, `silhouette-specs2` % Test)
-
-lazy val `silhouette-jwt-jose4j` = (project in file("modules/jwt-jose4j"))
-  .dependsOn(`silhouette-core`, `silhouette-crypto`, `silhouette-jwt`, `silhouette-specs2` % Test)
-
-lazy val `silhouette-password` = (project in file("modules/password"))
-  .dependsOn(`silhouette-core`, `silhouette-crypto`, `silhouette-specs2` % Test)
-
-lazy val `silhouette-password-bcrypt` = (project in file("modules/password-bcrypt"))
-  .dependsOn(`silhouette-core`, `silhouette-password`, `silhouette-specs2` % Test)
-
-lazy val `silhouette-provider` = (project in file("modules/provider"))
-  .dependsOn(`silhouette-core`, `silhouette-http`, `silhouette-specs2` % Test)
-
-lazy val `silhouette-provider-social` = (project in file("modules/provider-social"))
-  .dependsOn(`silhouette-core`, `silhouette-provider`, `silhouette-crypto`, `silhouette-specs2` % Test)
-
-lazy val `silhouette-persistence` = (project in file("modules/persistence"))
-  .dependsOn(`silhouette-core`, `silhouette-password`, `silhouette-specs2` % Test)
-
 lazy val `silhouette-specs2` = project in file("modules/specs2")
 
+lazy val `silhouette-core` = (project in file("modules/core"))
+  .dependsOn(
+    `silhouette-specs2` % Test
+  )
+
+lazy val `silhouette-crypto` = (project in file("modules/crypto"))
+  .dependsOn(
+    `silhouette-core`,
+    `silhouette-specs2` % Test
+  )
+
+lazy val `silhouette-crypto-jca` = (project in file("modules/crypto-jca"))
+  .dependsOn(
+    `silhouette-core`,
+    `silhouette-crypto`,
+    `silhouette-specs2` % Test
+  )
+
+lazy val `silhouette-http` = (project in file("modules/http"))
+  .dependsOn(
+    `silhouette-core`,
+    `silhouette-crypto`,
+    `silhouette-specs2` % Test
+  )
+
+lazy val `silhouette-jwt` = (project in file("modules/jwt"))
+  .dependsOn(
+    `silhouette-core`,
+    `silhouette-specs2` % Test
+  )
+
+lazy val `silhouette-jwt-jose4j` = (project in file("modules/jwt-jose4j"))
+  .dependsOn(
+    `silhouette-core`,
+    `silhouette-crypto`,
+    `silhouette-jwt`,
+    `silhouette-specs2` % Test
+  )
+
+lazy val `silhouette-authenticator` = (project in file("modules/authenticator"))
+  .dependsOn(
+    `silhouette-core`,
+    `silhouette-crypto`,
+    `silhouette-http`,
+    `silhouette-jwt`,
+    `silhouette-specs2` % Test
+  )
+
+lazy val `silhouette-password` = (project in file("modules/password"))
+  .dependsOn(
+    `silhouette-core`,
+    `silhouette-crypto`,
+    `silhouette-specs2` % Test
+  )
+
+lazy val `silhouette-password-bcrypt` = (project in file("modules/password-bcrypt"))
+  .dependsOn(
+    `silhouette-core`,
+    `silhouette-password`,
+    `silhouette-specs2` % Test
+  )
+
+lazy val `silhouette-provider` = (project in file("modules/provider"))
+  .dependsOn(
+    `silhouette-core`,
+    `silhouette-http`,
+    `silhouette-specs2` % Test
+  )
+
+lazy val `silhouette-provider-social` = (project in file("modules/provider-social"))
+  .dependsOn(
+    `silhouette-core`,
+    `silhouette-provider`,
+    `silhouette-crypto`,
+    `silhouette-specs2` % Test
+  )
+
+lazy val `silhouette-provider-oauth2` = (project in file("modules/provider-oauth2"))
+  .dependsOn(
+    `silhouette-core`,
+    `silhouette-provider`,
+    `silhouette-provider-social` % "compile->compile;test->test",
+    `silhouette-crypto`,
+    `silhouette-specs2` % Test
+  )
+
+lazy val `silhouette-persistence` = (project in file("modules/persistence"))
+  .dependsOn(
+    `silhouette-core`,
+    `silhouette-password`,
+    `silhouette-specs2` % Test
+  )
+
 lazy val `silhouette-util` = (project in file("modules/util"))
-  .dependsOn(`silhouette-core`, `silhouette-specs2` % Test)
+  .dependsOn(
+    `silhouette-core`,
+    `silhouette-specs2` % Test
+  )
 
 lazy val silhouette = (project in file("."))
   .aggregate(
-    `silhouette-authenticator`,
+    `silhouette-specs2`,
     `silhouette-core`,
     `silhouette-crypto`,
     `silhouette-crypto-jca`,
     `silhouette-http`,
     `silhouette-jwt`,
     `silhouette-jwt-jose4j`,
+    `silhouette-authenticator`,
     `silhouette-password`,
     `silhouette-password-bcrypt`,
     `silhouette-provider`,
     `silhouette-provider-social`,
+    `silhouette-provider-oauth2`,
     `silhouette-persistence`,
-    `silhouette-specs2`,
     `silhouette-util`
   ).settings(
     publish := {},

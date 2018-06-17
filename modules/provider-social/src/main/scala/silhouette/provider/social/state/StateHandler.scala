@@ -66,29 +66,28 @@ trait StateHandler {
   /**
    * Gets the social state for all handlers.
    *
-   * @param ec The execution context to handle the asynchronous operations.
    * @return The social state for all handlers.
    */
-  def state(implicit ec: ExecutionContext): Future[State]
+  def state: Future[State]
 
   /**
    * Serializes the given state into a single state value which can be passed with the state param.
    *
    * @param state The social state to serialize.
-   * @return The serialized state as string.
+   * @return Some serialized state as string if a state handler was registered and if a state item is available,
+   *         None otherwise.
    */
-  def serialize(state: State): String
+  def serialize(state: State): Option[String]
 
   /**
    * Unserializes the social state from the state param.
    *
    * @param state   The state to unserialize.
    * @param request The request to read the value of the state param from.
-   * @param ec      The execution context to handle the asynchronous operations.
    * @tparam R The type of the request.
    * @return The social state on success, an error on failure.
    */
-  def unserialize[R](state: String)(implicit request: RequestPipeline[R], ec: ExecutionContext): Future[State]
+  def unserialize[R](state: String)(implicit request: RequestPipeline[R]): Future[State]
 
   /**
    * Publishes the state to the client.
@@ -111,8 +110,9 @@ trait StateHandler {
  *
  * @param handlers The item handlers configured for this handler.
  * @param signer   The signer implementation to sign the state.
+ * @param ec       The execution context to handle the asynchronous operations.
  */
-class DefaultStateHandler(val handlers: Set[StateItemHandler], signer: Signer)
+class DefaultStateHandler(val handlers: Set[StateItemHandler], signer: Signer)(implicit ec: ExecutionContext)
   extends StateHandler {
 
   /**
@@ -138,29 +138,29 @@ class DefaultStateHandler(val handlers: Set[StateItemHandler], signer: Signer)
   /**
    * Gets the social state for all handlers.
    *
-   * @param ec The execution context to handle the asynchronous operations.
    * @return The social state for all handlers.
    */
-  override def state(implicit ec: ExecutionContext): Future[State] = {
+  override def state: Future[State] = {
     Future.sequence(handlers.map(_.item)).map(items => State(items.toSet))
   }
 
   /**
    * Serializes the given state into a single state value which can be passed with the state param.
    *
-   * If no handler is registered on the provider then we omit state signing, because it makes no sense the sign
-   * an empty state.
+   * If no handler is registered on the provider or if no state items are available, then we omit state signing,
+   * because it makes no sense the sign an empty state.
    *
    * @param state The social state to serialize.
-   * @return The serialized state as string.
+   * @return Some serialized state as string if a state handler was registered and if a state item is available,
+   *         None otherwise.
    */
-  override def serialize(state: State): String = {
+  override def serialize(state: State): Option[String] = {
     if (handlers.isEmpty || state.items.isEmpty) {
-      ""
+      None
     } else {
-      signer.sign(state.items.flatMap { i =>
+      Some(signer.sign(state.items.flatMap { i =>
         handlers.flatMap(h => h.canHandle(i).map(h.serialize)).map(_.asString)
-      }.mkString("."))
+      }.mkString(".")))
     }
   }
 
@@ -172,15 +172,10 @@ class DefaultStateHandler(val handlers: Set[StateItemHandler], signer: Signer)
    *
    * @param state   The state to unserialize.
    * @param request The request to read the value of the state param from.
-   * @param ec      The execution context to handle the asynchronous operations.
    * @tparam R The type of the request.
    * @return The social state on success, an error on failure.
    */
-  override def unserialize[R](state: String)(
-    implicit
-    request: RequestPipeline[R],
-    ec: ExecutionContext
-  ): Future[State] = {
+  override def unserialize[R](state: String)(implicit request: RequestPipeline[R]): Future[State] = {
     if (handlers.isEmpty) {
       Future.successful(State(Set()))
     } else {

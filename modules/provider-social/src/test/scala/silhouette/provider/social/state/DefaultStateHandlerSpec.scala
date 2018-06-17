@@ -24,7 +24,7 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.crypto.Signer
-import silhouette.http.{ FakeRequest, FakeRequestPipeline, FakeResponsePipeline, RequestPipeline }
+import silhouette.http._
 import silhouette.provider.ProviderException
 import silhouette.provider.social.state.DefaultStateHandler._
 import silhouette.provider.social.state.StateItem.ItemStructure
@@ -63,17 +63,17 @@ class DefaultStateHandlerSpec(implicit ev: ExecutionEnv)
   }
 
   "The `serialize` method" should {
-    "return an empty string if no handler is registered" in new Context {
+    "return None if no handler is registered" in new Context {
       override val stateHandler = new DefaultStateHandler(Set(), signer)
 
-      stateHandler.serialize(state) must be equalTo ""
+      stateHandler.serialize(state) must beNone
     }
 
-    "return an empty string if the items are empty" in new Context {
-      stateHandler.serialize(State(Set())) must be equalTo ""
+    "return None if the items are empty" in new Context {
+      stateHandler.serialize(State(Set())) must beNone
     }
 
-    "return the serialized social state" in new Context {
+    "return some serialized social state" in new Context {
       Default.itemHandler.canHandle(Publishable.item) returns None
       Default.itemHandler.canHandle(Default.item) returns Some(Default.item)
       Default.itemHandler.serialize(Default.item) returns Default.structure
@@ -82,23 +82,20 @@ class DefaultStateHandlerSpec(implicit ev: ExecutionEnv)
       Publishable.itemHandler.canHandle(Publishable.item) returns Some(Publishable.item)
       Publishable.itemHandler.serialize(Publishable.item) returns Publishable.structure
 
-      stateHandler.serialize(state) must be equalTo s"${Publishable.structure.asString}.${Default.structure.asString}"
+      stateHandler.serialize(state) must beSome(s"${Publishable.structure.asString}.${Default.structure.asString}")
     }
   }
 
   "The `unserialize` method" should {
     "omit state validation if no handler is registered" in new Context {
       override val stateHandler = new DefaultStateHandler(Set(), signer)
-      implicit val request: RequestPipeline[FakeRequest] = FakeRequestPipeline()
 
       stateHandler.unserialize("") must beEqualTo(State(Set())).awaitWithPatience
 
-      there was no(signer).extract(any[String])
+      there was no(signer).extract(any[String]())
     }
 
     "throw an Exception for an empty string" in new Context {
-      implicit val request: RequestPipeline[FakeRequest] = FakeRequestPipeline()
-
       stateHandler.unserialize("") must throwA[RuntimeException].like {
         case e =>
           e.getMessage must startWith("Wrong state format")
@@ -106,7 +103,6 @@ class DefaultStateHandlerSpec(implicit ev: ExecutionEnv)
     }
 
     "throw an ProviderException if the serialized item structure cannot be extracted" in new Context {
-      implicit val request: RequestPipeline[FakeRequest] = FakeRequestPipeline()
       val serialized = s"some-wired-content"
 
       stateHandler.unserialize(serialized) must throwA[ProviderException].like {
@@ -116,11 +112,10 @@ class DefaultStateHandlerSpec(implicit ev: ExecutionEnv)
     }
 
     "throw an ProviderException if none of the item handlers can handle the given state" in new Context {
-      implicit val request: RequestPipeline[FakeRequest] = FakeRequestPipeline()
       val serialized = s"${Default.structure.asString}"
 
-      Default.itemHandler.canHandle(any[ItemStructure])(any) returns false
-      Publishable.itemHandler.canHandle(any[ItemStructure])(any) returns false
+      Default.itemHandler.canHandle(any[ItemStructure]())(any()) returns false
+      Publishable.itemHandler.canHandle(any[ItemStructure]())(any()) returns false
 
       stateHandler.unserialize(serialized) must throwA[ProviderException].like {
         case e =>
@@ -129,7 +124,6 @@ class DefaultStateHandlerSpec(implicit ev: ExecutionEnv)
     }
 
     "return the unserialized social state" in new Context {
-      implicit val request: RequestPipeline[FakeRequest] = FakeRequestPipeline()
       val serialized = s"${Default.structure.asString}.${Publishable.structure.asString}"
 
       Default.itemHandler.canHandle(Publishable.structure) returns false
@@ -146,21 +140,17 @@ class DefaultStateHandlerSpec(implicit ev: ExecutionEnv)
 
   "The `publish` method" should {
     "should publish the state with the publishable handler that is responsible for the item" in new Context {
-      implicit val request: RequestPipeline[FakeRequest] = FakeRequestPipeline()
+      val publishedResult = Fake.response.withHeaders(Header("X-PUBLISHED", "true"))
 
-      val response = FakeResponsePipeline()
-      val publishedResult = FakeResponsePipeline().withHeaders("X-PUBLISHED" -> "true")
-
-      Publishable.itemHandler.publish(Publishable.item, response) returns publishedResult
+      Publishable.itemHandler.publish(Publishable.item, publishedResult) returns publishedResult
       Publishable.itemHandler.canHandle(Default.item) returns None
       Publishable.itemHandler.canHandle(Publishable.item) returns Some(Publishable.item)
 
-      stateHandler.publish(response, state) must be equalTo publishedResult
+      stateHandler.publish(publishedResult, state) must be equalTo publishedResult
     }
 
     "should not publish the state if no publishable handler is responsible" in new Context {
-      implicit val request: RequestPipeline[FakeRequest] = FakeRequestPipeline()
-      val response = FakeResponsePipeline()
+      val response = Fake.response
 
       Publishable.itemHandler.canHandle(Default.item) returns None
       Publishable.itemHandler.canHandle(Publishable.item) returns None
@@ -201,14 +191,19 @@ class DefaultStateHandlerSpec(implicit ev: ExecutionEnv)
     }
 
     /**
+     * The request pipeline.
+     */
+    implicit val requestPipeline: RequestPipeline[SilhouetteRequest] = Fake.request
+
+    /**
      * The signer implementation.
      *
      * The signer returns the same value as passed to the methods. This is enough for testing.
      */
     val signer = {
       val c = mock[Signer].smart
-      c.sign(any) answers { p => p.asInstanceOf[String] }
-      c.extract(any) answers { p =>
+      c.sign(anyString) answers { p => p.asInstanceOf[String] }
+      c.extract(anyString) answers { p =>
         p.asInstanceOf[String] match {
           case "" => Failure(new RuntimeException("Wrong state format"))
           case s  => Success(s)

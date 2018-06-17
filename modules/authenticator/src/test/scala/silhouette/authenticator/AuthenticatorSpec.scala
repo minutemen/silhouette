@@ -25,7 +25,7 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.LoginInfo
 import silhouette.authenticator.Authenticator.Implicits._
-import silhouette.http.{ FakeRequest, FakeRequestPipeline, RequestPipeline }
+import silhouette.http.{ Fake, RequestPipeline, SilhouetteRequest }
 import silhouette.specs2.WaitPatience
 
 import scala.concurrent.Future
@@ -76,14 +76,14 @@ class AuthenticatorSpec(implicit ev: ExecutionEnv) extends Specification with Mo
 
   "The `withFingerPrint` method" should {
     "set a default fingerprint" in new Context {
-      implicit val request: RequestPipeline[FakeRequest] = FakeRequestPipeline()
+      implicit val request: RequestPipeline[SilhouetteRequest] = Fake.request
 
       authenticator.withFingerPrint().fingerprint must beSome(request.fingerprint)
     }
 
     "set a custom fingerprint" in new Context {
-      val fingerPrintGenerator = (_: FakeRequest) => "test.fingerprint"
-      implicit val request: RequestPipeline[FakeRequest] = FakeRequestPipeline()
+      val fingerPrintGenerator = (_: SilhouetteRequest) => "test.fingerprint"
+      implicit val request: RequestPipeline[SilhouetteRequest] = Fake.request
 
       authenticator.withFingerPrint(fingerPrintGenerator).fingerprint must
         beSome(request.fingerprint(fingerPrintGenerator))

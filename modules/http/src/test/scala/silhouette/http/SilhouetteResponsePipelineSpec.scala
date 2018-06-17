@@ -21,9 +21,9 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 
 /**
- * Test case for the [[FakeResponsePipeline]] class.
+ * Test case for the [[SilhouetteResponsePipeline]] class.
  */
-class FakeResponsePipelineSpec extends Specification {
+class SilhouetteResponsePipelineSpec extends Specification {
 
   "The `headers` method" should {
     "return all headers" in new Context {
@@ -33,51 +33,52 @@ class FakeResponsePipelineSpec extends Specification {
 
   "The `header` method" should {
     "return the list of header values" in new Context {
-      responsePipeline.header("TEST1") must be equalTo Seq("value1", "value2")
+      responsePipeline.header("TEST1") must beSome(Header("TEST1", Seq("value1", "value2")))
     }
 
     "return an empty list if no header with the given name was found" in new Context {
-      responsePipeline.header("TEST3") must beEmpty
+      responsePipeline.header("TEST3") must beNone
     }
   }
 
   "The `withHeaders` method" should {
     "append a new header" in new Context {
-      responsePipeline.withHeaders("TEST3" -> "value1").headers must be equalTo Map(
-        "TEST1" -> Seq("value1", "value2"),
-        "TEST2" -> Seq("value1"),
-        "TEST3" -> Seq("value1")
+      responsePipeline.withHeaders(Header("TEST3", "value1")).headers must be equalTo Seq(
+        Header("TEST1", Seq("value1", "value2")),
+        Header("TEST2", Seq("value1")),
+        Header("TEST3", Seq("value1"))
       )
     }
 
     "append multiple headers" in new Context {
-      responsePipeline.withHeaders("TEST3" -> "value1", "TEST4" -> "value1").headers must be equalTo Map(
-        "TEST1" -> Seq("value1", "value2"),
-        "TEST2" -> Seq("value1"),
-        "TEST3" -> Seq("value1"),
-        "TEST4" -> Seq("value1")
+      responsePipeline.withHeaders(Header("TEST3", "value1"), Header("TEST4", "value1")).headers must be equalTo Seq(
+        Header("TEST1", Seq("value1", "value2")),
+        Header("TEST2", Seq("value1")),
+        Header("TEST3", Seq("value1")),
+        Header("TEST4", Seq("value1"))
       )
     }
 
     "append multiple headers with the same name" in new Context {
-      responsePipeline.withHeaders("TEST3" -> "value1", "TEST3" -> "value2").headers must be equalTo Map(
-        "TEST1" -> Seq("value1", "value2"),
-        "TEST2" -> Seq("value1"),
-        "TEST3" -> Seq("value1", "value2")
-      )
+      responsePipeline.withHeaders(Header("TEST3", "value1"), Header("TEST3", Seq("value2", "value3"))).headers must
+        be equalTo Seq(
+          Header("TEST1", Seq("value1", "value2")),
+          Header("TEST2", Seq("value1")),
+          Header("TEST3", Seq("value1", "value2", "value3"))
+        )
     }
 
     "override an existing header" in new Context {
-      responsePipeline.withHeaders("TEST2" -> "value2", "TEST2" -> "value3").headers must be equalTo Map(
-        "TEST1" -> Seq("value1", "value2"),
-        "TEST2" -> Seq("value2", "value3")
+      responsePipeline.withHeaders(Header("TEST2", "value2"), Header("TEST2", "value3")).headers must be equalTo Seq(
+        Header("TEST1", Seq("value1", "value2")),
+        Header("TEST2", Seq("value2", "value3"))
       )
     }
 
     "override multiple existing headers" in new Context {
-      responsePipeline.withHeaders("TEST1" -> "value3", "TEST2" -> "value2").headers must be equalTo Map(
-        "TEST1" -> Seq("value3"),
-        "TEST2" -> Seq("value2")
+      responsePipeline.withHeaders(Header("TEST1", "value3"), Header("TEST2", "value2")).headers must be equalTo Seq(
+        Header("TEST1", Seq("value3")),
+        Header("TEST2", Seq("value2"))
       )
     }
   }
@@ -176,12 +177,13 @@ class FakeResponsePipelineSpec extends Specification {
   trait Context extends Scope {
 
     /**
-     * A fake response.
+     * A response.
      */
-    val response = FakeResponse(
-      headers = Map(
-        "TEST1" -> Seq("value1", "value2"),
-        "TEST2" -> Seq("value1")
+    val response = SilhouetteResponse(
+      status = Status.OK,
+      headers = Seq(
+        Header("TEST1", Seq("value1", "value2")),
+        Header("TEST2", Seq("value1"))
       ),
       cookies = Seq(
         Cookie("test1", "value1"),
@@ -194,8 +196,8 @@ class FakeResponsePipelineSpec extends Specification {
     )
 
     /**
-     * A response pipeline which handles a fake response.
+     * A response pipeline which handles a response.
      */
-    val responsePipeline = FakeResponsePipeline(response)
+    val responsePipeline = SilhouetteResponsePipeline(response)
   }
 }

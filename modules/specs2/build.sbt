@@ -21,6 +21,9 @@ libraryDependencies ++= Seq(
   Library.Specs2.core,
   Library.Specs2.matcherExtra,
   Library.Specs2.mock,
+  Library.Circe.core,
+  Library.Circe.generic,
+  Library.Circe.parser,
   Library.mockito,
   Library.bouncyCastle,
   Library.logbackClassic

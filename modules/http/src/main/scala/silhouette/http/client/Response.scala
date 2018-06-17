@@ -17,6 +17,8 @@
  */
 package silhouette.http.client
 
+import silhouette.http.Status
+
 /**
  * The response an HTTP client returns after a request.
  */
@@ -39,7 +41,7 @@ private[silhouette] trait Response {
    *
    * @return The HTTP status code.
    */
-  def status: Int
+  def status: Status
 
   /**
    * Returns the response body.

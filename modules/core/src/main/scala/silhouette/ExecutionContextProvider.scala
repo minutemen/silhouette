@@ -20,12 +20,12 @@ package silhouette
 import scala.concurrent.ExecutionContext
 
 /**
- * A trait that can be mixed in to provide an execution context.
+ * A trait that can be mixed in, to provide an execution context.
  */
 trait ExecutionContextProvider {
 
   /**
    * The execution context to handle the asynchronous operations.
    */
-  implicit val executionContext: ExecutionContext
+  implicit val ec: ExecutionContext
 }

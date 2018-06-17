@@ -17,39 +17,44 @@
  */
 package silhouette.http
 
+import silhouette.RichSeq._
+
 /**
- * A fake response implementation.
+ * A Silhouette response implementation.
  *
+ * @param status The HTTP status code.
  * @param headers The headers.
  * @param cookies The cookies.
  * @param session The session.
  */
-protected[silhouette] case class FakeResponse(
-  headers: Map[String, Seq[String]] = Map(),
+protected[silhouette] case class SilhouetteResponse(
+  status: Status,
+  headers: Seq[Header] = Seq(),
   cookies: Seq[Cookie] = Seq(),
-  session: Map[String, String] = Map())
+  session: Map[String, String] = Map()
+)
 
 /**
- * The response pipeline implementation based on the `FakeResponse`.
+ * The response pipeline implementation based on the `SilhouetteResponse`.
  *
  * @param response The response this pipeline handles.
  */
-final protected[silhouette] case class FakeResponsePipeline(response: FakeResponse = FakeResponse())
-  extends ResponsePipeline[FakeResponse] {
+final protected[silhouette] case class SilhouetteResponsePipeline(response: SilhouetteResponse)
+  extends ResponsePipeline[SilhouetteResponse] {
 
   /**
-   * Helper which converts a `List[(String, String)]` into a `Map[String, List[String]]`.
+   * Gets the HTTP status code.
+   *
+   * @return The HTTP status code.
    */
-  private implicit class Pair(p: List[(String, String)]) {
-    def toMultiMap: Map[String, List[String]] = p.groupBy(_._1).mapValues(_.map(_._2))
-  }
+  override def status: Status = response.status
 
   /**
    * Gets all headers.
    *
    * @return All headers.
    */
-  override def headers: Map[String, Seq[String]] = response.headers
+  override def headers: Seq[Header] = response.headers
 
   /**
    * Creates a new response pipeline with the given headers.
@@ -59,10 +64,16 @@ final protected[silhouette] case class FakeResponsePipeline(response: FakeRespon
    * @param headers The headers to add.
    * @return A new response pipeline instance with the added headers.
    */
-  override def withHeaders(headers: (String, String)*): ResponsePipeline[FakeResponse] = {
-    val newHeaders = headers.toList.toMultiMap.foldLeft(response.headers) {
-      case (h, (k, v)) =>
-        h + (k -> v)
+  override def withHeaders(headers: Header*): ResponsePipeline[SilhouetteResponse] = {
+    val groupedHeaders = headers.groupByPreserveOrder(_.name).map {
+      case (key, h) => Header(key, h.flatMap(_.values))
+    }
+    val newHeaders = groupedHeaders.foldLeft(response.headers) {
+      case (acc, header) =>
+        acc.indexWhere(_.name == header.name) match {
+          case -1 => acc :+ header
+          case i  => acc.patch(i, Seq(header), 1)
+        }
     }
 
     copy(response.copy(headers = newHeaders))
@@ -83,13 +94,13 @@ final protected[silhouette] case class FakeResponsePipeline(response: FakeRespon
    * @param cookies The cookies to add.
    * @return A new response pipeline instance with the added cookies.
    */
-  override def withCookies(cookies: Cookie*): ResponsePipeline[FakeResponse] = {
-    val filteredCookies = cookies.groupBy(_.name).map(_._2.last)
+  override def withCookies(cookies: Cookie*): ResponsePipeline[SilhouetteResponse] = {
+    val filteredCookies = cookies.groupByPreserveOrder(_.name).map(_._2.last)
     val newCookies = filteredCookies.foldLeft(response.cookies) {
-      case (l, c) =>
-        l.indexWhere(_.name == c.name) match {
-          case -1 => l :+ c
-          case i  => l.patch(i, Seq(c), 1)
+      case (acc, cookie) =>
+        acc.indexWhere(_.name == cookie.name) match {
+          case -1 => acc :+ cookie
+          case i  => acc.patch(i, Seq(cookie), 1)
         }
     }
 
@@ -111,11 +122,10 @@ final protected[silhouette] case class FakeResponsePipeline(response: FakeRespon
    * @param data The session data to add.
    * @return A new response pipeline instance with the added session data.
    */
-  override def withSession(data: (String, String)*): ResponsePipeline[FakeResponse] = {
-    val filteredData = data.groupBy(_._1).map(_._2.last)
+  override def withSession(data: (String, String)*): ResponsePipeline[SilhouetteResponse] = {
+    val filteredData = data.groupByPreserveOrder(_._1).map(_._2.last)
     val newData = filteredData.foldLeft(response.session) {
-      case (d, (k, v)) =>
-        d + (k -> v)
+      case (acc, (key, value)) => acc + (key -> value)
     }
 
     copy(response.copy(session = newData))
@@ -127,10 +137,9 @@ final protected[silhouette] case class FakeResponsePipeline(response: FakeRespon
    * @param keys The session keys to remove.
    * @return A new response pipeline instance with the removed session data.
    */
-  override def withoutSession(keys: String*): ResponsePipeline[FakeResponse] = {
+  override def withoutSession(keys: String*): ResponsePipeline[SilhouetteResponse] = {
     val newData = keys.foldLeft(response.session) {
-      case (d, k) =>
-        d - k
+      case (acc, key) => acc - key
     }
 
     copy(response.copy(session = newData))
@@ -141,5 +150,5 @@ final protected[silhouette] case class FakeResponsePipeline(response: FakeRespon
    *
    * @return The framework specific response implementation.
    */
-  override def unbox: FakeResponse = response
+  override def unbox: SilhouetteResponse = response
 }

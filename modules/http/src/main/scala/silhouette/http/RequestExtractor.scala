@@ -77,7 +77,7 @@ trait RequestExtractor[R] extends LazyLogging {
   protected def fromHeaders(name: String, parts: Option[Parts]): Option[String] = {
     isAllowed(RequestPart.Headers, parts) {
       logger.debug(s"Try to extract value with name `$name` from headers: $headers")
-      header(name).headOption
+      header(name).map(_.value)
     }
   }
 
@@ -124,7 +124,7 @@ trait RequestExtractor[R] extends LazyLogging {
    */
   protected def fromXml(name: String, parts: Option[Parts]): Option[String] = {
     isAllowed(RequestPart.XMLBody, parts) {
-      bodyExtractor.fromJson(name).flatMap {
+      bodyExtractor.fromXml(name).flatMap {
         case (body, maybeValue) =>
           logger.debug(s"Try to extract value with name `$name` from Xml body: $body")
           maybeValue
@@ -156,7 +156,7 @@ trait RequestBodyExtractor[R] {
   /**
    * The value of the body.
    *
-   * If the body isn't from a specific type, then the value should be None.
+   * If the body isn't from the specific type, then the value should be None.
    * If the body is from the specific type then the value should be Some.
    *   - The first tuple value should be the string representation of the body.
    *   - The second tuple value should be either the extracted value or None if the value couldn't

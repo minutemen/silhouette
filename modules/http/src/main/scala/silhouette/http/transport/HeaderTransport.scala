@@ -29,7 +29,7 @@ import scala.language.postfixOps
  *
  * @param name The name of the header in which the payload will be transported.
  */
-final case class HeaderTransport(name: String)
+final case class HeaderTransport(name: Header.Name)
   extends RetrieveFromRequest
   with SmuggleIntoRequest
   with EmbedIntoResponse {
@@ -41,8 +41,7 @@ final case class HeaderTransport(name: String)
    * @tparam R The type of the request.
    * @return Some payload or None if no payload could be found in request.
    */
-  override def retrieve[R](request: RequestPipeline[R]): Option[String] =
-    request.header(name).headOption
+  override def retrieve[R](request: RequestPipeline[R]): Option[String] = request.header(name).map(_.value)
 
   /**
    * Adds a header with the given payload to the request.
@@ -53,7 +52,7 @@ final case class HeaderTransport(name: String)
    * @return The manipulated request pipeline.
    */
   override def smuggle[R](payload: String, request: RequestPipeline[R]): RequestPipeline[R] =
-    request.withHeaders(name -> payload)
+    request.withHeaders(Header(name, payload))
 
   /**
    * Adds a header with the given payload to the response.
@@ -64,7 +63,7 @@ final case class HeaderTransport(name: String)
    * @return The manipulated response pipeline.
    */
   override def embed[R](payload: String, response: ResponsePipeline[R]): ResponsePipeline[R] =
-    response.withHeaders(name -> payload)
+    response.withHeaders(Header(name, payload))
 }
 
 /**
@@ -73,7 +72,7 @@ final case class HeaderTransport(name: String)
  * @param name The name of the header in which the payload will be transported.
  * @tparam R The type of the request.
  */
-final case class RetrieveFromHeader[R](name: String) extends RetrieveReads[R, String] {
+final case class RetrieveFromHeader[R](name: Header.Name) extends RetrieveReads[R, String] {
 
   /**
    * Reads payload from a request header.
@@ -93,7 +92,7 @@ final case class RetrieveFromHeader[R](name: String) extends RetrieveReads[R, St
  * @param name The name of the header in which the payload will be transported; Defaults to Authorization.
  * @tparam R The type of the request.
  */
-final case class RetrieveBearerTokenFromHeader[R](name: String = "Authorization")
+final case class RetrieveBearerTokenFromHeader[R](name: Header.Name = Header.Name.Authorization)
   extends RetrieveReads[R, String] {
 
   /**
@@ -114,7 +113,7 @@ final case class RetrieveBearerTokenFromHeader[R](name: String = "Authorization"
  * @param name The name of the header in which the payload will be transported; Defaults to Authorization.
  * @tparam R The type of the request.
  */
-final case class RetrieveBasicCredentialsFromHeader[R](name: String = "Authorization")
+final case class RetrieveBasicCredentialsFromHeader[R](name: Header.Name = Header.Name.Authorization)
   extends RetrieveReads[R, Credentials] {
 
   /**
@@ -133,7 +132,7 @@ final case class RetrieveBasicCredentialsFromHeader[R](name: String = "Authoriza
  * @param name The name of the header in which the payload will be transported.
  * @tparam R The type of the response.
  */
-final case class SmuggleIntoHeader[R](name: String) extends SmuggleWrites[R, String] {
+final case class SmuggleIntoHeader[R](name: Header.Name) extends SmuggleWrites[R, String] {
 
   /**
    * Merges some payload and a [[RequestPipeline]] into a [[RequestPipeline]] that contains a header with the
@@ -155,7 +154,7 @@ final case class SmuggleIntoHeader[R](name: String) extends SmuggleWrites[R, Str
  * @param name The name of the header in which the payload will be transported; Defaults to Authorization.
  * @tparam R The type of the response.
  */
-final case class SmuggleBearerTokenIntoHeader[R](name: String = "Authorization")
+final case class SmuggleBearerTokenIntoHeader[R](name: Header.Name = Header.Name.Authorization)
   extends SmuggleWrites[R, String] {
 
   /**
@@ -178,7 +177,7 @@ final case class SmuggleBearerTokenIntoHeader[R](name: String = "Authorization")
  * @param name The name of the header in which the payload will be transported; Defaults to Authorization.
  * @tparam R The type of the response.
  */
-final case class SmuggleBasicCredentialsIntoHeader[R](name: String = "Authorization")
+final case class SmuggleBasicCredentialsIntoHeader[R](name: Header.Name = Header.Name.Authorization)
   extends SmuggleWrites[R, Credentials] {
 
   /**
@@ -199,7 +198,7 @@ final case class SmuggleBasicCredentialsIntoHeader[R](name: String = "Authorizat
  * @param name The name of the header in which the payload will be transported.
  * @tparam R The type of the response.
  */
-final case class EmbedIntoHeader[R](name: String) extends EmbedWrites[R, String] {
+final case class EmbedIntoHeader[R](name: Header.Name) extends EmbedWrites[R, String] {
 
   /**
    * Merges some payload and a [[ResponsePipeline]] into a [[ResponsePipeline]] that contains a header with the
@@ -221,7 +220,8 @@ final case class EmbedIntoHeader[R](name: String) extends EmbedWrites[R, String]
  * @param name The name of the header in which the payload will be transported; Defaults to Authorization.
  * @tparam R The type of the response.
  */
-final case class EmbedBearerTokenIntoHeader[R](name: String = "Authorization") extends EmbedWrites[R, String] {
+final case class EmbedBearerTokenIntoHeader[R](name: Header.Name = Header.Name.Authorization)
+  extends EmbedWrites[R, String] {
 
   /**
    * Merges some token and a [[ResponsePipeline]] into a [[ResponsePipeline]] that contains a bearer token header with
@@ -243,7 +243,7 @@ final case class EmbedBearerTokenIntoHeader[R](name: String = "Authorization") e
  * @param name The name of the header in which the payload will be transported; Defaults to Authorization.
  * @tparam R The type of the response.
  */
-final case class EmbedBasicCredentialsIntoHeader[R](name: String = "Authorization")
+final case class EmbedBasicCredentialsIntoHeader[R](name: Header.Name = Header.Name.Authorization)
   extends EmbedWrites[R, Credentials] {
 
   /**

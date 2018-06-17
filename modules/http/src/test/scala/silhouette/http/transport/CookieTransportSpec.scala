@@ -34,20 +34,16 @@ class CookieTransportSpec extends Specification {
 
   "The `retrieve` method" should {
     "return some payload from the cookie with the given name" in new Context {
-      transport.retrieve(requestPipeline) must beSome("payload")
+      transport.retrieve(requestPipeline.withCookies(Cookie("test", "payload"))) must beSome("payload")
     }
 
     "return None if no cookie with the give name exists" in new Context {
-      override val request = FakeRequest()
-
       transport.retrieve(requestPipeline) must beNone
     }
   }
 
   "The `smuggle` method" should {
     "smuggle a cookie into the request" in new Context {
-      override val request = FakeRequest()
-
       transport.smuggle("payload", requestPipeline).cookie("test") must beSome.like {
         case cookie =>
           cookie.value must be equalTo "payload"
@@ -57,8 +53,6 @@ class CookieTransportSpec extends Specification {
 
   "The `embed` method" should {
     "embed a cookie into the response" in new Context {
-      override val response = FakeResponse()
-
       transport.embed("payload", responsePipeline).cookie("test") must beSome.like {
         case cookie =>
           cookie.value must be equalTo "payload"
@@ -68,8 +62,6 @@ class CookieTransportSpec extends Specification {
 
   "The `discard` method" should {
     "discard a cookie" in new Context {
-      override val response = FakeResponse()
-
       transport.discard(responsePipeline).cookie("test") must beSome.like {
         case cookie =>
           cookie.value must be equalTo ""
@@ -80,7 +72,9 @@ class CookieTransportSpec extends Specification {
 
   "The `RetrieveFromCookie` reads" should {
     "read some payload from a cookie stored in the request" in new Context {
-      RetrieveFromCookie("test").read(requestPipeline) must beSome("payload")
+      RetrieveFromCookie("test").read(
+        requestPipeline.withCookies(Cookie("test", "payload"))
+      ) must beSome("payload")
     }
 
     "return None if no cookie with the give name exists" in new Context {
@@ -138,23 +132,13 @@ class CookieTransportSpec extends Specification {
     val transport = CookieTransport(settings)
 
     /**
-     * A fake request.
+     * A request pipeline.
      */
-    val request = FakeRequest(cookies = Seq(Cookie("test", "payload")))
+    lazy val requestPipeline = Fake.request
 
     /**
-     * A fake response.
+     * A response pipeline.
      */
-    val response = FakeResponse()
-
-    /**
-     * A fake request pipeline.
-     */
-    lazy val requestPipeline = FakeRequestPipeline(request)
-
-    /**
-     * A fake response pipeline.
-     */
-    lazy val responsePipeline = FakeResponsePipeline(response)
+    lazy val responsePipeline = Fake.response
   }
 }

@@ -20,7 +20,7 @@ import sbt._
 object Dependencies {
 
   object Version {
-    val specs2 = "3.8.6"
+    val specs2 = "4.3.3"
     val circe = "0.7.0"
   }
 
@@ -38,6 +38,7 @@ object Dependencies {
       val core = "io.circe" %% "circe-core" % Version.circe
       val generic = "io.circe" %% "circe-generic" % Version.circe
       val parser = "io.circe" %% "circe-parser" % Version.circe
+      val optics = "io.circe" %% "circe-optics" % Version.circe
     }
 
     val mockito = "org.mockito" % "mockito-core" % "1.10.19"

@@ -15,30 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.http.client
+package silhouette.http
+
+import java.net.URI
+
+import silhouette.http.client.{ Body, BodyFormat, Response }
 
 import scala.concurrent.Future
 
 /**
- * Builds a request by providing a fluent interface.
+ * A client which can be used to process HTTP requests.
  *
- * An instance of this class should not be instantiated directly. Instead the [[silhouette.http.Client]] should be
- * used to instantiate the [[RequestBuilder]].
+ * The concrete implementation of this client must be implemented by the framework specific Silhouette binding.
+ * The client is no full-blown HTTP client implementation. It implements only the parts which Silhouette depends on,
+ * and it is only meant for internal usage.
  */
-private[silhouette] trait RequestBuilder {
+private[silhouette] trait HttpClient {
 
   /**
-   * The concrete implementation of this trait.
-   */
-  type Self <: RequestBuilder
-
-  /**
-   * Returns a copy of this instance with a new URL.
+   * Returns a copy of this instance with a new URI.
    *
-   * @param url The URL to set.
+   * @param uri The URI to set.
    * @return A request builder to provide a fluent interface.
    */
-  def withUrl(url: String): Self
+  def withUri(uri: URI): HttpClient
 
   /**
    * Returns a copy of this instance with a new HTTP method.
@@ -46,7 +46,7 @@ private[silhouette] trait RequestBuilder {
    * @param method The HTTP method to set.
    * @return A request builder to provide a fluent interface.
    */
-  def withMethod(method: String): Self
+  def withMethod(method: Method): HttpClient
 
   /**
    * Returns a copy of this instance with the list of headers set.
@@ -54,7 +54,7 @@ private[silhouette] trait RequestBuilder {
    * @param headers The headers to set.
    * @return A request builder to provide a fluent interface.
    */
-  def withHeaders(headers: (String, String)*): Self
+  def withHeaders(headers: Header*): HttpClient
 
   /**
    * Returns a copy of this instance with the list of query params set.
@@ -62,7 +62,7 @@ private[silhouette] trait RequestBuilder {
    * @param params The query params to set.
    * @return A request builder to provide a fluent interface.
    */
-  def withQueryParams(params: (String, String)*): Self
+  def withQueryParams(params: (String, String)*): HttpClient
 
   /**
    * Returns a copy of this instance with a new body.
@@ -70,7 +70,7 @@ private[silhouette] trait RequestBuilder {
    * @param body The body to set.
    * @return A request builder to provide a fluent interface.
    */
-  def withBody(body: Body): Self
+  def withBody(body: Body): HttpClient
 
   /**
    * Returns a copy of this instance with a new body.
@@ -80,7 +80,7 @@ private[silhouette] trait RequestBuilder {
    * @param format The format which converts the given format into a body instance.
    * @return A request builder to provide a fluent interface.
    */
-  def withBody[T](body: T)(implicit format: BodyFormat[T]): Self = withBody(format.write(body))
+  def withBody[T](body: T)(implicit format: BodyFormat[T]): HttpClient = withBody(format.write(body))
 
   /**
    * Execute the request and produce a response.

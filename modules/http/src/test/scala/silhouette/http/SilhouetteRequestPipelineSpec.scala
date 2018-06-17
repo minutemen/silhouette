@@ -17,15 +17,17 @@
  */
 package silhouette.http
 
+import java.net.URI
+
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.crypto.Hash
 import silhouette.crypto.Hash._
 
 /**
- * Test case for the [[FakeRequestPipeline]] class.
+ * Test case for the [[SilhouetteRequestPipeline]] class.
  */
-class FakeRequestPipelineSpec extends Specification {
+class SilhouetteRequestPipelineSpec extends Specification {
 
   "The `headers` method" should {
     "return all headers" in new Context {
@@ -35,51 +37,52 @@ class FakeRequestPipelineSpec extends Specification {
 
   "The `header` method" should {
     "return the list of header values" in new Context {
-      requestPipeline.header("TEST1") must be equalTo Seq("value1", "value2")
+      requestPipeline.header("TEST1") must beSome(Header("TEST1", Seq("value1", "value2")))
     }
 
     "return an empty list if no header with the given name was found" in new Context {
-      requestPipeline.header("TEST3") must beEmpty
+      requestPipeline.header("TEST3") must beNone
     }
   }
 
   "The `withHeaders` method" should {
     "append a new header" in new Context {
-      requestPipeline.withHeaders("TEST3" -> "value1").headers must be equalTo Map(
-        "TEST1" -> Seq("value1", "value2"),
-        "TEST2" -> Seq("value1"),
-        "TEST3" -> Seq("value1")
+      requestPipeline.withHeaders(Header("TEST3", "value1")).headers must be equalTo Seq(
+        Header("TEST1", Seq("value1", "value2")),
+        Header("TEST2", Seq("value1")),
+        Header("TEST3", Seq("value1"))
       )
     }
 
     "append multiple headers" in new Context {
-      requestPipeline.withHeaders("TEST3" -> "value1", "TEST4" -> "value1").headers must be equalTo Map(
-        "TEST1" -> Seq("value1", "value2"),
-        "TEST2" -> Seq("value1"),
-        "TEST3" -> Seq("value1"),
-        "TEST4" -> Seq("value1")
+      requestPipeline.withHeaders(Header("TEST3", "value1"), Header("TEST4", "value1")).headers must be equalTo Seq(
+        Header("TEST1", Seq("value1", "value2")),
+        Header("TEST2", Seq("value1")),
+        Header("TEST3", Seq("value1")),
+        Header("TEST4", Seq("value1"))
       )
     }
 
     "append multiple headers with the same name" in new Context {
-      requestPipeline.withHeaders("TEST3" -> "value1", "TEST3" -> "value2").headers must be equalTo Map(
-        "TEST1" -> Seq("value1", "value2"),
-        "TEST2" -> Seq("value1"),
-        "TEST3" -> Seq("value1", "value2")
-      )
+      requestPipeline.withHeaders(Header("TEST3", "value1"), Header("TEST3", Seq("value2", "value3"))).headers must
+        be equalTo Seq(
+          Header("TEST1", Seq("value1", "value2")),
+          Header("TEST2", Seq("value1")),
+          Header("TEST3", Seq("value1", "value2", "value3"))
+        )
     }
 
     "override an existing header" in new Context {
-      requestPipeline.withHeaders("TEST2" -> "value2", "TEST2" -> "value3").headers must be equalTo Map(
-        "TEST1" -> Seq("value1", "value2"),
-        "TEST2" -> Seq("value2", "value3")
+      requestPipeline.withHeaders(Header("TEST2", "value2"), Header("TEST2", "value3")).headers must be equalTo Seq(
+        Header("TEST1", Seq("value1", "value2")),
+        Header("TEST2", Seq("value2", "value3"))
       )
     }
 
     "override multiple existing headers" in new Context {
-      requestPipeline.withHeaders("TEST1" -> "value3", "TEST2" -> "value2").headers must be equalTo Map(
-        "TEST1" -> Seq("value3"),
-        "TEST2" -> Seq("value2")
+      requestPipeline.withHeaders(Header("TEST1", "value3"), Header("TEST2", "value2")).headers must be equalTo Seq(
+        Header("TEST1", Seq("value3")),
+        Header("TEST2", Seq("value2"))
       )
     }
   }
@@ -182,7 +185,7 @@ class FakeRequestPipelineSpec extends Specification {
   }
 
   "The `withQueryParams` method" should {
-    "append a new header" in new Context {
+    "append a new query param" in new Context {
       requestPipeline.withQueryParams("test3" -> "value1").queryParams must be equalTo Map(
         "test1" -> Seq("value1", "value2"),
         "test2" -> Seq("value1"),
@@ -190,7 +193,7 @@ class FakeRequestPipelineSpec extends Specification {
       )
     }
 
-    "append multiple headers" in new Context {
+    "append multiple query params" in new Context {
       requestPipeline.withQueryParams("test3" -> "value1", "test4" -> "value1").queryParams must be equalTo Map(
         "test1" -> Seq("value1", "value2"),
         "test2" -> Seq("value1"),
@@ -199,7 +202,7 @@ class FakeRequestPipelineSpec extends Specification {
       )
     }
 
-    "append multiple headers with the same name" in new Context {
+    "append multiple query params with the same name" in new Context {
       requestPipeline.withQueryParams("test3" -> "value1", "test3" -> "value2").queryParams must be equalTo Map(
         "test1" -> Seq("value1", "value2"),
         "test2" -> Seq("value1"),
@@ -207,14 +210,14 @@ class FakeRequestPipelineSpec extends Specification {
       )
     }
 
-    "override an existing header" in new Context {
+    "override an existing query param" in new Context {
       requestPipeline.withQueryParams("test2" -> "value2", "test2" -> "value3").queryParams must be equalTo Map(
         "test1" -> Seq("value1", "value2"),
         "test2" -> Seq("value2", "value3")
       )
     }
 
-    "override multiple existing headers" in new Context {
+    "override multiple existing query params" in new Context {
       requestPipeline.withQueryParams("test1" -> "value3", "test2" -> "value2").queryParams must be equalTo Map(
         "test1" -> Seq("value3"),
         "test2" -> Seq("value2")
@@ -225,18 +228,19 @@ class FakeRequestPipelineSpec extends Specification {
   "The default `fingerprint` method" should {
     "return fingerprint including the `User-Agent` header" in new Context {
       val userAgent = "test-user-agent"
-      requestPipeline.withHeaders("User-Agent" -> userAgent).fingerprint must be equalTo Hash.sha1(userAgent + "::")
+      requestPipeline.withHeaders(Header("User-Agent", userAgent)).fingerprint must
+        be equalTo Hash.sha1(userAgent + "::")
     }
 
     "return fingerprint including the `Accept-Language` header" in new Context {
       val acceptLanguage = "test-accept-language"
-      requestPipeline.withHeaders("Accept-Language" -> acceptLanguage).fingerprint must
+      requestPipeline.withHeaders(Header("Accept-Language", acceptLanguage)).fingerprint must
         be equalTo Hash.sha1(":" + acceptLanguage + ":")
     }
 
     "return fingerprint including the `Accept-Charset` header" in new Context {
       val acceptCharset = "test-accept-charset"
-      requestPipeline.withHeaders("Accept-Charset" -> acceptCharset).fingerprint must
+      requestPipeline.withHeaders(Header("Accept-Charset", acceptCharset)).fingerprint must
         be equalTo Hash.sha1("::" + acceptCharset)
     }
 
@@ -245,9 +249,9 @@ class FakeRequestPipelineSpec extends Specification {
       val acceptLanguage = "test-accept-language"
       val acceptCharset = "test-accept-charset"
       requestPipeline.withHeaders(
-        "User-Agent" -> userAgent,
-        "Accept-Language" -> acceptLanguage,
-        "Accept-Charset" -> acceptCharset
+        Header("User-Agent", userAgent),
+        Header("Accept-Language", acceptLanguage),
+        Header("Accept-Charset", acceptCharset)
       ).fingerprint must be equalTo Hash.sha1(
           userAgent + ":" + acceptLanguage + ":" + acceptCharset
         )
@@ -261,16 +265,15 @@ class FakeRequestPipelineSpec extends Specification {
       val acceptCharset = "test-accept-charset"
       val acceptEncoding = "test-accept-encoding"
       requestPipeline.withHeaders(
-        "User-Agent" -> userAgent,
-        "Accept-Language" -> acceptLanguage,
-        "Accept-Charset" -> acceptCharset,
-        "Accept-Encoding" -> "gzip",
-        "Accept-Encoding" -> "deflate"
+        Header("User-Agent", userAgent),
+        Header("Accept-Language", acceptLanguage),
+        Header("Accept-Charset", acceptCharset),
+        Header("Accept-Encoding", Seq("gzip", "deflate"))
       ).fingerprint(request => Hash.sha1(new StringBuilder()
-          .append(request.headers.getOrElse("User-Agent", Seq("")).mkString(",")).append(":")
-          .append(request.headers.getOrElse("Accept-Language", Seq("")).mkString(",")).append(":")
-          .append(request.headers.getOrElse("Accept-Charset", Seq("")).mkString(",")).append(":")
-          .append(request.headers.getOrElse("Accept-Encoding", Seq("")).mkString(","))
+          .append(request.headers.find(_.name == Header.Name.`User-Agent`).map(_.value).getOrElse("")).append(":")
+          .append(request.headers.find(_.name == Header.Name.`Accept-Language`).map(_.value).getOrElse("")).append(":")
+          .append(request.headers.find(_.name == Header.Name.`Accept-Charset`).map(_.value).getOrElse("")).append(":")
+          .append(request.headers.find(_.name == Header.Name.`Accept-Encoding`).map(_.value).getOrElse(""))
           .toString()
         )) must be equalTo Hash.sha1(
           userAgent + ":" + acceptLanguage + ":" + acceptCharset + ":gzip,deflate"
@@ -290,12 +293,14 @@ class FakeRequestPipelineSpec extends Specification {
   trait Context extends Scope {
 
     /**
-     * A fake request.
+     * A request.
      */
-    val request = FakeRequest(
-      headers = Map(
-        "TEST1" -> Seq("value1", "value2"),
-        "TEST2" -> Seq("value1")
+    val request = SilhouetteRequest(
+      uri = new URI("http://localhost"),
+      method = Method.POST,
+      headers = Seq(
+        Header("TEST1", Seq("value1", "value2")),
+        Header("TEST2", "value1")
       ),
       cookies = Seq(
         Cookie("test1", "value1"),
@@ -312,8 +317,8 @@ class FakeRequestPipelineSpec extends Specification {
     )
 
     /**
-     * A request pipeline which handles a fake request.
+     * A request pipeline which handles a request.
      */
-    val requestPipeline = FakeRequestPipeline(request)
+    val requestPipeline = SilhouetteRequestPipeline(request)
   }
 }

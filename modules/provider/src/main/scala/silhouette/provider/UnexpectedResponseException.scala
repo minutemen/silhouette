@@ -15,20 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.http.client
+package silhouette.provider
 
 /**
- * Represents the content type of a request.
+ * Signals that an unexpected response was received from a provider.
  *
- * @param value String format for a content type.
+ * @param msg The exception message.
+ * @param cause The exception cause.
  */
-private[silhouette] final case class ContentType(value: String)
-
-/**
- * Util class for content type values.
- */
-private[silhouette] object ContentTypes {
-  val `text/plain` = ContentType("text/plain")
-  val `application/json` = ContentType("application/json")
-  val `application/xml` = ContentType("application/xml")
-}
+class UnexpectedResponseException(msg: String, cause: Option[Throwable] = None)
+  extends ProviderException(msg, cause)

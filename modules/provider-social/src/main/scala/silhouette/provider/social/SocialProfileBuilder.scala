@@ -36,16 +36,6 @@ trait SocialProfileBuilder {
   type Profile <: SocialProfile
 
   /**
-   * Gets the URLs that are needed to retrieve the profile data.
-   *
-   * Some providers need more than one request to different URLs to query the profile data.
-   * So we use a Map here to allow defining multiple URLs.
-   *
-   * @return The URLs that are needed to retrieve the profile data.
-   */
-  protected def urls: Map[String, String]
-
-  /**
    * Subclasses need to implement this method to populate the profile information from the service provider.
    *
    * @param authInfo The auth info received from the provider.
@@ -59,17 +49,6 @@ trait SocialProfileBuilder {
    * @return The profile parser implementation.
    */
   protected def profileParser: SocialProfileParser[Content, Profile, A]
-}
-
-/**
- * The companion object.
- */
-object SocialProfileBuilder {
-
-  /**
-   * Some error messages.
-   */
-  val UnspecifiedProfileError = "[%s] error retrieving profile information"
 }
 
 /**
