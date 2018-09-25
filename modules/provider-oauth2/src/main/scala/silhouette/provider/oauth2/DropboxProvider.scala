@@ -22,8 +22,8 @@ import java.net.URI
 import io.circe.Json
 import io.circe.optics.JsonPath._
 import silhouette.LoginInfo
-import silhouette.http._
-import silhouette.provider.oauth2.Auth0Provider._
+import silhouette.http.{ Header, HttpClient, Method, Status }
+import silhouette.provider.oauth2.DropboxProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
 import silhouette.provider.social.state.StateHandler
@@ -31,26 +31,12 @@ import silhouette.provider.social.state.StateHandler
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * Base Auth0 OAuth2 Provider.
+ * Base Dropbox OAuth2 Provider.
  *
- * OAuth Provider configuration in silhouette.conf must indicate:
- *
- *   # Auth0 Service URIs
- *   auth0.authorizationUri="https://mydomain.eu.auth0.com/authorize"
- *   auth0.accessTokenUri="https://mydomain.eu.auth0.com/oauth/token"
- *   auth0.apiUri="https://mydomain.eu.auth0.com/userinfo"
- *
- *   # Application URI and credentials
- *   auth0.redirectUri="http://localhost:9000/authenticate/auth0"
- *   auth0.clientID=myoauthclientid
- *   auth0.clientSecret=myoauthclientsecret
- *
- *   # Auth0 user's profile information requested
- *   auth0.scope="openid name email picture"
- *
- * See http://auth0.com for more information on the Auth0 Auth 2.0 Provider and Service.
+ * @see https://www.dropbox.com/developers/blog/45/using-oauth-20-with-the-core-api
+ * @see https://www.dropbox.com/developers/core/docs#oauth2-methods
  */
-trait BaseAuth0Provider extends OAuth2Provider {
+trait BaseDropboxProvider extends OAuth2Provider {
 
   /**
    * The content type to parse a profile from.
@@ -81,7 +67,6 @@ trait BaseAuth0Provider extends OAuth2Provider {
             case status =>
               Future.failed(new ProfileRetrievalException(SpecifiedProfileError.format(
                 id,
-                root.error_description.string.getOption(json).getOrElse("undefined"),
                 root.error.string.getOption(json).getOrElse("undefined"),
                 status,
                 json
@@ -90,27 +75,12 @@ trait BaseAuth0Provider extends OAuth2Provider {
         }
       }
   }
-
-  /**
-   * Gets the access token.
-   *
-   * @param code    The access code.
-   * @param request The current request.
-   * @tparam R The type of the request.
-   * @return The info containing the access token.
-   */
-  override protected def getAccessToken[R](code: String)(implicit request: RequestPipeline[R]): Future[OAuth2Info] = {
-    request.queryParam("token_type").headOption match {
-      case Some("bearer") => Future(OAuth2Info(code))
-      case _              => super.getAccessToken(code)
-    }
-  }
 }
 
 /**
  * The profile parser for the common social profile.
  */
-class Auth0ProfileParser extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
+class DropboxProfileParser extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
 
   /**
    * Parses the social profile.
@@ -121,40 +91,40 @@ class Auth0ProfileParser extends SocialProfileParser[Json, CommonSocialProfile, 
    */
   override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = Future.successful {
     CommonSocialProfile(
-      loginInfo = LoginInfo(ID, root.user_id.string.getOrError(json, "user_id", ID)),
-      fullName = root.name.string.getOption(json),
-      email = root.email.string.getOption(json),
-      avatarURL = root.picture.string.getOption(json)
+      loginInfo = LoginInfo(ID, root.uid.long.getOrError(json, "uid", ID).toString),
+      firstName = root.name_details.given_name.string.getOption(json),
+      lastName = root.name_details.surname.string.getOption(json),
+      fullName = root.display_name.string.getOption(json)
     )
   }
 }
 
 /**
- * The Auth0 OAuth2 Provider.
+ * The Dropbox OAuth2 Provider.
  *
  * @param httpClient   The HTTP client implementation.
  * @param stateHandler The state provider implementation.
  * @param settings     The provider settings.
  * @param ec           The execution context.
  */
-class Auth0Provider(
+class DropboxProvider(
   protected val httpClient: HttpClient,
   protected val stateHandler: StateHandler,
   val settings: OAuth2Settings
 )(
   implicit
   override implicit val ec: ExecutionContext
-) extends BaseAuth0Provider with CommonProfileBuilder {
+) extends BaseDropboxProvider with CommonProfileBuilder {
 
   /**
    * The type of this class.
    */
-  override type Self = Auth0Provider
+  override type Self = DropboxProvider
 
   /**
    * The profile parser implementation.
    */
-  override val profileParser = new Auth0ProfileParser
+  override val profileParser = new DropboxProfileParser
 
   /**
    * Gets a provider initialized with a new settings object.
@@ -163,27 +133,26 @@ class Auth0Provider(
    * @return An instance of the provider initialized with new settings.
    */
   override def withSettings(f: Settings => Settings): Self =
-    new Auth0Provider(httpClient, stateHandler, f(settings))
+    new DropboxProvider(httpClient, stateHandler, f(settings))
 }
 
 /**
  * The companion object.
  */
-object Auth0Provider {
+object DropboxProvider {
 
   /**
    * The error messages.
    */
-  val SpecifiedProfileError = "[%s] Error retrieving profile information. Error message:" +
-    " %s, type: %s, status: %s, json: %s"
+  val SpecifiedProfileError = "[%s] Error retrieving profile information. Error message: %s, status: %s, Json: %s"
 
   /**
    * The provider ID.
    */
-  val ID = "auth0"
+  val ID = "dropbox"
 
   /**
    * Default provider endpoint.
    */
-  val DefaultApiUri = new URI("https://auth0.auth0.com/userinfo")
+  val DefaultApiUri = new URI("https://api.dropbox.com/1/account/info")
 }

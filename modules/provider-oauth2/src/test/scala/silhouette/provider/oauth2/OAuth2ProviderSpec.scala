@@ -196,6 +196,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
 
     "submit the proper params to the access token post request" in {
       val code = "my.code"
+      val request = Fake.request.withQueryParams(Code -> code)
       val params = Map(
         ClientID -> Seq(c.settings.clientID),
         ClientSecret -> Seq(c.settings.clientSecret),
@@ -205,18 +206,30 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
         c.settings.accessTokenParams.mapValues(Seq(_)) ++
         c.settings.redirectUri.map(uri => Map(RedirectUri -> Seq(uri.toString))).getOrElse(Map())
 
-      val request = Fake.request.withQueryParams(Code -> code)
+      val body = Body.from(params)(BodyFormat.formUrlEncodedFormat)
 
       c.httpClient.withUri(c.settings.accessTokenUri) returns c.httpClient
       c.httpClient.withHeaders(any()) returns c.httpClient
       c.httpClient.withMethod(Method.POST) returns c.httpClient
-      c.httpClient.withBody(params)(BodyFormat.formUrlEncodedFormat) returns c.httpClient
+      c.httpClient.withBody(body) returns c.httpClient
+      // We must use this neat trick here because it isn't possible to check the withBody call with a verification,
+      // because of the implicit params needed for the withBody call. On the other hand we can test it in the abstract
+      // spec, because we throw an exception in both cases which stops the test once the post method was called.
+      // This protects as for an NPE because of the not mocked dependencies. The other solution would be to execute
+      // this test in every provider with the full mocked dependencies.
+      c.httpClient.withBody[Map[String, Seq[String]]](any())(any()) answers { (a, _) =>
+        if (a.asInstanceOf[Array[Any]](0).asInstanceOf[Map[String, Seq[String]]].equals(params)) {
+          throw new RuntimeException("success")
+        } else {
+          throw new RuntimeException("failure")
+        }
+      }
       c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
       c.stateHandler.state returns Future.successful(c.state)
 
-      c.provider.authenticate()(request)
-
-      there was one(c.httpClient).withBody(params)(BodyFormat.formUrlEncodedFormat)
+      failed[RuntimeException](c.provider.authenticate()(request)) {
+        case e => e.getMessage must startWith("success")
+      }
     }
 
     "fail with UnexpectedResponseException if Json cannot be parsed from response" in {

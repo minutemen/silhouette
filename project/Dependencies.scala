@@ -36,7 +36,6 @@ object Dependencies {
 
     object Circe {
       val core = "io.circe" %% "circe-core" % Version.circe
-      val generic = "io.circe" %% "circe-generic" % Version.circe
       val parser = "io.circe" %% "circe-parser" % Version.circe
       val optics = "io.circe" %% "circe-optics" % Version.circe
     }

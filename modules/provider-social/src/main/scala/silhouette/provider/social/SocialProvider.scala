@@ -85,8 +85,7 @@ trait SocialProvider extends Provider with SocialProfileBuilder with ExecutionCo
   /**
    * Retrieves the user profile for the given auth info.
    *
-   * This method can be used to retrieve the profile information for an already authenticated
-   * identity.
+   * This method can be used to retrieve the profile information for an already authenticated identity.
    *
    * @param authInfo The auth info for which the profile information should be retrieved.
    * @return The profile information for the given auth info.

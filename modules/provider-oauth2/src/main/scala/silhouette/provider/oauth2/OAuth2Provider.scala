@@ -22,12 +22,14 @@ import java.net.URLEncoder._
 
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.{ Decoder, Encoder, HCursor, Json }
+import monocle.Optional
 import silhouette.http._
-import silhouette.http.client.Response
+import silhouette.http.client.BodyFormat._
+import silhouette.http.client.{ Body, Response }
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social.state.handler.UserStateItemHandler
 import silhouette.provider.social.state.{ StateHandler, StateItem }
-import silhouette.provider.social.{ SocialStateProvider, StatefulAuthInfo }
+import silhouette.provider.social.{ ProfileRetrievalException, SocialStateProvider, StatefulAuthInfo }
 import silhouette.provider.{ AccessDeniedException, UnexpectedResponseException }
 import silhouette.{ AuthInfo, ConfigurationException }
 
@@ -286,12 +288,40 @@ trait OAuth2Provider extends SocialStateProvider with OAuth2Constants with LazyL
         Failure(new UnexpectedResponseException(UnexpectedResponse.format(id, response.body.raw, status)))
     }
   }
+
+  /**
+   * Helper that executes the builder code with the parsed JSON body.
+   *
+   * @param body    The body to parse as JSON.
+   * @param builder The profile builder block that parses the profile from the given JSON.
+   * @return The parsed profile.
+   */
+  protected def withParsedJson(body: Body)(builder: Json => Future[Profile]): Future[Profile] = {
+    body.as[Json] match {
+      case Failure(error) => Future.failed(
+        new ProfileRetrievalException(JsonParseError.format(id, body.raw), Some(error))
+      )
+      case Success(json) => builder(json)
+    }
+  }
 }
 
 /**
  * The OAuth2Provider companion object.
  */
 object OAuth2Provider extends OAuth2Constants {
+
+  /**
+   * Monkey patches a `Optional[Json, T]` instance.
+   *
+   * @param optional The instance to patch.
+   * @tparam T The type of the result.
+   */
+  implicit class RichMonocleOptional[T](optional: Optional[Json, T]) {
+    def getOrError(json: Json, path: String, id: String): T = optional.getOption(json).getOrElse(
+      throw new ProfileRetrievalException(JsonPathError.format(id, path, json))
+    )
+  }
 
   /**
    * The error messages.
