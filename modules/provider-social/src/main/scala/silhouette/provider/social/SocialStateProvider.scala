@@ -37,8 +37,10 @@ case class StatefulAuthInfo[A <: AuthInfo, +S <: StateItem](authInfo: A, userSta
 
 /**
  * Extends the [[SocialProvider]] with the ability to handle provider specific state.
+ *
+ * @tparam Settings The type of the settings.
  */
-trait SocialStateProvider extends SocialProvider {
+trait SocialStateProvider[Settings] extends SocialProvider[Settings] {
 
   /**
    * Authenticates the user and returns the auth information and the user state.

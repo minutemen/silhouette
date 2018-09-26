@@ -17,20 +17,16 @@
  */
 package silhouette.provider.oauth2
 
-import java.net.URI
 import java.nio.file.Paths
 
-import io.circe.Json
 import silhouette.LoginInfo
 import silhouette.http.client.BodyFormat._
 import silhouette.http.client.{ Body, Response }
-import silhouette.http.{ Fake, Header, Method, Status }
-import silhouette.provider.UnexpectedResponseException
+import silhouette.http.{ Header, Method, Status, URI }
 import silhouette.provider.oauth2.Auth0Provider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social.SocialProvider.UnspecifiedProfileError
-import silhouette.provider.social.state.StateItemHandler
-import silhouette.provider.social.{ CommonSocialProfile, ProfileRetrievalException, StatefulAuthInfo }
+import silhouette.provider.social.{ CommonSocialProfile, ProfileRetrievalException }
 import silhouette.specs2.BaseFixture
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -41,130 +37,25 @@ import scala.concurrent.Future
  */
 class Auth0ProviderSpec extends OAuth2ProviderSpec {
 
-  "The `withSettings` method" should {
-    "create a new instance with customized settings" in new Context {
-      val s = provider.withSettings { s =>
-        s.copy(accessTokenUri = new URI("new-access-token-url"))
-      }
-
-      s.settings.accessTokenUri must be equalTo new URI("new-access-token-url")
-    }
-  }
-
-  "The `authenticate` method" should {
-    "fail with UnexpectedResponseException for an unexpected response" in new Context {
-      val code = "my.code"
-      val httpResponse = mock[Response]
-      val request = Fake.request.withQueryParams(Code -> code)
-
-      httpResponse.status returns 401
-      httpResponse.body returns Body.from("Unauthorized")
-
-      httpClient.withUri(settings.accessTokenUri) returns httpClient
-      httpClient.withHeaders(any()) returns httpClient
-      httpClient.withBody[Map[String, Seq[String]]](any())(any()) returns httpClient
-      httpClient.withMethod(Method.POST) returns httpClient
-      httpClient.execute returns Future.successful(httpResponse)
-
-      stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(state)
-      stateHandler.state returns Future.successful(state)
-
-      failed[UnexpectedResponseException](provider.authenticate()(request)) {
-        case e => e.getMessage must be equalTo UnexpectedResponse.format(
-          provider.id, httpResponse.body.raw, Status.Unauthorized
-        )
-      }
-    }
-
-    "fail with UnexpectedResponseException if OAuth2Info can be build because of an unexpected response" in
-      new Context {
-        val code = "my.code"
-        val httpResponse = mock[Response]
-        val request = Fake.request.withQueryParams(Code -> code)
-
-        httpResponse.status returns 200
-        httpResponse.body returns Body.from(Json.obj())
-
-        httpClient.withUri(settings.accessTokenUri) returns httpClient
-        httpClient.withHeaders(any()) returns httpClient
-        httpClient.withBody[Map[String, Seq[String]]](any())(any()) returns httpClient
-        httpClient.withMethod(Method.POST) returns httpClient
-        httpClient.execute returns Future.successful(httpResponse)
-
-        stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(state)
-        stateHandler.state returns Future.successful(state)
-
-        failed[UnexpectedResponseException](provider.authenticate()(request)) {
-          case e => e.getMessage must startWith(InvalidInfoFormat.format(provider.id, ""))
-        }
-      }
-
-    "return the auth info" in new Context {
-      val code = "my.code"
-      val httpResponse = mock[Response]
-      val request = Fake.request.withQueryParams(Code -> code)
-
-      httpResponse.status returns 200
-      httpResponse.body returns Body.from(oAuthInfo)
-
-      httpClient.withUri(settings.accessTokenUri) returns httpClient
-      httpClient.withHeaders(any()) returns httpClient
-      httpClient.withBody[Map[String, Seq[String]]](any())(any()) returns httpClient
-      httpClient.withMethod(Method.POST) returns httpClient
-      httpClient.execute returns Future.successful(httpResponse)
-
-      stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(state)
-      stateHandler.state returns Future.successful(state)
-
-      authInfo(provider.authenticate()(request))(_ must be equalTo oAuthInfoObject)
-    }
-  }
-
-  "The `authenticate` method with user state" should {
-    "return stateful auth info" in new Context {
-      val code = "my.code"
-      val httpResponse = mock[Response]
-      implicit val request: Fake.Request = Fake.request.withQueryParams(Code -> code)
-
-      httpResponse.status returns 200
-      httpResponse.body returns Body.from(oAuthInfo)
-
-      httpClient.withUri(settings.accessTokenUri) returns httpClient
-      httpClient.withHeaders(any()) returns httpClient
-      httpClient.withBody[Map[String, Seq[String]]](any())(any()) returns httpClient
-      httpClient.withMethod(Method.POST) returns httpClient
-      httpClient.execute returns Future.successful(httpResponse)
-
-      stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(state)
-      stateHandler.state returns Future.successful(state)
-      stateHandler.withHandler(any[StateItemHandler]()) returns stateHandler
-      state.items returns Set(userStateItem)
-
-      statefulAuthInfo(provider.authenticate(userStateItem))(_ must be equalTo stateAuthInfo)
-    }
-  }
-
   "The `retrieveProfile` method" should {
     "fail with ProfileRetrievalException if API returns error" in new Context {
-      val error = ErrorJson.asJson
+      val apiResult = ErrorJson.asJson
       val httpResponse = mock[Response]
       httpResponse.status returns Status.`Bad Request`
-      httpResponse.body returns Body.from(error)
+      httpResponse.body returns Body.from(apiResult)
 
       httpClient.withUri(settings.apiUri.get) returns httpClient
       httpClient.withHeaders(
-        Header(Header.Name.Authorization, s"Bearer ${oAuthInfoObject.accessToken}")
+        Header(Header.Name.Authorization, s"Bearer ${oAuth2Info.accessToken}")
       ) returns httpClient
       httpClient.withMethod(Method.GET) returns httpClient
       httpClient.execute returns Future.successful(httpResponse)
 
-      failed[ProfileRetrievalException](provider.retrieveProfile(oAuthInfoObject)) {
+      failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
         case e => e.getMessage must equalTo(SpecifiedProfileError.format(
           provider.id,
-          "the connection was disabled",
-          "invalid_request",
           Status.`Bad Request`,
-          error
+          apiResult
         ))
       }
     }
@@ -176,34 +67,34 @@ class Auth0ProviderSpec extends OAuth2ProviderSpec {
 
       httpClient.withUri(settings.apiUri.get) returns httpClient
       httpClient.withHeaders(
-        Header(Header.Name.Authorization, s"Bearer ${oAuthInfoObject.accessToken}")
+        Header(Header.Name.Authorization, s"Bearer ${oAuth2Info.accessToken}")
       ) returns httpClient
       httpClient.withMethod(Method.GET) returns httpClient
       httpClient.execute returns Future.successful(httpResponse)
 
-      failed[ProfileRetrievalException](provider.retrieveProfile(oAuthInfoObject)) {
+      failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
         case e => e.getMessage must equalTo(UnspecifiedProfileError.format(ID))
       }
     }
 
     "return the social profile" in new Context {
-      val userProfile = UserProfileJson.asJson
+      val apiResult = UserProfileJson.asJson
       val httpResponse = mock[Response]
       httpResponse.status returns 200
-      httpResponse.body returns Body.from(userProfile)
+      httpResponse.body returns Body.from(apiResult)
 
       httpClient.withUri(settings.apiUri.get) returns httpClient
       httpClient.withHeaders(
-        Header(Header.Name.Authorization, s"Bearer ${oAuthInfoObject.accessToken}")
+        Header(Header.Name.Authorization, s"Bearer ${oAuth2Info.accessToken}")
       ) returns httpClient
       httpClient.withMethod(Method.GET) returns httpClient
       httpClient.execute returns Future.successful(httpResponse)
 
-      profile(provider.retrieveProfile(oAuthInfoObject)) { p =>
+      profile(provider.retrieveProfile(oAuth2Info)) { p =>
         p must be equalTo CommonSocialProfile(
           loginInfo = LoginInfo(provider.id, "auth0|56961100fc02d8a0339b1a2a"),
           fullName = Some("Apollonia Vanova"),
-          email = Some("apollonia.vanova@minutemen.com"),
+          email = Some("apollonia.vanova@minutemen.group"),
           avatarURL = Some("https://s.gravatar.com/avatar/c1c49231ce863e5f33d7f42cd44632f4?s=480&r=pg&d=https%" +
             "3A%2F%2Fcdn.auth0.com%2Favatars%2Flu.png")
         )
@@ -216,47 +107,32 @@ class Auth0ProviderSpec extends OAuth2ProviderSpec {
    *
    * @return The Context to use for the abstract OAuth2 provider spec.
    */
-  override protected def context: OAuth2ProviderSpecContext = new Context {}
+  override protected def context: BaseContext = new Context {}
 
   /**
    * The context.
    */
-  trait Context extends OAuth2ProviderSpecContext {
+  trait Context extends BaseContext {
 
     /**
      * Paths to the Json fixtures.
      */
-    lazy val ErrorJson = BaseFixture.load(Paths.get("auth0.error.json"))
-    lazy val AccessTokenJson = BaseFixture.load(Paths.get("auth0.access.token.json"))
-    lazy val UserProfileJson = BaseFixture.load(Paths.get("auth0.profile.json"))
+    override val ErrorJson = BaseFixture.load(Paths.get("auth0.error.json"))
+    override val AccessTokenJson = BaseFixture.load(Paths.get("auth0.access.token.json"))
+    override val UserProfileJson = BaseFixture.load(Paths.get("auth0.profile.json"))
 
     /**
      * The OAuth2 settings.
      */
     override lazy val settings = spy(OAuth2Settings(
-      authorizationUri = Some(new URI("https://gerritforge.eu.auth0.com/authorize")),
-      accessTokenUri = new URI("https://gerritforge.eu.auth0.com/oauth/token"),
-      apiUri = Some(new URI("https://gerritforge.eu.auth0.com/userinfo")),
-      redirectUri = Some(new URI("https://www.mohiva.com")),
+      authorizationUri = Some(URI("https://gerritforge.eu.auth0.com/authorize")),
+      accessTokenUri = URI("https://gerritforge.eu.auth0.com/oauth/token"),
+      apiUri = Some(URI("https://gerritforge.eu.auth0.com/userinfo")),
+      redirectUri = Some(URI("https://www.mohiva.com")),
       clientID = "some.client.id",
       clientSecret = "some.secret",
       scope = Some("email")
     ))
-
-    /**
-     * The OAuth2 info returned by Auth0.
-     */
-    override lazy val oAuthInfo = AccessTokenJson.asJson
-
-    /**
-     * The OAuth2 info deserialized as case class object.
-     */
-    lazy val oAuthInfoObject = AccessTokenJson.as[OAuth2Info]
-
-    /**
-     * The stateful auth info.
-     */
-    override lazy val stateAuthInfo = StatefulAuthInfo(oAuthInfoObject, userStateItem)
 
     /**
      * The provider to test.

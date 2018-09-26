@@ -17,7 +17,7 @@
  */
 package silhouette.http
 
-import java.net.URI
+import java.net.{ URI => JavaURI }
 
 import silhouette.http.client.{ Body, BodyFormat, Response }
 
@@ -38,7 +38,7 @@ private[silhouette] trait HttpClient {
    * @param uri The URI to set.
    * @return A request builder to provide a fluent interface.
    */
-  def withUri(uri: URI): HttpClient
+  def withUri(uri: JavaURI): HttpClient
 
   /**
    * Returns a copy of this instance with a new HTTP method.

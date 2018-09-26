@@ -20,8 +20,8 @@ package silhouette.provider.oauth2
 import io.circe.Json
 import io.circe.optics.JsonPath._
 import silhouette.LoginInfo
-import silhouette.http._
-import silhouette.provider.oauth2.DropboxProvider._
+import silhouette.http.{ HttpClient, Method, URI }
+import silhouette.provider.oauth2.FacebookProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
 import silhouette.provider.social.state.StateHandler
@@ -29,12 +29,13 @@ import silhouette.provider.social.state.StateHandler
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * Base Dropbox OAuth2 Provider.
+ * Base Facebook OAuth2 Provider.
  *
- * @see https://www.dropbox.com/developers/blog/45/using-oauth-20-with-the-core-api
- * @see https://www.dropbox.com/developers/core/docs#oauth2-methods
+ * @see https://developers.facebook.com/tools/explorer
+ * @see https://developers.facebook.com/docs/graph-api/reference/user
+ * @see https://developers.facebook.com/docs/facebook-login/access-tokens
  */
-trait BaseDropboxProvider extends OAuth2Provider {
+trait BaseFacebookProvider extends OAuth2Provider {
 
   /**
    * The content type to parse a profile from.
@@ -53,17 +54,16 @@ trait BaseDropboxProvider extends OAuth2Provider {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
-    httpClient.withUri(settings.apiUri.getOrElse[URI](DefaultApiUri))
-      .withHeaders(Header(Header.Name.Authorization, s"Bearer ${authInfo.accessToken}"))
+    httpClient.withUri(settings.apiUri.getOrElse(DefaultApiUri).format(authInfo.accessToken))
       .withMethod(Method.GET)
       .execute
       .flatMap { response =>
         withParsedJson(response.body) { json =>
-          response.status match {
-            case Status.OK =>
+          root.error.json.getOption(json) match {
+            case Some(error) =>
+              Future.failed(new ProfileRetrievalException(SpecifiedProfileError.format(id, response.status, error)))
+            case _ =>
               profileParser.parse(json, authInfo)
-            case status =>
-              Future.failed(new ProfileRetrievalException(SpecifiedProfileError.format(id, status, json)))
           }
         }
       }
@@ -73,7 +73,7 @@ trait BaseDropboxProvider extends OAuth2Provider {
 /**
  * The profile parser for the common social profile.
  */
-class DropboxProfileParser extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
+class FacebookProfileParser extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
 
   /**
    * Parses the social profile.
@@ -84,40 +84,42 @@ class DropboxProfileParser extends SocialProfileParser[Json, CommonSocialProfile
    */
   override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = Future.successful {
     CommonSocialProfile(
-      loginInfo = LoginInfo(ID, root.uid.long.getOrError(json, "uid", ID).toString),
-      firstName = root.name_details.given_name.string.getOption(json),
-      lastName = root.name_details.surname.string.getOption(json),
-      fullName = root.display_name.string.getOption(json)
+      loginInfo = LoginInfo(ID, root.id.string.getOrError(json, "id", ID)),
+      firstName = root.first_name.string.getOption(json),
+      lastName = root.last_name.string.getOption(json),
+      fullName = root.name.string.getOption(json),
+      email = root.email.string.getOption(json),
+      avatarURL = root.picture.data.url.string.getOption(json)
     )
   }
 }
 
 /**
- * The Dropbox OAuth2 Provider.
+ * The Facebook OAuth2 Provider.
  *
  * @param httpClient   The HTTP client implementation.
  * @param stateHandler The state provider implementation.
  * @param settings     The provider settings.
  * @param ec           The execution context.
  */
-class DropboxProvider(
+class FacebookProvider(
   protected val httpClient: HttpClient,
   protected val stateHandler: StateHandler,
   val settings: OAuth2Settings
 )(
   implicit
   override implicit val ec: ExecutionContext
-) extends BaseDropboxProvider with CommonProfileBuilder {
+) extends BaseFacebookProvider with CommonProfileBuilder {
 
   /**
    * The type of this class.
    */
-  override type Self = DropboxProvider
+  override type Self = FacebookProvider
 
   /**
    * The profile parser implementation.
    */
-  override val profileParser = new DropboxProfileParser
+  override val profileParser = new FacebookProfileParser
 
   /**
    * Gets a provider initialized with a new settings object.
@@ -126,21 +128,22 @@ class DropboxProvider(
    * @return An instance of the provider initialized with new settings.
    */
   override def withSettings(f: OAuth2Settings => OAuth2Settings): Self =
-    new DropboxProvider(httpClient, stateHandler, f(settings))
+    new FacebookProvider(httpClient, stateHandler, f(settings))
 }
 
 /**
  * The companion object.
  */
-object DropboxProvider {
+object FacebookProvider {
 
   /**
    * The provider ID.
    */
-  val ID = "dropbox"
+  val ID = "facebook"
 
   /**
    * Default provider endpoint.
    */
-  val DefaultApiUri: URI = URI("https://api.dropbox.com/1/account/info")
+  val DefaultApiUri = URI("https://graph.facebook.com/v3.1/me?fields=name,first_name,last_name,picture,email&" +
+    "return_ssl_resources=1&access_token=%s")
 }

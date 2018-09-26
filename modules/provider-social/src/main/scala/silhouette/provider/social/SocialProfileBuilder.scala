@@ -23,7 +23,7 @@ import scala.concurrent.Future
  * Builds the social profile.
  */
 trait SocialProfileBuilder {
-  self: SocialProvider =>
+  self: SocialProvider[_] =>
 
   /**
    * The content type to parse a profile from.

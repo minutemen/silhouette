@@ -17,8 +17,7 @@
  */
 package silhouette
 
-import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
-import io.circe.{ Decoder, Encoder }
+import io.circe.{ Decoder, Encoder, HCursor, Json }
 
 /**
  * Represents a linked login for an identity (i.e. a local username/password or a Facebook/Google account).
@@ -34,6 +33,14 @@ case class LoginInfo(providerID: String, providerKey: String)
  * The companion object.
  */
 object LoginInfo {
-  implicit val loginInfoDecoder: Decoder[LoginInfo] = deriveDecoder
-  implicit val loginInfoEncoder: Encoder[LoginInfo] = deriveEncoder
+  implicit val loginInfoDecoder: Decoder[LoginInfo] = (c: HCursor) => for {
+    providerID <- c.downField("providerID").as[String]
+    providerKey <- c.downField("providerKey").as[String]
+  } yield {
+    new LoginInfo(providerID, providerKey)
+  }
+  implicit val loginInfoEncoder: Encoder[LoginInfo] = (a: LoginInfo) => Json.obj(
+    ("providerID", Json.fromString(a.providerID)),
+    ("providerKey", Json.fromString(a.providerKey))
+  )
 }

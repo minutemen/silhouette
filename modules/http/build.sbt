@@ -19,7 +19,6 @@ import Dependencies._
 
 libraryDependencies ++= Seq(
   Library.Circe.core,
-  Library.Circe.generic,
   Library.Circe.parser,
   Library.scalaLogging,
   Library.scalaXml

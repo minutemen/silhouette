@@ -17,8 +17,9 @@
  */
 package silhouette.http
 
+import java.net.{ URLEncoder, URI => JavaURI }
+
 import silhouette.RichSeq._
-import java.net.{ URI, URLEncoder }
 
 /**
  * The Silhouette request implementation.
@@ -31,7 +32,7 @@ import java.net.{ URI, URLEncoder }
  * @param queryParams The query params.
  */
 protected[silhouette] case class SilhouetteRequest(
-  uri: URI,
+  uri: JavaURI,
   method: Method,
   headers: Seq[Header] = Seq(),
   cookies: Seq[Cookie] = Seq(),
@@ -55,7 +56,7 @@ final protected[silhouette] case class SilhouetteRequestPipeline(request: Silhou
    *
    * @return The absolute URI of the request target.
    */
-  override def uri: URI = request.uri
+  override def uri: JavaURI = request.uri
 
   /**
    * Creates a new request pipeline with the given URI.
@@ -66,7 +67,7 @@ final protected[silhouette] case class SilhouetteRequestPipeline(request: Silhou
    * @param uri The absolute URI of the request target.
    * @return A new request pipeline instance with the set URI.
    */
-  override def withUri(uri: URI): RequestPipeline[SilhouetteRequest] = copy(request.copy(uri = uri))
+  override def withUri(uri: JavaURI): RequestPipeline[SilhouetteRequest] = copy(request.copy(uri = uri))
 
   /**
    * Gets the HTTP request method.

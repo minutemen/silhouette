@@ -17,7 +17,6 @@
  */
 package silhouette.provider.oauth2
 
-import java.net.URI
 import java.net.URLEncoder._
 
 import com.typesafe.scalalogging.LazyLogging
@@ -77,17 +76,12 @@ object OAuth2Info extends OAuth2Constants {
 /**
  * Base implementation for all OAuth2 providers.
  */
-trait OAuth2Provider extends SocialStateProvider with OAuth2Constants with LazyLogging {
+trait OAuth2Provider extends SocialStateProvider[OAuth2Settings] with OAuth2Constants with LazyLogging {
 
   /**
    * The type of the auth info.
    */
   type A = OAuth2Info
-
-  /**
-   * The settings type.
-   */
-  type Settings = OAuth2Settings
 
   /**
    * The social state handler implementation.
@@ -332,6 +326,7 @@ object OAuth2Provider extends OAuth2Constants {
   val JsonParseError = "[%s] Cannot parse response `%s` to Json"
   val JsonPathError = "[%s] Cannot access json path `%s` from Json: %s"
   val UnexpectedResponse = "[%s] Got unexpected response `%s`; status: %s"
+  val SpecifiedProfileError = "[%s] Error retrieving profile information. Status: %s, Json: %s"
 }
 
 /**

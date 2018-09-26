@@ -28,23 +28,20 @@ import scala.concurrent.Future
 
 /**
  * The base interface for all social providers.
+ *
+ * @tparam Settings The type of the settings.
  */
-trait SocialProvider extends Provider with SocialProfileBuilder with ExecutionContextProvider {
+trait SocialProvider[Settings] extends Provider with SocialProfileBuilder with ExecutionContextProvider {
 
   /**
    * The type of the concrete implementation of this abstract type.
    */
-  type Self <: SocialProvider
+  type Self <: SocialProvider[Settings]
 
   /**
    * The type of the auth info.
    */
   type A <: AuthInfo
-
-  /**
-   * The settings type.
-   */
-  type Settings
 
   /**
    * The HTTP client implementation.

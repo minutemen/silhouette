@@ -17,23 +17,23 @@
  */
 package silhouette.provider.oauth2
 
-import java.net.URI
 import java.net.URLEncoder._
 
 import io.circe.Json
-import io.circe.syntax._
 import org.specs2.execute.Result
 import org.specs2.matcher.ThrownExpectations
 import org.specs2.mock.Mockito
 import org.specs2.specification.Scope
 import silhouette.ConfigurationException
 import silhouette.http._
+import silhouette.http.client.BodyFormat._
 import silhouette.http.client.{ Body, BodyFormat, Response }
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
 import silhouette.provider.social.state.handler.UserStateItem
 import silhouette.provider.social.state.{ State, StateHandler, StateItem, StateItemHandler }
 import silhouette.provider.{ AccessDeniedException, UnexpectedResponseException }
+import silhouette.specs2.BaseFixture
 
 import scala.concurrent.Future
 import scala.io.Codec
@@ -47,7 +47,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
   isolated
 
   "The `authenticate` method" should {
-    implicit val c: OAuth2ProviderSpecContext = context
+    implicit val c: BaseContext = context
     "fail with an AccessDeniedException if `error` key with value `access_denied` exists in query string" in {
       val request = Fake.request.withQueryParams(Error -> AccessDenied)
       failed[AccessDeniedException](c.provider.authenticate()(request)) {
@@ -119,41 +119,41 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
 
     "resolves relative redirectUri before starting the flow" in {
       verifyRedirectUri(
-        redirectUri = Some(new URI("/redirect-url")),
+        redirectUri = Some(URI("/redirect-url")),
         secure = false,
-        resolvedRedirectUri = new URI("http://www.example.com/redirect-url")
+        resolvedRedirectUri = URI("http://www.example.com/redirect-url")
       )
     }
 
     "resolves path relative redirectUri before starting the flow" in {
       verifyRedirectUri(
-        redirectUri = Some(new URI("redirect-url")),
+        redirectUri = Some(URI("redirect-url")),
         secure = false,
-        resolvedRedirectUri = new URI("http://www.example.com/request-path/redirect-url")
+        resolvedRedirectUri = URI("http://www.example.com/request-path/redirect-url")
       )
     }
 
     "resolves relative redirectUri before starting the flow over https" in {
       verifyRedirectUri(
-        redirectUri = Some(new URI("/redirect-url")),
+        redirectUri = Some(URI("/redirect-url")),
         secure = true,
-        resolvedRedirectUri = new URI("https://www.example.com/redirect-url")
+        resolvedRedirectUri = URI("https://www.example.com/redirect-url")
       )
     }
 
     "verifying presence of redirect param in the access token post request" in {
       verifyRedirectUri(
-        redirectUri = Some(new URI("/redirect-url")),
+        redirectUri = Some(URI("/redirect-url")),
         secure = false,
-        resolvedRedirectUri = new URI("http://www.example.com/redirect-url")
+        resolvedRedirectUri = URI("http://www.example.com/redirect-url")
       )
     }
 
     "verifying presence of redirect param in the access token post request over https" in {
       verifyRedirectUri(
-        redirectUri = Some(new URI("/redirect-url")),
+        redirectUri = Some(URI("/redirect-url")),
         secure = true,
-        resolvedRedirectUri = new URI("https://www.example.com/redirect-url")
+        resolvedRedirectUri = URI("https://www.example.com/redirect-url")
       )
     }
 
@@ -161,7 +161,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       verifyRedirectUri(
         redirectUri = None,
         secure = false,
-        resolvedRedirectUri = new URI("http://www.example.com/request-path/redirect-url")
+        resolvedRedirectUri = URI("http://www.example.com/request-path/redirect-url")
       )
     }
 
@@ -169,7 +169,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       verifyRedirectUri(
         redirectUri = None,
         secure = true,
-        resolvedRedirectUri = new URI("https://www.example.com/redirect-url")
+        resolvedRedirectUri = URI("https://www.example.com/redirect-url")
       )
     }
 
@@ -255,6 +255,97 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
           e.getCause.getMessage must be equalTo "expected json value got < (line 1, column 1)"
       }
     }
+
+    "fail with UnexpectedResponseException for an unexpected response" in {
+      val code = "my.code"
+      val httpResponse = mock[Response]
+      val request = Fake.request.withQueryParams(Code -> code)
+
+      httpResponse.status returns 401
+      httpResponse.body returns Body.from("Unauthorized")
+
+      c.httpClient.withUri(c.settings.accessTokenUri) returns c.httpClient
+      c.httpClient.withHeaders(any()) returns c.httpClient
+      c.httpClient.withBody[Map[String, Seq[String]]](any())(any()) returns c.httpClient
+      c.httpClient.withMethod(Method.POST) returns c.httpClient
+      c.httpClient.execute returns Future.successful(httpResponse)
+
+      c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
+      c.stateHandler.state returns Future.successful(c.state)
+
+      failed[UnexpectedResponseException](c.provider.authenticate()(request)) {
+        case e => e.getMessage must be equalTo UnexpectedResponse.format(
+          c.provider.id, httpResponse.body.raw, Status.Unauthorized
+        )
+      }
+    }
+
+    "fail with UnexpectedResponseException if OAuth2Info can be build because of an unexpected response" in {
+      val code = "my.code"
+      val httpResponse = mock[Response]
+      val request = Fake.request.withQueryParams(Code -> code)
+
+      httpResponse.status returns 200
+      httpResponse.body returns Body.from(Json.obj())
+
+      c.httpClient.withUri(c.settings.accessTokenUri) returns c.httpClient
+      c.httpClient.withHeaders(any()) returns c.httpClient
+      c.httpClient.withBody[Map[String, Seq[String]]](any())(any()) returns c.httpClient
+      c.httpClient.withMethod(Method.POST) returns c.httpClient
+      c.httpClient.execute returns Future.successful(httpResponse)
+
+      c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
+      c.stateHandler.state returns Future.successful(c.state)
+
+      failed[UnexpectedResponseException](c.provider.authenticate()(request)) {
+        case e => e.getMessage must startWith(InvalidInfoFormat.format(c.provider.id, ""))
+      }
+    }
+
+    "return the auth info" in {
+      val code = "my.code"
+      val httpResponse = mock[Response]
+      val request = Fake.request.withQueryParams(Code -> code)
+
+      httpResponse.status returns 200
+      httpResponse.body returns Body.from(c.oAuth2InfoJson)
+
+      c.httpClient.withUri(c.settings.accessTokenUri) returns c.httpClient
+      c.httpClient.withHeaders(any()) returns c.httpClient
+      c.httpClient.withBody[Map[String, Seq[String]]](any())(any()) returns c.httpClient
+      c.httpClient.withMethod(Method.POST) returns c.httpClient
+      c.httpClient.execute returns Future.successful(httpResponse)
+
+      c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
+      c.stateHandler.state returns Future.successful(c.state)
+
+      authInfo(c.provider.authenticate()(request))(_ must be equalTo c.oAuth2Info)
+    }
+  }
+
+  "The `authenticate` method with user state" should {
+    val c = context
+    "return stateful auth info" in {
+      val code = "my.code"
+      val httpResponse = mock[Response]
+      implicit val request: Fake.Request = Fake.request.withQueryParams(Code -> code)
+
+      httpResponse.status returns 200
+      httpResponse.body returns Body.from(c.oAuth2InfoJson)
+
+      c.httpClient.withUri(c.settings.accessTokenUri) returns c.httpClient
+      c.httpClient.withHeaders(any()) returns c.httpClient
+      c.httpClient.withBody[Map[String, Seq[String]]](any())(any()) returns c.httpClient
+      c.httpClient.withMethod(Method.POST) returns c.httpClient
+      c.httpClient.execute returns Future.successful(httpResponse)
+
+      c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
+      c.stateHandler.state returns Future.successful(c.state)
+      c.stateHandler.withHandler(any[StateItemHandler]()) returns c.stateHandler
+      c.state.items returns Set(c.userStateItem)
+
+      statefulAuthInfo(c.provider.authenticate(c.userStateItem))(_ must be equalTo c.stateAuthInfo)
+    }
   }
 
   "The `settings` method" should {
@@ -264,12 +355,23 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
     }
   }
 
+  "The `withSettings` method" should {
+    val c = context
+    "create a new instance with customized settings" in {
+      val newProvider = c.provider.withSettings { s =>
+        s.copy(accessTokenUri = URI("new-access-token-url"))
+      }
+
+      newProvider.settings.accessTokenUri must be equalTo URI("new-access-token-url")
+    }
+  }
+
   /**
    * Defines the context for the abstract OAuth2 provider spec.
    *
    * @return The Context to use for the abstract OAuth2 provider spec.
    */
-  protected def context: OAuth2ProviderSpecContext
+  protected def context: BaseContext
 
   /**
    * Helper method that validates the resolved redirect URI.
@@ -280,14 +382,14 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
     resolvedRedirectUri: URI
   )(
     implicit
-    c: OAuth2ProviderSpecContext
+    c: BaseContext
   ) = {
     c.settings.authorizationUri match {
       case None =>
         skipped("authorizationUri is not defined, so this step isn't needed for provider: " + c.provider.getClass)
       case Some(_) =>
         val scheme = if (secure) "https" else "http"
-        val uri = new URI(s"$scheme://www.example.com/request-path/something")
+        val uri = URI(s"$scheme://www.example.com/request-path/something")
         val request = Fake.request(uri)
 
         val sessionKey = "session-key"
@@ -300,7 +402,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
         c.stateHandler.state returns Future.successful(c.state)
         c.stateHandler.publish[SilhouetteRequest, SilhouetteResponse](any(), any())(any()) answers { (a, _) =>
           val result = a.asInstanceOf[Array[Any]](0).asInstanceOf[Fake.Response]
-          val state = a.asInstanceOf[Array[Any]](1).asInstanceOf[OAuth2ProviderSpecContext#TestState]
+          val state = a.asInstanceOf[Array[Any]](1).asInstanceOf[BaseContext#TestState]
 
           result.withSession(sessionKey -> c.stateHandler.serialize(state).getOrElse(""))
         }
@@ -323,77 +425,78 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
         }
     }
   }
-}
 
-/**
- * Context for the OAuth2ProviderSpec.
- */
-trait OAuth2ProviderSpecContext extends Scope with Mockito with ThrownExpectations {
-  abstract class TestState extends State(Set.empty)
-  abstract class TestStateHandler extends StateHandler {
-    override type Self = TestStateHandler
-    override def withHandler(handler: StateItemHandler): TestStateHandler
+  /**
+   * Base context.
+   */
+  trait BaseContext extends Scope with Mockito with ThrownExpectations {
+    abstract class TestState extends State(Set.empty)
+    abstract class TestStateHandler extends StateHandler {
+      override type Self = TestStateHandler
+      override def withHandler(handler: StateItemHandler): TestStateHandler
+    }
+
+    /**
+     * Paths to the Json fixtures.
+     */
+    val ErrorJson: BaseFixture.F
+    val AccessTokenJson: BaseFixture.F
+    val UserProfileJson: BaseFixture.F
+
+    /**
+     * The HTTP client mock.
+     */
+    lazy val httpClient = mock[HttpClient].smart
+
+    /**
+     * The OAuth2 state.
+     */
+    lazy val state = mock[TestState].smart
+
+    /**
+     * A user state item.
+     */
+    lazy val userStateItem = UserStateItem(Map("path" -> "/login"))
+
+    /**
+     * The OAuth2 state handler.
+     */
+    lazy val stateHandler = mock[TestStateHandler].smart
+
+    /**
+     * A OAuth2 info as JSON.
+     */
+    lazy val oAuth2InfoJson = AccessTokenJson.asJson
+
+    /**
+     * The OAuth2 info decoded from the JSON.
+     */
+    lazy val oAuth2Info = AccessTokenJson.as[OAuth2Info]
+
+    /**
+     * The stateful auth info.
+     */
+    lazy val stateAuthInfo = StatefulAuthInfo(oAuth2Info, userStateItem)
+
+    /**
+     * The OAuth2 settings.
+     */
+    def settings: OAuth2Settings
+
+    /**
+     * The provider to test.
+     */
+    def provider: OAuth2Provider
+
+    /**
+     * Extracts the params of a URL.
+     *
+     * @param url The url to parse.
+     * @return The params of a URL.
+     */
+    def urlParams(url: String): Map[String, String] = (url.split('&') map { str =>
+      val pair = str.split('=')
+      pair(0) -> pair(1)
+    }).toMap
   }
-
-  /**
-   * The HTTP client mock.
-   */
-  lazy val httpClient = mock[HttpClient].smart
-
-  /**
-   * A OAuth2 info.
-   */
-  lazy val oAuthInfo: Json = Json.obj(
-    AccessToken -> "my.access.token".asJson,
-    TokenType -> "bearer".asJson,
-    ExpiresIn -> 3600.asJson,
-    RefreshToken -> "my.refresh.token".asJson
-  )
-
-  /**
-   * The OAuth2 state.
-   */
-  lazy val state = mock[TestState].smart
-
-  /**
-   * A user state item.
-   */
-  lazy val userStateItem = UserStateItem(Map("path" -> "/login"))
-
-  /**
-   * The OAuth2 state handler.
-   */
-  lazy val stateHandler = mock[TestStateHandler].smart
-
-  /**
-   * The stateful auth info.
-   */
-  lazy val stateAuthInfo = StatefulAuthInfo(oAuthInfo.as[OAuth2Info].toOption.get, userStateItem)
-
-  /**
-   * The OAuth2 settings.
-   */
-  def settings: OAuth2Settings = spy(OAuth2Settings(
-    authorizationUri = Some(new URI("https://graph.facebook.com/oauth/authorize")),
-    accessTokenUri = new URI("https://graph.facebook.com/oauth/access_token"),
-    clientID = "my.client.id",
-    clientSecret = "my.client.secret",
-    scope = Some("email")
-  ))
-
-  /**
-   * The provider to test.
-   */
-  def provider: OAuth2Provider
-
-  /**
-   * Extracts the params of a URL.
-   *
-   * @param url The url to parse.
-   * @return The params of a URL.
-   */
-  def urlParams(url: String): Map[String, String] = (url.split('&') map { str =>
-    val pair = str.split('=')
-    pair(0) -> pair(1)
-  }).toMap
 }

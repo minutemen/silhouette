@@ -19,11 +19,12 @@ package silhouette.provider.oauth2
 
 import java.nio.file.Paths
 
+import io.circe.optics.JsonPath._
 import silhouette.LoginInfo
 import silhouette.http.client.BodyFormat._
 import silhouette.http.client.{ Body, Response }
-import silhouette.http.{ Header, Method, Status, URI }
-import silhouette.provider.oauth2.DropboxProvider._
+import silhouette.http.{ Method, Status, URI }
+import silhouette.provider.oauth2.FacebookProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social.SocialProvider.UnspecifiedProfileError
 import silhouette.provider.social.{ CommonSocialProfile, ProfileRetrievalException }
@@ -33,9 +34,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 /**
- * Test case for the [[DropboxProvider]] class.
+ * Test case for the [[FacebookProvider]] class.
  */
-class DropboxProviderSpec extends OAuth2ProviderSpec {
+class FacebookProviderSpec extends OAuth2ProviderSpec {
 
   "The `retrieveProfile` method" should {
     "fail with ProfileRetrievalException if API returns error" in new Context {
@@ -44,10 +45,7 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
       httpResponse.status returns Status.`Bad Request`
       httpResponse.body returns Body.from(apiResult)
 
-      httpClient.withUri(DefaultApiUri) returns httpClient
-      httpClient.withHeaders(
-        Header(Header.Name.Authorization, s"Bearer ${oAuth2Info.accessToken}")
-      ) returns httpClient
+      httpClient.withUri(DefaultApiUri.format(oAuth2Info.accessToken)) returns httpClient
       httpClient.withMethod(Method.GET) returns httpClient
       httpClient.execute returns Future.successful(httpResponse)
 
@@ -55,7 +53,7 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
         case e => e.getMessage must equalTo(SpecifiedProfileError.format(
           provider.id,
           Status.`Bad Request`,
-          apiResult
+          root.error.json.getOption(apiResult).get
         ))
       }
     }
@@ -65,10 +63,7 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
       httpResponse.status returns 500
       httpResponse.body throws new RuntimeException("")
 
-      httpClient.withUri(DefaultApiUri) returns httpClient
-      httpClient.withHeaders(
-        Header(Header.Name.Authorization, s"Bearer ${oAuth2Info.accessToken}")
-      ) returns httpClient
+      httpClient.withUri(DefaultApiUri.format(oAuth2Info.accessToken)) returns httpClient
       httpClient.withMethod(Method.GET) returns httpClient
       httpClient.execute returns Future.successful(httpResponse)
 
@@ -83,19 +78,19 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
       httpResponse.status returns 200
       httpResponse.body returns Body.from(apiResult)
 
-      httpClient.withUri(DefaultApiUri) returns httpClient
-      httpClient.withHeaders(
-        Header(Header.Name.Authorization, s"Bearer ${oAuth2Info.accessToken}")
-      ) returns httpClient
+      httpClient.withUri(DefaultApiUri.format(oAuth2Info.accessToken)) returns httpClient
       httpClient.withMethod(Method.GET) returns httpClient
       httpClient.execute returns Future.successful(httpResponse)
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>
         p must be equalTo CommonSocialProfile(
-          loginInfo = LoginInfo(provider.id, "12345678"),
+          loginInfo = LoginInfo(provider.id, "134405962728980"),
           firstName = Some("Apollonia"),
           lastName = Some("Vanova"),
-          fullName = Some("Apollonia Vanova")
+          fullName = Some("Apollonia Vanova"),
+          email = Some("apollonia.vanova@minutemen.group"),
+          avatarURL = Some("https://fbcdn-sphotos-g-a.akamaihd.net/hphotos-ak-ash2/t1/36245_155530314499277_2350717_n" +
+            ".jpg?lvh=1")
         )
       }
     }
@@ -116,25 +111,25 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
     /**
      * Paths to the Json fixtures.
      */
-    override val ErrorJson = BaseFixture.load(Paths.get("dropbox.error.json"))
-    override val AccessTokenJson = BaseFixture.load(Paths.get("dropbox.access.token.json"))
-    override val UserProfileJson = BaseFixture.load(Paths.get("dropbox.profile.json"))
+    override val ErrorJson = BaseFixture.load(Paths.get("facebook.error.json"))
+    override val AccessTokenJson = BaseFixture.load(Paths.get("facebook.access.token.json"))
+    override val UserProfileJson = BaseFixture.load(Paths.get("facebook.profile.json"))
 
     /**
      * The OAuth2 settings.
      */
     override lazy val settings = spy(OAuth2Settings(
-      authorizationUri = Some(URI("https://www.dropbox.com/1/oauth2/authorize")),
-      accessTokenUri = URI("https://api.dropbox.com/1/oauth2/token"),
+      authorizationUri = Some(URI("https://graph.facebook.com/oauth/authorize")),
+      accessTokenUri = URI("https://graph.facebook.com/oauth/access_token"),
       redirectUri = Some(URI("https://www.mohiva.com")),
       clientID = "my.client.id",
       clientSecret = "my.client.secret",
-      scope = None
+      scope = Some("email")
     ))
 
     /**
      * The provider to test.
      */
-    lazy val provider = new DropboxProvider(httpClient, stateHandler, settings)
+    lazy val provider = new FacebookProvider(httpClient, stateHandler, settings)
   }
 }

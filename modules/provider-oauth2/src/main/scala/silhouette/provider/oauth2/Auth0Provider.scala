@@ -17,8 +17,6 @@
  */
 package silhouette.provider.oauth2
 
-import java.net.URI
-
 import io.circe.Json
 import io.circe.optics.JsonPath._
 import silhouette.LoginInfo
@@ -69,7 +67,7 @@ trait BaseAuth0Provider extends OAuth2Provider {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
-    httpClient.withUri(settings.apiUri.getOrElse(DefaultApiUri))
+    httpClient.withUri(settings.apiUri.getOrElse[URI](DefaultApiUri))
       .withHeaders(Header(Header.Name.Authorization, s"Bearer ${authInfo.accessToken}"))
       .withMethod(Method.GET)
       .execute
@@ -79,13 +77,7 @@ trait BaseAuth0Provider extends OAuth2Provider {
             case Status.OK =>
               profileParser.parse(json, authInfo)
             case status =>
-              Future.failed(new ProfileRetrievalException(SpecifiedProfileError.format(
-                id,
-                root.error_description.string.getOption(json).getOrElse("undefined"),
-                root.error.string.getOption(json).getOrElse("undefined"),
-                status,
-                json
-              )))
+              Future.failed(new ProfileRetrievalException(SpecifiedProfileError.format(id, status, json)))
           }
         }
       }
@@ -162,7 +154,7 @@ class Auth0Provider(
    * @param f A function which gets the settings passed and returns different settings.
    * @return An instance of the provider initialized with new settings.
    */
-  override def withSettings(f: Settings => Settings): Self =
+  override def withSettings(f: OAuth2Settings => OAuth2Settings): Self =
     new Auth0Provider(httpClient, stateHandler, f(settings))
 }
 
@@ -172,12 +164,6 @@ class Auth0Provider(
 object Auth0Provider {
 
   /**
-   * The error messages.
-   */
-  val SpecifiedProfileError = "[%s] Error retrieving profile information. Error message:" +
-    " %s, type: %s, status: %s, json: %s"
-
-  /**
    * The provider ID.
    */
   val ID = "auth0"
@@ -185,5 +171,5 @@ object Auth0Provider {
   /**
    * Default provider endpoint.
    */
-  val DefaultApiUri = new URI("https://auth0.auth0.com/userinfo")
+  val DefaultApiUri: URI = URI("https://auth0.auth0.com/userinfo")
 }

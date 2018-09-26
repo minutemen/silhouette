@@ -18,9 +18,8 @@
 package silhouette.provider.social.state.handler
 
 import com.typesafe.scalalogging.LazyLogging
-import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
 import io.circe.syntax._
-import io.circe.{ Decoder, Encoder }
+import io.circe.{ Decoder, Encoder, HCursor, Json }
 import javax.inject.Inject
 import silhouette.crypto.{ SecureAsyncID, Signer }
 import silhouette.http.{ Cookie, RequestPipeline, ResponsePipeline }
@@ -44,8 +43,14 @@ case class CsrfStateItem(token: String) extends StateItem
  * The companion object of the [[CsrfStateItem]].
  */
 object CsrfStateItem {
-  implicit val jsonDecoder: Decoder[CsrfStateItem] = deriveDecoder
-  implicit val jsonEncoder: Encoder[CsrfStateItem] = deriveEncoder
+  implicit val jsonDecoder: Decoder[CsrfStateItem] = (c: HCursor) => for {
+    token <- c.downField("token").as[String]
+  } yield {
+    new CsrfStateItem(token)
+  }
+  implicit val jsonEncoder: Encoder[CsrfStateItem] = (a: CsrfStateItem) => Json.obj(
+    ("token", Json.fromString(a.token))
+  )
 }
 
 /**

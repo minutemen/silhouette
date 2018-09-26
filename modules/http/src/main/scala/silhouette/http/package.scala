@@ -17,7 +17,7 @@
  */
 package silhouette
 
-import java.net.URI
+import java.net.{ URI => JavaURI }
 
 /**
  * HTTP related interfaces and implementations.
@@ -28,7 +28,7 @@ package object http {
     type Response = ResponsePipeline[SilhouetteResponse]
 
     def request(
-      uri: URI = new URI("http://localhost/"),
+      uri: JavaURI = new JavaURI("http://localhost/"),
       method: Method = Method.GET,
       headers: Seq[Header] = Seq(),
       cookies: Seq[Cookie] = Seq(),
