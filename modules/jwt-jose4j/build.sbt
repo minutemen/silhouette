@@ -18,8 +18,7 @@
 import Dependencies._
 
 libraryDependencies ++= Seq(
-  Library.jose4j,
-  Library.bouncyCastle % Test
+  Library.jose4j
 )
 
 //enablePlugins(Doc)

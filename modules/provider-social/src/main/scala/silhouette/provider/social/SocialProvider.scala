@@ -19,22 +19,24 @@ package silhouette.provider.social
 
 import java.net.URI
 
-import silhouette.http.{ RequestPipeline, ResponsePipeline }
+import silhouette.http.{ HttpClient, RequestPipeline, ResponsePipeline, SilhouetteResponse }
 import silhouette.provider.Provider
-import silhouette.provider.social.SocialProfileBuilder._
+import silhouette.provider.social.SocialProvider._
 import silhouette.{ AuthInfo, ExecutionContextProvider }
 
 import scala.concurrent.Future
 
 /**
  * The base interface for all social providers.
+ *
+ * @tparam C The type of the config.
  */
-trait SocialProvider extends Provider with SocialProfileBuilder with ExecutionContextProvider {
+trait SocialProvider[C] extends Provider with SocialProfileBuilder with ExecutionContextProvider {
 
   /**
    * The type of the concrete implementation of this abstract type.
    */
-  type Self <: SocialProvider
+  type Self <: SocialProvider[C]
 
   /**
    * The type of the auth info.
@@ -42,24 +44,24 @@ trait SocialProvider extends Provider with SocialProfileBuilder with ExecutionCo
   type A <: AuthInfo
 
   /**
-   * The settings type.
+   * The HTTP client implementation.
    */
-  type Settings
+  protected val httpClient: HttpClient
 
   /**
-   * Gets the provider settings.
+   * Gets the provider config.
    *
-   * @return The provider settings.
+   * @return The provider config.
    */
-  def settings: Settings
+  def config: C
 
   /**
-   * Gets a provider initialized with a new settings object.
+   * Gets a provider initialized with a new config object.
    *
-   * @param f A function which gets the settings passed and returns different settings.
-   * @return An instance of the provider initialized with new settings.
+   * @param f A function which gets the config passed and returns different config.
+   * @return An instance of the provider initialized with new config.
    */
-  def withSettings(f: Settings => Settings): Self
+  def withConfig(f: C => C): Self
 
   /**
    * Authenticates the user and returns the auth information.
@@ -70,16 +72,17 @@ trait SocialProvider extends Provider with SocialProfileBuilder with ExecutionCo
    *
    * @param request The request pipeline.
    * @tparam R The type of the request.
-   * @tparam P The type of the response.
    * @return Either a `ResponsePipeline` or the `AuthInfo` from the provider.
    */
-  def authenticate[R, P]()(implicit request: RequestPipeline[R]): Future[Either[ResponsePipeline[P], A]]
+  def authenticate[R]()(
+    implicit
+    request: RequestPipeline[R]
+  ): Future[Either[ResponsePipeline[SilhouetteResponse], A]]
 
   /**
    * Retrieves the user profile for the given auth info.
    *
-   * This method can be used to retrieve the profile information for an already authenticated
-   * identity.
+   * This method can be used to retrieve the profile information for an already authenticated identity.
    *
    * @param authInfo The auth info for which the profile information should be retrieved.
    * @return The profile information for the given auth info.
@@ -92,22 +95,28 @@ trait SocialProvider extends Provider with SocialProfileBuilder with ExecutionCo
   }
 
   /**
-   * Resolves the url to be absolute relative to the request.
+   * Resolves the URI to be absolute relative to the request.
    *
-   * This will pass the url through if its already absolute.
+   * This will pass the URI through if its already absolute.
    *
-   * @param url The url to resolve.
+   * @param uri     The URI to resolve.
    * @param request The current request.
    * @tparam R The type of the request.
    * @return The absolute url.
    */
-  protected def resolveCallbackURL[R](url: String)(
+  protected def resolveCallbackUri[R](uri: URI)(
     implicit
     request: RequestPipeline[R]
-  ): String = URI.create(url) match {
-    case uri if uri.isAbsolute => url
-    case uri =>
-      val scheme = if (request.isSecure) "https://" else "http://"
-      URI.create(scheme + request.host + request.path).resolve(uri).toString
-  }
+  ): URI = if (uri.isAbsolute) uri else request.uri.resolve(uri)
+}
+
+/**
+ * The companion object.
+ */
+object SocialProvider {
+
+  /**
+   * Some error messages.
+   */
+  val UnspecifiedProfileError = "[%s] Error retrieving profile information"
 }

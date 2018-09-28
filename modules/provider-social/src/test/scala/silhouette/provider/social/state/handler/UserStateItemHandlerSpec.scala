@@ -23,7 +23,7 @@ import org.specs2.matcher.JsonMatchers
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import silhouette.http.{ FakeRequest, FakeRequestPipeline, RequestPipeline }
+import silhouette.http.{ Fake, RequestPipeline, SilhouetteRequest }
 import silhouette.provider.social.state.StateItem
 import silhouette.provider.social.state.StateItem.ItemStructure
 import silhouette.provider.social.state.handler.UserStateItem._
@@ -64,12 +64,14 @@ class UserStateItemHandlerSpec(implicit ev: ExecutionEnv)
       val nonUserItemStructure = mock[ItemStructure].smart
       nonUserItemStructure.id returns "non-user-item"
 
-      implicit val request: RequestPipeline[FakeRequest] = FakeRequestPipeline()
+      implicit val request: RequestPipeline[SilhouetteRequest] = Fake.request
+
       userStateItemHandler.canHandle(nonUserItemStructure) must beFalse
     }
 
     "return true if it can handle the given `ItemStructure`" in new Context {
-      implicit val request: RequestPipeline[FakeRequest] = FakeRequestPipeline()
+      implicit val request: RequestPipeline[SilhouetteRequest] = Fake.request
+
       userStateItemHandler.canHandle(userItemStructure) must beTrue
     }
   }
@@ -82,7 +84,7 @@ class UserStateItemHandlerSpec(implicit ev: ExecutionEnv)
 
   "The `unserialize` method" should {
     "unserialize the state item" in new Context {
-      implicit val request: RequestPipeline[FakeRequest] = FakeRequestPipeline()
+      implicit val request: RequestPipeline[SilhouetteRequest] = Fake.request
 
       userStateItemHandler.unserialize(userItemStructure) must beEqualTo(userStateItem).awaitWithPatience
     }

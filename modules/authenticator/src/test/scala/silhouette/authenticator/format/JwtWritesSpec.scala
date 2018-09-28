@@ -52,7 +52,7 @@ class JwtWritesSpec(implicit ev: ExecutionEnv) extends Specification with Mockit
 
   "The `write` method" should {
     "write a claims representation from the authenticator" in new Context {
-      underlyingJwtWrites.write(any[Claims]) returns Try(jwt)
+      underlyingJwtWrites.write(any[Claims]()) returns Try(jwt)
 
       val captor = capture[Claims]
 

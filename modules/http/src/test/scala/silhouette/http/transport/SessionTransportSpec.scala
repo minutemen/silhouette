@@ -19,7 +19,7 @@ package silhouette.http.transport
 
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import silhouette.http.{ FakeRequest, FakeRequestPipeline, FakeResponse, FakeResponsePipeline }
+import silhouette.http._
 
 /**
  * Test case for the [[SessionTransport]] class.
@@ -34,43 +34,37 @@ class SessionTransportSpec extends Specification {
 
   "The `retrieve` method" should {
     "return some payload from the session with the given key" in new Context {
-      transport.retrieve(requestPipeline) must beSome("payload")
+      transport.retrieve(requestPipeline.withSession("test" -> "payload")) must beSome("payload")
     }
 
     "return None if no session with the give key exists" in new Context {
-      override val request = FakeRequest()
-
       transport.retrieve(requestPipeline) must beNone
     }
   }
 
   "The `smuggle` method" should {
     "smuggle a session value into the request" in new Context {
-      override val request = FakeRequest()
-
       transport.smuggle("payload", requestPipeline).session("test") must be equalTo "payload"
     }
   }
 
   "The `embed` method" should {
     "embed a session value into the response" in new Context {
-      override val response = FakeResponse()
-
       transport.embed("payload", responsePipeline).session("test") must be equalTo "payload"
     }
   }
 
   "The `discard` method" should {
     "remove the session for the given key" in new Context {
-      override val response = FakeResponse()
-
       transport.discard(responsePipeline).session must beEmpty
     }
   }
 
   "The `RetrieveFromSession` reads" should {
     "return some payload from the session with the given key" in new Context {
-      RetrieveFromSession("test").read(requestPipeline) must beSome("payload")
+      RetrieveFromSession("test").read(
+        requestPipeline.withSession("test" -> "payload")
+      ) must beSome("payload")
     }
 
     "return None if no session with the give key exists" in new Context {
@@ -111,23 +105,13 @@ class SessionTransportSpec extends Specification {
     val transport = SessionTransport("test")
 
     /**
-     * A fake request.
+     * A request pipeline.
      */
-    val request = FakeRequest(session = Map("test" -> "payload"))
+    lazy val requestPipeline = Fake.request
 
     /**
-     * A fake response.
+     * A response pipeline.
      */
-    val response = FakeResponse()
-
-    /**
-     * A fake request pipeline.
-     */
-    lazy val requestPipeline = FakeRequestPipeline(request)
-
-    /**
-     * A fake response pipeline.
-     */
-    lazy val responsePipeline = FakeResponsePipeline(response)
+    lazy val responsePipeline = Fake.response
   }
 }

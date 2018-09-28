@@ -17,7 +17,33 @@
  */
 package silhouette
 
+import java.net.URI
+
 /**
  * HTTP related interfaces and implementations.
  */
-package object http {}
+package object http {
+  protected[silhouette] object Fake {
+    type Request = RequestPipeline[SilhouetteRequest]
+    type Response = ResponsePipeline[SilhouetteResponse]
+
+    def request(
+      uri: URI = new URI("http://localhost/"),
+      method: Method = Method.GET,
+      headers: Seq[Header] = Seq(),
+      cookies: Seq[Cookie] = Seq(),
+      session: Map[String, String] = Map(),
+      queryParams: Map[String, Seq[String]] = Map()
+    ): Request = SilhouetteRequestPipeline(SilhouetteRequest(
+      uri,
+      method,
+      headers,
+      cookies,
+      session,
+      queryParams
+    ))
+    def request: Request = request()
+
+    val response: Response = SilhouetteResponsePipeline(SilhouetteResponse(Status.OK))
+  }
+}

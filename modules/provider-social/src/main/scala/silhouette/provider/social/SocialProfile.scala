@@ -17,6 +17,8 @@
  */
 package silhouette.provider.social
 
+import java.net.URI
+
 import silhouette.LoginInfo
 
 /**
@@ -42,10 +44,10 @@ trait SocialProfile {
  *
  * @param loginInfo The linked login info.
  * @param firstName Maybe the first name of the authenticated user.
- * @param lastName Maybe the last name of the authenticated user.
- * @param fullName Maybe the full name of the authenticated user.
- * @param email Maybe the email of the authenticated provider.
- * @param avatarURL Maybe the avatar URL of the authenticated provider.
+ * @param lastName  Maybe the last name of the authenticated user.
+ * @param fullName  Maybe the full name of the authenticated user.
+ * @param email     Maybe the email of the authenticated provider.
+ * @param avatarUri Maybe the avatar URL of the authenticated provider.
  */
 case class CommonSocialProfile(
   loginInfo: LoginInfo,
@@ -53,5 +55,5 @@ case class CommonSocialProfile(
   lastName: Option[String] = None,
   fullName: Option[String] = None,
   email: Option[String] = None,
-  avatarURL: Option[String] = None
+  avatarUri: Option[URI] = None
 ) extends SocialProfile

@@ -17,6 +17,7 @@
  */
 package silhouette.provider.social
 
+import org.specs2.matcher.MatchResult
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
@@ -36,12 +37,12 @@ class SocialProviderRegistrySpec extends Specification with Mockito {
     }
 
     "return a provider by its ID as SocialProvider" in new Context {
-      val provider = registry.get[SocialProvider]("google")
+      val provider = registry.get[SocialProvider[_]]("google")
 
-      provider must beSome.like {
+      provider must beSome[SocialProvider[_]].like[MatchResult[SocialProvider[_]]] {
         case value =>
           value.id must be equalTo google.id
-          value must beAnInstanceOf[SocialProvider]
+          value must beAnInstanceOf[SocialProvider[_]]
       }
     }
 
@@ -56,7 +57,7 @@ class SocialProviderRegistrySpec extends Specification with Mockito {
     }
 
     "return None if no provider for the given ID exists" in new Context {
-      registry.get[SocialProvider]("yahoo") must beNone
+      registry.get[SocialProvider[_]]("yahoo") must beNone
     }
   }
 
@@ -72,8 +73,11 @@ class SocialProviderRegistrySpec extends Specification with Mockito {
    * The context.
    */
   trait Context extends Scope {
-    trait OAuth1Provider extends SocialProvider
-    trait OAuth2Provider extends SocialProvider
+    case class OAuth1Config()
+    case class OAuth2Config()
+
+    trait OAuth1Provider extends SocialProvider[OAuth1Config]
+    trait OAuth2Provider extends SocialProvider[OAuth2Config]
     trait TwitterProvider extends OAuth1Provider
     trait YahooProvider extends OAuth1Provider
     trait FacebookProvider extends OAuth2Provider

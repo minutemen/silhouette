@@ -21,11 +21,11 @@ import org.specs2.concurrent.ExecutionEnv
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
+import silhouette.LoginInfo
 import silhouette.authenticator.{ Authenticator, StatefulWrites }
 import silhouette.http.transport.EmbedIntoHeader
-import silhouette.http.{ FakeResponse, FakeResponsePipeline, ResponsePipeline }
+import silhouette.http.{ Fake, Header, ResponsePipeline, SilhouetteResponse }
 import silhouette.specs2.WaitPatience
-import silhouette.LoginInfo
 
 import scala.concurrent.Future
 
@@ -44,9 +44,9 @@ class EmbedStatefulPipelineSpec(implicit ev: ExecutionEnv) extends Specification
     }
 
     "embed the authenticator into the response" in new Context {
-      pipeline.write(authenticator -> responsePipeline) must beLike[ResponsePipeline[FakeResponse]] {
+      pipeline.write(authenticator -> responsePipeline) must beLike[ResponsePipeline[SilhouetteResponse]] {
         case response =>
-          response.header("test") must be equalTo Seq(authenticator.toString)
+          response.header("test") must beSome(Header("test", authenticator.toString))
       }.awaitWithPatience
     }
   }
@@ -69,13 +69,13 @@ class EmbedStatefulPipelineSpec(implicit ev: ExecutionEnv) extends Specification
     /**
      * The response pipeline.
      */
-    val responsePipeline = FakeResponsePipeline()
+    val responsePipeline = Fake.response
 
     /**
      * A writer to write the stateful [[Authenticator]] to a backing store.
      */
     val statefulWriter = {
-      val m = mock[(Authenticator) => Future[Authenticator]]
+      val m = mock[Authenticator => Future[Authenticator]]
       m.apply(authenticator) returns Future.successful(authenticator)
       m
     }
@@ -92,6 +92,6 @@ class EmbedStatefulPipelineSpec(implicit ev: ExecutionEnv) extends Specification
     /**
      * The pipeline to test.
      */
-    val pipeline = EmbedStatefulPipeline[FakeResponse](statefulWriter, statefulWrites, EmbedIntoHeader("test"))
+    val pipeline = EmbedStatefulPipeline[SilhouetteResponse](statefulWriter, statefulWrites, EmbedIntoHeader("test"))
   }
 }

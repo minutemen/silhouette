@@ -28,7 +28,7 @@ object BasicSettings extends AutoPlugin {
     organization := "group.minutemen",
     resolvers ++= Dependencies.resolvers,
     scalaVersion := crossScalaVersions.value.head,
-    crossScalaVersions := Seq("2.12.4", "2.11.11"),
+    crossScalaVersions := Seq("2.12.6", "2.11.12"),
     scalacOptions ++= Seq(
       "-deprecation", // Emit warning and location for usages of deprecated APIs.
       "-feature", // Emit warning and location for usages of features that should be imported explicitly.
@@ -41,7 +41,7 @@ object BasicSettings extends AutoPlugin {
       "-Ywarn-nullary-override", // Warn when non-nullary overrides nullary, e.g. def foo() over def foo.
       "-Ywarn-numeric-widen" // Warn when numerics are widened.
     ),
-    scalacOptions in Test ~= { (options: Seq[String]) =>
+    scalacOptions in Test ~= { options: Seq[String] =>
       options filterNot (_ == "-Ywarn-dead-code") // Allow dead code in tests (to support using mockito).
     },
     parallelExecution in Test := false,

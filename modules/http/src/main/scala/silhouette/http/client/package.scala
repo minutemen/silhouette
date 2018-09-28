@@ -17,27 +17,7 @@
  */
 package silhouette.http
 
-import scala.util.Try
-
 /**
  * Provides the HTTP client implementation.
  */
-package object client {
-
-  /**
-   * Provides syntax via enrichment classes.
-   *
-   * @param body The body instance on which the additional methods should be defined.
-   */
-  implicit final class RichBody[A <: Body](body: A) {
-
-    /**
-     * Provides a method that transforms from `Body` to `T`.
-     *
-     * @param format An implicit `BodyFormat` instance that is used to transform the body.
-     * @tparam T The type of the result.
-     * @return An instance of T or an error if the body couldn't be transformed.
-     */
-    def as[T](implicit format: BodyFormat[T]): Try[T] = format.read(body)
-  }
-}
+package object client

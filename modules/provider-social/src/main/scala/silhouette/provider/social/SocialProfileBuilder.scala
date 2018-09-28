@@ -17,33 +17,27 @@
  */
 package silhouette.provider.social
 
+import io.circe.Json
+
 import scala.concurrent.Future
 
 /**
  * Builds the social profile.
  */
 trait SocialProfileBuilder {
-  self: SocialProvider =>
+  self: SocialProvider[_] =>
 
   /**
    * The content type to parse a profile from.
+   *
+   * The content type is mostly JSON. A concrete provider is able to override it if needed.
    */
-  type Content
+  type Content = Json
 
   /**
    * The type of the profile a profile builder is responsible for.
    */
   type Profile <: SocialProfile
-
-  /**
-   * Gets the URLs that are needed to retrieve the profile data.
-   *
-   * Some providers need more than one request to different URLs to query the profile data.
-   * So we use a Map here to allow defining multiple URLs.
-   *
-   * @return The URLs that are needed to retrieve the profile data.
-   */
-  protected def urls: Map[String, String]
 
   /**
    * Subclasses need to implement this method to populate the profile information from the service provider.
@@ -59,17 +53,6 @@ trait SocialProfileBuilder {
    * @return The profile parser implementation.
    */
   protected def profileParser: SocialProfileParser[Content, Profile, A]
-}
-
-/**
- * The companion object.
- */
-object SocialProfileBuilder {
-
-  /**
-   * Some error messages.
-   */
-  val UnspecifiedProfileError = "[%s] error retrieving profile information"
 }
 
 /**

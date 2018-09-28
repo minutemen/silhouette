@@ -67,20 +67,20 @@ class CsrfStateItemHandlerSpec(implicit ev: ExecutionEnv)
       val nonCsrfItemStructure = mock[ItemStructure].smart
       nonCsrfItemStructure.id returns "non-csrf-item"
 
-      implicit val request: RequestPipeline[FakeRequest] = FakeRequestPipeline()
+      implicit val request: RequestPipeline[SilhouetteRequest] = Fake.request
 
       csrfStateItemHandler.canHandle(nonCsrfItemStructure) must beFalse
     }
 
     "return false if client state doesn't match the item state" in new Context {
-      implicit val request: RequestPipeline[FakeRequest] = FakeRequestPipeline()
+      implicit val request: RequestPipeline[SilhouetteRequest] = Fake.request
         .withCookies(cookie("invalid-token"))
 
       csrfStateItemHandler.canHandle(csrfItemStructure) must beFalse
     }
 
     "return true if it can handle the given `ItemStructure`" in new Context {
-      implicit val request: RequestPipeline[FakeRequest] = FakeRequestPipeline()
+      implicit val request: RequestPipeline[SilhouetteRequest] = Fake.request
         .withCookies(cookie(csrfStateItem.token))
 
       csrfStateItemHandler.canHandle(csrfItemStructure) must beTrue
@@ -95,7 +95,7 @@ class CsrfStateItemHandlerSpec(implicit ev: ExecutionEnv)
 
   "The `unserialize` method" should {
     "unserialize the state item" in new Context {
-      implicit val request: RequestPipeline[FakeRequest] = FakeRequestPipeline()
+      implicit val request: RequestPipeline[SilhouetteRequest] = Fake.request
 
       csrfStateItemHandler.unserialize(csrfItemStructure) must beEqualTo(csrfStateItem).awaitWithPatience
     }
@@ -103,10 +103,10 @@ class CsrfStateItemHandlerSpec(implicit ev: ExecutionEnv)
 
   "The `publish` method" should {
     "publish the state item to the client" in new Context {
-      implicit val request: RequestPipeline[FakeRequest] = FakeRequestPipeline()
-      val result = csrfStateItemHandler.publish(csrfStateItem, FakeResponsePipeline())
+      implicit val request: RequestPipeline[SilhouetteRequest] = Fake.request
+      val result = csrfStateItemHandler.publish(csrfStateItem, Fake.response)
 
-      result.cookie(settings.cookieName) must beSome(cookie(csrfToken))
+      result.cookie(config.cookieName) must beSome(cookie(csrfToken))
     }
   }
 
@@ -130,9 +130,9 @@ class CsrfStateItemHandlerSpec(implicit ev: ExecutionEnv)
     }
 
     /**
-     * The settings.
+     * The config.
      */
-    val settings = CsrfStateSettings()
+    val config = CsrfStateConfig()
 
     /**
      * The signer implementation.
@@ -141,8 +141,8 @@ class CsrfStateItemHandlerSpec(implicit ev: ExecutionEnv)
      */
     val signer = {
       val c = mock[Signer].smart
-      c.sign(any) answers { p => p.asInstanceOf[String] }
-      c.extract(any) answers { p => Success(p.asInstanceOf[String]) }
+      c.sign(anyString) answers { p => p.asInstanceOf[String] }
+      c.extract(anyString) answers { p => Success(p.asInstanceOf[String]) }
       c
     }
 
@@ -159,7 +159,7 @@ class CsrfStateItemHandlerSpec(implicit ev: ExecutionEnv)
     /**
      * An instance of the CSRF state item handler.
      */
-    val csrfStateItemHandler = new CsrfStateItemHandler(settings, secureID, signer)
+    val csrfStateItemHandler = new CsrfStateItemHandler(config, secureID, signer)
 
     /**
      * A helper method to create a cookie.
@@ -168,14 +168,14 @@ class CsrfStateItemHandlerSpec(implicit ev: ExecutionEnv)
      * @return A cookie instance with the given value.
      */
     def cookie(value: String): Cookie = Cookie(
-      name = settings.cookieName,
+      name = config.cookieName,
       value = signer.sign(value),
-      maxAge = Some(settings.expirationTime.toSeconds.toInt),
-      path = settings.cookiePath,
-      domain = settings.cookieDomain,
-      secure = settings.secureCookie,
-      httpOnly = settings.httpOnlyCookie,
-      sameSite = settings.sameSite
+      maxAge = Some(config.expirationTime.toSeconds.toInt),
+      path = config.cookiePath,
+      domain = config.cookieDomain,
+      secure = config.secureCookie,
+      httpOnly = config.httpOnlyCookie,
+      sameSite = config.sameSite
     )
   }
 }

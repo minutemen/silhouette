@@ -17,9 +17,8 @@
  */
 package silhouette.provider.social.state.handler
 
-import io.circe.generic.semiauto.{ deriveDecoder, deriveEncoder }
 import io.circe.syntax._
-import io.circe.{ Decoder, Encoder }
+import io.circe.{ Decoder, Encoder, HCursor, Json }
 import silhouette.http.RequestPipeline
 import silhouette.provider.social.state.StateItem.ItemStructure
 import silhouette.provider.social.state.handler.UserStateItemHandler._
@@ -37,8 +36,14 @@ case class UserStateItem(state: Map[String, String]) extends StateItem
  * The companion object of the [[UserStateItem]].
  */
 object UserStateItem {
-  implicit val jsonDecoder: Decoder[UserStateItem] = deriveDecoder
-  implicit val jsonEncoder: Encoder[UserStateItem] = deriveEncoder
+  implicit val jsonDecoder: Decoder[UserStateItem] = (c: HCursor) => for {
+    state <- c.downField("state").as[Map[String, String]]
+  } yield {
+    new UserStateItem(state)
+  }
+  implicit val jsonEncoder: Encoder[UserStateItem] = (a: UserStateItem) => Json.obj(
+    ("state", a.state.asJson)
+  )
 }
 
 /**

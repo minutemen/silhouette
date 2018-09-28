@@ -19,7 +19,7 @@ package silhouette.http.transport
 
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import silhouette.http.{ FakeRequest, FakeRequestPipeline }
+import silhouette.http.Fake
 
 /**
  * Test case for the [[QueryStringTransport]] class.
@@ -34,27 +34,28 @@ class QueryStringTransportSpec extends Specification {
 
   "The `retrieve` method" should {
     "return some payload from the query param with the given name" in new Context {
-      transport.retrieve(requestPipeline) must beSome("payload")
+      transport.retrieve(
+        requestPipeline.withQueryParams("test" -> "payload")
+      ) must beSome("payload")
     }
 
     "return None if no query param with the give name exists" in new Context {
-      override val request = FakeRequest()
-
       transport.retrieve(requestPipeline) must beNone
     }
   }
 
   "The `smuggle` method" should {
     "smuggle a query param into the request" in new Context {
-      override val request = FakeRequest()
-
-      transport.smuggle("payload", requestPipeline).queryParam("test").head must be equalTo "payload"
+      transport.smuggle("payload", requestPipeline)
+        .queryParam("test").head must be equalTo "payload"
     }
   }
 
   "The `RetrieveFromQueryString` reads" should {
     "return some payload from the query param with the given name" in new Context {
-      RetrieveFromQueryString("test").read(requestPipeline) must beSome("payload")
+      RetrieveFromQueryString("test").read(
+        requestPipeline.withQueryParams("test" -> "payload")
+      ) must beSome("payload")
     }
 
     "return None if no query param with the give name exists" in new Context {
@@ -81,13 +82,8 @@ class QueryStringTransportSpec extends Specification {
     val transport = QueryStringTransport("test")
 
     /**
-     * A fake request.
+     * A request pipeline.
      */
-    val request = FakeRequest(queryParams = Map("test" -> Seq("payload")))
-
-    /**
-     * A fake request pipeline.
-     */
-    lazy val requestPipeline = FakeRequestPipeline(request)
+    lazy val requestPipeline = Fake.request
   }
 }
