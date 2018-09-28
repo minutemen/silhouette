@@ -24,9 +24,9 @@ import scala.language.implicitConversions
 /**
  * An URI that can have format parameters in the URI that will be replaced at runtime.
  *
- * If a [[URI]] contains format parameters like `%s` it will throw an exception on instantiation. This
+ * If a [[java.net.URI]] contains format parameters like `%s` it will throw an exception on instantiation. This
  * class allows us to specify an URI with such parameters. We will provide implicit converters that help to
- * translate between this class and [[URI]].
+ * translate between this class and [[java.net.URI]].
  *
  * @param uri An URI.
  */
@@ -42,9 +42,9 @@ case class ConfigURI(uri: String) {
   def format(args: Any*): ConfigURI = ConfigURI(uri.format(args: _*))
 
   /**
-   * Converts this instance to a [[URI]] instance.
+   * Converts this instance to a [[java.net.URI]] instance.
    *
-   * @return A [[URI]] instance.
+   * @return A [[java.net.URI]] instance.
    */
   def toURI: URI = new URI(uri)
 
@@ -62,7 +62,7 @@ case class ConfigURI(uri: String) {
 object ConfigURI {
 
   /**
-   * Converts a [[ConfigURI]] to a [[URI]].
+   * Converts a [[ConfigURI]] to a [[java.net.URI]].
    *
    * @param uri The URI to convert.
    * @return A [[java.net.URI]] instance.
