@@ -105,7 +105,7 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
           loginInfo = LoginInfo(provider.id, "13221052"),
           firstName = Some("Apollonia"),
           lastName = Some("Vanova"),
-          email = Some("apollonia.vanova@watchmen.com"),
+          email = Some("apollonia.vanova@minutemen.group"),
           avatarUri = Some(new URI("https://irs0.4sqi.net/img/user/100x100/blank_girl.png"))
         )
       }
@@ -126,7 +126,7 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
           loginInfo = LoginInfo(provider.id, "13221052"),
           firstName = Some("Apollonia"),
           lastName = Some("Vanova"),
-          email = Some("apollonia.vanova@watchmen.com"),
+          email = Some("apollonia.vanova@minutemen.group"),
           avatarUri = Some(new URI("https://irs0.4sqi.net/img/user/100x100/blank_girl.png"))
         )
       }
@@ -151,7 +151,7 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
           loginInfo = LoginInfo(provider.id, "13221052"),
           firstName = Some("Apollonia"),
           lastName = Some("Vanova"),
-          email = Some("apollonia.vanova@watchmen.com"),
+          email = Some("apollonia.vanova@minutemen.group"),
           avatarUri = Some(new URI("https://irs0.4sqi.net/img/user/100x100/blank_girl.png"))
         )
       }
@@ -175,7 +175,7 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
           loginInfo = LoginInfo(provider.id, "13221052"),
           firstName = Some("Apollonia"),
           lastName = Some("Vanova"),
-          email = Some("apollonia.vanova@watchmen.com"),
+          email = Some("apollonia.vanova@minutemen.group"),
           avatarUri = Some(new URI("https://irs0.4sqi.net/img/user/150x150/blank_girl.png"))
         )
       }
