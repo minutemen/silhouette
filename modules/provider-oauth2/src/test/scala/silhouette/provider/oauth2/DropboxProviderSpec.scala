@@ -78,7 +78,7 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
     }
 
     "use the overridden API URI" in new Context {
-      val uri = ConfigURI("https://api.dropbox.com/1/account/info&new")
+      val uri = DefaultApiUri.copy(uri = DefaultApiUri.uri + "&new")
       val apiResult = UserProfileJson.asJson
       val httpResponse = mock[Response].smart
       httpResponse.status returns Status.OK

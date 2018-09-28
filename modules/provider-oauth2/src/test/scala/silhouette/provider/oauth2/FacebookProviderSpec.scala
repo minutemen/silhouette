@@ -20,8 +20,6 @@ package silhouette.provider.oauth2
 import java.net.URI
 import java.nio.file.Paths
 
-import io.circe.optics.JsonPath._
-import silhouette.{ ConfigURI, LoginInfo }
 import silhouette.http.client.BodyFormat._
 import silhouette.http.client.{ Body, Response }
 import silhouette.http.{ Method, Status }
@@ -30,6 +28,7 @@ import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social.SocialProvider.UnspecifiedProfileError
 import silhouette.provider.social.{ CommonSocialProfile, ProfileRetrievalException }
 import silhouette.specs2.BaseFixture
+import silhouette.{ ConfigURI, LoginInfo }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -54,7 +53,7 @@ class FacebookProviderSpec extends OAuth2ProviderSpec {
         case e => e.getMessage must equalTo(SpecifiedProfileError.format(
           provider.id,
           Status.`Bad Request`,
-          root.error.json.getOption(apiResult).get
+          apiResult
         ))
       }
     }
@@ -74,8 +73,7 @@ class FacebookProviderSpec extends OAuth2ProviderSpec {
     }
 
     "use the overridden API URI" in new Context {
-      val uri = ConfigURI("https://graph.facebook.com/v3.1/me?fields=name,first_name,last_name,picture,email&" +
-        "return_ssl_resources=1&access_token=%s&new")
+      val uri = DefaultApiUri.copy(uri = DefaultApiUri.uri + "&new")
       val apiResult = UserProfileJson.asJson
       val httpResponse = mock[Response].smart
       httpResponse.status returns Status.OK

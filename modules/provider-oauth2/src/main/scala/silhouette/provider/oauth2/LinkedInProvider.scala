@@ -21,8 +21,8 @@ import java.net.URI
 
 import io.circe.Json
 import io.circe.optics.JsonPath._
-import silhouette.http._
-import silhouette.provider.oauth2.FoursquareProvider._
+import silhouette.http.{ HttpClient, Method, Status }
+import silhouette.provider.oauth2.LinkedInProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
 import silhouette.provider.social.state.StateHandler
@@ -31,13 +31,12 @@ import silhouette.{ ConfigURI, LoginInfo }
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * Base Foursquare OAuth2 provider.
+ * Base LinkedIn OAuth2 Provider.
  *
- * @see https://developer.foursquare.com/overview/auth
- * @see https://developer.foursquare.com/overview/responses
- * @see https://developer.foursquare.com/docs/explore
+ * @see https://developer.linkedin.com/docs/oauth2
+ * @see https://developer.linkedin.com/docs/signin-with-linkedin
  */
-trait BaseFoursquareProvider extends OAuth2Provider {
+trait BaseLinkedInProvider extends OAuth2Provider {
 
   /**
    * The provider ID.
@@ -51,19 +50,13 @@ trait BaseFoursquareProvider extends OAuth2Provider {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
-    val version = config.customProperties.getOrElse(ApiVersion, DefaultApiVersion)
-    httpClient.withUri(config.apiUri.getOrElse[ConfigURI](DefaultApiUri).format(authInfo.accessToken, version))
+    httpClient.withUri(config.apiUri.getOrElse(DefaultApiUri).format(authInfo.accessToken))
       .withMethod(Method.GET)
       .execute
       .flatMap { response =>
         withParsedJson(response.body) { json =>
           response.status match {
             case Status.OK =>
-              val errorType = root.meta.errorType.string.getOption(json)
-              if (errorType.contains("deprecated")) {
-                logger.info("This implementation may be deprecated! Please contact the Silhouette team for a fix!")
-              }
-
               profileParser.parse(json, authInfo)
             case status =>
               Future.failed(new ProfileRetrievalException(SpecifiedProfileError.format(id, status, json)))
@@ -75,11 +68,8 @@ trait BaseFoursquareProvider extends OAuth2Provider {
 
 /**
  * The profile parser for the common social profile.
- *
- * @param config The provider config.
  */
-class FoursquareProfileParser(config: OAuth2Config)
-  extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
+class LinkedInProfileParser extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
 
   /**
    * Parses the social profile.
@@ -89,48 +79,43 @@ class FoursquareProfileParser(config: OAuth2Config)
    * @return The social profile from the given result.
    */
   override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = Future.successful {
-    val user = root.response.user.json.getOrError(json, "response.user", ID)
-    val avatarURLPart1 = root.photo.prefix.string.getOption(user)
-    val avatarURLPart2 = root.photo.suffix.string.getOption(user)
-    val resolution = config.customProperties.getOrElse(AvatarResolution, DefaultAvatarResolution)
-
     CommonSocialProfile(
-      loginInfo = LoginInfo(ID, root.id.string.getOrError(user, "id", ID)),
-      firstName = root.firstName.string.getOption(user),
-      lastName = root.lastName.string.getOption(user),
-      email = root.contact.email.string.getOption(user).filter(!_.isEmpty),
-      avatarUri = for (prefix <- avatarURLPart1; postfix <- avatarURLPart2)
-        yield new URI(prefix + resolution + postfix)
+      loginInfo = LoginInfo(ID, root.id.string.getOrError(json, "id", ID)),
+      firstName = root.firstName.string.getOption(json),
+      lastName = root.lastName.string.getOption(json),
+      fullName = root.formattedName.string.getOption(json),
+      email = root.emailAddress.string.getOption(json),
+      avatarUri = root.pictureUrl.string.getOption(json).map(uri => new URI(uri))
     )
   }
 }
 
 /**
- * The Foursquare OAuth2 Provider.
+ * The LinkedIn OAuth2 Provider.
  *
  * @param httpClient   The HTTP client implementation.
  * @param stateHandler The state provider implementation.
  * @param config       The provider config.
  * @param ec           The execution context.
  */
-class FoursquareProvider(
+class LinkedInProvider(
   protected val httpClient: HttpClient,
   protected val stateHandler: StateHandler,
   val config: OAuth2Config
 )(
   implicit
   override implicit val ec: ExecutionContext
-) extends BaseFoursquareProvider with CommonProfileBuilder {
+) extends BaseLinkedInProvider with CommonProfileBuilder {
 
   /**
    * The type of this class.
    */
-  override type Self = FoursquareProvider
+  override type Self = LinkedInProvider
 
   /**
    * The profile parser implementation.
    */
-  override val profileParser = new FoursquareProfileParser(config)
+  override val profileParser = new LinkedInProfileParser
 
   /**
    * Gets a provider initialized with a new config object.
@@ -139,39 +124,22 @@ class FoursquareProvider(
    * @return An instance of the provider initialized with new config.
    */
   override def withConfig(f: OAuth2Config => OAuth2Config): Self =
-    new FoursquareProvider(httpClient, stateHandler, f(config))
+    new LinkedInProvider(httpClient, stateHandler, f(config))
 }
 
 /**
  * The companion object.
  */
-object FoursquareProvider {
+object LinkedInProvider {
 
   /**
    * The provider ID.
    */
-  val ID = "foursquare"
+  val ID = "linkedin"
 
   /**
    * Default provider endpoint.
    */
-  val DefaultApiUri: ConfigURI = ConfigURI("https://api.foursquare.com/v2/users/self?oauth_token=%s&v=%s")
-
-  /**
-   * The version of this implementation.
-   *
-   * @see https://developer.foursquare.com/overview/versioning
-   */
-  val DefaultApiVersion = "20181001"
-
-  /**
-   * The default avatar resolution.
-   */
-  val DefaultAvatarResolution = "100x100"
-
-  /**
-   * Some custom properties for this provider.
-   */
-  val ApiVersion = "api.version"
-  val AvatarResolution = "avatar.resolution"
+  val DefaultApiUri = ConfigURI("https://api.linkedin.com/v1/people/~:(id,first-name,last-name,formatted-name," +
+    "picture-url,email-address)?format=json&oauth2_access_token=%s")
 }

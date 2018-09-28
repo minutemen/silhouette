@@ -79,7 +79,7 @@ class Auth0ProviderSpec extends OAuth2ProviderSpec {
     }
 
     "use the overridden API URI" in new Context {
-      val uri = ConfigURI("https://gerritforge.eu.auth0.com/userinfo")
+      val uri = DefaultApiUri.copy(uri = DefaultApiUri.uri + "&new")
       val apiResult = UserProfileJson.asJson
       val httpResponse = mock[Response].smart
       httpResponse.status returns Status.OK

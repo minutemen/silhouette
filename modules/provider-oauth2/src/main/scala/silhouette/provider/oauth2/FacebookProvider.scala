@@ -21,12 +21,12 @@ import java.net.URI
 
 import io.circe.Json
 import io.circe.optics.JsonPath._
-import silhouette.{ ConfigURI, LoginInfo }
-import silhouette.http.{ HttpClient, Method }
+import silhouette.http.{ HttpClient, Method, Status }
 import silhouette.provider.oauth2.FacebookProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
 import silhouette.provider.social.state.StateHandler
+import silhouette.{ ConfigURI, LoginInfo }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -56,11 +56,11 @@ trait BaseFacebookProvider extends OAuth2Provider {
       .execute
       .flatMap { response =>
         withParsedJson(response.body) { json =>
-          root.error.json.getOption(json) match {
-            case Some(error) =>
-              Future.failed(new ProfileRetrievalException(SpecifiedProfileError.format(id, response.status, error)))
-            case _ =>
+          response.status match {
+            case Status.OK =>
               profileParser.parse(json, authInfo)
+            case status =>
+              Future.failed(new ProfileRetrievalException(SpecifiedProfileError.format(id, status, json)))
           }
         }
       }

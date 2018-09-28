@@ -73,7 +73,7 @@ class GoogleProviderSpec extends OAuth2ProviderSpec {
     }
 
     "use the overridden API URI" in new Context {
-      val uri = ConfigURI("https://www.googleapis.com/plus/v1/people/me?access_token=%s&new")
+      val uri = DefaultApiUri.copy(uri = DefaultApiUri.uri + "&new")
       val apiResult = UserProfileJson.asJson
       val httpResponse = mock[Response].smart
       httpResponse.status returns Status.OK

@@ -23,7 +23,7 @@ import java.nio.file.Paths
 import silhouette.http.client.BodyFormat._
 import silhouette.http.client.{ Body, Response }
 import silhouette.http.{ Method, Status }
-import silhouette.provider.oauth2.InstagramProvider._
+import silhouette.provider.oauth2.LinkedInProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social.SocialProvider.UnspecifiedProfileError
 import silhouette.provider.social.{ CommonSocialProfile, ProfileRetrievalException }
@@ -34,9 +34,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 /**
- * Test case for the [[InstagramProvider]] class.
+ * Test case for the [[LinkedInProvider]] class.
  */
-class InstagramProviderSpec extends OAuth2ProviderSpec {
+class LinkedInProviderSpec extends OAuth2ProviderSpec {
 
   "The `retrieveProfile` method" should {
     "fail with ProfileRetrievalException if API returns error" in new Context {
@@ -102,9 +102,13 @@ class InstagramProviderSpec extends OAuth2ProviderSpec {
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>
         p must be equalTo CommonSocialProfile(
-          loginInfo = LoginInfo(provider.id, "1574083"),
+          loginInfo = LoginInfo(provider.id, "NhZXBl_O6f"),
+          firstName = Some("Apollonia"),
+          lastName = Some("Vanova"),
           fullName = Some("Apollonia Vanova"),
-          avatarUri = Some(new URI("http://distillery.s3.amazonaws.com/profiles/profile_1574083_75sq_1295469061.jpg"))
+          email = Some("apollonia.vanova@minutemen.group"),
+          avatarUri = Some(new URI("http://media.linkedin.com/mpr/mprx/0_fsPnURNRhLhk_Ue2fjKLUZkB2FL6TOe2S4" +
+            "bdUZz61GA9Ysxu_y_sz4THGW5JGJWhaMleN0F61-Dg"))
         )
       }
     }
@@ -125,25 +129,25 @@ class InstagramProviderSpec extends OAuth2ProviderSpec {
     /**
      * Paths to the Json fixtures.
      */
-    override val ErrorJson = BaseFixture.load(Paths.get("instagram.error.json"))
-    override val AccessTokenJson = BaseFixture.load(Paths.get("instagram.access.token.json"))
-    override val UserProfileJson = BaseFixture.load(Paths.get("instagram.profile.json"))
+    override val ErrorJson = BaseFixture.load(Paths.get("linkedin.error.json"))
+    override val AccessTokenJson = BaseFixture.load(Paths.get("linkedin.access.token.json"))
+    override val UserProfileJson = BaseFixture.load(Paths.get("linkedin.profile.json"))
 
     /**
      * The OAuth2 config.
      */
     override lazy val config = spy(OAuth2Config(
-      authorizationUri = Some(ConfigURI("https://api.instagram.com/oauth/authorize")),
-      accessTokenUri = ConfigURI("https://api.instagram.com/oauth/access_token"),
+      authorizationUri = Some(ConfigURI("https://www.linkedin.com/uas/oauth2/authorization")),
+      accessTokenUri = ConfigURI("https://www.linkedin.com/uas/oauth2/accessToken"),
       redirectUri = Some(ConfigURI("https://minutemen.group")),
       clientID = "my.client.id",
       clientSecret = "my.client.secret",
-      scope = Some("basic")
+      scope = None
     ))
 
     /**
      * The provider to test.
      */
-    lazy val provider = new InstagramProvider(httpClient, stateHandler, config)
+    lazy val provider = new LinkedInProvider(httpClient, stateHandler, config)
   }
 }
