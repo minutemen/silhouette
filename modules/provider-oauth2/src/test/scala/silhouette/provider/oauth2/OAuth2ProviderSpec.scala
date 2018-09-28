@@ -19,12 +19,12 @@ package silhouette.provider.oauth2
 
 import java.net.URLEncoder._
 
-import io.circe.Json
+import io.circe.{ Decoder, Json }
 import org.specs2.execute.Result
 import org.specs2.matcher.ThrownExpectations
 import org.specs2.mock.Mockito
 import org.specs2.specification.Scope
-import silhouette.{ ConfigurationException, ConfigURI }
+import silhouette.{ ConfigURI, ConfigurationException }
 import silhouette.http._
 import silhouette.http.client.BodyFormat._
 import silhouette.http.client.{ Body, BodyFormat, Response }
@@ -442,6 +442,11 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
     val ErrorJson: BaseFixture.F
     val AccessTokenJson: BaseFixture.F
     val UserProfileJson: BaseFixture.F
+
+    /**
+     * The access token decoder to use to decode the [[OAuth2Info]] from JSON.
+     */
+    implicit val accessTokenDecoder: Decoder[OAuth2Info] = OAuth2Info.decoder
 
     /**
      * The HTTP client mock.

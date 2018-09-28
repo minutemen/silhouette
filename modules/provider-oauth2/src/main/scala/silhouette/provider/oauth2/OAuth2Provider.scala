@@ -61,7 +61,7 @@ object OAuth2Info extends OAuth2Constants {
   /**
    * Converts the JSON into a [[OAuth2Info]] object.
    */
-  implicit val infoDecoder: Decoder[OAuth2Info] = (c: HCursor) => {
+  implicit val decoder: Decoder[OAuth2Info] = (c: HCursor) => {
     for {
       accessToken <- c.downField(AccessToken).as[String]
       tokenType <- c.downField(TokenType).as[Option[String]]
@@ -107,7 +107,7 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
    *
    * Override this if a specific provider needs another decoder.
    */
-  implicit protected val accessTokenDecoder: Decoder[OAuth2Info] = OAuth2Info.infoDecoder
+  implicit protected val accessTokenDecoder: Decoder[OAuth2Info] = OAuth2Info.decoder
 
   /**
    * Starts the authentication process.
