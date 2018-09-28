@@ -1,11 +1,11 @@
 {
   "emails": [
     {
-      "value": "home@watchmen.com",
+      "value": "home@minutemen.group",
       "type": "home"
     },
     {
-      "value": "apollonia.vanova@watchmen.com",
+      "value": "apollonia.vanova@minutemen.group",
       "type": "account"
     }
   ],
@@ -17,6 +17,6 @@
   },
   "image": {
     "url": "https://lh6.googleusercontent.com/-m34A6I77dJU/ASASAASADAAI/AVABAAAAAJk/5cg1hcjo_4s/photo.jpg?sz=50",
-    "isDefault" : true
+    "isDefault": true
   }
 }

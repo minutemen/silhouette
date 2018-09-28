@@ -60,7 +60,7 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
 
     "fail with ProfileRetrievalException if an unexpected error occurred" in new Context {
       val httpResponse = mock[Response].smart
-      httpResponse.status returns 500
+      httpResponse.status returns Status.`Internal Server Error`
       httpResponse.body throws new RuntimeException("")
 
       httpClient.withUri(DefaultApiUri.format(oAuth2Info.accessToken, DefaultApiVersion)) returns httpClient
@@ -76,7 +76,7 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
       val uri = ConfigURI("https://api.foursquare.com/v2/users/self?oauth_token=%s&v=%s&new")
       val apiResult = UserProfileJson.asJson
       val httpResponse = mock[Response].smart
-      httpResponse.status returns 200
+      httpResponse.status returns Status.OK
       httpResponse.body returns Body.from(apiResult)
 
       config.apiUri returns Some(uri)
@@ -93,7 +93,7 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
     "return the social profile" in new Context {
       val apiResult = UserProfileJson.asJson
       val httpResponse = mock[Response].smart
-      httpResponse.status returns 200
+      httpResponse.status returns Status.OK
       httpResponse.body returns Body.from(apiResult)
 
       httpClient.withUri(DefaultApiUri.format(oAuth2Info.accessToken, DefaultApiVersion)) returns httpClient
@@ -114,7 +114,7 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
     "return the social profile if API is deprecated" in new Context {
       val apiResult = DeprecatedJson.asJson
       val httpResponse = mock[Response].smart
-      httpResponse.status returns 200
+      httpResponse.status returns Status.OK
       httpResponse.body returns Body.from(apiResult)
 
       httpClient.withUri(DefaultApiUri.format(oAuth2Info.accessToken, DefaultApiVersion)) returns httpClient
@@ -137,7 +137,7 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
       val customProperties = Map(ApiVersion -> customApiVersion)
       val apiResult = UserProfileJson.asJson
       val httpResponse = mock[Response].smart
-      httpResponse.status returns 200
+      httpResponse.status returns Status.OK
       httpResponse.body returns Body.from(apiResult)
 
       config.customProperties returns customProperties
@@ -161,7 +161,7 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
       val customProperties = Map(AvatarResolution -> "150x150")
       val apiResult = UserProfileJson.asJson
       val httpResponse = mock[Response].smart
-      httpResponse.status returns 200
+      httpResponse.status returns Status.OK
       httpResponse.body returns Body.from(apiResult)
 
       config.customProperties returns customProperties

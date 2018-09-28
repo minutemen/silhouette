@@ -62,7 +62,7 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
 
     "fail with ProfileRetrievalException if an unexpected error occurred" in new Context {
       val httpResponse = mock[Response].smart
-      httpResponse.status returns 500
+      httpResponse.status returns Status.`Internal Server Error`
       httpResponse.body throws new RuntimeException("")
 
       httpClient.withUri(DefaultApiUri) returns httpClient
@@ -81,7 +81,7 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
       val uri = ConfigURI("https://api.dropbox.com/1/account/info&new")
       val apiResult = UserProfileJson.asJson
       val httpResponse = mock[Response].smart
-      httpResponse.status returns 200
+      httpResponse.status returns Status.OK
       httpResponse.body returns Body.from(apiResult)
 
       config.apiUri returns Some(uri)
@@ -101,7 +101,7 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
     "return the social profile" in new Context {
       val apiResult = UserProfileJson.asJson
       val httpResponse = mock[Response].smart
-      httpResponse.status returns 200
+      httpResponse.status returns Status.OK
       httpResponse.body returns Body.from(apiResult)
 
       httpClient.withUri(DefaultApiUri) returns httpClient

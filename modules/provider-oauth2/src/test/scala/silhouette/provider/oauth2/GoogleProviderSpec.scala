@@ -20,24 +20,23 @@ package silhouette.provider.oauth2
 import java.net.URI
 import java.nio.file.Paths
 
-import io.circe.optics.JsonPath._
-import silhouette.{ ConfigURI, LoginInfo }
 import silhouette.http.client.BodyFormat._
 import silhouette.http.client.{ Body, Response }
 import silhouette.http.{ Method, Status }
-import silhouette.provider.oauth2.FacebookProvider._
+import silhouette.provider.oauth2.GoogleProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social.SocialProvider.UnspecifiedProfileError
 import silhouette.provider.social.{ CommonSocialProfile, ProfileRetrievalException }
 import silhouette.specs2.BaseFixture
+import silhouette.{ ConfigURI, LoginInfo }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 /**
- * Test case for the [[FacebookProvider]] class.
+ * Test case for the [[GoogleProvider]] class.
  */
-class FacebookProviderSpec extends OAuth2ProviderSpec {
+class GoogleProviderSpec extends OAuth2ProviderSpec {
 
   "The `retrieveProfile` method" should {
     "fail with ProfileRetrievalException if API returns error" in new Context {
@@ -54,7 +53,7 @@ class FacebookProviderSpec extends OAuth2ProviderSpec {
         case e => e.getMessage must equalTo(SpecifiedProfileError.format(
           provider.id,
           Status.`Bad Request`,
-          root.error.json.getOption(apiResult).get
+          apiResult
         ))
       }
     }
@@ -74,8 +73,7 @@ class FacebookProviderSpec extends OAuth2ProviderSpec {
     }
 
     "use the overridden API URI" in new Context {
-      val uri = ConfigURI("https://graph.facebook.com/v3.1/me?fields=name,first_name,last_name,picture,email&" +
-        "return_ssl_resources=1&access_token=%s&new")
+      val uri = ConfigURI("https://www.googleapis.com/plus/v1/people/me?access_token=%s&new")
       val apiResult = UserProfileJson.asJson
       val httpResponse = mock[Response].smart
       httpResponse.status returns Status.OK
@@ -92,7 +90,7 @@ class FacebookProviderSpec extends OAuth2ProviderSpec {
       there was one(httpClient).withUri(uri.format(oAuth2Info.accessToken))
     }
 
-    "return the social profile" in new Context {
+    "return the social profile with an email" in new Context {
       val apiResult = UserProfileJson.asJson
       val httpResponse = mock[Response].smart
       httpResponse.status returns Status.OK
@@ -104,13 +102,81 @@ class FacebookProviderSpec extends OAuth2ProviderSpec {
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>
         p must be equalTo CommonSocialProfile(
-          loginInfo = LoginInfo(provider.id, "134405962728980"),
+          loginInfo = LoginInfo(provider.id, "109476598527568979481"),
           firstName = Some("Apollonia"),
           lastName = Some("Vanova"),
           fullName = Some("Apollonia Vanova"),
           email = Some("apollonia.vanova@minutemen.group"),
-          avatarUri = Some(new URI("https://fbcdn-sphotos-g-a.akamaihd.net/hphotos-ak-ash2/t1/" +
-            "36245_155530314499277_2350717_n.jpg?lvh=1"))
+          avatarUri = Some(new URI("https://lh6.googleusercontent.com/-m34A6I77dJU/ASASAASADAAI/AVABAAAAAJk/" +
+            "5cg1hcjo_4s/photo.jpg?sz=50"))
+        )
+      }
+    }
+
+    "return the social profile without an email" in new Context {
+      val apiResult = WithoutEmailJson.asJson
+      val httpResponse = mock[Response].smart
+      httpResponse.status returns Status.OK
+      httpResponse.body returns Body.from(apiResult)
+
+      httpClient.withUri(DefaultApiUri.format(oAuth2Info.accessToken)) returns httpClient
+      httpClient.withMethod(Method.GET) returns httpClient
+      httpClient.execute returns Future.successful(httpResponse)
+
+      profile(provider.retrieveProfile(oAuth2Info)) { p =>
+        p must be equalTo CommonSocialProfile(
+          loginInfo = LoginInfo(provider.id, "109476598527568979481"),
+          firstName = Some("Apollonia"),
+          lastName = Some("Vanova"),
+          fullName = Some("Apollonia Vanova"),
+          email = None,
+          avatarUri = Some(new URI("https://lh6.googleusercontent.com/-m34A6I77dJU/ASASAASADAAI/AVABAAAAAJk/" +
+            "5cg1hcjo_4s/photo.jpg?sz=50"))
+        )
+      }
+    }
+
+    "return the social profile with an avatar URI" in new Context {
+      val apiResult = NonDefaultImageJson.asJson
+      val httpResponse = mock[Response].smart
+      httpResponse.status returns Status.OK
+      httpResponse.body returns Body.from(apiResult)
+
+      httpClient.withUri(DefaultApiUri.format(oAuth2Info.accessToken)) returns httpClient
+      httpClient.withMethod(Method.GET) returns httpClient
+      httpClient.execute returns Future.successful(httpResponse)
+
+      profile(provider.retrieveProfile(oAuth2Info)) { p =>
+        p must be equalTo CommonSocialProfile(
+          loginInfo = LoginInfo(provider.id, "109476598527568979481"),
+          firstName = Some("Apollonia"),
+          lastName = Some("Vanova"),
+          fullName = Some("Apollonia Vanova"),
+          email = Some("apollonia.vanova@minutemen.group"),
+          avatarUri = Some(new URI("https://lh6.googleusercontent.com/-m34A6I77dJU/ASASAASADAAI/AVABAAAAAJk/" +
+            "5cg1hcjo_4s/photo.jpg?sz=50"))
+        )
+      }
+    }
+
+    "return the social profile without an avatar URI" in new Context {
+      val apiResult = DefaultImageJson.asJson
+      val httpResponse = mock[Response].smart
+      httpResponse.status returns Status.OK
+      httpResponse.body returns Body.from(apiResult)
+
+      httpClient.withUri(DefaultApiUri.format(oAuth2Info.accessToken)) returns httpClient
+      httpClient.withMethod(Method.GET) returns httpClient
+      httpClient.execute returns Future.successful(httpResponse)
+
+      profile(provider.retrieveProfile(oAuth2Info)) { p =>
+        p must be equalTo CommonSocialProfile(
+          loginInfo = LoginInfo(provider.id, "109476598527568979481"),
+          firstName = Some("Apollonia"),
+          lastName = Some("Vanova"),
+          fullName = Some("Apollonia Vanova"),
+          email = Some("apollonia.vanova@minutemen.group"),
+          avatarUri = None
         )
       }
     }
@@ -131,25 +197,28 @@ class FacebookProviderSpec extends OAuth2ProviderSpec {
     /**
      * Paths to the Json fixtures.
      */
-    override val ErrorJson = BaseFixture.load(Paths.get("facebook.error.json"))
-    override val AccessTokenJson = BaseFixture.load(Paths.get("facebook.access.token.json"))
-    override val UserProfileJson = BaseFixture.load(Paths.get("facebook.profile.json"))
+    override val ErrorJson = BaseFixture.load(Paths.get("google.error.json"))
+    override val AccessTokenJson = BaseFixture.load(Paths.get("google.access.token.json"))
+    override val UserProfileJson = BaseFixture.load(Paths.get("google.profile.json"))
+    val DefaultImageJson = BaseFixture.load(Paths.get("google.img.default.json"))
+    val NonDefaultImageJson = BaseFixture.load(Paths.get("google.img.non-default.json"))
+    val WithoutEmailJson = BaseFixture.load(Paths.get("google.without.email.json"))
 
     /**
      * The OAuth2 config.
      */
     override lazy val config = spy(OAuth2Config(
-      authorizationUri = Some(ConfigURI("https://graph.facebook.com/oauth/authorize")),
-      accessTokenUri = ConfigURI("https://graph.facebook.com/oauth/access_token"),
+      authorizationUri = Some(ConfigURI("https://accounts.google.com/o/oauth2/auth")),
+      accessTokenUri = ConfigURI("https://accounts.google.com/o/oauth2/token"),
       redirectUri = Some(ConfigURI("https://minutemen.group")),
       clientID = "my.client.id",
       clientSecret = "my.client.secret",
-      scope = Some("email")
+      scope = Some("profile,email")
     ))
 
     /**
      * The provider to test.
      */
-    lazy val provider = new FacebookProvider(httpClient, stateHandler, config)
+    lazy val provider = new GoogleProvider(httpClient, stateHandler, config)
   }
 }

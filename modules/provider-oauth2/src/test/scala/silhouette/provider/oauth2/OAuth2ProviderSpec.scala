@@ -237,7 +237,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       val httpResponse = mock[Response].smart
       val request = Fake.request.withQueryParams(Code -> code)
 
-      httpResponse.status returns 200
+      httpResponse.status returns Status.OK
       httpResponse.body returns Body(MimeType.`application/json`, data = "<html></html>".getBytes(Codec.UTF8.charSet))
 
       c.httpClient.withUri(c.config.accessTokenUri) returns c.httpClient
@@ -261,7 +261,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       val httpResponse = mock[Response].smart
       val request = Fake.request.withQueryParams(Code -> code)
 
-      httpResponse.status returns 401
+      httpResponse.status returns Status.Unauthorized
       httpResponse.body returns Body.from("Unauthorized")
 
       c.httpClient.withUri(c.config.accessTokenUri) returns c.httpClient
@@ -285,7 +285,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       val httpResponse = mock[Response].smart
       val request = Fake.request.withQueryParams(Code -> code)
 
-      httpResponse.status returns 200
+      httpResponse.status returns Status.OK
       httpResponse.body returns Body.from(Json.obj())
 
       c.httpClient.withUri(c.config.accessTokenUri) returns c.httpClient
@@ -307,7 +307,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       val httpResponse = mock[Response].smart
       val request = Fake.request.withQueryParams(Code -> code)
 
-      httpResponse.status returns 200
+      httpResponse.status returns Status.OK
       httpResponse.body returns Body.from(c.oAuth2InfoJson)
 
       c.httpClient.withUri(c.config.accessTokenUri) returns c.httpClient
@@ -330,7 +330,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       val httpResponse = mock[Response].smart
       implicit val request: Fake.Request = Fake.request.withQueryParams(Code -> code)
 
-      httpResponse.status returns 200
+      httpResponse.status returns Status.OK
       httpResponse.body returns Body.from(c.oAuth2InfoJson)
 
       c.httpClient.withUri(c.config.accessTokenUri) returns c.httpClient

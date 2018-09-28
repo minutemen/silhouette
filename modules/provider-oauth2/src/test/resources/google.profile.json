@@ -1,11 +1,11 @@
 {
   "emails": [
     {
-      "value": "home@watchmen.com",
+      "value": "home@minutemen.group",
       "type": "home"
     },
     {
-      "value": "apollonia.vanova@watchmen.com",
+      "value": "apollonia.vanova@minutemen.group",
       "type": "account"
     }
   ],
