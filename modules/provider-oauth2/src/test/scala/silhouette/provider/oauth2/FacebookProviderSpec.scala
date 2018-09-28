@@ -17,13 +17,14 @@
  */
 package silhouette.provider.oauth2
 
+import java.net.URI
 import java.nio.file.Paths
 
 import io.circe.optics.JsonPath._
-import silhouette.LoginInfo
+import silhouette.{ ConfigURI, LoginInfo }
 import silhouette.http.client.BodyFormat._
 import silhouette.http.client.{ Body, Response }
-import silhouette.http.{ Method, Status, URI }
+import silhouette.http.{ Method, Status }
 import silhouette.provider.oauth2.FacebookProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social.SocialProvider.UnspecifiedProfileError
@@ -41,7 +42,7 @@ class FacebookProviderSpec extends OAuth2ProviderSpec {
   "The `retrieveProfile` method" should {
     "fail with ProfileRetrievalException if API returns error" in new Context {
       val apiResult = ErrorJson.asJson
-      val httpResponse = mock[Response]
+      val httpResponse = mock[Response].smart
       httpResponse.status returns Status.`Bad Request`
       httpResponse.body returns Body.from(apiResult)
 
@@ -59,7 +60,7 @@ class FacebookProviderSpec extends OAuth2ProviderSpec {
     }
 
     "fail with ProfileRetrievalException if an unexpected error occurred" in new Context {
-      val httpResponse = mock[Response]
+      val httpResponse = mock[Response].smart
       httpResponse.status returns 500
       httpResponse.body throws new RuntimeException("")
 
@@ -72,9 +73,28 @@ class FacebookProviderSpec extends OAuth2ProviderSpec {
       }
     }
 
+    "use the overridden API URI" in new Context {
+      val uri = ConfigURI("https://graph.facebook.com/v3.1/me?fields=name,first_name,last_name,picture,email&" +
+        "return_ssl_resources=1&access_token=%s&new")
+      val apiResult = UserProfileJson.asJson
+      val httpResponse = mock[Response].smart
+      httpResponse.status returns 200
+      httpResponse.body returns Body.from(apiResult)
+
+      config.apiUri returns Some(uri)
+
+      httpClient.withUri(uri.format(oAuth2Info.accessToken)) returns httpClient
+      httpClient.withMethod(Method.GET) returns httpClient
+      httpClient.execute returns Future.successful(httpResponse)
+
+      await(provider.retrieveProfile(oAuth2Info))
+
+      there was one(httpClient).withUri(uri.format(oAuth2Info.accessToken))
+    }
+
     "return the social profile" in new Context {
       val apiResult = UserProfileJson.asJson
-      val httpResponse = mock[Response]
+      val httpResponse = mock[Response].smart
       httpResponse.status returns 200
       httpResponse.body returns Body.from(apiResult)
 
@@ -89,8 +109,8 @@ class FacebookProviderSpec extends OAuth2ProviderSpec {
           lastName = Some("Vanova"),
           fullName = Some("Apollonia Vanova"),
           email = Some("apollonia.vanova@minutemen.group"),
-          avatarURL = Some("https://fbcdn-sphotos-g-a.akamaihd.net/hphotos-ak-ash2/t1/36245_155530314499277_2350717_n" +
-            ".jpg?lvh=1")
+          avatarUri = Some(new URI("https://fbcdn-sphotos-g-a.akamaihd.net/hphotos-ak-ash2/t1/" +
+            "36245_155530314499277_2350717_n.jpg?lvh=1"))
         )
       }
     }
@@ -116,12 +136,12 @@ class FacebookProviderSpec extends OAuth2ProviderSpec {
     override val UserProfileJson = BaseFixture.load(Paths.get("facebook.profile.json"))
 
     /**
-     * The OAuth2 settings.
+     * The OAuth2 config.
      */
-    override lazy val settings = spy(OAuth2Settings(
-      authorizationUri = Some(URI("https://graph.facebook.com/oauth/authorize")),
-      accessTokenUri = URI("https://graph.facebook.com/oauth/access_token"),
-      redirectUri = Some(URI("https://www.mohiva.com")),
+    override lazy val config = spy(OAuth2Config(
+      authorizationUri = Some(ConfigURI("https://graph.facebook.com/oauth/authorize")),
+      accessTokenUri = ConfigURI("https://graph.facebook.com/oauth/access_token"),
+      redirectUri = Some(ConfigURI("https://minutemen.group")),
       clientID = "my.client.id",
       clientSecret = "my.client.secret",
       scope = Some("email")
@@ -130,6 +150,6 @@ class FacebookProviderSpec extends OAuth2ProviderSpec {
     /**
      * The provider to test.
      */
-    lazy val provider = new FacebookProvider(httpClient, stateHandler, settings)
+    lazy val provider = new FacebookProvider(httpClient, stateHandler, config)
   }
 }

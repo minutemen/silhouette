@@ -19,7 +19,7 @@ package silhouette.provider.oauth2
 
 import io.circe.Json
 import io.circe.optics.JsonPath._
-import silhouette.LoginInfo
+import silhouette.{ LoginInfo, ConfigURI }
 import silhouette.http._
 import silhouette.provider.oauth2.DropboxProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
@@ -37,11 +37,6 @@ import scala.concurrent.{ ExecutionContext, Future }
 trait BaseDropboxProvider extends OAuth2Provider {
 
   /**
-   * The content type to parse a profile from.
-   */
-  override type Content = Json
-
-  /**
    * The provider ID.
    */
   override val id = ID
@@ -53,7 +48,7 @@ trait BaseDropboxProvider extends OAuth2Provider {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
-    httpClient.withUri(settings.apiUri.getOrElse[URI](DefaultApiUri))
+    httpClient.withUri(config.apiUri.getOrElse[ConfigURI](DefaultApiUri))
       .withHeaders(Header(Header.Name.Authorization, s"Bearer ${authInfo.accessToken}"))
       .withMethod(Method.GET)
       .execute
@@ -97,13 +92,13 @@ class DropboxProfileParser extends SocialProfileParser[Json, CommonSocialProfile
  *
  * @param httpClient   The HTTP client implementation.
  * @param stateHandler The state provider implementation.
- * @param settings     The provider settings.
+ * @param config       The provider config.
  * @param ec           The execution context.
  */
 class DropboxProvider(
   protected val httpClient: HttpClient,
   protected val stateHandler: StateHandler,
-  val settings: OAuth2Settings
+  val config: OAuth2Config
 )(
   implicit
   override implicit val ec: ExecutionContext
@@ -120,13 +115,13 @@ class DropboxProvider(
   override val profileParser = new DropboxProfileParser
 
   /**
-   * Gets a provider initialized with a new settings object.
+   * Gets a provider initialized with a new config object.
    *
-   * @param f A function which gets the settings passed and returns different settings.
-   * @return An instance of the provider initialized with new settings.
+   * @param f A function which gets the config passed and returns different config.
+   * @return An instance of the provider initialized with new config.
    */
-  override def withSettings(f: OAuth2Settings => OAuth2Settings): Self =
-    new DropboxProvider(httpClient, stateHandler, f(settings))
+  override def withConfig(f: OAuth2Config => OAuth2Config): Self =
+    new DropboxProvider(httpClient, stateHandler, f(config))
 }
 
 /**
@@ -142,5 +137,5 @@ object DropboxProvider {
   /**
    * Default provider endpoint.
    */
-  val DefaultApiUri: URI = URI("https://api.dropbox.com/1/account/info")
+  val DefaultApiUri: ConfigURI = ConfigURI("https://api.dropbox.com/1/account/info")
 }

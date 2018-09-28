@@ -29,14 +29,14 @@ import scala.concurrent.Future
 /**
  * The base interface for all social providers.
  *
- * @tparam Settings The type of the settings.
+ * @tparam C The type of the config.
  */
-trait SocialProvider[Settings] extends Provider with SocialProfileBuilder with ExecutionContextProvider {
+trait SocialProvider[C] extends Provider with SocialProfileBuilder with ExecutionContextProvider {
 
   /**
    * The type of the concrete implementation of this abstract type.
    */
-  type Self <: SocialProvider[Settings]
+  type Self <: SocialProvider[C]
 
   /**
    * The type of the auth info.
@@ -49,19 +49,19 @@ trait SocialProvider[Settings] extends Provider with SocialProfileBuilder with E
   protected val httpClient: HttpClient
 
   /**
-   * Gets the provider settings.
+   * Gets the provider config.
    *
-   * @return The provider settings.
+   * @return The provider config.
    */
-  def settings: Settings
+  def config: C
 
   /**
-   * Gets a provider initialized with a new settings object.
+   * Gets a provider initialized with a new config object.
    *
-   * @param f A function which gets the settings passed and returns different settings.
-   * @return An instance of the provider initialized with new settings.
+   * @param f A function which gets the config passed and returns different config.
+   * @return An instance of the provider initialized with new config.
    */
-  def withSettings(f: Settings => Settings): Self
+  def withConfig(f: C => C): Self
 
   /**
    * Authenticates the user and returns the auth information.

@@ -17,7 +17,7 @@
  */
 package silhouette.http
 
-import java.net.{ URI => JavaURI }
+import java.net.URI
 
 import silhouette.crypto.Hash
 import silhouette.crypto.Hash._
@@ -45,7 +45,7 @@ protected[silhouette] trait RequestPipeline[R] extends RequestExtractor[R] {
    *
    * @return The absolute URI of the request target.
    */
-  def uri: JavaURI
+  def uri: URI
 
   /**
    * Creates a new request pipeline with the given URI.
@@ -56,7 +56,7 @@ protected[silhouette] trait RequestPipeline[R] extends RequestExtractor[R] {
    * @param uri The absolute URI of the request target.
    * @return A new request pipeline instance with the set URI.
    */
-  def withUri(uri: JavaURI): RequestPipeline[R]
+  def withUri(uri: URI): RequestPipeline[R]
 
   /**
    * Gets the HTTP request method.

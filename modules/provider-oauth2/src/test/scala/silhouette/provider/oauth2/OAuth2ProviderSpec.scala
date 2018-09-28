@@ -24,7 +24,7 @@ import org.specs2.execute.Result
 import org.specs2.matcher.ThrownExpectations
 import org.specs2.mock.Mockito
 import org.specs2.specification.Scope
-import silhouette.ConfigurationException
+import silhouette.{ ConfigurationException, ConfigURI }
 import silhouette.http._
 import silhouette.http.client.BodyFormat._
 import silhouette.http.client.{ Body, BodyFormat, Response }
@@ -63,14 +63,14 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
     }
 
     "fail with an ConfigurationException if authorization URL is undefined when it's needed" in {
-      c.settings.authorizationUri match {
+      c.config.authorizationUri match {
         case None =>
           skipped("authorizationURL is not defined, so this step isn't needed for provider: " + c.provider.getClass)
         case Some(_) =>
           c.stateHandler.serialize(c.state) returns Some("session-value")
           c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
           c.stateHandler.state returns Future.successful(c.state)
-          c.settings.authorizationUri returns None
+          c.config.authorizationUri returns None
 
           failed[ConfigurationException](c.provider.authenticate()(Fake.request)) {
             case e => e.getMessage must startWith(AuthorizationUriUndefined.format(c.provider.id))
@@ -79,7 +79,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
     }
 
     "redirect to authorization URL if authorization code doesn't exists in request" in {
-      c.settings.authorizationUri match {
+      c.config.authorizationUri match {
         case None =>
           skipped("authorizationURL is not defined, so this step isn't needed for provider: " + c.provider.getClass)
         case Some(authorizationURL) =>
@@ -102,12 +102,12 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
             await(result).header(Header.Name.Location) must beSome.which { header =>
               val urlParams = c.urlParams(header.values.head)
               val params = List(
-                Some(ClientID -> c.settings.clientID),
+                Some(ClientID -> c.config.clientID),
                 Some(ResponseType -> Code),
                 Some(OAuth2Provider.State -> urlParams(OAuth2Provider.State)),
-                c.settings.scope.map(Scope -> _),
-                c.settings.redirectUri.map(uri => RedirectUri -> uri.toString)
-              ).flatten ++ c.settings.authorizationParams.toList
+                c.config.scope.map(Scope -> _),
+                c.config.redirectUri.map(uri => RedirectUri -> uri.toString)
+              ).flatten ++ c.config.authorizationParams.toList
 
               header.values.head must be equalTo (authorizationURL + params.map { p =>
                 encode(p._1, "UTF-8") + "=" + encode(p._2, "UTF-8")
@@ -119,41 +119,41 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
 
     "resolves relative redirectUri before starting the flow" in {
       verifyRedirectUri(
-        redirectUri = Some(URI("/redirect-url")),
+        redirectUri = Some(ConfigURI("/redirect-url")),
         secure = false,
-        resolvedRedirectUri = URI("http://www.example.com/redirect-url")
+        resolvedRedirectUri = ConfigURI("http://www.example.com/redirect-url")
       )
     }
 
     "resolves path relative redirectUri before starting the flow" in {
       verifyRedirectUri(
-        redirectUri = Some(URI("redirect-url")),
+        redirectUri = Some(ConfigURI("redirect-url")),
         secure = false,
-        resolvedRedirectUri = URI("http://www.example.com/request-path/redirect-url")
+        resolvedRedirectUri = ConfigURI("http://www.example.com/request-path/redirect-url")
       )
     }
 
     "resolves relative redirectUri before starting the flow over https" in {
       verifyRedirectUri(
-        redirectUri = Some(URI("/redirect-url")),
+        redirectUri = Some(ConfigURI("/redirect-url")),
         secure = true,
-        resolvedRedirectUri = URI("https://www.example.com/redirect-url")
+        resolvedRedirectUri = ConfigURI("https://www.example.com/redirect-url")
       )
     }
 
     "verifying presence of redirect param in the access token post request" in {
       verifyRedirectUri(
-        redirectUri = Some(URI("/redirect-url")),
+        redirectUri = Some(ConfigURI("/redirect-url")),
         secure = false,
-        resolvedRedirectUri = URI("http://www.example.com/redirect-url")
+        resolvedRedirectUri = ConfigURI("http://www.example.com/redirect-url")
       )
     }
 
     "verifying presence of redirect param in the access token post request over https" in {
       verifyRedirectUri(
-        redirectUri = Some(URI("/redirect-url")),
+        redirectUri = Some(ConfigURI("/redirect-url")),
         secure = true,
-        resolvedRedirectUri = URI("https://www.example.com/redirect-url")
+        resolvedRedirectUri = ConfigURI("https://www.example.com/redirect-url")
       )
     }
 
@@ -161,7 +161,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       verifyRedirectUri(
         redirectUri = None,
         secure = false,
-        resolvedRedirectUri = URI("http://www.example.com/request-path/redirect-url")
+        resolvedRedirectUri = ConfigURI("http://www.example.com/request-path/redirect-url")
       )
     }
 
@@ -169,12 +169,12 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       verifyRedirectUri(
         redirectUri = None,
         secure = true,
-        resolvedRedirectUri = URI("https://www.example.com/redirect-url")
+        resolvedRedirectUri = ConfigURI("https://www.example.com/redirect-url")
       )
     }
 
     "not send state param if state is empty" in {
-      c.settings.authorizationUri match {
+      c.config.authorizationUri match {
         case None =>
           skipped("authorizationURL is not defined, so this step isn't needed for provider: " + c.provider.getClass)
         case Some(_) =>
@@ -198,17 +198,17 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       val code = "my.code"
       val request = Fake.request.withQueryParams(Code -> code)
       val params = Map(
-        ClientID -> Seq(c.settings.clientID),
-        ClientSecret -> Seq(c.settings.clientSecret),
+        ClientID -> Seq(c.config.clientID),
+        ClientSecret -> Seq(c.config.clientSecret),
         GrantType -> Seq(AuthorizationCode),
         Code -> Seq(code)
       ) ++
-        c.settings.accessTokenParams.mapValues(Seq(_)) ++
-        c.settings.redirectUri.map(uri => Map(RedirectUri -> Seq(uri.toString))).getOrElse(Map())
+        c.config.accessTokenParams.mapValues(Seq(_)) ++
+        c.config.redirectUri.map(uri => Map(RedirectUri -> Seq(uri.toString))).getOrElse(Map())
 
       val body = Body.from(params)(BodyFormat.formUrlEncodedFormat)
 
-      c.httpClient.withUri(c.settings.accessTokenUri) returns c.httpClient
+      c.httpClient.withUri(c.config.accessTokenUri) returns c.httpClient
       c.httpClient.withHeaders(any()) returns c.httpClient
       c.httpClient.withMethod(Method.POST) returns c.httpClient
       c.httpClient.withBody(body) returns c.httpClient
@@ -234,13 +234,13 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
 
     "fail with UnexpectedResponseException if Json cannot be parsed from response" in {
       val code = "my.code"
-      val httpResponse = mock[Response]
+      val httpResponse = mock[Response].smart
       val request = Fake.request.withQueryParams(Code -> code)
 
       httpResponse.status returns 200
       httpResponse.body returns Body(MimeType.`application/json`, data = "<html></html>".getBytes(Codec.UTF8.charSet))
 
-      c.httpClient.withUri(c.settings.accessTokenUri) returns c.httpClient
+      c.httpClient.withUri(c.config.accessTokenUri) returns c.httpClient
       c.httpClient.withHeaders(any()) returns c.httpClient
       c.httpClient.withBody[Map[String, Seq[String]]](any())(any()) returns c.httpClient
       c.httpClient.withMethod(Method.POST) returns c.httpClient
@@ -258,13 +258,13 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
 
     "fail with UnexpectedResponseException for an unexpected response" in {
       val code = "my.code"
-      val httpResponse = mock[Response]
+      val httpResponse = mock[Response].smart
       val request = Fake.request.withQueryParams(Code -> code)
 
       httpResponse.status returns 401
       httpResponse.body returns Body.from("Unauthorized")
 
-      c.httpClient.withUri(c.settings.accessTokenUri) returns c.httpClient
+      c.httpClient.withUri(c.config.accessTokenUri) returns c.httpClient
       c.httpClient.withHeaders(any()) returns c.httpClient
       c.httpClient.withBody[Map[String, Seq[String]]](any())(any()) returns c.httpClient
       c.httpClient.withMethod(Method.POST) returns c.httpClient
@@ -282,13 +282,13 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
 
     "fail with UnexpectedResponseException if OAuth2Info can be build because of an unexpected response" in {
       val code = "my.code"
-      val httpResponse = mock[Response]
+      val httpResponse = mock[Response].smart
       val request = Fake.request.withQueryParams(Code -> code)
 
       httpResponse.status returns 200
       httpResponse.body returns Body.from(Json.obj())
 
-      c.httpClient.withUri(c.settings.accessTokenUri) returns c.httpClient
+      c.httpClient.withUri(c.config.accessTokenUri) returns c.httpClient
       c.httpClient.withHeaders(any()) returns c.httpClient
       c.httpClient.withBody[Map[String, Seq[String]]](any())(any()) returns c.httpClient
       c.httpClient.withMethod(Method.POST) returns c.httpClient
@@ -304,13 +304,13 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
 
     "return the auth info" in {
       val code = "my.code"
-      val httpResponse = mock[Response]
+      val httpResponse = mock[Response].smart
       val request = Fake.request.withQueryParams(Code -> code)
 
       httpResponse.status returns 200
       httpResponse.body returns Body.from(c.oAuth2InfoJson)
 
-      c.httpClient.withUri(c.settings.accessTokenUri) returns c.httpClient
+      c.httpClient.withUri(c.config.accessTokenUri) returns c.httpClient
       c.httpClient.withHeaders(any()) returns c.httpClient
       c.httpClient.withBody[Map[String, Seq[String]]](any())(any()) returns c.httpClient
       c.httpClient.withMethod(Method.POST) returns c.httpClient
@@ -327,13 +327,13 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
     val c = context
     "return stateful auth info" in {
       val code = "my.code"
-      val httpResponse = mock[Response]
+      val httpResponse = mock[Response].smart
       implicit val request: Fake.Request = Fake.request.withQueryParams(Code -> code)
 
       httpResponse.status returns 200
       httpResponse.body returns Body.from(c.oAuth2InfoJson)
 
-      c.httpClient.withUri(c.settings.accessTokenUri) returns c.httpClient
+      c.httpClient.withUri(c.config.accessTokenUri) returns c.httpClient
       c.httpClient.withHeaders(any()) returns c.httpClient
       c.httpClient.withBody[Map[String, Seq[String]]](any())(any()) returns c.httpClient
       c.httpClient.withMethod(Method.POST) returns c.httpClient
@@ -348,21 +348,21 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
     }
   }
 
-  "The `settings` method" should {
+  "The `config` method" should {
     val c = context
-    "return the settings instance" in {
-      c.provider.settings must be equalTo c.settings
+    "return the config instance" in {
+      c.provider.config must be equalTo c.config
     }
   }
 
-  "The `withSettings` method" should {
+  "The `withConfig` method" should {
     val c = context
-    "create a new instance with customized settings" in {
-      val newProvider = c.provider.withSettings { s =>
-        s.copy(accessTokenUri = URI("new-access-token-url"))
+    "create a new instance with customized config" in {
+      val newProvider = c.provider.withConfig { s =>
+        s.copy(accessTokenUri = ConfigURI("new-access-token-url"))
       }
 
-      newProvider.settings.accessTokenUri must be equalTo URI("new-access-token-url")
+      newProvider.config.accessTokenUri must be equalTo ConfigURI("new-access-token-url")
     }
   }
 
@@ -377,25 +377,25 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
    * Helper method that validates the resolved redirect URI.
    */
   protected def verifyRedirectUri(
-    redirectUri: Option[URI],
+    redirectUri: Option[ConfigURI],
     secure: Boolean,
-    resolvedRedirectUri: URI
+    resolvedRedirectUri: ConfigURI
   )(
     implicit
     c: BaseContext
   ) = {
-    c.settings.authorizationUri match {
+    c.config.authorizationUri match {
       case None =>
         skipped("authorizationUri is not defined, so this step isn't needed for provider: " + c.provider.getClass)
       case Some(_) =>
         val scheme = if (secure) "https" else "http"
-        val uri = URI(s"$scheme://www.example.com/request-path/something")
+        val uri = ConfigURI(s"$scheme://www.example.com/request-path/something")
         val request = Fake.request(uri)
 
         val sessionKey = "session-key"
         val sessionValue = "session-value"
 
-        c.settings.redirectUri returns redirectUri
+        c.config.redirectUri returns redirectUri
 
         c.stateHandler.serialize(c.state) returns Some(sessionValue)
         c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
@@ -479,9 +479,9 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
     lazy val stateAuthInfo = StatefulAuthInfo(oAuth2Info, userStateItem)
 
     /**
-     * The OAuth2 settings.
+     * The OAuth2 config.
      */
-    def settings: OAuth2Settings
+    def config: OAuth2Config
 
     /**
      * The provider to test.

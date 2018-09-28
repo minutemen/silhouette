@@ -19,10 +19,10 @@ package silhouette.provider.oauth2
 
 import java.nio.file.Paths
 
-import silhouette.LoginInfo
+import silhouette.{ LoginInfo, ConfigURI }
 import silhouette.http.client.BodyFormat._
 import silhouette.http.client.{ Body, Response }
-import silhouette.http.{ Header, Method, Status, URI }
+import silhouette.http.{ Header, Method, Status }
 import silhouette.provider.oauth2.DropboxProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social.SocialProvider.UnspecifiedProfileError
@@ -40,7 +40,7 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
   "The `retrieveProfile` method" should {
     "fail with ProfileRetrievalException if API returns error" in new Context {
       val apiResult = ErrorJson.asJson
-      val httpResponse = mock[Response]
+      val httpResponse = mock[Response].smart
       httpResponse.status returns Status.`Bad Request`
       httpResponse.body returns Body.from(apiResult)
 
@@ -61,7 +61,7 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
     }
 
     "fail with ProfileRetrievalException if an unexpected error occurred" in new Context {
-      val httpResponse = mock[Response]
+      val httpResponse = mock[Response].smart
       httpResponse.status returns 500
       httpResponse.body throws new RuntimeException("")
 
@@ -77,9 +77,30 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
       }
     }
 
+    "use the overridden API URI" in new Context {
+      val uri = ConfigURI("https://api.dropbox.com/1/account/info&new")
+      val apiResult = UserProfileJson.asJson
+      val httpResponse = mock[Response].smart
+      httpResponse.status returns 200
+      httpResponse.body returns Body.from(apiResult)
+
+      config.apiUri returns Some(uri)
+
+      httpClient.withUri(uri) returns httpClient
+      httpClient.withHeaders(
+        Header(Header.Name.Authorization, s"Bearer ${oAuth2Info.accessToken}")
+      ) returns httpClient
+      httpClient.withMethod(Method.GET) returns httpClient
+      httpClient.execute returns Future.successful(httpResponse)
+
+      await(provider.retrieveProfile(oAuth2Info))
+
+      there was one(httpClient).withUri(uri)
+    }
+
     "return the social profile" in new Context {
       val apiResult = UserProfileJson.asJson
-      val httpResponse = mock[Response]
+      val httpResponse = mock[Response].smart
       httpResponse.status returns 200
       httpResponse.body returns Body.from(apiResult)
 
@@ -121,12 +142,12 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
     override val UserProfileJson = BaseFixture.load(Paths.get("dropbox.profile.json"))
 
     /**
-     * The OAuth2 settings.
+     * The OAuth2 config.
      */
-    override lazy val settings = spy(OAuth2Settings(
-      authorizationUri = Some(URI("https://www.dropbox.com/1/oauth2/authorize")),
-      accessTokenUri = URI("https://api.dropbox.com/1/oauth2/token"),
-      redirectUri = Some(URI("https://www.mohiva.com")),
+    override lazy val config = spy(OAuth2Config(
+      authorizationUri = Some(ConfigURI("https://www.dropbox.com/1/oauth2/authorize")),
+      accessTokenUri = ConfigURI("https://api.dropbox.com/1/oauth2/token"),
+      redirectUri = Some(ConfigURI("https://minutemen.group")),
       clientID = "my.client.id",
       clientSecret = "my.client.secret",
       scope = None
@@ -135,6 +156,6 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
     /**
      * The provider to test.
      */
-    lazy val provider = new DropboxProvider(httpClient, stateHandler, settings)
+    lazy val provider = new DropboxProvider(httpClient, stateHandler, config)
   }
 }

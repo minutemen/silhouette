@@ -17,6 +17,8 @@
  */
 package silhouette.provider.social
 
+import io.circe.Json
+
 import scala.concurrent.Future
 
 /**
@@ -27,8 +29,10 @@ trait SocialProfileBuilder {
 
   /**
    * The content type to parse a profile from.
+   *
+   * The content type is mostly JSON. A concrete provider is able to override it if needed.
    */
-  type Content
+  type Content = Json
 
   /**
    * The type of the profile a profile builder is responsible for.

@@ -73,11 +73,11 @@ class SocialProviderRegistrySpec extends Specification with Mockito {
    * The context.
    */
   trait Context extends Scope {
-    case class OAuth1Settings()
-    case class OAuth2Settings()
+    case class OAuth1Config()
+    case class OAuth2Config()
 
-    trait OAuth1Provider extends SocialProvider[OAuth1Settings]
-    trait OAuth2Provider extends SocialProvider[OAuth2Settings]
+    trait OAuth1Provider extends SocialProvider[OAuth1Config]
+    trait OAuth2Provider extends SocialProvider[OAuth2Config]
     trait TwitterProvider extends OAuth1Provider
     trait YahooProvider extends OAuth1Provider
     trait FacebookProvider extends OAuth2Provider

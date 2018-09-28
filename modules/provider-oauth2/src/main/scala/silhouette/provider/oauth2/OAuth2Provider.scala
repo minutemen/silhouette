@@ -30,7 +30,7 @@ import silhouette.provider.social.state.handler.UserStateItemHandler
 import silhouette.provider.social.state.{ StateHandler, StateItem }
 import silhouette.provider.social.{ ProfileRetrievalException, SocialStateProvider, StatefulAuthInfo }
 import silhouette.provider.{ AccessDeniedException, UnexpectedResponseException }
-import silhouette.{ AuthInfo, ConfigurationException }
+import silhouette.{ AuthInfo, ConfigurationException, ConfigURI }
 
 import scala.concurrent.Future
 import scala.reflect.ClassTag
@@ -76,7 +76,7 @@ object OAuth2Info extends OAuth2Constants {
 /**
  * Base implementation for all OAuth2 providers.
  */
-trait OAuth2Provider extends SocialStateProvider[OAuth2Settings] with OAuth2Constants with LazyLogging {
+trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Constants with LazyLogging {
 
   /**
    * The type of the auth info.
@@ -89,9 +89,11 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Settings] with OAuth2Cons
   protected val stateHandler: StateHandler
 
   /**
-   * A list with headers to send to the API.
+   * A list with headers to send to the API to get the access token.
+   *
+   * Override this if a specific provider uses additional headers to send with the access token request.
    */
-  protected val headers: Seq[Header] = Seq()
+  protected val accessTokenHeaders: Seq[Header] = Seq()
 
   /**
    * The default access token response code.
@@ -208,22 +210,22 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Settings] with OAuth2Cons
   ): Future[ResponsePipeline[SilhouetteResponse]] = {
     stateHandler.state.map { state =>
       val params = List(
-        Some(ClientID -> settings.clientID),
+        Some(ClientID -> config.clientID),
         Some(ResponseType -> Code),
         stateHandler.serialize(state).map(State -> _),
-        settings.scope.map(Scope -> _),
-        settings.redirectUri.map(uri => RedirectUri -> resolveCallbackUri(uri).toString)
-      ).flatten ++ settings.authorizationParams.toList
+        config.scope.map(Scope -> _),
+        config.redirectUri.map(uri => RedirectUri -> resolveCallbackUri(uri).toString)
+      ).flatten ++ config.authorizationParams.toList
 
       val encodedParams = params.map { p => encode(p._1, "UTF-8") + "=" + encode(p._2, "UTF-8") }
-      val uri = settings.authorizationUri.getOrElse {
+      val uri = config.authorizationUri.getOrElse {
         throw new ConfigurationException(AuthorizationUriUndefined.format(id))
       } + encodedParams.mkString("?", "&", "")
       val redirectResponse = SilhouetteResponse(Status.`See Other`)
       val redirectResponsePipeline = SilhouetteResponsePipeline(redirectResponse)
         .withHeaders(Header(Header.Name.Location, uri))
       val redirect = stateHandler.publish(redirectResponsePipeline, state)
-      logger.debug("[%s] Use authorization URI: %s".format(id, settings.authorizationUri))
+      logger.debug("[%s] Use authorization URI: %s".format(id, config.authorizationUri))
       logger.debug("[%s] Redirecting to: %s".format(id, uri))
       redirect
     }
@@ -239,17 +241,17 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Settings] with OAuth2Cons
    */
   protected def getAccessToken[R](code: String)(implicit request: RequestPipeline[R]): Future[OAuth2Info] = {
     val params = Map(
-      ClientID -> Seq(settings.clientID),
-      ClientSecret -> Seq(settings.clientSecret),
+      ClientID -> Seq(config.clientID),
+      ClientSecret -> Seq(config.clientSecret),
       GrantType -> Seq(AuthorizationCode),
       Code -> Seq(code)
     ) ++
-      settings.accessTokenParams.mapValues(Seq(_)) ++
-      settings.redirectUri.map(uri => Map(RedirectUri -> Seq(resolveCallbackUri(uri).toString))).getOrElse(Map())
+      config.accessTokenParams.mapValues(Seq(_)) ++
+      config.redirectUri.map(uri => Map(RedirectUri -> Seq(resolveCallbackUri(uri).toString))).getOrElse(Map())
 
     httpClient
-      .withUri(settings.accessTokenUri)
-      .withHeaders(headers: _*)
+      .withUri(config.accessTokenUri)
+      .withHeaders(accessTokenHeaders: _*)
       .withMethod(Method.POST)
       .withBody(params)
       .execute
@@ -352,7 +354,7 @@ trait OAuth2Constants {
 }
 
 /**
- * The OAuth2 settings.
+ * The OAuth2 configuration.
  *
  * @param authorizationUri    The authorization URI provided by the OAuth provider.
  * @param accessTokenUri      The access token URI provided by the OAuth provider.
@@ -368,11 +370,11 @@ trait OAuth2Constants {
  * @param accessTokenParams   Additional params to add to the access token request.
  * @param customProperties    A map of custom properties for the different providers.
  */
-case class OAuth2Settings(
-  authorizationUri: Option[URI] = None,
-  accessTokenUri: URI,
-  redirectUri: Option[URI] = None,
-  apiUri: Option[URI] = None,
+case class OAuth2Config(
+  authorizationUri: Option[ConfigURI] = None,
+  accessTokenUri: ConfigURI,
+  redirectUri: Option[ConfigURI] = None,
+  apiUri: Option[ConfigURI] = None,
   clientID: String, clientSecret: String,
   scope: Option[String] = None,
   authorizationParams: Map[String, String] = Map.empty,

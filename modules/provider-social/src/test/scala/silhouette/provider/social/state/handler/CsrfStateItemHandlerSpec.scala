@@ -106,7 +106,7 @@ class CsrfStateItemHandlerSpec(implicit ev: ExecutionEnv)
       implicit val request: RequestPipeline[SilhouetteRequest] = Fake.request
       val result = csrfStateItemHandler.publish(csrfStateItem, Fake.response)
 
-      result.cookie(settings.cookieName) must beSome(cookie(csrfToken))
+      result.cookie(config.cookieName) must beSome(cookie(csrfToken))
     }
   }
 
@@ -130,9 +130,9 @@ class CsrfStateItemHandlerSpec(implicit ev: ExecutionEnv)
     }
 
     /**
-     * The settings.
+     * The config.
      */
-    val settings = CsrfStateSettings()
+    val config = CsrfStateConfig()
 
     /**
      * The signer implementation.
@@ -159,7 +159,7 @@ class CsrfStateItemHandlerSpec(implicit ev: ExecutionEnv)
     /**
      * An instance of the CSRF state item handler.
      */
-    val csrfStateItemHandler = new CsrfStateItemHandler(settings, secureID, signer)
+    val csrfStateItemHandler = new CsrfStateItemHandler(config, secureID, signer)
 
     /**
      * A helper method to create a cookie.
@@ -168,14 +168,14 @@ class CsrfStateItemHandlerSpec(implicit ev: ExecutionEnv)
      * @return A cookie instance with the given value.
      */
     def cookie(value: String): Cookie = Cookie(
-      name = settings.cookieName,
+      name = config.cookieName,
       value = signer.sign(value),
-      maxAge = Some(settings.expirationTime.toSeconds.toInt),
-      path = settings.cookiePath,
-      domain = settings.cookieDomain,
-      secure = settings.secureCookie,
-      httpOnly = settings.httpOnlyCookie,
-      sameSite = settings.sameSite
+      maxAge = Some(config.expirationTime.toSeconds.toInt),
+      path = config.cookiePath,
+      domain = config.cookieDomain,
+      secure = config.secureCookie,
+      httpOnly = config.httpOnlyCookie,
+      sameSite = config.sameSite
     )
   }
 }

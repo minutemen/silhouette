@@ -37,7 +37,7 @@ License and Copyright
 
 By submitting work via pull requests, issues, documentation, or any other means, contributors indicate their agreement to 
 publish their work under this project's license and also attest that they are the authors of the work and grant a 
-copyright license to the Mohiva Organisation, unless the contribution clearly states a different copyright notice 
+copyright license to the Minutemen Group, unless the contribution clearly states a different copyright notice 
 (e.g., it contains original work by a third party).
 
 

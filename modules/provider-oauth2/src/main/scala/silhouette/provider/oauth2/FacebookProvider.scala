@@ -17,10 +17,12 @@
  */
 package silhouette.provider.oauth2
 
+import java.net.URI
+
 import io.circe.Json
 import io.circe.optics.JsonPath._
-import silhouette.LoginInfo
-import silhouette.http.{ HttpClient, Method, URI }
+import silhouette.{ ConfigURI, LoginInfo }
+import silhouette.http.{ HttpClient, Method }
 import silhouette.provider.oauth2.FacebookProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
@@ -38,11 +40,6 @@ import scala.concurrent.{ ExecutionContext, Future }
 trait BaseFacebookProvider extends OAuth2Provider {
 
   /**
-   * The content type to parse a profile from.
-   */
-  override type Content = Json
-
-  /**
    * The provider ID.
    */
   override val id = ID
@@ -54,7 +51,7 @@ trait BaseFacebookProvider extends OAuth2Provider {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
-    httpClient.withUri(settings.apiUri.getOrElse(DefaultApiUri).format(authInfo.accessToken))
+    httpClient.withUri(config.apiUri.getOrElse(DefaultApiUri).format(authInfo.accessToken))
       .withMethod(Method.GET)
       .execute
       .flatMap { response =>
@@ -89,7 +86,7 @@ class FacebookProfileParser extends SocialProfileParser[Json, CommonSocialProfil
       lastName = root.last_name.string.getOption(json),
       fullName = root.name.string.getOption(json),
       email = root.email.string.getOption(json),
-      avatarURL = root.picture.data.url.string.getOption(json)
+      avatarUri = root.picture.data.url.string.getOption(json).map(uri => new URI(uri))
     )
   }
 }
@@ -99,13 +96,13 @@ class FacebookProfileParser extends SocialProfileParser[Json, CommonSocialProfil
  *
  * @param httpClient   The HTTP client implementation.
  * @param stateHandler The state provider implementation.
- * @param settings     The provider settings.
+ * @param config       The provider config.
  * @param ec           The execution context.
  */
 class FacebookProvider(
   protected val httpClient: HttpClient,
   protected val stateHandler: StateHandler,
-  val settings: OAuth2Settings
+  val config: OAuth2Config
 )(
   implicit
   override implicit val ec: ExecutionContext
@@ -122,13 +119,13 @@ class FacebookProvider(
   override val profileParser = new FacebookProfileParser
 
   /**
-   * Gets a provider initialized with a new settings object.
+   * Gets a provider initialized with a new config object.
    *
-   * @param f A function which gets the settings passed and returns different settings.
-   * @return An instance of the provider initialized with new settings.
+   * @param f A function which gets the config passed and returns different config.
+   * @return An instance of the provider initialized with new config.
    */
-  override def withSettings(f: OAuth2Settings => OAuth2Settings): Self =
-    new FacebookProvider(httpClient, stateHandler, f(settings))
+  override def withConfig(f: OAuth2Config => OAuth2Config): Self =
+    new FacebookProvider(httpClient, stateHandler, f(config))
 }
 
 /**
@@ -144,6 +141,6 @@ object FacebookProvider {
   /**
    * Default provider endpoint.
    */
-  val DefaultApiUri = URI("https://graph.facebook.com/v3.1/me?fields=name,first_name,last_name,picture,email&" +
+  val DefaultApiUri = ConfigURI("https://graph.facebook.com/v3.1/me?fields=name,first_name,last_name,picture,email&" +
     "return_ssl_resources=1&access_token=%s")
 }

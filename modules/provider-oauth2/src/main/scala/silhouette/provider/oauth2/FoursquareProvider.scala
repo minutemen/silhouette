@@ -21,36 +21,23 @@ import java.net.URI
 
 import io.circe.Json
 import io.circe.optics.JsonPath._
-import silhouette.{ ConfigURI, LoginInfo }
 import silhouette.http._
-import silhouette.provider.oauth2.Auth0Provider._
+import silhouette.provider.oauth2.FoursquareProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
 import silhouette.provider.social.state.StateHandler
+import silhouette.{ ConfigURI, LoginInfo }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * Base Auth0 OAuth2 Provider.
+ * Base Foursquare OAuth2 provider.
  *
- * OAuth Provider configuration in silhouette.conf must indicate:
- *
- *   # Auth0 Service URIs
- *   auth0.authorizationUri="https://mydomain.eu.auth0.com/authorize"
- *   auth0.accessTokenUri="https://mydomain.eu.auth0.com/oauth/token"
- *   auth0.apiUri="https://mydomain.eu.auth0.com/userinfo"
- *
- *   # Application URI and credentials
- *   auth0.redirectUri="http://localhost:9000/authenticate/auth0"
- *   auth0.clientID=myoauthclientid
- *   auth0.clientSecret=myoauthclientsecret
- *
- *   # Auth0 user's profile information requested
- *   auth0.scope="openid name email picture"
- *
- * See http://auth0.com for more information on the Auth0 Auth 2.0 Provider and Service.
+ * @see https://developer.foursquare.com/overview/auth
+ * @see https://developer.foursquare.com/overview/responses
+ * @see https://developer.foursquare.com/docs/explore
  */
-trait BaseAuth0Provider extends OAuth2Provider {
+trait BaseFoursquareProvider extends OAuth2Provider {
 
   /**
    * The provider ID.
@@ -64,42 +51,37 @@ trait BaseAuth0Provider extends OAuth2Provider {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
-    httpClient.withUri(config.apiUri.getOrElse[ConfigURI](DefaultApiUri))
-      .withHeaders(Header(Header.Name.Authorization, s"Bearer ${authInfo.accessToken}"))
+    val version = config.customProperties.getOrElse(ApiVersion, DefaultApiVersion)
+    httpClient.withUri(config.apiUri.getOrElse[ConfigURI](DefaultApiUri).format(authInfo.accessToken, version))
       .withMethod(Method.GET)
       .execute
       .flatMap { response =>
         withParsedJson(response.body) { json =>
-          response.status match {
-            case Status.OK =>
+          root.meta.code.int.getOption(json) match {
+            case Some(code) if code != 200 =>
+              Future.failed(new ProfileRetrievalException(SpecifiedProfileError.format(id, response.status, json)))
+            case _ =>
+              // Status code 200 and an existing errorType can only be a deprecated error
+              // https://developer.foursquare.com/overview/responses
+              val errorType = root.meta.errorType.string.getOption(json)
+              if (errorType.isDefined) {
+                logger.info("This implementation may be deprecated! Please contact the Silhouette team for a fix!")
+              }
+
               profileParser.parse(json, authInfo)
-            case status =>
-              Future.failed(new ProfileRetrievalException(SpecifiedProfileError.format(id, status, json)))
           }
         }
       }
-  }
-
-  /**
-   * Gets the access token.
-   *
-   * @param code    The access code.
-   * @param request The current request.
-   * @tparam R The type of the request.
-   * @return The info containing the access token.
-   */
-  override protected def getAccessToken[R](code: String)(implicit request: RequestPipeline[R]): Future[OAuth2Info] = {
-    request.queryParam("token_type").headOption match {
-      case Some("bearer") => Future(OAuth2Info(code))
-      case _              => super.getAccessToken(code)
-    }
   }
 }
 
 /**
  * The profile parser for the common social profile.
+ *
+ * @param config The provider config.
  */
-class Auth0ProfileParser extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
+class FoursquareProfileParser(config: OAuth2Config)
+  extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
 
   /**
    * Parses the social profile.
@@ -109,41 +91,48 @@ class Auth0ProfileParser extends SocialProfileParser[Json, CommonSocialProfile, 
    * @return The social profile from the given result.
    */
   override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = Future.successful {
+    val user = root.response.user.json.getOrError(json, "response.user", ID)
+    val avatarURLPart1 = root.photo.prefix.string.getOption(user)
+    val avatarURLPart2 = root.photo.suffix.string.getOption(user)
+    val resolution = config.customProperties.getOrElse(AvatarResolution, DefaultAvatarResolution)
+
     CommonSocialProfile(
-      loginInfo = LoginInfo(ID, root.user_id.string.getOrError(json, "user_id", ID)),
-      fullName = root.name.string.getOption(json),
-      email = root.email.string.getOption(json),
-      avatarUri = root.picture.string.getOption(json).map(uri => new URI(uri))
+      loginInfo = LoginInfo(ID, root.id.string.getOrError(user, "id", ID)),
+      firstName = root.firstName.string.getOption(user),
+      lastName = root.lastName.string.getOption(user),
+      email = root.contact.email.string.getOption(user).filter(!_.isEmpty),
+      avatarUri = for (prefix <- avatarURLPart1; postfix <- avatarURLPart2)
+        yield new URI(prefix + resolution + postfix)
     )
   }
 }
 
 /**
- * The Auth0 OAuth2 Provider.
+ * The Foursquare OAuth2 Provider.
  *
  * @param httpClient   The HTTP client implementation.
  * @param stateHandler The state provider implementation.
  * @param config       The provider config.
  * @param ec           The execution context.
  */
-class Auth0Provider(
+class FoursquareProvider(
   protected val httpClient: HttpClient,
   protected val stateHandler: StateHandler,
   val config: OAuth2Config
 )(
   implicit
   override implicit val ec: ExecutionContext
-) extends BaseAuth0Provider with CommonProfileBuilder {
+) extends BaseFoursquareProvider with CommonProfileBuilder {
 
   /**
    * The type of this class.
    */
-  override type Self = Auth0Provider
+  override type Self = FoursquareProvider
 
   /**
    * The profile parser implementation.
    */
-  override val profileParser = new Auth0ProfileParser
+  override val profileParser = new FoursquareProfileParser(config)
 
   /**
    * Gets a provider initialized with a new config object.
@@ -152,21 +141,39 @@ class Auth0Provider(
    * @return An instance of the provider initialized with new config.
    */
   override def withConfig(f: OAuth2Config => OAuth2Config): Self =
-    new Auth0Provider(httpClient, stateHandler, f(config))
+    new FoursquareProvider(httpClient, stateHandler, f(config))
 }
 
 /**
  * The companion object.
  */
-object Auth0Provider {
+object FoursquareProvider {
 
   /**
    * The provider ID.
    */
-  val ID = "auth0"
+  val ID = "foursquare"
 
   /**
    * Default provider endpoint.
    */
-  val DefaultApiUri: ConfigURI = ConfigURI("https://auth0.auth0.com/userinfo")
+  val DefaultApiUri: ConfigURI = ConfigURI("https://api.foursquare.com/v2/users/self?oauth_token=%s&v=%s")
+
+  /**
+   * The version of this implementation.
+   *
+   * @see https://developer.foursquare.com/overview/versioning
+   */
+  val DefaultApiVersion = "20181001"
+
+  /**
+   * The default avatar resolution.
+   */
+  val DefaultAvatarResolution = "100x100"
+
+  /**
+   * Some custom properties for this provider.
+   */
+  val ApiVersion = "api.version"
+  val AvatarResolution = "avatar.resolution"
 }

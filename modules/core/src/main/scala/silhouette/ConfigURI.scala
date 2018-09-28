@@ -15,22 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.http
+package silhouette
 
-import java.net.{ URI => JavaURI }
+import java.net.URI
 
 import scala.language.implicitConversions
 
 /**
- * An URI implementation that can have format parameters in the URI that will be replaced at runtime.
+ * An URI that can have format parameters in the URI that will be replaced at runtime.
  *
- * If a [[java.net.URI]] contains format parameters like `%s` it will throw an exception on instantiation. This
+ * If a [[URI]] contains format parameters like `%s` it will throw an exception on instantiation. This
  * class allows us to specify an URI with such parameters. We will provide implicit converters that help to
- * translate between this class and [[java.net.URI]].
+ * translate between this class and [[URI]].
  *
  * @param uri An URI.
  */
-case class URI(uri: String) {
+case class ConfigURI(uri: String) {
 
   /**
    * Uses the underlying string as a pattern (in a fashion similar to printf in C), and uses the supplied arguments
@@ -39,14 +39,14 @@ case class URI(uri: String) {
    * @see [[scala.collection.immutable.StringLike.format]]
    * @param args The arguments used to instantiating the pattern.
    */
-  def format(args: Any*): URI = URI(uri.format(args: _*))
+  def format(args: Any*): ConfigURI = ConfigURI(uri.format(args: _*))
 
   /**
-   * Converts this instance to a [[java.net.URI]] instance.
+   * Converts this instance to a [[URI]] instance.
    *
-   * @return A [[java.net.URI]] instance.
+   * @return A [[URI]] instance.
    */
-  def toJava: JavaURI = new JavaURI(uri)
+  def toURI: URI = new URI(uri)
 
   /**
    * Gets the string representation of the URI.
@@ -59,13 +59,13 @@ case class URI(uri: String) {
 /**
  * The companion object.
  */
-object URI {
+object ConfigURI {
 
   /**
-   * Converts a [[silhouette.http.URI]] to a [[java.net.URI]].
+   * Converts a [[ConfigURI]] to a [[URI]].
    *
    * @param uri The URI to convert.
    * @return A [[java.net.URI]] instance.
    */
-  implicit def toJavaURI(uri: URI): JavaURI = uri.toJava
+  implicit def toURI(uri: ConfigURI): URI = uri.toURI
 }

@@ -60,12 +60,12 @@ object CsrfStateItem {
  * provider redirects back to the application both tokens will be compared. If both tokens are the same than the
  * application can trust the redirect source.
  *
- * @param settings The state settings.
+ * @param config   The state config.
  * @param secureID A secure ID implementation, used to create the state value.
  * @param signer   The signer implementation.
  */
 class CsrfStateItemHandler @Inject() (
-  settings: CsrfStateSettings,
+  config: CsrfStateConfig,
   secureID: SecureAsyncID[String],
   signer: Signer
 ) extends StateItemHandler with LazyLogging
@@ -160,14 +160,14 @@ class CsrfStateItemHandler @Inject() (
     request: RequestPipeline[R]
   ): ResponsePipeline[P] = {
     response.withCookies(Cookie(
-      name = settings.cookieName,
+      name = config.cookieName,
       value = signer.sign(item.token),
-      maxAge = Some(settings.expirationTime.toSeconds.toInt),
-      path = settings.cookiePath,
-      domain = settings.cookieDomain,
-      secure = settings.secureCookie,
-      httpOnly = settings.httpOnlyCookie,
-      sameSite = settings.sameSite
+      maxAge = Some(config.expirationTime.toSeconds.toInt),
+      path = config.cookiePath,
+      domain = config.cookieDomain,
+      secure = config.secureCookie,
+      httpOnly = config.httpOnlyCookie,
+      sameSite = config.sameSite
     ))
   }
 
@@ -179,9 +179,9 @@ class CsrfStateItemHandler @Inject() (
    * @return The CSRF token on success, otherwise a failure.
    */
   private def clientState[R](implicit request: RequestPipeline[R]): Try[Item] = {
-    request.cookie(settings.cookieName) match {
+    request.cookie(config.cookieName) match {
       case Some(cookie) => signer.extract(cookie.value).map(token => CsrfStateItem(token))
-      case None         => Failure(new SocialStateException(ClientStateDoesNotExists.format(settings.cookieName)))
+      case None         => Failure(new SocialStateException(ClientStateDoesNotExists.format(config.cookieName)))
     }
   }
 }
@@ -203,7 +203,7 @@ object CsrfStateItemHandler {
 }
 
 /**
- * The settings for the Csrf State.
+ * The config for the Csrf State.
  *
  * @param cookieName     The cookie name.
  * @param cookiePath     The cookie path.
@@ -214,7 +214,7 @@ object CsrfStateItemHandler {
  * @param expirationTime State expiration. Defaults to 5 minutes which provides sufficient time to log in, but
  *                       not too much. This is a balance between convenience and security.
  */
-case class CsrfStateSettings(
+case class CsrfStateConfig(
   cookieName: String = "CsrfState",
   cookiePath: Option[String] = Some("/"),
   cookieDomain: Option[String] = None,
