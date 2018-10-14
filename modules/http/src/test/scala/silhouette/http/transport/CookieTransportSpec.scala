@@ -27,8 +27,8 @@ import silhouette.http._
 class CookieTransportSpec extends Specification {
 
   "The `copy` method" should {
-    "allow to override the settings" in new Context {
-      transport.copy(transport.settings.copy("not-name")).settings.name must be equalTo "not-name"
+    "allow to override the config" in new Context {
+      transport.copy(transport.config.copy("not-name")).config.name must be equalTo "not-name"
     }
   }
 
@@ -84,7 +84,7 @@ class CookieTransportSpec extends Specification {
 
   "The `SmuggleIntoCookie` writes" should {
     "smuggle a cookie into the request" in new Context {
-      SmuggleIntoCookie(settings)
+      SmuggleIntoCookie(config)
         .write(("payload", requestPipeline))
         .cookie("test") must beSome.like {
           case cookie =>
@@ -95,7 +95,7 @@ class CookieTransportSpec extends Specification {
 
   "The `EmbedIntoCookie` writes" should {
     "embed a cookie into the response" in new Context {
-      EmbedIntoCookie(settings)
+      EmbedIntoCookie(config)
         .write(("payload", responsePipeline))
         .cookie("test") must beSome.like {
           case cookie =>
@@ -106,7 +106,7 @@ class CookieTransportSpec extends Specification {
 
   "The `DiscardFromCookie` writes" should {
     "discard a cookie" in new Context {
-      DiscardFromCookie(settings)
+      DiscardFromCookie(config)
         .write(responsePipeline)
         .cookie("test") must beSome.like {
           case cookie =>
@@ -122,14 +122,14 @@ class CookieTransportSpec extends Specification {
   trait Context extends Scope {
 
     /**
-     * The cookie transport settings.
+     * The cookie transport config.
      */
-    val settings = CookieTransportSettings(name = "test")
+    val config = CookieTransportConfig(name = "test")
 
     /**
      * The cookie transport to test.
      */
-    val transport = CookieTransport(settings)
+    val transport = CookieTransport(config)
 
     /**
      * A request pipeline.

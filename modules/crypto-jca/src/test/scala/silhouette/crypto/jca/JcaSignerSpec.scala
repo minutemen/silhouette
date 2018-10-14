@@ -75,13 +75,13 @@ class JcaSignerSpec extends Specification {
     val key = "s3cr3t_k3y"
 
     /**
-     * The settings instance.
+     * The config instance.
      */
-    val settings = JcaSignerSettings(key)
+    val config = JcaSignerConfig(key)
 
     /**
      * The cookie signer to test.
      */
-    val signer = new JcaSigner(settings)
+    val signer = new JcaSigner(config)
   }
 }

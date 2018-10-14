@@ -32,9 +32,9 @@ import silhouette.crypto.{ Crypter, CryptoException }
  * be abused for various attacks if messages are not properly
  * [[https://en.wikipedia.org/wiki/Malleability_%28cryptography%29 authenticated]].
  *
- * @param settings The settings instance.
+ * @param config The config instance.
  */
-class JcaCrypter(settings: JcaCrypterSettings) extends Crypter {
+class JcaCrypter(config: JcaCrypterConfig) extends Crypter {
 
   /**
    * Encrypts a string.
@@ -43,7 +43,7 @@ class JcaCrypter(settings: JcaCrypterSettings) extends Crypter {
    * @return The encrypted string.
    */
   override def encrypt(value: String): String = {
-    val keySpec = secretKeyWithSha256(settings.key, "AES")
+    val keySpec = secretKeyWithSha256(config.key, "AES")
     val cipher = Cipher.getInstance("AES/CTR/NoPadding")
     cipher.init(Cipher.ENCRYPT_MODE, keySpec)
     val encryptedValue = cipher.doFinal(value.getBytes("UTF-8"))
@@ -62,7 +62,7 @@ class JcaCrypter(settings: JcaCrypterSettings) extends Crypter {
    */
   override def decrypt(value: String): String = {
     value.split("-", 2) match {
-      case Array(version, data) if version == "1" => decryptVersion1(data, settings.key)
+      case Array(version, data) if version == "1" => decryptVersion1(data, config.key)
       case Array(version, _)                      => throw new CryptoException(UnknownVersion.format(version))
       case _                                      => throw new CryptoException(UnexpectedFormat)
     }
@@ -107,8 +107,8 @@ object JcaCrypter {
 }
 
 /**
- * The settings for the JCA crypter.
+ * The config for the JCA crypter.
  *
  * @param key The encryption key.
  */
-case class JcaCrypterSettings(key: String)
+case class JcaCrypterConfig(key: String)

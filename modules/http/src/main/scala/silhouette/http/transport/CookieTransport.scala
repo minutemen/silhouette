@@ -22,7 +22,7 @@ import silhouette.http._
 import scala.concurrent.duration.FiniteDuration
 
 /**
- * The settings for the cookie transport.
+ * The config for the cookie transport.
  *
  * @param name     The cookie name.
  * @param path     The cookie path.
@@ -31,21 +31,21 @@ import scala.concurrent.duration.FiniteDuration
  * @param httpOnly Whether this cookie is HTTP only, i.e. not accessible from client-side JavaScript code.
  * @param maxAge   The duration a cookie expires. `None` for a transient cookie.
  */
-final case class CookieTransportSettings(
+final case class CookieTransportConfig(
   name: String,
   path: String = "/",
   domain: Option[String] = None,
   secure: Boolean = true,
   httpOnly: Boolean = true,
   maxAge: Option[FiniteDuration] = None
-) extends TransportSettings
+) extends TransportConfig
 
 /**
  * The cookie transport.
  *
- * @param settings The transport settings.
+ * @param config The transport config.
  */
-final case class CookieTransport(settings: CookieTransportSettings)
+final case class CookieTransport(config: CookieTransportConfig)
   extends RetrieveFromRequest
   with SmuggleIntoRequest
   with EmbedIntoResponse
@@ -59,7 +59,7 @@ final case class CookieTransport(settings: CookieTransportSettings)
    * @return Some payload or None if no payload could be found in request.
    */
   override def retrieve[R](request: RequestPipeline[R]): Option[String] =
-    request.cookie(settings.name).map(_.value)
+    request.cookie(config.name).map(_.value)
 
   /**
    * Adds a cookie with the given payload to the request.
@@ -96,19 +96,19 @@ final case class CookieTransport(settings: CookieTransportSettings)
   }
 
   /**
-   * Creates a cookie based on the settings and the given value.
+   * Creates a cookie based on the config and the given value.
    *
    * @param value The cookie value.
    * @return A cookie value.
    */
   private def cookie(value: String) = Cookie(
-    name = settings.name,
+    name = config.name,
     value = value,
-    maxAge = settings.maxAge.map(_.toSeconds.toInt),
-    domain = settings.domain,
-    path = Some(settings.path),
-    secure = settings.secure,
-    httpOnly = settings.httpOnly
+    maxAge = config.maxAge.map(_.toSeconds.toInt),
+    domain = config.domain,
+    path = Some(config.path),
+    secure = config.secure,
+    httpOnly = config.httpOnly
   )
 }
 
@@ -127,16 +127,16 @@ final case class RetrieveFromCookie[R](name: String) extends RetrieveReads[R, St
    * @return The retrieved payload.
    */
   override def read(requestPipeline: RequestPipeline[R]): Option[String] =
-    CookieTransport(CookieTransportSettings(name)).retrieve(requestPipeline)
+    CookieTransport(CookieTransportConfig(name)).retrieve(requestPipeline)
 }
 
 /**
  * A writes that smuggles a cookie with the given payload into the given request.
  *
- * @param settings The cookie transport settings.
+ * @param config The cookie transport config.
  * @tparam R The type of the request.
  */
-final case class SmuggleIntoCookie[R](settings: CookieTransportSettings) extends SmuggleWrites[R, String] {
+final case class SmuggleIntoCookie[R](config: CookieTransportConfig) extends SmuggleWrites[R, String] {
 
   /**
    * Merges some payload and a [[RequestPipeline]] into a [[RequestPipeline]] that contains a cookie with the
@@ -147,16 +147,16 @@ final case class SmuggleIntoCookie[R](settings: CookieTransportSettings) extends
    * @return The request pipeline with the smuggled cookie.
    */
   override def write(in: (String, RequestPipeline[R])): RequestPipeline[R] =
-    CookieTransport(settings).smuggle[R] _ tupled in
+    CookieTransport(config).smuggle[R] _ tupled in
 }
 
 /**
  * A writes that embeds a cookie with the given payload into the given response.
  *
- * @param settings The cookie transport settings.
+ * @param config The cookie transport config.
  * @tparam R The type of the response.
  */
-final case class EmbedIntoCookie[R](settings: CookieTransportSettings) extends EmbedWrites[R, String] {
+final case class EmbedIntoCookie[R](config: CookieTransportConfig) extends EmbedWrites[R, String] {
 
   /**
    * Merges some payload and a [[ResponsePipeline]] into a [[ResponsePipeline]] that contains a cookie with the
@@ -167,16 +167,16 @@ final case class EmbedIntoCookie[R](settings: CookieTransportSettings) extends E
    * @return The response pipeline with the embedded cookie.
    */
   override def write(in: (String, ResponsePipeline[R])): ResponsePipeline[R] =
-    CookieTransport(settings).embed[R] _ tupled in
+    CookieTransport(config).embed[R] _ tupled in
 }
 
 /**
  * A writes that embeds a discarding cookie into the given response.
  *
- * @param settings The transport settings.
+ * @param config The transport config.
  * @tparam R The type of the response.
  */
-final case class DiscardFromCookie[R](settings: CookieTransportSettings) extends DiscardWrites[R] {
+final case class DiscardFromCookie[R](config: CookieTransportConfig) extends DiscardWrites[R] {
 
   /**
    * Takes a [[ResponsePipeline]] and embeds a discarding cookie into it.
@@ -185,5 +185,5 @@ final case class DiscardFromCookie[R](settings: CookieTransportSettings) extends
    * @return The response pipeline with the embedded discarding cookie.
    */
   override def write(responsePipeline: ResponsePipeline[R]): ResponsePipeline[R] =
-    CookieTransport(settings).discard(responsePipeline)
+    CookieTransport(config).discard(responsePipeline)
 }

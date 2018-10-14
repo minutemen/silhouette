@@ -31,9 +31,9 @@ import scala.util.{ Failure, Success, Try }
  * This signer signs the data with the specified key. If the signature verification fails, the signer
  * does not try to decode the data in any way in order to prevent various types of attacks.
  *
- * @param settings The settings instance.
+ * @param config The config instance.
  */
-class JcaSigner(settings: JcaSignerSettings) extends Signer {
+class JcaSigner(config: JcaSignerConfig) extends Signer {
 
   /**
    * Signs (MAC) the given data using the given secret key.
@@ -42,9 +42,9 @@ class JcaSigner(settings: JcaSignerSettings) extends Signer {
    * @return A message authentication code.
    */
   override def sign(data: String): String = {
-    val message = settings.pepper + data + settings.pepper
+    val message = config.pepper + data + config.pepper
     val mac = Mac.getInstance("HmacSHA1")
-    mac.init(new SecretKeySpec(settings.key.getBytes("UTF-8"), "HmacSHA1"))
+    mac.init(new SecretKeySpec(config.key.getBytes("UTF-8"), "HmacSHA1"))
     val signature = Hex.encodeHexString(mac.doFinal(message.getBytes("UTF-8")))
     val version = 1
     s"$version-$signature-$data"
@@ -113,10 +113,10 @@ object JcaSigner {
 }
 
 /**
- * The settings for the JCA cookie signer.
+ * The config for the JCA cookie signer.
  *
  * @param key    Key for signing.
  * @param pepper Constant prepended and appended to the data before signing. When using one key for multiple purposes,
  *               using a specific pepper reduces some risks arising from this.
  */
-case class JcaSignerSettings(key: String, pepper: String = "-silhouette-signer-")
+case class JcaSignerConfig(key: String, pepper: String = "-silhouette-signer-")
