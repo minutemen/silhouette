@@ -61,13 +61,13 @@ class JcaCrypterSpec extends Specification {
     val key = "s3cr3t_k3y"
 
     /**
-     * The settings instance.
+     * The config instance.
      */
-    val settings = JcaCrypterSettings(key)
+    val config = JcaCrypterConfig(key)
 
     /**
      * The crypter to test.
      */
-    val encoder = new JcaCrypter(settings)
+    val encoder = new JcaCrypter(config)
   }
 }

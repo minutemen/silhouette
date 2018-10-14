@@ -20,9 +20,9 @@ package silhouette.http
 import silhouette.{ Reads, Writes }
 
 /**
- * Marker trait for the transport settings.
+ * Marker trait for the transport config.
  */
-trait TransportSettings
+trait TransportConfig
 
 /**
  * Defines the way how payload can be transported in an HTTP request or an HTTP response.
