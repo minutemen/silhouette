@@ -18,6 +18,7 @@
 package silhouette.provider.oauth2
 
 import java.net.URLEncoder._
+import java.time.{ Clock, Instant }
 
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.{ Decoder, Encoder, HCursor, Json }
@@ -25,12 +26,13 @@ import monocle.Optional
 import silhouette.http._
 import silhouette.http.client.BodyFormat._
 import silhouette.http.client.{ Body, Response }
+import silhouette.http.transport.format.BasicAuthHeaderFormat
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social.state.handler.UserStateItemHandler
 import silhouette.provider.social.state.{ StateHandler, StateItem }
 import silhouette.provider.social.{ ProfileRetrievalException, SocialStateProvider, StatefulAuthInfo }
 import silhouette.provider.{ AccessDeniedException, UnexpectedResponseException }
-import silhouette.{ AuthInfo, ConfigurationException, ConfigURI }
+import silhouette.{ AuthInfo, ConfigURI, ConfigurationException, Credentials }
 
 import scala.concurrent.Future
 import scala.reflect.ClassTag
@@ -40,18 +42,33 @@ import scala.util.{ Failure, Success, Try }
  * The OAuth2 info.
  *
  * @param accessToken  The access token.
- * @param tokenType    The token type.
- * @param expiresIn    The number of seconds before the token expires.
+ * @param tokenType    The access token type.
+ * @param createdAt    The time the OAuth2 info instance was created.
+ * @param expiresIn    The number of seconds before the access token expires.
  * @param refreshToken The refresh token.
  * @param params       Additional params transported in conjunction with the token.
  */
 case class OAuth2Info(
   accessToken: String,
   tokenType: Option[String] = None,
+  createdAt: Option[Instant] = None,
   expiresIn: Option[Int] = None,
   refreshToken: Option[String] = None,
   params: Option[Map[String, String]] = None
-) extends AuthInfo
+) extends AuthInfo {
+
+  /**
+   * Checks if the access token is expired and needs to be refreshed.
+   *
+   * @param clock The clock to check against.
+   */
+  def expired(clock: Clock): Boolean = {
+    (expiresIn, createdAt) match {
+      case (Some(in), Some(at)) => clock.instant().isAfter(at.plusSeconds(in.toLong))
+      case _                    => false
+    }
+  }
+}
 
 /**
  * The Oauth2 info companion object.
@@ -60,15 +77,18 @@ object OAuth2Info extends OAuth2Constants {
 
   /**
    * Converts the JSON into a [[OAuth2Info]] object.
+   *
+   * @param clock The current clock instance.
+   * @see https://tools.ietf.org/html/rfc6749#section-5.1
    */
-  implicit val decoder: Decoder[OAuth2Info] = (c: HCursor) => {
+  def decoder(clock: Clock): Decoder[OAuth2Info] = (c: HCursor) => {
     for {
       accessToken <- c.downField(AccessToken).as[String]
       tokenType <- c.downField(TokenType).as[Option[String]]
       expiresIn <- c.downField(ExpiresIn).as[Option[Int]]
       refreshToken <- c.downField(RefreshToken).as[Option[String]]
     } yield {
-      OAuth2Info(accessToken, tokenType, expiresIn, refreshToken)
+      OAuth2Info(accessToken, tokenType, Some(clock.instant()), expiresIn, refreshToken)
     }
   }
 }
@@ -84,6 +104,11 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
   type A = OAuth2Info
 
   /**
+   * The current clock instance.
+   */
+  protected val clock: Clock
+
+  /**
    * The social state handler implementation.
    */
   protected val stateHandler: StateHandler
@@ -96,18 +121,29 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
   protected val accessTokenHeaders: Seq[Header] = Seq()
 
   /**
-   * The default access token response code.
+   * A list with headers to send to the API to refresh the access token.
    *
-   * Override this if a specific provider uses another HTTP status code for a successful access token response.
+   * Override this if a specific provider uses additional headers to send with the access token request.
    */
-  protected val accessTokeResponseCode: Status = Status.OK
+  protected val refreshHeaders: Seq[Header] = Seq()
+
+  /**
+   * Gets the authorization header.
+   *
+   * @return The authorization header.
+   * @see https://tools.ietf.org/html/rfc6749#section-2.3.1
+   */
+  protected val authorizationHeader: Header = {
+    val credentials = Credentials(encode(config.clientID, "UTF-8"), encode(config.clientSecret, "UTF-8"))
+    Header(Header.Name.`Authorization`, BasicAuthHeaderFormat().write(credentials))
+  }
 
   /**
    * The implicit access token decoder.
    *
    * Override this if a specific provider needs another decoder.
    */
-  implicit protected val accessTokenDecoder: Decoder[OAuth2Info] = OAuth2Info.decoder
+  implicit protected val accessTokenDecoder: Decoder[OAuth2Info] = OAuth2Info.decoder(clock)
 
   /**
    * Starts the authentication process.
@@ -164,6 +200,39 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
   }
 
   /**
+   * Refreshes the access token.
+   *
+   * @param refreshToken The refresh token.
+   * @return The auth info containing the access token.
+   */
+  def refresh(refreshToken: String): Future[OAuth2Info] = {
+    config.refreshURI match {
+      case Some(uri) =>
+        httpClient
+          .withUri(uri)
+          .withHeaders(authorizationHeader)
+          .withHeaders(refreshHeaders: _*)
+          .withMethod(Method.POST)
+          .withBody(
+            Body.from(Map(
+              GrantType -> Seq(RefreshToken),
+              RefreshToken -> Seq(refreshToken)
+            ) ++
+              config.refreshParams.mapValues(Seq(_)) ++
+              config.scope.map(scope => Map(Scope -> Seq(scope))).getOrElse(Map())
+            )
+          )
+          .execute
+          .flatMap { response =>
+            logger.debug("[%s] Access token response: [%s]".format(id, response.body.raw))
+            Future.fromTry(buildInfo(response))
+          }
+      case None =>
+        Future.failed(new ConfigurationException(RefreshUriUndefined.format(id)))
+    }
+  }
+
+  /**
    * Handles the OAuth2 flow.
    *
    * The left flow is the authorization flow, which will be processed, if no `code` parameter exists
@@ -178,7 +247,7 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
    * @tparam R The type of the request.
    * @return Either the left or the right flow.
    */
-  def handleFlow[LF, RF, R](left: => Future[LF])(right: String => Future[RF])(
+  protected def handleFlow[LF, RF, R](left: => Future[LF])(right: String => Future[RF])(
     implicit
     request: RequestPipeline[R]
   ): Future[Either[LF, RF]] = {
@@ -214,18 +283,18 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
         Some(ResponseType -> Code),
         stateHandler.serialize(state).map(State -> _),
         config.scope.map(Scope -> _),
-        config.redirectUri.map(uri => RedirectUri -> resolveCallbackUri(uri).toString)
+        config.redirectURI.map(uri => RedirectUri -> resolveCallbackUri(uri).toString)
       ).flatten ++ config.authorizationParams.toList
 
       val encodedParams = params.map { p => encode(p._1, "UTF-8") + "=" + encode(p._2, "UTF-8") }
-      val uri = config.authorizationUri.getOrElse {
+      val uri = config.authorizationURI.getOrElse {
         throw new ConfigurationException(AuthorizationUriUndefined.format(id))
       } + encodedParams.mkString("?", "&", "")
       val redirectResponse = SilhouetteResponse(Status.`See Other`)
       val redirectResponsePipeline = SilhouetteResponsePipeline(redirectResponse)
         .withHeaders(Header(Header.Name.Location, uri))
       val redirect = stateHandler.publish(redirectResponsePipeline, state)
-      logger.debug("[%s] Use authorization URI: %s".format(id, config.authorizationUri))
+      logger.debug("[%s] Use authorization URI: %s".format(id, config.authorizationURI))
       logger.debug("[%s] Redirecting to: %s".format(id, uri))
       redirect
     }
@@ -237,28 +306,26 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
    * @param code    The access code.
    * @param request The current request.
    * @tparam R The type of the request.
-   * @return The info containing the access token.
+   * @return The auth info containing the access token.
    */
   protected def getAccessToken[R](code: String)(implicit request: RequestPipeline[R]): Future[OAuth2Info] = {
-    val params = Map(
-      ClientID -> Seq(config.clientID),
-      ClientSecret -> Seq(config.clientSecret),
-      GrantType -> Seq(AuthorizationCode),
-      Code -> Seq(code)
-    ) ++
-      config.accessTokenParams.mapValues(Seq(_)) ++
-      config.redirectUri.map(uri => Map(RedirectUri -> Seq(resolveCallbackUri(uri).toString))).getOrElse(Map())
-
     httpClient
-      .withUri(config.accessTokenUri)
+      .withUri(config.accessTokenURI)
+      .withHeaders(authorizationHeader)
       .withHeaders(accessTokenHeaders: _*)
       .withMethod(Method.POST)
-      .withBody(params)
+      .withBody(Body.from(
+        Map(
+          GrantType -> Seq(AuthorizationCode),
+          Code -> Seq(code)
+        ) ++
+          config.accessTokenParams.mapValues(Seq(_)) ++
+          config.redirectURI.map(uri => Map(RedirectUri -> Seq(resolveCallbackUri(uri).toString))).getOrElse(Map())
+      ))
       .execute
-      .flatMap {
-        response =>
-          logger.debug("[%s] Access token response: [%s]".format(id, response.body))
-          Future.fromTry(buildInfo(response))
+      .flatMap { response =>
+        logger.debug("[%s] Access token response: [%s]".format(id, response.body.raw))
+        Future.fromTry(buildInfo(response))
       }
   }
 
@@ -267,11 +334,12 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
    *
    * @param response The response from the provider.
    * @return The OAuth2 info on success, otherwise a failure.
+   * @see https://tools.ietf.org/html/rfc6749#section-5.1
    */
   protected def buildInfo(response: Response): Try[OAuth2Info] = {
     import silhouette.http.client.BodyFormat.circeJsonFormat
     response.status match {
-      case status if status == accessTokeResponseCode =>
+      case Status.OK =>
         response.body.as[Json] match {
           case Success(json) => json.as[OAuth2Info].fold(
             error => Failure(new UnexpectedResponseException(InvalidInfoFormat.format(id), Some(error))),
@@ -323,6 +391,7 @@ object OAuth2Provider extends OAuth2Constants {
    * The error messages.
    */
   val AuthorizationUriUndefined = "[%s] Authorization URI is undefined"
+  val RefreshUriUndefined = "[%s] Refresh URI is undefined"
   val AuthorizationError = "[%s] Authorization server returned error: %s"
   val InvalidInfoFormat = "[%s] Cannot build OAuth2Info because of invalid response format"
   val JsonParseError = "[%s] Cannot parse response `%s` to Json"
@@ -344,40 +413,43 @@ trait OAuth2Constants {
   val GrantType = "grant_type"
   val AuthorizationCode = "authorization_code"
   val AccessToken = "access_token"
+  val RefreshToken = "refresh_token"
   val Error = "error"
   val Code = "code"
   val TokenType = "token_type"
   val ExpiresIn = "expires_in"
   val Expires = "expires"
-  val RefreshToken = "refresh_token"
   val AccessDenied = "access_denied"
 }
 
 /**
  * The OAuth2 configuration.
  *
- * @param authorizationUri    The authorization URI provided by the OAuth provider.
- * @param accessTokenUri      The access token URI provided by the OAuth provider.
- * @param redirectUri         The redirect URI to the application after a successful authentication on the OAuth
+ * @param authorizationURI    The authorization URI provided by the OAuth provider.
+ * @param accessTokenURI      The access token URI provided by the OAuth provider.
+ * @param redirectURI         The redirect URI to the application after a successful authentication on the OAuth
  *                            provider. The URI can be a relative path which will be resolved against the current
  *                            request's host.
- * @param apiUri              The URI to fetch the profile from the API. Can be used to override the default URI
+ * @param apiURI              The URI to fetch the profile from the API. Can be used to override the default URI
  *                            hardcoded in every provider implementation.
  * @param clientID            The client ID provided by the OAuth provider.
  * @param clientSecret        The client secret provided by the OAuth provider.
  * @param scope               The OAuth2 scope parameter provided by the OAuth provider.
  * @param authorizationParams Additional params to add to the authorization request.
- * @param accessTokenParams   Additional params to add to the access token request.
+ * @param accessTokenParams   Additional params to add to the initial access token request.
+ * @param refreshParams       Additional params to add to the access token refresh request.
  * @param customProperties    A map of custom properties for the different providers.
  */
 case class OAuth2Config(
-  authorizationUri: Option[ConfigURI] = None,
-  accessTokenUri: ConfigURI,
-  redirectUri: Option[ConfigURI] = None,
-  apiUri: Option[ConfigURI] = None,
+  authorizationURI: Option[ConfigURI] = None,
+  accessTokenURI: ConfigURI,
+  redirectURI: Option[ConfigURI] = None,
+  refreshURI: Option[ConfigURI] = None,
+  apiURI: Option[ConfigURI] = None,
   clientID: String, clientSecret: String,
   scope: Option[String] = None,
   authorizationParams: Map[String, String] = Map.empty,
   accessTokenParams: Map[String, String] = Map.empty,
+  refreshParams: Map[String, String] = Map.empty,
   customProperties: Map[String, String] = Map.empty
 )

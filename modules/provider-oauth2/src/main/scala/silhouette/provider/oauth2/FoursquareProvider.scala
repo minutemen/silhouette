@@ -18,6 +18,7 @@
 package silhouette.provider.oauth2
 
 import java.net.URI
+import java.time.Clock
 
 import io.circe.Json
 import io.circe.optics.JsonPath._
@@ -52,7 +53,7 @@ trait BaseFoursquareProvider extends OAuth2Provider {
    */
   override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
     val version = config.customProperties.getOrElse(ApiVersion, DefaultApiVersion)
-    httpClient.withUri(config.apiUri.getOrElse[ConfigURI](DefaultApiUri).format(authInfo.accessToken, version))
+    httpClient.withUri(config.apiURI.getOrElse[ConfigURI](DefaultApiURI).format(authInfo.accessToken, version))
       .withMethod(Method.GET)
       .execute
       .flatMap { response =>
@@ -110,12 +111,14 @@ class FoursquareProfileParser(config: OAuth2Config)
  *
  * @param httpClient   The HTTP client implementation.
  * @param stateHandler The state provider implementation.
+ * @param clock        The current clock instance.
  * @param config       The provider config.
  * @param ec           The execution context.
  */
 class FoursquareProvider(
   protected val httpClient: HttpClient,
   protected val stateHandler: StateHandler,
+  protected val clock: Clock,
   val config: OAuth2Config
 )(
   implicit
@@ -139,7 +142,7 @@ class FoursquareProvider(
    * @return An instance of the provider initialized with new config.
    */
   override def withConfig(f: OAuth2Config => OAuth2Config): Self =
-    new FoursquareProvider(httpClient, stateHandler, f(config))
+    new FoursquareProvider(httpClient, stateHandler, clock, f(config))
 }
 
 /**
@@ -155,7 +158,7 @@ object FoursquareProvider {
   /**
    * Default provider endpoint.
    */
-  val DefaultApiUri: ConfigURI = ConfigURI("https://api.foursquare.com/v2/users/self?oauth_token=%s&v=%s")
+  val DefaultApiURI: ConfigURI = ConfigURI("https://api.foursquare.com/v2/users/self?oauth_token=%s&v=%s")
 
   /**
    * The version of this implementation.

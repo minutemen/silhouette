@@ -17,9 +17,11 @@
  */
 package silhouette.provider.oauth2
 
+import java.time.Clock
+
 import io.circe.Json
 import io.circe.optics.JsonPath._
-import silhouette.{ LoginInfo, ConfigURI }
+import silhouette.{ ConfigURI, LoginInfo }
 import silhouette.http._
 import silhouette.provider.oauth2.DropboxProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
@@ -48,7 +50,7 @@ trait BaseDropboxProvider extends OAuth2Provider {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
-    httpClient.withUri(config.apiUri.getOrElse[ConfigURI](DefaultApiUri))
+    httpClient.withUri(config.apiURI.getOrElse[ConfigURI](DefaultApiURI))
       .withHeaders(Header(Header.Name.Authorization, s"Bearer ${authInfo.accessToken}"))
       .withMethod(Method.GET)
       .execute
@@ -92,12 +94,14 @@ class DropboxProfileParser extends SocialProfileParser[Json, CommonSocialProfile
  *
  * @param httpClient   The HTTP client implementation.
  * @param stateHandler The state provider implementation.
+ * @param clock        The current clock instance.
  * @param config       The provider config.
  * @param ec           The execution context.
  */
 class DropboxProvider(
   protected val httpClient: HttpClient,
   protected val stateHandler: StateHandler,
+  protected val clock: Clock,
   val config: OAuth2Config
 )(
   implicit
@@ -121,7 +125,7 @@ class DropboxProvider(
    * @return An instance of the provider initialized with new config.
    */
   override def withConfig(f: OAuth2Config => OAuth2Config): Self =
-    new DropboxProvider(httpClient, stateHandler, f(config))
+    new DropboxProvider(httpClient, stateHandler, clock, f(config))
 }
 
 /**
@@ -137,5 +141,5 @@ object DropboxProvider {
   /**
    * Default provider endpoint.
    */
-  val DefaultApiUri: ConfigURI = ConfigURI("https://api.dropbox.com/1/account/info")
+  val DefaultApiURI: ConfigURI = ConfigURI("https://api.dropbox.com/1/account/info")
 }
