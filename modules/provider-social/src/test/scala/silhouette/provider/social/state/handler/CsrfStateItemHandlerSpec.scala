@@ -141,8 +141,8 @@ class CsrfStateItemHandlerSpec(implicit ev: ExecutionEnv)
      */
     val signer = {
       val c = mock[Signer].smart
-      c.sign(anyString) answers { p => p.asInstanceOf[String] }
-      c.extract(anyString) answers { p => Success(p.asInstanceOf[String]) }
+      c.sign(anyString) answers { p: Any => p.asInstanceOf[String] }
+      c.extract(anyString) answers { p: Any => Success(p.asInstanceOf[String]) }
       c
     }
 
