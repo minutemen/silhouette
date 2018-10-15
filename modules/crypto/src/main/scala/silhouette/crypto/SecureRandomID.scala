@@ -58,7 +58,10 @@ object SecureRandomID {
    * There is a cost of getting a secure random instance for its initial seeding, so it's recommended you use
    * a singleton style so you only create one for all of your usage going forward.
    *
-   * On Linux systems SecureRandom uses /dev/random and it can block waiting for sufficient entropy to build up.
+   * Based on the configuration, SecureRandom may use /dev/random and it can block waiting for sufficient entropy to
+   * build up.
+   *
+   * @see https://tersesystems.com/blog/2015/12/17/the-right-way-to-use-securerandom/
    */
   lazy val random = new SecureRandom()
 }

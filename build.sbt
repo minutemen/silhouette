@@ -90,9 +90,30 @@ lazy val `silhouette-provider` = (project in file("modules/provider"))
     `silhouette-specs2` % Test
   )
 
-lazy val `silhouette-provider-social` = (project in file("modules/provider-social"))
+lazy val `silhouette-provider-password` = (project in file("modules/provider-password"))
   .dependsOn(
     `silhouette-core`,
+    `silhouette-provider`,
+    `silhouette-password`,
+    `silhouette-specs2` % Test
+  )
+
+lazy val `silhouette-provider-http` = (project in file("modules/provider-http"))
+  .dependsOn(
+    `silhouette-core`,
+    `silhouette-provider-password` % "compile->compile;test->test",
+    `silhouette-specs2` % Test
+  )
+
+lazy val `silhouette-provider-credentials` = (project in file("modules/provider-credentials"))
+  .dependsOn(
+    `silhouette-core`,
+    `silhouette-provider-password` % "compile->compile;test->test",
+    `silhouette-specs2` % Test
+  )
+
+lazy val `silhouette-provider-social` = (project in file("modules/provider-social"))
+  .dependsOn(
     `silhouette-provider`,
     `silhouette-crypto`,
     `silhouette-specs2` % Test
@@ -101,7 +122,6 @@ lazy val `silhouette-provider-social` = (project in file("modules/provider-socia
 lazy val `silhouette-provider-oauth2` = (project in file("modules/provider-oauth2"))
   .dependsOn(
     `silhouette-core`,
-    `silhouette-provider`,
     `silhouette-provider-social` % "compile->compile;test->test",
     `silhouette-crypto`,
     `silhouette-specs2` % Test
@@ -133,6 +153,9 @@ lazy val silhouette = (project in file("."))
     `silhouette-password`,
     `silhouette-password-bcrypt`,
     `silhouette-provider`,
+    `silhouette-provider-password`,
+    `silhouette-provider-http`,
+    `silhouette-provider-credentials`,
     `silhouette-provider-social`,
     `silhouette-provider-oauth2`,
     `silhouette-persistence`,

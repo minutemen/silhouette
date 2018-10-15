@@ -202,8 +202,8 @@ class DefaultStateHandlerSpec(implicit ev: ExecutionEnv)
      */
     val signer = {
       val c = mock[Signer].smart
-      c.sign(anyString) answers { p => p.asInstanceOf[String] }
-      c.extract(anyString) answers { p =>
+      c.sign(anyString) answers { p: Any => p.asInstanceOf[String] }
+      c.extract(anyString) answers { p: Any =>
         p.asInstanceOf[String] match {
           case "" => Failure(new RuntimeException("Wrong state format"))
           case s  => Success(s)
