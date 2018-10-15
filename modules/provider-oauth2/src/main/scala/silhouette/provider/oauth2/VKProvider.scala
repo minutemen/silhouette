@@ -18,6 +18,7 @@
 package silhouette.provider.oauth2
 
 import java.net.URI
+import java.time.Clock
 
 import io.circe.optics.JsonPath._
 import io.circe.{ Decoder, HCursor, Json }
@@ -50,7 +51,7 @@ trait BaseVKProvider extends OAuth2Provider {
    *
    * VK provider needs it own JSON decoder to extract the email from response.
    */
-  override implicit protected val accessTokenDecoder: Decoder[OAuth2Info] = VKProvider.infoDecoder
+  override implicit protected val accessTokenDecoder: Decoder[OAuth2Info] = VKProvider.infoDecoder(clock)
 
   /**
    * Builds the social profile.
@@ -59,7 +60,7 @@ trait BaseVKProvider extends OAuth2Provider {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
-    httpClient.withUri(config.apiUri.getOrElse(DefaultApiUri).format(authInfo.accessToken))
+    httpClient.withUri(config.apiURI.getOrElse(DefaultApiURI).format(authInfo.accessToken))
       .withMethod(Method.GET)
       .execute
       .flatMap { response =>
@@ -111,12 +112,14 @@ class VKProfileParser extends SocialProfileParser[Json, CommonSocialProfile, OAu
  *
  * @param httpClient   The HTTP client implementation.
  * @param stateHandler The state provider implementation.
+ * @param clock        The current clock instance.
  * @param config       The provider config.
  * @param ec           The execution context.
  */
 class VKProvider(
   protected val httpClient: HttpClient,
   protected val stateHandler: StateHandler,
+  protected val clock: Clock,
   val config: OAuth2Config
 )(
   implicit
@@ -140,7 +143,7 @@ class VKProvider(
    * @return An instance of the provider initialized with new config.
    */
   override def withConfig(f: OAuth2Config => OAuth2Config): Self =
-    new VKProvider(httpClient, stateHandler, f(config))
+    new VKProvider(httpClient, stateHandler, clock, f(config))
 }
 
 /**
@@ -161,13 +164,15 @@ object VKProvider {
   /**
    * Default provider endpoint.
    */
-  val DefaultApiUri = ConfigURI("https://api.vk.com/method/users.get?fields=id,first_name,last_name," +
+  val DefaultApiURI = ConfigURI("https://api.vk.com/method/users.get?fields=id,first_name,last_name," +
     s"photo_max_orig&v=$ApiVersion&access_token=%s")
 
   /**
    * Converts the JSON into a [[OAuth2Info]] object.
+   *
+   * @param clock The current clock instance.
    */
-  implicit val infoDecoder: Decoder[OAuth2Info] = (c: HCursor) => {
+  def infoDecoder(clock: Clock): Decoder[OAuth2Info] = (c: HCursor) => {
     for {
       accessToken <- c.downField(AccessToken).as[String]
       tokenType <- c.downField(TokenType).as[Option[String]]
@@ -175,7 +180,14 @@ object VKProvider {
       refreshToken <- c.downField(RefreshToken).as[Option[String]]
       email <- c.downField("email").as[Option[String]]
     } yield {
-      OAuth2Info(accessToken, tokenType, expiresIn, refreshToken, email.map(e => Map("email" -> e)))
+      OAuth2Info(
+        accessToken,
+        tokenType,
+        Some(clock.instant()),
+        expiresIn,
+        refreshToken,
+        email.map(e => Map("email" -> e))
+      )
     }
   }
 }

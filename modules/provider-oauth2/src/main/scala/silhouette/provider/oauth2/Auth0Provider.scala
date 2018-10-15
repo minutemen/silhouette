@@ -18,6 +18,7 @@
 package silhouette.provider.oauth2
 
 import java.net.URI
+import java.time.Clock
 
 import io.circe.Json
 import io.circe.optics.JsonPath._
@@ -64,7 +65,7 @@ trait BaseAuth0Provider extends OAuth2Provider {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
-    httpClient.withUri(config.apiUri.getOrElse[ConfigURI](DefaultApiUri))
+    httpClient.withUri(config.apiURI.getOrElse[ConfigURI](DefaultApiURI))
       .withHeaders(Header(Header.Name.Authorization, s"Bearer ${authInfo.accessToken}"))
       .withMethod(Method.GET)
       .execute
@@ -123,12 +124,14 @@ class Auth0ProfileParser extends SocialProfileParser[Json, CommonSocialProfile, 
  *
  * @param httpClient   The HTTP client implementation.
  * @param stateHandler The state provider implementation.
+ * @param clock        The current clock instance.
  * @param config       The provider config.
  * @param ec           The execution context.
  */
 class Auth0Provider(
   protected val httpClient: HttpClient,
   protected val stateHandler: StateHandler,
+  protected val clock: Clock,
   val config: OAuth2Config
 )(
   implicit
@@ -152,7 +155,7 @@ class Auth0Provider(
    * @return An instance of the provider initialized with new config.
    */
   override def withConfig(f: OAuth2Config => OAuth2Config): Self =
-    new Auth0Provider(httpClient, stateHandler, f(config))
+    new Auth0Provider(httpClient, stateHandler, clock, f(config))
 }
 
 /**
@@ -168,5 +171,5 @@ object Auth0Provider {
   /**
    * Default provider endpoint.
    */
-  val DefaultApiUri: ConfigURI = ConfigURI("https://auth0.auth0.com/userinfo")
+  val DefaultApiURI: ConfigURI = ConfigURI("https://auth0.auth0.com/userinfo")
 }

@@ -45,7 +45,7 @@ class LinkedInProviderSpec extends OAuth2ProviderSpec {
       httpResponse.status returns Status.`Bad Request`
       httpResponse.body returns Body.from(apiResult)
 
-      httpClient.withUri(DefaultApiUri.format(oAuth2Info.accessToken)) returns httpClient
+      httpClient.withUri(DefaultApiURI.format(oAuth2Info.accessToken)) returns httpClient
       httpClient.withMethod(Method.GET) returns httpClient
       httpClient.execute returns Future.successful(httpResponse)
 
@@ -63,7 +63,7 @@ class LinkedInProviderSpec extends OAuth2ProviderSpec {
       httpResponse.status returns Status.`Internal Server Error`
       httpResponse.body throws new RuntimeException("")
 
-      httpClient.withUri(DefaultApiUri.format(oAuth2Info.accessToken)) returns httpClient
+      httpClient.withUri(DefaultApiURI.format(oAuth2Info.accessToken)) returns httpClient
       httpClient.withMethod(Method.GET) returns httpClient
       httpClient.execute returns Future.successful(httpResponse)
 
@@ -73,13 +73,13 @@ class LinkedInProviderSpec extends OAuth2ProviderSpec {
     }
 
     "use the overridden API URI" in new Context {
-      val uri = DefaultApiUri.copy(uri = DefaultApiUri.uri + "&new")
+      val uri = DefaultApiURI.copy(uri = DefaultApiURI.uri + "&new")
       val apiResult = UserProfileJson.asJson
       val httpResponse = mock[Response].smart
       httpResponse.status returns Status.OK
       httpResponse.body returns Body.from(apiResult)
 
-      config.apiUri returns Some(uri)
+      config.apiURI returns Some(uri)
 
       httpClient.withUri(uri.format(oAuth2Info.accessToken)) returns httpClient
       httpClient.withMethod(Method.GET) returns httpClient
@@ -96,7 +96,7 @@ class LinkedInProviderSpec extends OAuth2ProviderSpec {
       httpResponse.status returns Status.OK
       httpResponse.body returns Body.from(apiResult)
 
-      httpClient.withUri(DefaultApiUri.format(oAuth2Info.accessToken)) returns httpClient
+      httpClient.withUri(DefaultApiURI.format(oAuth2Info.accessToken)) returns httpClient
       httpClient.withMethod(Method.GET) returns httpClient
       httpClient.execute returns Future.successful(httpResponse)
 
@@ -137,9 +137,9 @@ class LinkedInProviderSpec extends OAuth2ProviderSpec {
      * The OAuth2 config.
      */
     override lazy val config = spy(OAuth2Config(
-      authorizationUri = Some(ConfigURI("https://www.linkedin.com/uas/oauth2/authorization")),
-      accessTokenUri = ConfigURI("https://www.linkedin.com/uas/oauth2/accessToken"),
-      redirectUri = Some(ConfigURI("https://minutemen.group")),
+      authorizationURI = Some(ConfigURI("https://www.linkedin.com/uas/oauth2/authorization")),
+      accessTokenURI = ConfigURI("https://www.linkedin.com/uas/oauth2/accessToken"),
+      redirectURI = Some(ConfigURI("https://minutemen.group")),
       clientID = "my.client.id",
       clientSecret = "my.client.secret",
       scope = None
@@ -148,6 +148,6 @@ class LinkedInProviderSpec extends OAuth2ProviderSpec {
     /**
      * The provider to test.
      */
-    lazy val provider = new LinkedInProvider(httpClient, stateHandler, config)
+    lazy val provider = new LinkedInProvider(httpClient, stateHandler, clock, config)
   }
 }

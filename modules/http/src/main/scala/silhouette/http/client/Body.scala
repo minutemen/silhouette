@@ -26,12 +26,19 @@ import silhouette.http.MimeType._
 import silhouette.http.client.DefaultBodyFormat._
 import silhouette.{ Reads, TransformException, Writes }
 
+import scala.collection.mutable
 import scala.io.Codec
 import scala.util.{ Failure, Success, Try }
 import scala.xml._
 
 /**
  * Represents the body of a request.
+ *
+ * We use a [[scala.collection.mutable.WrappedArray]] instance to get a proper `equals` and `hashCode` method for
+ * the body. With this we can write better tests.
+ *
+ * Since Scala 2.8, Scala arrays are just Java arrays, so we aren't free to make the hashCode method return
+ * a different answer than Java does. (https://issues.scala-lang.org/browse/SI-1607)
  *
  * @param contentType The content type of the body.
  * @param codec       The codec of the body.
@@ -40,7 +47,7 @@ import scala.xml._
 protected[silhouette] final case class Body(
   contentType: MimeType,
   codec: Codec = Body.DefaultCodec,
-  data: Array[Byte]
+  data: mutable.WrappedArray[Byte]
 ) {
 
   /**
@@ -48,7 +55,7 @@ protected[silhouette] final case class Body(
    *
    * @return The content as raw string.
    */
-  def raw: String = new String(data, codec.charSet)
+  def raw: String = new String(data.array, codec.charSet)
 
   /**
    * Transforms the body with the help of a reads into the given format.
@@ -121,7 +128,7 @@ private[silhouette] trait DefaultBodyFormat {
   implicit val stringFormat: BodyFormat[String] = new BodyFormat[String] {
     override def read(body: Body): Try[String] = body match {
       case Body(`text/plain`, codec, bytes) =>
-        Try(new String(bytes, codec.charSet))
+        Try(new String(bytes.array, codec.charSet))
       case Body(ct, _, _) =>
         Failure(new UnsupportedContentTypeException(UnsupportedContentType.format(`text/plain`, ct)))
     }
@@ -139,7 +146,7 @@ private[silhouette] trait DefaultBodyFormat {
   implicit val formUrlEncodedFormat: BodyFormat[Map[String, Seq[String]]] = new BodyFormat[Map[String, Seq[String]]] {
     override def read(body: Body): Try[Map[String, Seq[String]]] = body match {
       case Body(`application/x-www-form-urlencoded`, codec, bytes) =>
-        val data = new String(bytes, codec.charSet)
+        val data = new String(bytes.array, codec.charSet)
         val split = "[&;]".r.split(data)
         val pairs: Seq[(String, String)] = if (split.length == 1 && split(0).isEmpty) {
           Seq.empty
@@ -178,7 +185,7 @@ private[silhouette] trait DefaultBodyFormat {
   implicit val circeJsonFormat: BodyFormat[Json] = new BodyFormat[Json] {
     override def read(body: Body): Try[Json] = body match {
       case Body(`application/json`, codec, bytes) =>
-        parse(new String(bytes, codec.charSet)) match {
+        parse(new String(bytes.array, codec.charSet)) match {
           case Left(ParsingFailure(msg, e)) => Failure(new TransformException(msg, Option(e)))
           case Right(json)                  => Success(json)
         }
@@ -199,7 +206,7 @@ private[silhouette] trait DefaultBodyFormat {
   implicit val scalaXmlFormat: BodyFormat[Node] = new BodyFormat[Node] {
     override def read(body: Body): Try[Node] = body match {
       case Body(`application/xml`, codec, bytes) =>
-        Try(XML.loadString(new String(bytes, codec.charSet))).recover {
+        Try(XML.loadString(new String(bytes.array, codec.charSet))).recover {
           case e: SAXParseException => throw new TransformException(e.getMessage, Option(e))
         }
       case Body(ct, _, _) =>

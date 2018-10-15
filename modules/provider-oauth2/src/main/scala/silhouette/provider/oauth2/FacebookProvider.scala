@@ -18,6 +18,7 @@
 package silhouette.provider.oauth2
 
 import java.net.URI
+import java.time.Clock
 
 import io.circe.Json
 import io.circe.optics.JsonPath._
@@ -51,7 +52,7 @@ trait BaseFacebookProvider extends OAuth2Provider {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
-    httpClient.withUri(config.apiUri.getOrElse(DefaultApiUri).format(authInfo.accessToken))
+    httpClient.withUri(config.apiURI.getOrElse(DefaultApiURI).format(authInfo.accessToken))
       .withMethod(Method.GET)
       .execute
       .flatMap { response =>
@@ -96,12 +97,14 @@ class FacebookProfileParser extends SocialProfileParser[Json, CommonSocialProfil
  *
  * @param httpClient   The HTTP client implementation.
  * @param stateHandler The state provider implementation.
+ * @param clock        The current clock instance.
  * @param config       The provider config.
  * @param ec           The execution context.
  */
 class FacebookProvider(
   protected val httpClient: HttpClient,
   protected val stateHandler: StateHandler,
+  protected val clock: Clock,
   val config: OAuth2Config
 )(
   implicit
@@ -125,7 +128,7 @@ class FacebookProvider(
    * @return An instance of the provider initialized with new config.
    */
   override def withConfig(f: OAuth2Config => OAuth2Config): Self =
-    new FacebookProvider(httpClient, stateHandler, f(config))
+    new FacebookProvider(httpClient, stateHandler, clock, f(config))
 }
 
 /**
@@ -141,6 +144,6 @@ object FacebookProvider {
   /**
    * Default provider endpoint.
    */
-  val DefaultApiUri = ConfigURI("https://graph.facebook.com/v3.1/me?fields=name,first_name,last_name,picture,email&" +
+  val DefaultApiURI = ConfigURI("https://graph.facebook.com/v3.1/me?fields=name,first_name,last_name,picture,email&" +
     "return_ssl_resources=1&access_token=%s")
 }

@@ -44,7 +44,7 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
       httpResponse.status returns Status.`Bad Request`
       httpResponse.body returns Body.from(apiResult)
 
-      httpClient.withUri(DefaultApiUri) returns httpClient
+      httpClient.withUri(DefaultApiURI) returns httpClient
       httpClient.withHeaders(
         Header(Header.Name.Authorization, s"Bearer ${oAuth2Info.accessToken}")
       ) returns httpClient
@@ -65,7 +65,7 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
       httpResponse.status returns Status.`Internal Server Error`
       httpResponse.body throws new RuntimeException("")
 
-      httpClient.withUri(DefaultApiUri) returns httpClient
+      httpClient.withUri(DefaultApiURI) returns httpClient
       httpClient.withHeaders(
         Header(Header.Name.Authorization, s"Bearer ${oAuth2Info.accessToken}")
       ) returns httpClient
@@ -78,13 +78,13 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
     }
 
     "use the overridden API URI" in new Context {
-      val uri = DefaultApiUri.copy(uri = DefaultApiUri.uri + "&new")
+      val uri = DefaultApiURI.copy(uri = DefaultApiURI.uri + "&new")
       val apiResult = UserProfileJson.asJson
       val httpResponse = mock[Response].smart
       httpResponse.status returns Status.OK
       httpResponse.body returns Body.from(apiResult)
 
-      config.apiUri returns Some(uri)
+      config.apiURI returns Some(uri)
 
       httpClient.withUri(uri) returns httpClient
       httpClient.withHeaders(
@@ -104,7 +104,7 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
       httpResponse.status returns Status.OK
       httpResponse.body returns Body.from(apiResult)
 
-      httpClient.withUri(DefaultApiUri) returns httpClient
+      httpClient.withUri(DefaultApiURI) returns httpClient
       httpClient.withHeaders(
         Header(Header.Name.Authorization, s"Bearer ${oAuth2Info.accessToken}")
       ) returns httpClient
@@ -145,9 +145,9 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
      * The OAuth2 config.
      */
     override lazy val config = spy(OAuth2Config(
-      authorizationUri = Some(ConfigURI("https://www.dropbox.com/1/oauth2/authorize")),
-      accessTokenUri = ConfigURI("https://api.dropbox.com/1/oauth2/token"),
-      redirectUri = Some(ConfigURI("https://minutemen.group")),
+      authorizationURI = Some(ConfigURI("https://www.dropbox.com/1/oauth2/authorize")),
+      accessTokenURI = ConfigURI("https://api.dropbox.com/1/oauth2/token"),
+      redirectURI = Some(ConfigURI("https://minutemen.group")),
       clientID = "my.client.id",
       clientSecret = "my.client.secret",
       scope = None
@@ -156,6 +156,6 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
     /**
      * The provider to test.
      */
-    lazy val provider = new DropboxProvider(httpClient, stateHandler, config)
+    lazy val provider = new DropboxProvider(httpClient, stateHandler, clock, config)
   }
 }

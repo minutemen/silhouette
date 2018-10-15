@@ -18,6 +18,7 @@
 package silhouette.provider.oauth2
 
 import java.net.URI
+import java.time.Clock
 
 import io.circe.Json
 import io.circe.optics.JsonPath._
@@ -60,7 +61,7 @@ trait BaseGitHubProvider extends OAuth2Provider {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
-    httpClient.withUri(config.apiUri.getOrElse(DefaultApiUri).format(authInfo.accessToken))
+    httpClient.withUri(config.apiURI.getOrElse(DefaultApiURI).format(authInfo.accessToken))
       .withMethod(Method.GET)
       .execute
       .flatMap { response =>
@@ -103,12 +104,14 @@ class GitHubProfileParser extends SocialProfileParser[Json, CommonSocialProfile,
  *
  * @param httpClient   The HTTP client implementation.
  * @param stateHandler The state provider implementation.
+ * @param clock        The current clock instance.
  * @param config       The provider config.
  * @param ec           The execution context.
  */
 class GitHubProvider(
   protected val httpClient: HttpClient,
   protected val stateHandler: StateHandler,
+  protected val clock: Clock,
   val config: OAuth2Config
 )(
   implicit
@@ -132,7 +135,7 @@ class GitHubProvider(
    * @return An instance of the provider initialized with new config.
    */
   override def withConfig(f: OAuth2Config => OAuth2Config): Self =
-    new GitHubProvider(httpClient, stateHandler, f(config))
+    new GitHubProvider(httpClient, stateHandler, clock, f(config))
 }
 
 /**
@@ -148,5 +151,5 @@ object GitHubProvider {
   /**
    * Default provider endpoint.
    */
-  val DefaultApiUri = ConfigURI("https://api.github.com/user?access_token=%s")
+  val DefaultApiURI = ConfigURI("https://api.github.com/user?access_token=%s")
 }

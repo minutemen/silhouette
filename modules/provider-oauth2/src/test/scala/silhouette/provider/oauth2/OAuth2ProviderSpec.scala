@@ -18,22 +18,24 @@
 package silhouette.provider.oauth2
 
 import java.net.URLEncoder._
+import java.time.{ Clock, Instant }
 
 import io.circe.{ Decoder, Json }
 import org.specs2.execute.Result
 import org.specs2.matcher.ThrownExpectations
 import org.specs2.mock.Mockito
 import org.specs2.specification.Scope
-import silhouette.{ ConfigURI, ConfigurationException }
 import silhouette.http._
 import silhouette.http.client.BodyFormat._
-import silhouette.http.client.{ Body, BodyFormat, Response }
+import silhouette.http.client.{ Body, Response }
+import silhouette.http.transport.format.BasicAuthHeaderFormat
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
 import silhouette.provider.social.state.handler.UserStateItem
 import silhouette.provider.social.state.{ State, StateHandler, StateItem, StateItemHandler }
 import silhouette.provider.{ AccessDeniedException, UnexpectedResponseException }
 import silhouette.specs2.BaseFixture
+import silhouette.{ ConfigURI, ConfigurationException, Credentials }
 
 import scala.concurrent.Future
 import scala.io.Codec
@@ -62,15 +64,15 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       }
     }
 
-    "fail with an ConfigurationException if authorization URL is undefined when it's needed" in {
-      c.config.authorizationUri match {
+    "fail with an ConfigurationException if authorization URI is undefined when it's needed" in {
+      c.config.authorizationURI match {
         case None =>
-          skipped("authorizationURL is not defined, so this step isn't needed for provider: " + c.provider.getClass)
+          skipped("authorizationURI is not defined, so this step isn't needed for provider: " + c.provider.getClass)
         case Some(_) =>
           c.stateHandler.serialize(c.state) returns Some("session-value")
           c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
           c.stateHandler.state returns Future.successful(c.state)
-          c.config.authorizationUri returns None
+          c.config.authorizationURI returns None
 
           failed[ConfigurationException](c.provider.authenticate()(Fake.request)) {
             case e => e.getMessage must startWith(AuthorizationUriUndefined.format(c.provider.id))
@@ -78,11 +80,11 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       }
     }
 
-    "redirect to authorization URL if authorization code doesn't exists in request" in {
-      c.config.authorizationUri match {
+    "redirect to authorization URI if authorization code doesn't exists in request" in {
+      c.config.authorizationURI match {
         case None =>
-          skipped("authorizationURL is not defined, so this step isn't needed for provider: " + c.provider.getClass)
-        case Some(authorizationURL) =>
+          skipped("authorizationURI is not defined, so this step isn't needed for provider: " + c.provider.getClass)
+        case Some(authorizationURI) =>
           val sessionKey = "session-key"
           val sessionValue = "session-value"
 
@@ -106,10 +108,10 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
                 Some(ResponseType -> Code),
                 Some(OAuth2Provider.State -> urlParams(OAuth2Provider.State)),
                 c.config.scope.map(Scope -> _),
-                c.config.redirectUri.map(uri => RedirectUri -> uri.toString)
+                c.config.redirectURI.map(uri => RedirectUri -> uri.toString)
               ).flatten ++ c.config.authorizationParams.toList
 
-              header.values.head must be equalTo (authorizationURL + params.map { p =>
+              header.values.head must be equalTo (authorizationURI + params.map { p =>
                 encode(p._1, "UTF-8") + "=" + encode(p._2, "UTF-8")
               }.mkString("?", "&", ""))
             }
@@ -119,41 +121,41 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
 
     "resolves relative redirectUri before starting the flow" in {
       verifyRedirectUri(
-        redirectUri = Some(ConfigURI("/redirect-url")),
+        redirectUri = Some(ConfigURI("/redirect-uri")),
         secure = false,
-        resolvedRedirectUri = ConfigURI("http://www.example.com/redirect-url")
+        resolvedRedirectUri = ConfigURI("http://www.example.com/redirect-uri")
       )
     }
 
     "resolves path relative redirectUri before starting the flow" in {
       verifyRedirectUri(
-        redirectUri = Some(ConfigURI("redirect-url")),
+        redirectUri = Some(ConfigURI("redirect-uri")),
         secure = false,
-        resolvedRedirectUri = ConfigURI("http://www.example.com/request-path/redirect-url")
+        resolvedRedirectUri = ConfigURI("http://www.example.com/request-path/redirect-uri")
       )
     }
 
     "resolves relative redirectUri before starting the flow over https" in {
       verifyRedirectUri(
-        redirectUri = Some(ConfigURI("/redirect-url")),
+        redirectUri = Some(ConfigURI("/redirect-uri")),
         secure = true,
-        resolvedRedirectUri = ConfigURI("https://www.example.com/redirect-url")
+        resolvedRedirectUri = ConfigURI("https://www.example.com/redirect-uri")
       )
     }
 
     "verifying presence of redirect param in the access token post request" in {
       verifyRedirectUri(
-        redirectUri = Some(ConfigURI("/redirect-url")),
+        redirectUri = Some(ConfigURI("/redirect-uri")),
         secure = false,
-        resolvedRedirectUri = ConfigURI("http://www.example.com/redirect-url")
+        resolvedRedirectUri = ConfigURI("http://www.example.com/redirect-uri")
       )
     }
 
     "verifying presence of redirect param in the access token post request over https" in {
       verifyRedirectUri(
-        redirectUri = Some(ConfigURI("/redirect-url")),
+        redirectUri = Some(ConfigURI("/redirect-uri")),
         secure = true,
-        resolvedRedirectUri = ConfigURI("https://www.example.com/redirect-url")
+        resolvedRedirectUri = ConfigURI("https://www.example.com/redirect-uri")
       )
     }
 
@@ -161,7 +163,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       verifyRedirectUri(
         redirectUri = None,
         secure = false,
-        resolvedRedirectUri = ConfigURI("http://www.example.com/request-path/redirect-url")
+        resolvedRedirectUri = ConfigURI("http://www.example.com/request-path/redirect-uri")
       )
     }
 
@@ -169,14 +171,14 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       verifyRedirectUri(
         redirectUri = None,
         secure = true,
-        resolvedRedirectUri = ConfigURI("https://www.example.com/redirect-url")
+        resolvedRedirectUri = ConfigURI("https://www.example.com/redirect-uri")
       )
     }
 
     "not send state param if state is empty" in {
-      c.config.authorizationUri match {
+      c.config.authorizationURI match {
         case None =>
-          skipped("authorizationURL is not defined, so this step isn't needed for provider: " + c.provider.getClass)
+          skipped("authorizationURI is not defined, so this step isn't needed for provider: " + c.provider.getClass)
         case Some(_) =>
           c.stateHandler.serialize(c.state) returns None
           c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
@@ -194,44 +196,6 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       }
     }
 
-    "submit the proper params to the access token post request" in {
-      val code = "my.code"
-      val request = Fake.request.withQueryParams(Code -> code)
-      val params = Map(
-        ClientID -> Seq(c.config.clientID),
-        ClientSecret -> Seq(c.config.clientSecret),
-        GrantType -> Seq(AuthorizationCode),
-        Code -> Seq(code)
-      ) ++
-        c.config.accessTokenParams.mapValues(Seq(_)) ++
-        c.config.redirectUri.map(uri => Map(RedirectUri -> Seq(uri.toString))).getOrElse(Map())
-
-      val body = Body.from(params)(BodyFormat.formUrlEncodedFormat)
-
-      c.httpClient.withUri(c.config.accessTokenUri) returns c.httpClient
-      c.httpClient.withHeaders(any()) returns c.httpClient
-      c.httpClient.withMethod(Method.POST) returns c.httpClient
-      c.httpClient.withBody(body) returns c.httpClient
-      // We must use this neat trick here because it isn't possible to check the withBody call with a verification,
-      // because of the implicit params needed for the withBody call. On the other hand we can test it in the abstract
-      // spec, because we throw an exception in both cases which stops the test once the post method was called.
-      // This protects as for an NPE because of the not mocked dependencies. The other solution would be to execute
-      // this test in every provider with the full mocked dependencies.
-      c.httpClient.withBody[Map[String, Seq[String]]](any())(any()) answers { (a, _) =>
-        if (a.asInstanceOf[Array[Any]](0).asInstanceOf[Map[String, Seq[String]]].equals(params)) {
-          throw new RuntimeException("success")
-        } else {
-          throw new RuntimeException("failure")
-        }
-      }
-      c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
-      c.stateHandler.state returns Future.successful(c.state)
-
-      failed[RuntimeException](c.provider.authenticate()(request)) {
-        case e => e.getMessage must startWith("success")
-      }
-    }
-
     "fail with UnexpectedResponseException if Json cannot be parsed from response" in {
       val code = "my.code"
       val httpResponse = mock[Response].smart
@@ -240,9 +204,9 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       httpResponse.status returns Status.OK
       httpResponse.body returns Body(MimeType.`application/json`, data = "<html></html>".getBytes(Codec.UTF8.charSet))
 
-      c.httpClient.withUri(c.config.accessTokenUri) returns c.httpClient
+      c.httpClient.withUri(c.config.accessTokenURI) returns c.httpClient
       c.httpClient.withHeaders(any()) returns c.httpClient
-      c.httpClient.withBody[Map[String, Seq[String]]](any())(any()) returns c.httpClient
+      c.httpClient.withBody(any[Body]()) returns c.httpClient
       c.httpClient.withMethod(Method.POST) returns c.httpClient
       c.httpClient.execute returns Future.successful(httpResponse)
 
@@ -264,9 +228,9 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       httpResponse.status returns Status.Unauthorized
       httpResponse.body returns Body.from("Unauthorized")
 
-      c.httpClient.withUri(c.config.accessTokenUri) returns c.httpClient
+      c.httpClient.withUri(c.config.accessTokenURI) returns c.httpClient
       c.httpClient.withHeaders(any()) returns c.httpClient
-      c.httpClient.withBody[Map[String, Seq[String]]](any())(any()) returns c.httpClient
+      c.httpClient.withBody(any[Body]()) returns c.httpClient
       c.httpClient.withMethod(Method.POST) returns c.httpClient
       c.httpClient.execute returns Future.successful(httpResponse)
 
@@ -288,9 +252,9 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       httpResponse.status returns Status.OK
       httpResponse.body returns Body.from(Json.obj())
 
-      c.httpClient.withUri(c.config.accessTokenUri) returns c.httpClient
+      c.httpClient.withUri(c.config.accessTokenURI) returns c.httpClient
       c.httpClient.withHeaders(any()) returns c.httpClient
-      c.httpClient.withBody[Map[String, Seq[String]]](any())(any()) returns c.httpClient
+      c.httpClient.withBody(any[Body]()) returns c.httpClient
       c.httpClient.withMethod(Method.POST) returns c.httpClient
       c.httpClient.execute returns Future.successful(httpResponse)
 
@@ -306,13 +270,20 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       val code = "my.code"
       val httpResponse = mock[Response].smart
       val request = Fake.request.withQueryParams(Code -> code)
+      val body = Body.from(Map(
+        GrantType -> Seq(AuthorizationCode),
+        Code -> Seq(code)
+      ) ++
+        c.config.accessTokenParams.mapValues(Seq(_)) ++
+        c.config.redirectURI.map(uri => Map(RedirectUri -> Seq(uri.toString))).getOrElse(Map())
+      )
 
       httpResponse.status returns Status.OK
       httpResponse.body returns Body.from(c.oAuth2InfoJson)
 
-      c.httpClient.withUri(c.config.accessTokenUri) returns c.httpClient
+      c.httpClient.withUri(c.config.accessTokenURI) returns c.httpClient
       c.httpClient.withHeaders(any()) returns c.httpClient
-      c.httpClient.withBody[Map[String, Seq[String]]](any())(any()) returns c.httpClient
+      c.httpClient.withBody(body) returns c.httpClient
       c.httpClient.withMethod(Method.POST) returns c.httpClient
       c.httpClient.execute returns Future.successful(httpResponse)
 
@@ -320,6 +291,8 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       c.stateHandler.state returns Future.successful(c.state)
 
       authInfo(c.provider.authenticate()(request))(_ must be equalTo c.oAuth2Info)
+      there was one(c.httpClient).withHeaders(c.authorizationHeader)
+      there was one(c.httpClient).withBody(body)
     }
   }
 
@@ -333,9 +306,9 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       httpResponse.status returns Status.OK
       httpResponse.body returns Body.from(c.oAuth2InfoJson)
 
-      c.httpClient.withUri(c.config.accessTokenUri) returns c.httpClient
+      c.httpClient.withUri(c.config.accessTokenURI) returns c.httpClient
       c.httpClient.withHeaders(any()) returns c.httpClient
-      c.httpClient.withBody[Map[String, Seq[String]]](any())(any()) returns c.httpClient
+      c.httpClient.withBody(any[Body]()) returns c.httpClient
       c.httpClient.withMethod(Method.POST) returns c.httpClient
       c.httpClient.execute returns Future.successful(httpResponse)
 
@@ -345,6 +318,127 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       c.state.items returns Set(c.userStateItem)
 
       statefulAuthInfo(c.provider.authenticate(c.userStateItem))(_ must be equalTo c.stateAuthInfo)
+    }
+  }
+
+  "The `refresh` method" should {
+    val c = context
+    "fail with an ConfigurationException if refresh URI is undefined when it's needed" in {
+      c.config.refreshURI match {
+        case None =>
+          skipped("refreshURI is not defined, so this step isn't needed for provider: " + c.provider.getClass)
+        case Some(_) =>
+          c.config.refreshURI returns None
+
+          failed[ConfigurationException](c.provider.refresh("some-refresh-token")) {
+            case e => e.getMessage must startWith(RefreshUriUndefined.format(c.provider.id))
+          }: Result
+      }
+    }
+
+    "fail with UnexpectedResponseException if Json cannot be parsed from response" in {
+      c.config.refreshURI match {
+        case None =>
+          skipped("refreshURI is not defined, so this step isn't needed for provider: " + c.provider.getClass)
+        case Some(refreshURI) =>
+          val refreshToken = "some-refresh-token"
+          val httpResponse = mock[Response].smart
+
+          httpResponse.status returns Status.OK
+          httpResponse.body returns Body(
+            MimeType.`application/json`, data = "<html></html>".getBytes(Codec.UTF8.charSet)
+          )
+
+          c.httpClient.withUri(refreshURI) returns c.httpClient
+          c.httpClient.withHeaders(any()) returns c.httpClient
+          c.httpClient.withBody(any[Body]()) returns c.httpClient
+          c.httpClient.withMethod(Method.POST) returns c.httpClient
+          c.httpClient.execute returns Future.successful(httpResponse)
+
+          failed[UnexpectedResponseException](c.provider.refresh(refreshToken)) {
+            case e =>
+              e.getMessage must startWith(JsonParseError.format(c.provider.id, "<html></html>"))
+              e.getCause.getMessage must be equalTo "expected json value got < (line 1, column 1)"
+          }: Result
+      }
+    }
+
+    "fail with UnexpectedResponseException for an unexpected response" in {
+      c.config.refreshURI match {
+        case None =>
+          skipped("refreshURI is not defined, so this step isn't needed for provider: " + c.provider.getClass)
+        case Some(refreshURI) =>
+          val refreshToken = "some-refresh-token"
+          val httpResponse = mock[Response].smart
+
+          httpResponse.status returns Status.Unauthorized
+          httpResponse.body returns Body.from("Unauthorized")
+
+          c.httpClient.withUri(refreshURI) returns c.httpClient
+          c.httpClient.withHeaders(any()) returns c.httpClient
+          c.httpClient.withBody(any[Body]()) returns c.httpClient
+          c.httpClient.withMethod(Method.POST) returns c.httpClient
+          c.httpClient.execute returns Future.successful(httpResponse)
+
+          failed[UnexpectedResponseException](c.provider.refresh(refreshToken)) {
+            case e => e.getMessage must be equalTo UnexpectedResponse.format(
+              c.provider.id, httpResponse.body.raw, Status.Unauthorized
+            )
+          }: Result
+      }
+    }
+
+    "fail with UnexpectedResponseException if OAuth2Info can be build because of an unexpected response" in {
+      c.config.refreshURI match {
+        case None =>
+          skipped("refreshURI is not defined, so this step isn't needed for provider: " + c.provider.getClass)
+        case Some(refreshURI) =>
+          val refreshToken = "some-refresh-token"
+          val httpResponse = mock[Response].smart
+
+          httpResponse.status returns Status.OK
+          httpResponse.body returns Body.from(Json.obj())
+
+          c.httpClient.withUri(refreshURI) returns c.httpClient
+          c.httpClient.withHeaders(any()) returns c.httpClient
+          c.httpClient.withBody(any[Body]()) returns c.httpClient
+          c.httpClient.withMethod(Method.POST) returns c.httpClient
+          c.httpClient.execute returns Future.successful(httpResponse)
+
+          failed[UnexpectedResponseException](c.provider.refresh(refreshToken)) {
+            case e => e.getMessage must startWith(InvalidInfoFormat.format(c.provider.id, ""))
+          }: Result
+      }
+    }
+
+    "return the auth info" in {
+      c.config.refreshURI match {
+        case None =>
+          skipped("refreshURI is not defined, so this step isn't needed for provider: " + c.provider.getClass)
+        case Some(refreshURI) =>
+          val refreshToken = "some-refresh-token"
+          val httpResponse = mock[Response].smart
+          val body = Body.from(Map(
+            GrantType -> Seq(RefreshToken),
+            RefreshToken -> Seq(refreshToken)
+          ) ++
+            c.config.refreshParams.mapValues(Seq(_)) ++
+            c.config.scope.map(scope => Map(Scope -> Seq(scope))).getOrElse(Map())
+          )
+
+          httpResponse.status returns Status.OK
+          httpResponse.body returns Body.from(c.oAuth2InfoJson)
+
+          c.httpClient.withUri(refreshURI) returns c.httpClient
+          c.httpClient.withHeaders(any()) returns c.httpClient
+          c.httpClient.withBody(body) returns c.httpClient
+          c.httpClient.withMethod(Method.POST) returns c.httpClient
+          c.httpClient.execute returns Future.successful(httpResponse)
+
+          await(c.provider.refresh(refreshToken)) must be equalTo c.oAuth2Info
+          there was one(c.httpClient).withHeaders(c.authorizationHeader)
+          there was one(c.httpClient).withBody(body): Result
+      }
     }
   }
 
@@ -359,10 +453,10 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
     val c = context
     "create a new instance with customized config" in {
       val newProvider = c.provider.withConfig { s =>
-        s.copy(accessTokenUri = ConfigURI("new-access-token-url"))
+        s.copy(accessTokenURI = ConfigURI("new-access-token-uri"))
       }
 
-      newProvider.config.accessTokenUri must be equalTo ConfigURI("new-access-token-url")
+      newProvider.config.accessTokenURI must be equalTo ConfigURI("new-access-token-uri")
     }
   }
 
@@ -384,7 +478,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
     implicit
     c: BaseContext
   ) = {
-    c.config.authorizationUri match {
+    c.config.authorizationURI match {
       case None =>
         skipped("authorizationUri is not defined, so this step isn't needed for provider: " + c.provider.getClass)
       case Some(_) =>
@@ -395,7 +489,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
         val sessionKey = "session-key"
         val sessionValue = "session-value"
 
-        c.config.redirectUri returns redirectUri
+        c.config.redirectURI returns redirectUri
 
         c.stateHandler.serialize(c.state) returns Some(sessionValue)
         c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
@@ -444,9 +538,18 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
     val UserProfileJson: BaseFixture.F
 
     /**
+     * The clock instance.
+     */
+    val clock = {
+      val c = mock[Clock].smart
+      c.instant() returns Instant.ofEpochSecond(0)
+      c
+    }
+
+    /**
      * The access token decoder to use to decode the [[OAuth2Info]] from JSON.
      */
-    implicit val accessTokenDecoder: Decoder[OAuth2Info] = OAuth2Info.decoder
+    implicit val accessTokenDecoder: Decoder[OAuth2Info] = OAuth2Info.decoder(clock)
 
     /**
      * The HTTP client mock.
@@ -492,6 +595,17 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
      * The provider to test.
      */
     def provider: OAuth2Provider
+
+    /**
+     * Gets the authorization header.
+     *
+     * @return The authorization header.
+     * @see https://tools.ietf.org/html/rfc6749#section-2.3.1
+     */
+    def authorizationHeader: Header = {
+      val credentials = Credentials(encode(config.clientID, "UTF-8"), encode(config.clientSecret, "UTF-8"))
+      Header(Header.Name.`Authorization`, BasicAuthHeaderFormat().write(credentials))
+    }
 
     /**
      * Extracts the params of a URL.
