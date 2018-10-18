@@ -15,17 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.http.transport.format
+package silhouette.http.auth
 
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.TransformException
-import silhouette.http.transport.format.BearerAuthHeaderFormat._
+import silhouette.http.BearerToken
+import silhouette.http.auth.BearerAuthSchemeFormat._
 
 /**
- * Test case for the [[BearerAuthHeaderFormat]] class.
+ * Test case for the [[BearerAuthSchemeFormat]] class.
  */
-class BearerAuthorizationHeaderSpec extends Specification {
+class BearerAuthSchemeFormatSpec extends Specification {
 
   "The `read` method" should {
     "return None if the header value doesn't start with 'Bearer'" in new Context {
@@ -35,13 +36,13 @@ class BearerAuthorizationHeaderSpec extends Specification {
     }
 
     "return the header value" in new Context {
-      format.read(s"Bearer some.long.token") must beSuccessfulTry("some.long.token")
+      format.read(s"Bearer some.long.token") must beSuccessfulTry(BearerToken("some.long.token"))
     }
   }
 
   "The `write` method" should {
     "return a 'Bearer' auth header for the given credentials" in new Context {
-      format.write("some.long.token") must be equalTo s"Bearer some.long.token"
+      format.write(BearerToken("some.long.token")) must be equalTo s"Bearer some.long.token"
     }
   }
 
@@ -53,6 +54,6 @@ class BearerAuthorizationHeaderSpec extends Specification {
     /**
      * The format to test.
      */
-    val format = new BearerAuthHeaderFormat()
+    val format = new BearerAuthSchemeFormat()
   }
 }

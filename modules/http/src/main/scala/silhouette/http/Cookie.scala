@@ -47,7 +47,17 @@ case class Cookie(
  * The companion object.
  */
 object Cookie {
-  sealed abstract class SameSite(val value: String)
+
+  /**
+   * The same site policy.
+   *
+   * @param name The string representation of the policy.
+   */
+  sealed abstract class SameSite(val name: String)
+
+  /**
+   * The available policies.
+   */
   object SameSite {
     case object Strict extends SameSite("Strict")
     case object Lax extends SameSite("Lax")

@@ -28,14 +28,13 @@ import org.specs2.specification.Scope
 import silhouette.http._
 import silhouette.http.client.BodyFormat._
 import silhouette.http.client.{ Body, Response }
-import silhouette.http.transport.format.BasicAuthHeaderFormat
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
 import silhouette.provider.social.state.handler.UserStateItem
 import silhouette.provider.social.state.{ State, StateHandler, StateItem, StateItemHandler }
 import silhouette.provider.{ AccessDeniedException, UnexpectedResponseException }
 import silhouette.specs2.BaseFixture
-import silhouette.{ ConfigURI, ConfigurationException, Credentials }
+import silhouette.{ ConfigURI, ConfigurationException }
 
 import scala.concurrent.Future
 import scala.io.Codec
@@ -602,10 +601,9 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
      * @return The authorization header.
      * @see https://tools.ietf.org/html/rfc6749#section-2.3.1
      */
-    def authorizationHeader: Header = {
-      val credentials = Credentials(encode(config.clientID, "UTF-8"), encode(config.clientSecret, "UTF-8"))
-      Header(Header.Name.`Authorization`, BasicAuthHeaderFormat().write(credentials))
-    }
+    def authorizationHeader: Header = BasicAuthorizationHeader(
+      BasicCredentials(encode(config.clientID, "UTF-8"), encode(config.clientSecret, "UTF-8"))
+    )
 
     /**
      * Extracts the params of a URL.

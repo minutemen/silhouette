@@ -30,16 +30,7 @@ import scala.language.implicitConversions
  * @param name   The header name as string.
  * @param values The header values.
  */
-protected[silhouette] case class Header(name: Header.Name, values: Seq[String]) {
-
-  /**
-   * Creates a header with a single value.
-   *
-   * @param name  The header name as string.
-   * @param value The header value.
-   * @return
-   */
-  def this(name: Header.Name, value: String) = this(name, Seq(value))
+case class Header(name: Header.Name, values: String*) {
 
   /**
    * Gets the value of a header.
@@ -56,23 +47,21 @@ protected[silhouette] case class Header(name: Header.Name, values: Seq[String]) 
 /**
  * The companion object.
  */
-private[silhouette] object Header {
-
-  def apply(name: Header.Name, value: String): Header = Header(name, Seq(value))
+object Header {
 
   /**
    * Represents a HTTP header name.
    *
    * @param value The header name as string.
    */
-  protected[silhouette] case class Name(value: String)
+  case class Name(value: String)
 
   /**
    * Common HTTP header names.
    *
    * @see https://en.wikipedia.org/wiki/List_of_HTTP_header_fields
    */
-  private[silhouette] object Name {
+  object Name {
     implicit def toString(name: Name): String = name.value
     implicit def fromString(name: String): Name = Name(name)
 
@@ -186,5 +175,78 @@ private[silhouette] object Header {
     // Shared non-standard request and response fields
     final val `X-Request-ID` = Name("X-Request-ID")
     final val `X-Correlation-ID` = Name("X-Correlation-ID")
+  }
+}
+
+/**
+ * Represents an authorization header that is based on an [[AuthScheme]].
+ *
+ * @param scheme The auth scheme.
+ */
+sealed abstract class AuthorizationHeader(protected val scheme: AuthScheme) {
+
+  /**
+   * Creates an `Authorization` header with the value suffixed to the auth scheme.
+   *
+   * @param value The value to add to the auth scheme.
+   * @return An `Authorization` header with the value suffixed to the auth scheme.
+   */
+  def apply(value: String): Header = Header(Header.Name.Authorization, scheme.apply(value))
+}
+
+/**
+ * An extractor object that handles the "Basic" `Authorization` header.
+ */
+object BasicAuthorizationHeader extends AuthorizationHeader(AuthScheme.Basic) {
+
+  /**
+   * Creates an "Basic" `Authorization` header from the given [[BasicCredentials]].
+   *
+   * @param credentials The credentials from which the header should be created.
+   * @return A "Basic" `Authorization` header.
+   */
+  def apply(credentials: BasicCredentials): Header = apply(BasicCredentials(credentials))
+
+  /**
+   * Extracts [[BasicCredentials]] from an "Basic" `Authorization` header.
+   *
+   * The value of the "Basic" `Authorization` header is in the form "base64(username:password)". This method
+   * extracts the username and the password and applies it as parameters to a [[BasicCredentials]] instance.
+   *
+   * @param header The header from which the [[BasicCredentials]] should be extracted.
+   * @return Maybe some [[BasicCredentials]] if the values could be extracted, None otherwise.
+   */
+  def unapply(header: Header): Option[BasicCredentials] = header match {
+    case h @ Header(Header.Name.Authorization, _*) =>
+      scheme.unapply(h.value).flatMap(BasicCredentials.unapply)
+    case _ =>
+      None
+  }
+}
+
+/**
+ * An extractor object that handles the "Bearer" `Authorization` header.
+ */
+object BearerAuthorizationHeader extends AuthorizationHeader(AuthScheme.Bearer) {
+
+  /**
+   * Creates a "Bearer" `Authorization` header from the given [[BearerToken]].
+   *
+   * @param token The token from which the header should be created.
+   * @return A "Bearer" `Authorization` header.
+   */
+  def apply(token: BearerToken): Header = apply(token.value)
+
+  /**
+   * Extracts a [[BearerToken]] from a "Bearer" `Authorization` header.
+   *
+   * @param header The header from which the [[BearerToken]] should be extracted.
+   * @return The extracted [[BearerToken]].
+   */
+  def unapply(header: Header): Option[BearerToken] = header match {
+    case h @ Header(Header.Name.Authorization, _*) =>
+      scheme.unapply(h.value).map(BearerToken)
+    case _ =>
+      None
   }
 }

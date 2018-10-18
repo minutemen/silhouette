@@ -19,10 +19,8 @@ package silhouette.provider.http
 
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
-import silhouette.Fitting._
-import silhouette.http.transport.HeaderTransport
-import silhouette.http.transport.format.BasicAuthHeaderFormat
-import silhouette.http.{ Header, RequestPipeline }
+import silhouette.http.RequestPipeline
+import silhouette.http.transport.RetrieveBasicCredentialsFromHeader
 import silhouette.password.PasswordHasherRegistry
 import silhouette.provider.RequestProvider
 import silhouette.provider.http.BasicAuthProvider._
@@ -30,7 +28,6 @@ import silhouette.provider.password.PasswordProvider
 import silhouette.{ ConfigurationException, LoginInfo }
 
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.{ Failure, Success }
 
 /**
  * A request provider implementation which supports HTTP basic authentication.
@@ -72,9 +69,9 @@ class BasicAuthProvider @Inject() (
    * @return Some login info on successful authentication or None if the authentication was unsuccessful.
    */
   override def authenticate[R](request: RequestPipeline[R]): Future[Option[LoginInfo]] = {
-    HeaderTransport(Header.Name.Authorization).retrieve(request).andThenTry(BasicAuthHeaderFormat()).toTry match {
-      case Success(credentials) =>
-        val loginInfo = LoginInfo(id, credentials.identifier)
+    RetrieveBasicCredentialsFromHeader().read(request) match {
+      case Some(credentials) =>
+        val loginInfo = LoginInfo(id, credentials.username)
         authenticate(loginInfo, credentials.password).map {
           case Authenticated => Some(loginInfo)
           case InvalidPassword(error) =>
@@ -85,8 +82,7 @@ class BasicAuthProvider @Inject() (
             logger.debug(error)
             None
         }
-      case Failure(e) =>
-        logger.debug(e.getMessage, e)
+      case None =>
         Future.successful(None)
     }
   }

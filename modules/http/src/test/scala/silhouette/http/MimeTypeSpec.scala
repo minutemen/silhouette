@@ -15,9 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.http2.transport
+package silhouette.http
+
+import org.specs2.mutable.Specification
 
 /**
- * Provides formats for the HTTP transport implementations.
+ * Test case for the [[MimeType]] class.
  */
-package object format {}
+class MimeTypeSpec extends Specification {
+
+  "The implicit `toString` method" should {
+    "transform a `MimeType` instance to a string" in {
+      MimeType.`text/plain` must be equalTo "text/plain"
+    }
+  }
+
+  "The implicit `fromString` method" should {
+    "transform a string into a `MimeType` instance" in {
+      "text/plain" must be equalTo MimeType.`text/plain`
+    }
+  }
+}

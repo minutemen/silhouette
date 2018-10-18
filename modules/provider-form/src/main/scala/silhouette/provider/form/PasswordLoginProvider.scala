@@ -15,19 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.provider.credentials
+package silhouette.provider.form
 
 import javax.inject.Inject
 import silhouette.password.PasswordHasherRegistry
 import silhouette.provider.IdentityNotFoundException
-import silhouette.provider.credentials.CredentialsProvider._
+import silhouette.provider.form.PasswordLoginProvider._
 import silhouette.provider.password.{ InvalidPasswordException, PasswordProvider }
 import silhouette.{ ConfigurationException, Credentials, LoginInfo }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * A provider for authenticating with credentials.
+ * Credentials to authenticate with an identifier (pseudonym, email address, ...) and a password.
+ *
+ * @param identifier The unique identifier (pseudonym, email address, ...) to authenticate with.
+ * @param password   The password to authenticate with.
+ */
+case class PasswordCredentials(identifier: String, password: String) extends Credentials
+
+/**
+ * A provider for authenticating with [[PasswordCredentials]].
  *
  * The provider supports the change of password hashing algorithms on the fly. Sometimes it may be possible to change
  * the hashing algorithm used by the application. But the hashes stored in the backing store can't be converted back
@@ -42,7 +50,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  * @param passwordHasherRegistry The password hashers used by the application.
  * @param ec                     The execution context to handle the asynchronous operations.
  */
-class CredentialsProvider @Inject() (
+class PasswordLoginProvider @Inject() (
   protected val authInfoReader: PasswordProvider#AuthInfoReader,
   protected val authInfoWriter: PasswordProvider#AuthInfoWriter,
   protected val passwordHasherRegistry: PasswordHasherRegistry
@@ -64,7 +72,7 @@ class CredentialsProvider @Inject() (
    * @param credentials The credentials to authenticate with.
    * @return The login info if the authentication was successful, otherwise a failure.
    */
-  def authenticate(credentials: Credentials): Future[LoginInfo] = {
+  def authenticate(credentials: PasswordCredentials): Future[LoginInfo] = {
     loginInfo(credentials).flatMap { loginInfo =>
       authenticate(loginInfo, credentials.password).map {
         case Authenticated            => loginInfo
@@ -89,16 +97,17 @@ class CredentialsProvider @Inject() (
    * @param credentials The credentials to authenticate with.
    * @return The login info created from the credentials.
    */
-  def loginInfo(credentials: Credentials): Future[LoginInfo] = Future.successful(LoginInfo(id, credentials.identifier))
+  def loginInfo(credentials: PasswordCredentials): Future[LoginInfo] =
+    Future.successful(LoginInfo(id, credentials.identifier))
 }
 
 /**
  * The companion object.
  */
-object CredentialsProvider {
+object PasswordLoginProvider {
 
   /**
-   * The provider constants.
+   * The provider ID.
    */
-  val ID = "credentials"
+  val ID = "password-login"
 }

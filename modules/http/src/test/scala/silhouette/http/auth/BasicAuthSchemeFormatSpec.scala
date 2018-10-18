@@ -15,18 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.http.transport.format
+package silhouette.http.auth
 
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import silhouette.{ Credentials, TransformException }
+import silhouette.TransformException
 import silhouette.crypto.Base64
-import silhouette.http.transport.format.BasicAuthHeaderFormat._
+import silhouette.http.BasicCredentials
+import silhouette.http.auth.BasicAuthSchemeFormat._
 
 /**
- * Test case for the [[BasicAuthHeaderFormat]] class.
+ * Test case for the [[BasicAuthSchemeFormat]] class.
  */
-class BasicAuthorizationHeaderSpec extends Specification {
+class BasicAuthSchemeFormatSpec extends Specification {
 
   "The `read` method" should {
     "return None if the header value doesn't start with 'Basic'" in new Context {
@@ -42,17 +43,17 @@ class BasicAuthorizationHeaderSpec extends Specification {
     }
 
     "return the Credentials if the header value does consists of an identifier and password part" in new Context {
-      format.read(s"Basic ${Base64.encode("user:pass")}") must beSuccessfulTry(Credentials("user", "pass"))
+      format.read(s"Basic ${Base64.encode("user:pass")}") must beSuccessfulTry(BasicCredentials("user", "pass"))
     }
 
     "return the Credentials if the password part contains a colon" in new Context {
-      format.read(s"Basic ${Base64.encode("user:abc:def")}") must beSuccessfulTry(Credentials("user", "abc:def"))
+      format.read(s"Basic ${Base64.encode("user:abc:def")}") must beSuccessfulTry(BasicCredentials("user", "abc:def"))
     }
   }
 
   "The `write` method" should {
     "return a 'Basic' auth header for the given credentials" in new Context {
-      format.write(Credentials("user", "pass")) must be equalTo s"Basic ${Base64.encode(s"user:pass")}"
+      format.write(BasicCredentials("user", "pass")) must be equalTo s"Basic ${Base64.encode(s"user:pass")}"
     }
   }
 
@@ -64,6 +65,6 @@ class BasicAuthorizationHeaderSpec extends Specification {
     /**
      * The format to test.
      */
-    val format = new BasicAuthHeaderFormat()
+    val format = new BasicAuthSchemeFormat()
   }
 }

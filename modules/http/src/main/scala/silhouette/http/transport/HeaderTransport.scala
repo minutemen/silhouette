@@ -17,10 +17,9 @@
  */
 package silhouette.http.transport
 
-import silhouette.Credentials
 import silhouette.Fitting._
 import silhouette.http._
-import silhouette.http.transport.format.{ BasicAuthHeaderFormat, BearerAuthHeaderFormat }
+import silhouette.http.auth.{ BasicAuthSchemeFormat, BearerAuthSchemeFormat }
 
 import scala.language.postfixOps
 
@@ -93,16 +92,16 @@ final case class RetrieveFromHeader[R](name: Header.Name) extends RetrieveReads[
  * @tparam R The type of the request.
  */
 final case class RetrieveBearerTokenFromHeader[R](name: Header.Name = Header.Name.Authorization)
-  extends RetrieveReads[R, String] {
+  extends RetrieveReads[R, BearerToken] {
 
   /**
-   * Reads payload from a header.
+   * Reads a bearer token from a header.
    *
    * @param requestPipeline The request pipeline.
    * @return The retrieved payload.
    */
-  override def read(requestPipeline: RequestPipeline[R]): Option[String] =
-    RetrieveFromHeader[R](name)(requestPipeline) andThenTry BearerAuthHeaderFormat() toOption
+  override def read(requestPipeline: RequestPipeline[R]): Option[BearerToken] =
+    RetrieveFromHeader[R](name)(requestPipeline) andThenTry BearerAuthSchemeFormat() toOption
 }
 
 /**
@@ -114,7 +113,7 @@ final case class RetrieveBearerTokenFromHeader[R](name: Header.Name = Header.Nam
  * @tparam R The type of the request.
  */
 final case class RetrieveBasicCredentialsFromHeader[R](name: Header.Name = Header.Name.Authorization)
-  extends RetrieveReads[R, Credentials] {
+  extends RetrieveReads[R, BasicCredentials] {
 
   /**
    * Reads payload from a header.
@@ -122,8 +121,8 @@ final case class RetrieveBasicCredentialsFromHeader[R](name: Header.Name = Heade
    * @param requestPipeline The request pipeline.
    * @return The retrieved payload.
    */
-  override def read(requestPipeline: RequestPipeline[R]): Option[Credentials] =
-    RetrieveFromHeader[R](name)(requestPipeline) andThenTry BasicAuthHeaderFormat() toOption
+  override def read(requestPipeline: RequestPipeline[R]): Option[BasicCredentials] =
+    RetrieveFromHeader[R](name)(requestPipeline) andThenTry BasicAuthSchemeFormat() toOption
 }
 
 /**
@@ -155,7 +154,7 @@ final case class SmuggleIntoHeader[R](name: Header.Name) extends SmuggleWrites[R
  * @tparam R The type of the response.
  */
 final case class SmuggleBearerTokenIntoHeader[R](name: Header.Name = Header.Name.Authorization)
-  extends SmuggleWrites[R, String] {
+  extends SmuggleWrites[R, BearerToken] {
 
   /**
    * Merges some token and a [[RequestPipeline]] into a [[RequestPipeline]] that contains a bearer token header with
@@ -165,8 +164,8 @@ final case class SmuggleBearerTokenIntoHeader[R](name: Header.Name = Header.Name
    *           which the header should be smuggled.
    * @return The request pipeline with the smuggled header.
    */
-  override def write(in: (String, RequestPipeline[R])): RequestPipeline[R] =
-    BearerAuthHeaderFormat().mapW(value => value -> in._2) andThen SmuggleIntoHeader[R](name) write in._1
+  override def write(in: (BearerToken, RequestPipeline[R])): RequestPipeline[R] =
+    BearerAuthSchemeFormat().mapW(value => value -> in._2) andThen SmuggleIntoHeader[R](name) write in._1
 }
 
 /**
@@ -178,7 +177,7 @@ final case class SmuggleBearerTokenIntoHeader[R](name: Header.Name = Header.Name
  * @tparam R The type of the response.
  */
 final case class SmuggleBasicCredentialsIntoHeader[R](name: Header.Name = Header.Name.Authorization)
-  extends SmuggleWrites[R, Credentials] {
+  extends SmuggleWrites[R, BasicCredentials] {
 
   /**
    * Merges some credentials and a [[RequestPipeline]] into a [[RequestPipeline]] that contains a basic auth header
@@ -188,8 +187,8 @@ final case class SmuggleBasicCredentialsIntoHeader[R](name: Header.Name = Header
    *           which the header should be smuggled.
    * @return The request pipeline with the smuggled header.
    */
-  override def write(in: (Credentials, RequestPipeline[R])): RequestPipeline[R] =
-    BasicAuthHeaderFormat().mapW(value => value -> in._2) andThen SmuggleIntoHeader[R](name) write in._1
+  override def write(in: (BasicCredentials, RequestPipeline[R])): RequestPipeline[R] =
+    BasicAuthSchemeFormat().mapW(value => value -> in._2) andThen SmuggleIntoHeader[R](name) write in._1
 }
 
 /**
@@ -221,7 +220,7 @@ final case class EmbedIntoHeader[R](name: Header.Name) extends EmbedWrites[R, St
  * @tparam R The type of the response.
  */
 final case class EmbedBearerTokenIntoHeader[R](name: Header.Name = Header.Name.Authorization)
-  extends EmbedWrites[R, String] {
+  extends EmbedWrites[R, BearerToken] {
 
   /**
    * Merges some token and a [[ResponsePipeline]] into a [[ResponsePipeline]] that contains a bearer token header with
@@ -231,8 +230,8 @@ final case class EmbedBearerTokenIntoHeader[R](name: Header.Name = Header.Name.A
    *           which the header should be embedded.
    * @return The response pipeline with the embedded header.
    */
-  override def write(in: (String, ResponsePipeline[R])): ResponsePipeline[R] =
-    BearerAuthHeaderFormat().mapW(value => value -> in._2) andThen EmbedIntoHeader[R](name) write in._1
+  override def write(in: (BearerToken, ResponsePipeline[R])): ResponsePipeline[R] =
+    BearerAuthSchemeFormat().mapW(value => value -> in._2) andThen EmbedIntoHeader[R](name) write in._1
 }
 
 /**
@@ -244,7 +243,7 @@ final case class EmbedBearerTokenIntoHeader[R](name: Header.Name = Header.Name.A
  * @tparam R The type of the response.
  */
 final case class EmbedBasicCredentialsIntoHeader[R](name: Header.Name = Header.Name.Authorization)
-  extends EmbedWrites[R, Credentials] {
+  extends EmbedWrites[R, BasicCredentials] {
 
   /**
    * Merges some credentials and a [[ResponsePipeline]] into a [[ResponsePipeline]] that contains a basic auth header
@@ -254,6 +253,6 @@ final case class EmbedBasicCredentialsIntoHeader[R](name: Header.Name = Header.N
    *           which the header should be embedded.
    * @return The response pipeline with the embedded header.
    */
-  override def write(in: (Credentials, ResponsePipeline[R])): ResponsePipeline[R] =
-    BasicAuthHeaderFormat().mapW(value => value -> in._2) andThen EmbedIntoHeader[R](name) write in._1
+  override def write(in: (BasicCredentials, ResponsePipeline[R])): ResponsePipeline[R] =
+    BasicAuthSchemeFormat().mapW(value => value -> in._2) andThen EmbedIntoHeader[R](name) write in._1
 }

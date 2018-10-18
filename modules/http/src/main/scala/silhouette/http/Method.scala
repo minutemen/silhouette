@@ -22,12 +22,12 @@ package silhouette.http
  *
  * @param value The request method as string.
  */
-protected[silhouette] sealed abstract class Method(val value: String)
+sealed abstract class Method(val value: String)
 
 /**
  * The HTTP request methods.
  */
-private[silhouette] object Method {
+object Method {
   case object GET extends Method("GET")
   case object POST extends Method("POST")
   case object PUT extends Method("PUT")

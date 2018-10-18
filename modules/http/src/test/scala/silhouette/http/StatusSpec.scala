@@ -17,24 +17,32 @@
  */
 package silhouette.http
 
-import scala.language.implicitConversions
+import org.specs2.mutable.Specification
 
 /**
- * Represents a HTTP MIME type.
- *
- * @param value The MIME type as string.
+ * Test case for the [[Status]] class.
  */
-case class MimeType(value: String)
+class StatusSpec extends Specification {
 
-/**
- * Common HTTP MIME types used by Silhouette.
- */
-object MimeType {
-  implicit def toString(mimeType: MimeType): String = mimeType.value
-  implicit def fromString(mimeType: String): MimeType = MimeType(mimeType)
+  "The `toString` method" should {
+    "return the string representation of a status" in {
+      Status.OK.toString must be equalTo "200 (OK)"
+    }
+  }
 
-  final val `text/plain` = MimeType("text/plain")
-  final val `application/x-www-form-urlencoded` = MimeType("application/x-www-form-urlencoded")
-  final val `application/json` = MimeType("application/json")
-  final val `application/xml` = MimeType("application/xml")
+  "The implicit `toInt` method" should {
+    "transform a `Status` instance to a status code" in {
+      Status.OK must be equalTo 200
+    }
+  }
+
+  "The implicit `fromInt` method" should {
+    "transform a status code into a `Status` instance" in {
+      200 must be equalTo Status.OK
+    }
+
+    "transform an unofficial status code into a `Status` instance" in {
+      600 must be equalTo Status(600, "Unofficial code")
+    }
+  }
 }

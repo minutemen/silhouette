@@ -32,11 +32,11 @@ ${SCRIPTS_DIR}/validate-style.sh
 
 echo ""
 echo "Testing and generating documentation"
-${SCRIPTS_DIR}/sbt.sh clean coverage test doc coverageReport
+${SCRIPTS_DIR}/sbt.sh clean coverage test doc
 
 echo ""
 echo "Aggregate coverage from sub-projects"
-${SCRIPTS_DIR}/sbt.sh coverageAggregate
+${SCRIPTS_DIR}/sbt.sh coverageReport coverageAggregate
 
 echo ""
 echo "Build finished"

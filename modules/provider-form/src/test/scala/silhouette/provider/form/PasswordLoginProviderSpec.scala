@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.provider.credentials
+package silhouette.provider.form
 
 import org.specs2.concurrent.ExecutionEnv
 import silhouette.password.PasswordInfo
@@ -23,16 +23,16 @@ import silhouette.provider.IdentityNotFoundException
 import silhouette.provider.password.PasswordProvider._
 import silhouette.provider.password.{ InvalidPasswordException, PasswordProviderSpec }
 import silhouette.specs2.WaitPatience
-import silhouette.{ ConfigurationException, Credentials, Done, LoginInfo }
+import silhouette.{ ConfigurationException, Done, LoginInfo }
 
 import scala.concurrent.Future
 
 /**
- * Test case for the [[CredentialsProvider]] class.
+ * Test case for the [[PasswordLoginProvider]] class.
  *
  * @param ev The execution environment.
  */
-class CredentialsProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderSpec with WaitPatience {
+class PasswordLoginProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderSpec with WaitPatience {
 
   "The `authenticate` method" should {
     "throw IdentityNotFoundException if no auth info could be found for the given credentials" in new Context {
@@ -114,11 +114,11 @@ class CredentialsProviderSpec(implicit ev: ExecutionEnv) extends PasswordProvide
     /**
      * The test credentials.
      */
-    lazy val credentials = Credentials("apollonia.vanova@minutemen.group", "s3cr3t")
+    lazy val credentials = PasswordCredentials("apollonia.vanova@minutemen.group", "s3cr3t")
 
     /**
      * The provider to test.
      */
-    lazy val provider = new CredentialsProvider(authInfoReader, authInfoWriter, passwordHasherRegistry)
+    lazy val provider = new PasswordLoginProvider(authInfoReader, authInfoWriter, passwordHasherRegistry)
   }
 }

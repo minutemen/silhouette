@@ -15,44 +15,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.http.transport.format
+package silhouette.http.auth
 
+import silhouette.http.auth.BearerAuthSchemeFormat._
+import silhouette.http.{ AuthScheme, BearerToken }
 import silhouette.{ Reads, TransformException, Writes }
-import silhouette.http.transport.format.BearerAuthHeaderFormat._
 
 import scala.util.{ Failure, Success, Try }
 
 /**
- * Handles the transformation of the "bearer" `Authorization` header.
+ * Handles the transformation of the "Bearer" `Authorization` header to a [[BearerToken]] and vice versa.
  */
-final case class BearerAuthHeaderFormat() extends Reads[String, Try[String]] with Writes[String, String] {
+final case class BearerAuthSchemeFormat() extends Reads[String, Try[BearerToken]] with Writes[BearerToken, String] {
 
   /**
-   * Transforms the "bearer" `Authorization` header value into some token.
+   * Transforms the "Bearer" `Authorization` header value into some token.
    *
-   * @param header The "bearer" `Authorization` header value.
-   * @return Some token or a failure if the header could not be parsed.
+   * @param value The "Bearer" `Authorization` header value.
+   * @return Some token or a failure if the value could not be parsed.
    */
-  override def read(header: String): Try[String] = {
-    if (header.startsWith("Bearer ")) {
-      Success(header.replace("Bearer ", ""))
-    } else {
+  override def read(value: String): Try[BearerToken] = value match {
+    case AuthScheme.Bearer(token) =>
+      Success(BearerToken(token))
+    case _ =>
       Failure(new TransformException(MissingBearerAuthIdentifier))
-    }
   }
 
   /**
-   * Transforms a token into a "bearer" `Authorization` header value.
+   * Transforms a token into a "Bearer" `Authorization` header value.
    *
    * @param token The token to encode.
-   * @return The "bearer" `Authorization` header value.
+   * @return The "Bearer" `Authorization` header value.
    */
-  override def write(token: String): String = s"Bearer $token"
+  override def write(token: BearerToken): String = AuthScheme.Bearer(token.value)
 }
 
 /**
- * The companion object of the [[BearerAuthHeaderFormat]] class.
+ * The companion object of the [[BearerAuthSchemeFormat]] class.
  */
-object BearerAuthHeaderFormat {
+object BearerAuthSchemeFormat {
   val MissingBearerAuthIdentifier = "Header doesn't start with 'Bearer '"
 }
