@@ -19,13 +19,12 @@ package silhouette.provider.http
 
 import org.specs2.concurrent.ExecutionEnv
 import silhouette.crypto.Base64
-import silhouette.http.transport.format.BasicAuthHeaderFormat
-import silhouette.http.{ Fake, Header }
+import silhouette.http.{ BasicAuthorizationHeader, BasicCredentials, Fake, Header }
 import silhouette.password.PasswordInfo
 import silhouette.provider.password.PasswordProvider._
 import silhouette.provider.password.PasswordProviderSpec
 import silhouette.specs2.WaitPatience
-import silhouette.{ ConfigurationException, Credentials, Done, LoginInfo }
+import silhouette.{ ConfigurationException, Done, LoginInfo }
 
 import scala.concurrent.Future
 
@@ -39,10 +38,8 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
   "The `authenticate` method" should {
     "throw ConfigurationException if unsupported hasher is stored" in new Context {
       val passwordInfo = PasswordInfo("unknown", "hashed(s3cr3t)")
-      val loginInfo = LoginInfo(provider.id, credentials.identifier)
-      val request = Fake.request.withHeaders(
-        Header(Header.Name.Authorization, BasicAuthHeaderFormat().write(credentials))
-      )
+      val loginInfo = LoginInfo(provider.id, credentials.username)
+      val request = Fake.request.withHeaders(BasicAuthorizationHeader(credentials))
 
       authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
 
@@ -52,10 +49,8 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
     }
 
     "return None if no auth info could be found for the given credentials" in new Context {
-      val loginInfo = new LoginInfo(provider.id, credentials.identifier)
-      val request = Fake.request.withHeaders(
-        Header(Header.Name.Authorization, BasicAuthHeaderFormat().write(credentials))
-      )
+      val loginInfo = new LoginInfo(provider.id, credentials.username)
+      val request = Fake.request.withHeaders(BasicAuthorizationHeader(credentials))
 
       authInfoReader.apply(loginInfo) returns Future.successful(None)
 
@@ -64,10 +59,8 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
 
     "return None if password does not match" in new Context {
       val passwordInfo = PasswordInfo("foo", "hashed(s3cr3t)")
-      val loginInfo = LoginInfo(provider.id, credentials.identifier)
-      val request = Fake.request.withHeaders(
-        Header(Header.Name.Authorization, BasicAuthHeaderFormat().write(credentials))
-      )
+      val loginInfo = LoginInfo(provider.id, credentials.username)
+      val request = Fake.request.withHeaders(BasicAuthorizationHeader(credentials))
 
       fooHasher.matches(passwordInfo, credentials.password) returns false
       authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
@@ -87,10 +80,8 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
 
     "return login info if passwords does match" in new Context {
       val passwordInfo = PasswordInfo("foo", "hashed(s3cr3t)")
-      val loginInfo = LoginInfo(provider.id, credentials.identifier)
-      val request = Fake.request.withHeaders(
-        Header(Header.Name.Authorization, BasicAuthHeaderFormat().write(credentials))
-      )
+      val loginInfo = LoginInfo(provider.id, credentials.username)
+      val request = Fake.request.withHeaders(BasicAuthorizationHeader(credentials))
 
       fooHasher.matches(passwordInfo, credentials.password) returns true
       authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
@@ -99,12 +90,10 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
     }
 
     "handle a colon in a password" in new Context {
-      val credentialsWithColon = Credentials("apollonia.vanova@minutemen.group", "s3c:r3t")
+      val credentialsWithColon = BasicCredentials("apollonia.vanova@minutemen.group", "s3c:r3t")
       val passwordInfo = PasswordInfo("foo", "hashed(s3c:r3t)")
-      val loginInfo = LoginInfo(provider.id, credentialsWithColon.identifier)
-      val request = Fake.request.withHeaders(
-        Header(Header.Name.Authorization, BasicAuthHeaderFormat().write(credentialsWithColon))
-      )
+      val loginInfo = LoginInfo(provider.id, credentialsWithColon.username)
+      val request = Fake.request.withHeaders(BasicAuthorizationHeader(credentialsWithColon))
 
       fooHasher.matches(passwordInfo, credentialsWithColon.password) returns true
       authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
@@ -114,10 +103,8 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
 
     "re-hash password with new hasher if hasher is deprecated" in new Context {
       val passwordInfo = PasswordInfo("bar", "hashed(s3cr3t)")
-      val loginInfo = LoginInfo(provider.id, credentials.identifier)
-      val request = Fake.request.withHeaders(
-        Header(Header.Name.Authorization, BasicAuthHeaderFormat().write(credentials))
-      )
+      val loginInfo = LoginInfo(provider.id, credentials.username)
+      val request = Fake.request.withHeaders(BasicAuthorizationHeader(credentials))
 
       fooHasher.hash(credentials.password) returns passwordInfo
       barHasher.matches(passwordInfo, credentials.password) returns true
@@ -130,10 +117,8 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
 
     "re-hash password with new hasher if password info is deprecated" in new Context {
       val passwordInfo = PasswordInfo("foo", "hashed(s3cr3t)")
-      val loginInfo = LoginInfo(provider.id, credentials.identifier)
-      val request = Fake.request.withHeaders(
-        Header(Header.Name.Authorization, BasicAuthHeaderFormat().write(credentials))
-      )
+      val loginInfo = LoginInfo(provider.id, credentials.username)
+      val request = Fake.request.withHeaders(BasicAuthorizationHeader(credentials))
 
       fooHasher.isDeprecated(passwordInfo) returns Some(true)
       fooHasher.hash(credentials.password) returns passwordInfo
@@ -162,7 +147,7 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
     /**
      * The test credentials.
      */
-    lazy val credentials = Credentials("apollonia.vanova@minutemen.group", "s3cr3t")
+    lazy val credentials = BasicCredentials("apollonia.vanova@minutemen.group", "s3cr3t")
 
     /**
      * The provider to test.

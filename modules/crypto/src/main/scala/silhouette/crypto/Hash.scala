@@ -42,6 +42,14 @@ object Hash {
   implicit def strToByteArray(str: String)(implicit codec: Codec): Array[Byte] = str.getBytes(codec.charSet)
 
   /**
+   * Creates a MD5 hash from the given byte array.
+   *
+   * @param bytes The bytes to create a hash from.
+   * @return The MD5 hash of the bytes.
+   */
+  def md5(bytes: Array[Byte]): String = hash("MD5", bytes)
+
+  /**
    * Creates a SHA-1 hash from the given byte array.
    *
    * @param bytes The bytes to create a hash from.

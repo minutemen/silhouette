@@ -28,7 +28,7 @@ object BasicSettings extends AutoPlugin {
     organization := "group.minutemen",
     resolvers ++= Dependencies.resolvers,
     scalaVersion := crossScalaVersions.value.head,
-    crossScalaVersions := Seq("2.12.6", "2.11.12"),
+    crossScalaVersions := Seq("2.12.7", "2.11.12"),
     scalacOptions ++= Seq(
       "-deprecation", // Emit warning and location for usages of deprecated APIs.
       "-feature", // Emit warning and location for usages of features that should be imported explicitly.
@@ -131,7 +131,7 @@ object Publish extends AutoPlugin {
 
   override def projectSettings: Seq[Setting[_]] = sonatypeSettings ++ Seq(
     description := "Framework agnostic authentication library for Scala that supports several authentication " +
-      "methods, including OAuth1, OAuth2, OpenID, CAS, Credentials, Basic Authentication, Two Factor Authentication " +
+      "methods, including OAuth2, OpenID Connect, CAS, Credentials, Basic Authentication " +
       "or custom authentication schemes",
     homepage := Some(url("http://www.silhouette.rocks/")),
     licenses := Seq("Apache-2.0" -> url("https://github.com/minutemen/silhouette/blob/master/LICENSE")),

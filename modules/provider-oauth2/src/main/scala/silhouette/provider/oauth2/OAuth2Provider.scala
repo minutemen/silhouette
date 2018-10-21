@@ -26,13 +26,12 @@ import monocle.Optional
 import silhouette.http._
 import silhouette.http.client.BodyFormat._
 import silhouette.http.client.{ Body, Response }
-import silhouette.http.transport.format.BasicAuthHeaderFormat
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social.state.handler.UserStateItemHandler
 import silhouette.provider.social.state.{ StateHandler, StateItem }
 import silhouette.provider.social.{ ProfileRetrievalException, SocialStateProvider, StatefulAuthInfo }
 import silhouette.provider.{ AccessDeniedException, UnexpectedResponseException }
-import silhouette.{ AuthInfo, ConfigURI, ConfigurationException, Credentials }
+import silhouette.{ AuthInfo, ConfigURI, ConfigurationException }
 
 import scala.concurrent.Future
 import scala.reflect.ClassTag
@@ -133,10 +132,9 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
    * @return The authorization header.
    * @see https://tools.ietf.org/html/rfc6749#section-2.3.1
    */
-  protected val authorizationHeader: Header = {
-    val credentials = Credentials(encode(config.clientID, "UTF-8"), encode(config.clientSecret, "UTF-8"))
-    Header(Header.Name.`Authorization`, BasicAuthHeaderFormat().write(credentials))
-  }
+  protected val authorizationHeader: Header = BasicAuthorizationHeader(
+    BasicCredentials(encode(config.clientID, "UTF-8"), encode(config.clientSecret, "UTF-8"))
+  )
 
   /**
    * The implicit access token decoder.

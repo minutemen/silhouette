@@ -37,7 +37,7 @@ class SilhouetteRequestPipelineSpec extends Specification {
 
   "The `header` method" should {
     "return the list of header values" in new Context {
-      requestPipeline.header("TEST1") must beSome(Header("TEST1", Seq("value1", "value2")))
+      requestPipeline.header("TEST1") must beSome(Header("TEST1", "value1", "value2"))
     }
 
     "return an empty list if no header with the given name was found" in new Context {
@@ -48,41 +48,41 @@ class SilhouetteRequestPipelineSpec extends Specification {
   "The `withHeaders` method" should {
     "append a new header" in new Context {
       requestPipeline.withHeaders(Header("TEST3", "value1")).headers must be equalTo Seq(
-        Header("TEST1", Seq("value1", "value2")),
-        Header("TEST2", Seq("value1")),
-        Header("TEST3", Seq("value1"))
+        Header("TEST1", "value1", "value2"),
+        Header("TEST2", "value1"),
+        Header("TEST3", "value1")
       )
     }
 
     "append multiple headers" in new Context {
       requestPipeline.withHeaders(Header("TEST3", "value1"), Header("TEST4", "value1")).headers must be equalTo Seq(
-        Header("TEST1", Seq("value1", "value2")),
-        Header("TEST2", Seq("value1")),
-        Header("TEST3", Seq("value1")),
-        Header("TEST4", Seq("value1"))
+        Header("TEST1", "value1", "value2"),
+        Header("TEST2", "value1"),
+        Header("TEST3", "value1"),
+        Header("TEST4", "value1")
       )
     }
 
     "append multiple headers with the same name" in new Context {
-      requestPipeline.withHeaders(Header("TEST3", "value1"), Header("TEST3", Seq("value2", "value3"))).headers must
+      requestPipeline.withHeaders(Header("TEST3", "value1"), Header("TEST3", "value2", "value3")).headers must
         be equalTo Seq(
-          Header("TEST1", Seq("value1", "value2")),
-          Header("TEST2", Seq("value1")),
-          Header("TEST3", Seq("value1", "value2", "value3"))
+          Header("TEST1", "value1", "value2"),
+          Header("TEST2", "value1"),
+          Header("TEST3", "value1", "value2", "value3")
         )
     }
 
     "override an existing header" in new Context {
       requestPipeline.withHeaders(Header("TEST2", "value2"), Header("TEST2", "value3")).headers must be equalTo Seq(
-        Header("TEST1", Seq("value1", "value2")),
-        Header("TEST2", Seq("value2", "value3"))
+        Header("TEST1", "value1", "value2"),
+        Header("TEST2", "value2", "value3")
       )
     }
 
     "override multiple existing headers" in new Context {
       requestPipeline.withHeaders(Header("TEST1", "value3"), Header("TEST2", "value2")).headers must be equalTo Seq(
-        Header("TEST1", Seq("value3")),
-        Header("TEST2", Seq("value2"))
+        Header("TEST1", "value3"),
+        Header("TEST2", "value2")
       )
     }
   }
@@ -268,7 +268,7 @@ class SilhouetteRequestPipelineSpec extends Specification {
         Header("User-Agent", userAgent),
         Header("Accept-Language", acceptLanguage),
         Header("Accept-Charset", acceptCharset),
-        Header("Accept-Encoding", Seq("gzip", "deflate"))
+        Header("Accept-Encoding", "gzip", "deflate")
       ).fingerprint(request => Hash.sha1(new StringBuilder()
           .append(request.headers.find(_.name == Header.Name.`User-Agent`).map(_.value).getOrElse("")).append(":")
           .append(request.headers.find(_.name == Header.Name.`Accept-Language`).map(_.value).getOrElse("")).append(":")
@@ -299,7 +299,7 @@ class SilhouetteRequestPipelineSpec extends Specification {
       uri = new URI("http://localhost"),
       method = Method.POST,
       headers = Seq(
-        Header("TEST1", Seq("value1", "value2")),
+        Header("TEST1", "value1", "value2"),
         Header("TEST2", "value1")
       ),
       cookies = Seq(

@@ -101,7 +101,7 @@ final protected[silhouette] case class SilhouetteRequestPipeline(request: Silhou
    */
   override def withHeaders(headers: Header*): RequestPipeline[SilhouetteRequest] = {
     val groupedHeaders = headers.groupByPreserveOrder(_.name).map {
-      case (key, h) => Header(key, h.flatMap(_.values))
+      case (key, h) => Header(key, h.flatMap(_.values): _*)
     }
     val newHeaders = groupedHeaders.foldLeft(request.headers) {
       case (acc, header) =>

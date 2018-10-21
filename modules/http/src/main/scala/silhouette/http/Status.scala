@@ -25,7 +25,7 @@ import scala.language.implicitConversions
  * @param code         HTTP status code.
  * @param reasonPhrase A textual representation of the status code.
  */
-private[silhouette] case class Status(code: Int, reasonPhrase: String) {
+case class Status(code: Int, reasonPhrase: String) {
   override def toString: String = s"$code ($reasonPhrase)"
 }
 
@@ -34,7 +34,7 @@ private[silhouette] case class Status(code: Int, reasonPhrase: String) {
  *
  * @see https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
  */
-private[silhouette] object Status {
+object Status {
 
   /**
    * Contains a list of all status instances. Will be initialized lazy if needed. The list is needed to determine the

@@ -27,15 +27,15 @@ import scala.concurrent.{ ExecutionContext, Future }
  * A generator which uses [[java.security.SecureRandom]] to generate cryptographically strong IDs.
  *
  * @param idSizeInBytes The size of the ID length in bytes.
- * @param ec The execution context to handle the asynchronous operations.
+ * @param ec            The execution context to handle the asynchronous operations.
  */
 class SecureRandomID(idSizeInBytes: Int = 128)(implicit ec: ExecutionContext) extends SecureAsyncID[String] {
 
   /**
    * Gets a new secure ID using [[java.security.SecureRandom]].
    *
-   * Generating secure IDs can block the application, while the system waits for resources. Therefore we
-   * return a future so that the application doesn't get blocked while waiting for the generated ID.
+   * Based on the chosen algorithm, the initial seeding may use /dev/random and it may block as entropy is
+   * being gathered. Therefore we return a future to handle the seeding in an async way.
    *
    * @return The generated ID.
    */
@@ -58,8 +58,9 @@ object SecureRandomID {
    * There is a cost of getting a secure random instance for its initial seeding, so it's recommended you use
    * a singleton style so you only create one for all of your usage going forward.
    *
-   * Based on the configuration, SecureRandom may use /dev/random and it can block waiting for sufficient entropy to
-   * build up.
+   * Based on the configuration, SecureRandom may use /dev/random on Unix-like systems and it may block as entropy is
+   * being gathered. So it's recommended to use a singleton style so you only create one for all of your usage going
+   * forward.
    *
    * @see https://tersesystems.com/blog/2015/12/17/the-right-way-to-use-securerandom/
    */
