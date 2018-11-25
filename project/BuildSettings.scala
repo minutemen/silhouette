@@ -28,7 +28,7 @@ object BasicSettings extends AutoPlugin {
     organization := "group.minutemen",
     resolvers ++= Dependencies.resolvers,
     scalaVersion := crossScalaVersions.value.head,
-    crossScalaVersions := Seq("2.12.7", "2.11.12"),
+    crossScalaVersions := Seq("2.12.7"),
     scalacOptions ++= Seq(
       "-deprecation", // Emit warning and location for usages of deprecated APIs.
       "-feature", // Emit warning and location for usages of features that should be imported explicitly.
