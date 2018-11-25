@@ -137,6 +137,8 @@ lazy val `silhouette-persistence` = (project in file("modules/persistence"))
 lazy val `silhouette-util` = (project in file("modules/util"))
   .dependsOn(
     `silhouette-core`,
+    `silhouette-http`,
+    `silhouette-crypto`,
     `silhouette-specs2` % Test
   )
 

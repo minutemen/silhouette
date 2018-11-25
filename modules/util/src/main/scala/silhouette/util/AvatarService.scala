@@ -17,18 +17,20 @@
  */
 package silhouette.util
 
+import java.net.URI
+
 import scala.concurrent.Future
 
 /**
- * Service to retrieve avatar URLs from an avatar service such as Gravatar.
+ * Service to retrieve avatar URIs from an avatar service such as Gravatar.
  */
 trait AvatarService {
 
   /**
-   * Retrieves the URL for an identifier.
+   * Retrieves the URI for an identifier.
    *
    * @param id The identifier for the avatar.
-   * @return Maybe an avatar URL or None if no URL could be found for the given identifier.
+   * @return Maybe an avatar URI or None if no URL could be found for the given identifier.
    */
-  def retrieveURL(id: String): Future[Option[String]]
+  def retrieveURI(id: String): Future[Option[URI]]
 }
