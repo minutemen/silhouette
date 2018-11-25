@@ -106,6 +106,7 @@ object BasicSettings extends AutoPlugin {
 object Publish extends AutoPlugin {
 
   import xerial.sbt.Sonatype._
+  import SonatypeKeys._
 
   override def trigger: PluginTrigger = allRequirements
 
@@ -139,6 +140,7 @@ object Publish extends AutoPlugin {
     publishArtifact in Test := false,
     pomIncludeRepository := { _ => false },
     pomExtra := pom,
+    publishTo := sonatypePublishTo.value,
     credentials ++= (for {
       username <- Option(System.getenv().get("SONATYPE_USERNAME"))
       password <- Option(System.getenv().get("SONATYPE_PASSWORD"))
