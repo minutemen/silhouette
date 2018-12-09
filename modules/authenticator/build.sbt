@@ -18,7 +18,6 @@
 import Dependencies._
 
 libraryDependencies ++= Seq(
-  Library.jsonAst,
   Library.Circe.core,
 )
 //enablePlugins(Doc)

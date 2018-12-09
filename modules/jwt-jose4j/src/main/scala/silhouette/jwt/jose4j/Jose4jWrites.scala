@@ -17,12 +17,12 @@
  */
 package silhouette.jwt.jose4j
 
+import io.circe.{ Json, JsonNumber, JsonObject }
 import org.jose4j.jwt.{ JwtClaims, NumericDate }
-import silhouette.jwt.{ JwtException, Writes }
 import silhouette.jwt.jose4j.Jose4jWrites._
+import silhouette.jwt.{ JwtException, Writes }
 
 import scala.collection.JavaConverters._
-import scala.json.ast._
 import scala.language.implicitConversions
 import scala.util.Try
 
@@ -74,17 +74,17 @@ final case class Jose4jWrites(producer: Jose4jProducer) extends Writes {
    * @param claims The custom claims to transform.
    * @return A map containing custom claims.
    */
-  private def transformCustomClaims(claims: JObject): java.util.Map[String, Object] = {
-    def toJava(value: JValue): Object = value match {
-      case JNull       => None.orNull
-      case v: JString  => v.value
-      case v: JNumber  => BigDecimal(v.value)
-      case v: JBoolean => Boolean.box(v.get)
-      case v: JArray   => v.value.map(toJava).asJava
-      case v: JObject  => transformCustomClaims(v)
-    }
+  private def transformCustomClaims(claims: JsonObject): java.util.Map[String, Object] = {
+    def toJava(value: Json): Object = value.fold[Object](
+      jsonNull = None.orNull,
+      jsonBoolean = (x: Boolean) => Boolean.box(x),
+      jsonNumber = (x: JsonNumber) => x.toBigDecimal.getOrElse(new Integer(0)),
+      jsonString = (x: String) => x,
+      jsonArray = (x: Vector[Json]) => x.map(toJava).asJava,
+      jsonObject = (x: JsonObject) => transformCustomClaims(x)
+    )
 
-    claims.value.map { case (name, value) => name -> toJava(value) }.asJava
+    claims.toMap.map { case (name, value) => name -> toJava(value) }.asJava
   }
 }
 

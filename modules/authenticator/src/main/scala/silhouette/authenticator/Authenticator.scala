@@ -19,13 +19,13 @@ package silhouette.authenticator
 
 import java.time.{ Clock, Instant }
 
+import io.circe.Json
 import silhouette.LoginInfo
 import silhouette.authenticator.Authenticator.Implicits._
 import silhouette.http.RequestPipeline
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.json.ast.JObject
 
 /**
  * An authenticator tracks an authenticated user.
@@ -56,7 +56,7 @@ final case class Authenticator(
   expires: Option[Instant] = None,
   fingerprint: Option[String] = None,
   tags: Seq[String] = Seq(),
-  payload: Option[JObject] = None) {
+  payload: Option[Json] = None) {
 
   /**
    * Gets the duration the authenticator expires in.
