@@ -17,14 +17,15 @@
  */
 package silhouette.authenticator.format
 
+import io.circe.Json
 import io.circe.jawn.decode
+import io.circe.optics.JsonPath._
 import silhouette.authenticator.format.JwtReads._
 import silhouette.authenticator.{ Authenticator, AuthenticatorException, StatefulReads, StatelessReads }
 import silhouette.crypto.Base64
 import silhouette.{ LoginInfo, jwt }
 
 import scala.concurrent.Future
-import scala.json.ast.{ JArray, JObject, JString }
 import scala.util.{ Failure, Success, Try }
 
 /**
@@ -48,27 +49,16 @@ final case class JwtReads(jwtReads: jwt.Reads) extends StatelessReads with State
    */
   override def read(jwt: String): Future[Authenticator] = Future.fromTry {
     jwtReads.read(jwt).map { claims =>
+      val custom = Json.fromJsonObject(claims.custom)
       Authenticator(
         id = claims.jwtID.getOrElse(throw new AuthenticatorException(MissingClaimValue.format("jwtID"))),
         loginInfo = buildLoginInfo(Base64.decode(claims.subject
           .getOrElse(throw new AuthenticatorException(MissingClaimValue.format("subject"))))).get,
         touched = claims.issuedAt,
         expires = claims.expirationTime,
-        tags = claims.custom.value.get("tags").map {
-          case a: JArray => a.value.map {
-            case s: JString => s.value
-            case v          => throw new AuthenticatorException(UnexpectedJsonValue.format(v, "JString"))
-          }
-          case v => throw new AuthenticatorException(UnexpectedJsonValue.format(v, "JArray"))
-        }.getOrElse(Seq()),
-        fingerprint = claims.custom.value.get("fingerprint").map {
-          case s: JString => s.value
-          case v          => throw new AuthenticatorException(UnexpectedJsonValue.format(v, "JString"))
-        },
-        payload = claims.custom.value.get("payload").map {
-          case o: JObject => o
-          case v          => throw new AuthenticatorException(UnexpectedJsonValue.format(v, "JObject"))
-        }
+        tags = root.tags.each.string.getAll(custom),
+        fingerprint = root.fingerprint.string.getOption(custom),
+        payload = root.payload.json.getOption(custom)
       )
     }
   }

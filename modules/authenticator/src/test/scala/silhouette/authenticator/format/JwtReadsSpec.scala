@@ -20,6 +20,7 @@ package silhouette.authenticator.format
 import java.time.Instant
 
 import io.circe.syntax._
+import io.circe.{ Json, JsonObject }
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
@@ -31,7 +32,6 @@ import silhouette.crypto.Base64
 import silhouette.jwt.{ Claims, Reads }
 import silhouette.specs2.WaitPatience
 
-import scala.json.ast._
 import scala.util.{ Failure, Try }
 
 /**
@@ -89,39 +89,32 @@ class JwtReadsSpec(implicit ev: ExecutionEnv) extends Specification with Mockito
       }.awaitWithPatience
     }
 
-    "throw an `AuthenticatorException` if the `tags` in the custom claim JSON isn't an array" in new Context {
-      underlyingJwtReads.read(jwt) returns Try(claims.copy(custom = JObject(Map("tags" -> JString("some string")))))
+    "return the tags as empty array if the `tags` in the custom claim JSON isn't an array" in new Context {
+      underlyingJwtReads.read(jwt) returns Try(claims.copy(custom = JsonObject(
+        "tags" -> Json.fromString("some string")
+      )))
 
-      jwtReads.read(jwt) must throwA[AuthenticatorException].like {
-        case e =>
-          e.getMessage must be equalTo UnexpectedJsonValue.format("JString(some string)", "JArray")
+      jwtReads.read(jwt) must beLike[Authenticator] {
+        case value =>
+          value.tags must beEqualTo(Seq())
       }.awaitWithPatience
     }
 
-    "throw an `AuthenticatorException` if the values in the JSON `tags` array are not strings" in new Context {
-      underlyingJwtReads.read(jwt) returns Try(claims.copy(custom = JObject(Map("tags" -> JArray(JNumber(1))))))
+    "return the `tags` as empty array if the values in the JSON `tags` array are not strings" in new Context {
+      underlyingJwtReads.read(jwt) returns Try(claims.copy(custom = JsonObject("tags" -> Json.arr(Json.fromInt(1)))))
 
-      jwtReads.read(jwt) must throwA[AuthenticatorException].like {
-        case e =>
-          e.getMessage must be equalTo UnexpectedJsonValue.format("JNumber(1)", "JString")
+      jwtReads.read(jwt) must beLike[Authenticator] {
+        case value =>
+          value.tags must beEqualTo(Seq())
       }.awaitWithPatience
     }
 
-    "throw an `AuthenticatorException` if the `fingerprint` in the custom claim JSON isn't a string" in new Context {
-      underlyingJwtReads.read(jwt) returns Try(claims.copy(custom = JObject(Map("fingerprint" -> JNumber(1)))))
+    "return the `fingerprint` as None if the `fingerprint` in the custom claim JSON isn't a string" in new Context {
+      underlyingJwtReads.read(jwt) returns Try(claims.copy(custom = JsonObject("fingerprint" -> Json.fromInt(1))))
 
-      jwtReads.read(jwt) must throwA[AuthenticatorException].like {
-        case e =>
-          e.getMessage must be equalTo UnexpectedJsonValue.format("JNumber(1)", "JString")
-      }.awaitWithPatience
-    }
-
-    "throw an `AuthenticatorException` if the `payload` in the custom claim JSON isn't an object" in new Context {
-      underlyingJwtReads.read(jwt) returns Try(claims.copy(custom = JObject(Map("payload" -> JNumber(1)))))
-
-      jwtReads.read(jwt) must throwA[AuthenticatorException].like {
-        case e =>
-          e.getMessage must be equalTo UnexpectedJsonValue.format("JNumber(1)", "JObject")
+      jwtReads.read(jwt) must beLike[Authenticator] {
+        case value =>
+          value.fingerprint must beNone
       }.awaitWithPatience
     }
 
@@ -165,13 +158,11 @@ class JwtReadsSpec(implicit ev: ExecutionEnv) extends Specification with Mockito
       notBefore = Some(instant),
       issuedAt = Some(instant),
       jwtID = Some("id"),
-      custom = JObject(Map(
-        "tags" -> JArray(JString("tag1"), JString("tag2")),
-        "fingerprint" -> JString("fingerprint"),
-        "payload" -> JObject(Map(
-          "secure" -> JTrue
-        ))
-      ))
+      custom = JsonObject(
+        "tags" -> Json.arr(Json.fromString("tag1"), Json.fromString("tag2")),
+        "fingerprint" -> Json.fromString("fingerprint"),
+        "payload" -> Json.obj("secure" -> Json.True)
+      )
     )
 
     /**
@@ -184,9 +175,7 @@ class JwtReadsSpec(implicit ev: ExecutionEnv) extends Specification with Mockito
       expires = Some(instant),
       fingerprint = Some("fingerprint"),
       tags = Seq("tag1", "tag2"),
-      payload = Some(JObject(Map(
-        "secure" -> JTrue
-      )))
+      payload = Some(Json.obj("secure" -> Json.True))
     )
 
     /**

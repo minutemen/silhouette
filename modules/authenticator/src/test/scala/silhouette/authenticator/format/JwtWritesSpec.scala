@@ -19,18 +19,18 @@ package silhouette.authenticator.format
 
 import java.time.Instant
 
+import io.circe.{ Json, JsonObject }
 import io.circe.syntax._
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
+import silhouette.LoginInfo
 import silhouette.authenticator.{ Authenticator, StatefulWrites, StatelessWrites }
 import silhouette.crypto.Base64
 import silhouette.jwt.{ Claims, Writes }
 import silhouette.specs2.WaitPatience
-import silhouette.LoginInfo
 
-import scala.json.ast._
 import scala.util.Try
 
 /**
@@ -96,13 +96,11 @@ class JwtWritesSpec(implicit ev: ExecutionEnv) extends Specification with Mockit
       notBefore = Some(instant),
       issuedAt = Some(instant),
       jwtID = Some("id"),
-      custom = JObject(Map(
-        "tags" -> JArray(JString("tag1"), JString("tag2")),
-        "fingerprint" -> JString("fingerprint"),
-        "payload" -> JObject(Map(
-          "secure" -> JTrue
-        ))
-      ))
+      custom = JsonObject(
+        "tags" -> Json.arr(Json.fromString("tag1"), Json.fromString("tag2")),
+        "fingerprint" -> Json.fromString("fingerprint"),
+        "payload" -> Json.obj("secure" -> Json.True)
+      )
     )
 
     /**
@@ -115,9 +113,7 @@ class JwtWritesSpec(implicit ev: ExecutionEnv) extends Specification with Mockit
       expires = Some(instant),
       fingerprint = Some("fingerprint"),
       tags = Seq("tag1", "tag2"),
-      payload = Some(JObject(Map(
-        "secure" -> JTrue
-      )))
+      payload = Some(Json.obj("secure" -> Json.True))
     )
 
     /**

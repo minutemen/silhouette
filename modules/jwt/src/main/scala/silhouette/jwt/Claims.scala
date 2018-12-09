@@ -19,7 +19,7 @@ package silhouette.jwt
 
 import java.time.Instant
 
-import scala.json.ast.JObject
+import io.circe.JsonObject
 
 /**
  * JWT reserved claims and also optional custom claims in the form of a JSON object.
@@ -44,5 +44,5 @@ final case class Claims(
   notBefore: Option[Instant] = None,
   issuedAt: Option[Instant] = None,
   jwtID: Option[String] = None,
-  custom: JObject = JObject()
+  custom: JsonObject = JsonObject.empty
 )

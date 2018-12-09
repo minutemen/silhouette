@@ -20,6 +20,7 @@ package silhouette.jwt.jose4j
 import java.time.Clock
 import java.time.temporal.ChronoUnit
 
+import io.circe.{ Json, JsonObject }
 import org.jose4j.jwa.AlgorithmConstraints
 import org.jose4j.jws.AlgorithmIdentifiers._
 import org.jose4j.jws.JsonWebSignature
@@ -33,7 +34,6 @@ import silhouette.jwt.jose4j.Jose4jWrites._
 import silhouette.jwt.{ Claims, JwtException, ReservedClaims }
 import silhouette.specs2.WithBouncyCastle
 
-import scala.json.ast._
 import scala.util.Try
 
 /**
@@ -171,22 +171,28 @@ class FormatSpec extends Specification with WithBouncyCastle {
     /**
      * Some custom claims.
      */
-    val customClaims = JObject(Map(
-      "boolean" -> JTrue,
-      "string" -> JString("string"),
-      "int" -> JNumber(1234567890),
-      "long" -> JNumber(1234567890L),
-      "float" -> JNumber(1.2),
-      "double" -> JNumber(1.2d),
-      "null" -> JNull,
-      "array" -> JArray(JNumber(1), JNumber(2)),
-      "object" -> JObject(Map(
-        "array" -> JArray(JString("string1"), JString("string2")),
-        "object" -> JObject(Map(
-          "array" -> JArray(JString("string"), JFalse, JObject(Map("number" -> JNumber(1))))
-        ))
-      ))
-    ))
+    val customClaims = JsonObject(
+      "boolean" -> Json.True,
+      "string" -> Json.fromString("string"),
+      "int" -> Json.fromInt(1234567890),
+      "long" -> Json.fromLong(1234567890L),
+      "float" -> Json.fromFloatOrNull(1.2F),
+      "double" -> Json.fromDoubleOrNull(1.2D),
+      "bigInt" -> Json.fromBigInt(new java.math.BigInteger("10000000000000000000000000000000")),
+      "bigDecimal" -> Json.fromBigDecimal(new java.math.BigDecimal("100000000000000000000000000000.00")),
+      "null" -> Json.Null,
+      "array" -> Json.arr(Json.fromInt(1), Json.fromInt(2)),
+      "object" -> Json.obj(
+        "array" -> Json.arr(Json.fromString("string1"), Json.fromString("string2")),
+        "object" -> Json.obj(
+          "array" -> Json.arr(
+            Json.fromString("string"),
+            Json.False,
+            Json.obj("number" -> Json.fromInt(1))
+          )
+        )
+      )
+    )
 
     /**
      * A helper method which transforms claims into a JWT and vice versa to check if the same
@@ -214,7 +220,7 @@ class FormatSpec extends Specification with WithBouncyCastle {
      */
     protected def reserved(claim: String): MatchResult[Any] = {
       val message = OverrideReservedClaim.format(claim, ReservedClaims.mkString(", "))
-      writes.write(Claims(custom = JObject(Map(claim -> JString("test"))))) must beFailedTry.like {
+      writes.write(Claims(custom = JsonObject(claim -> Json.fromString("test")))) must beFailedTry.like {
         case e: JwtException => e.getMessage must be equalTo message
       }
     }

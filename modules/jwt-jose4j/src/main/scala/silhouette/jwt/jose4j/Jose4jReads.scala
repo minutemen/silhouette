@@ -19,12 +19,12 @@ package silhouette.jwt.jose4j
 
 import java.time.Instant
 
+import io.circe.{ Json, JsonObject }
 import org.jose4j.jwt.JwtClaims
 import silhouette.jwt.jose4j.Jose4jReads._
 import silhouette.jwt.{ Claims, JwtException, Reads, ReservedClaims }
 
 import scala.collection.JavaConverters._
-import scala.json.ast._
 import scala.util.{ Failure, Try }
 
 /**
@@ -71,7 +71,7 @@ final case class Jose4jReads(consumer: Jose4jConsumer) extends Reads {
         .map(seconds => Instant.ofEpochSecond(seconds)),
       jwtID = Option(claims.getJwtId),
       custom = claims.getClaimsMap(ReservedClaims.asJava).asScala match {
-        case l if l.isEmpty => JObject()
+        case l if l.isEmpty => JsonObject.empty
         case l              => transformCustomClaims(l.asJava)
       }
     )
@@ -83,18 +83,29 @@ final case class Jose4jReads(consumer: Jose4jConsumer) extends Reads {
    * @param claims The custom claims to Transforms.
    * @return A Json object representing the custom claims.
    */
-  private def transformCustomClaims(claims: java.util.Map[String, Object]): JObject = {
-    def toJson(value: Any): JValue = Option(value) match {
-      case None                         => JNull
-      case Some(v: java.lang.String)    => JString(v)
-      case Some(v: java.lang.Number)    => JNumber(v.toString)
-      case Some(v: java.lang.Boolean)   => JBoolean(v)
-      case Some(v: java.util.List[_])   => JArray(v.asScala.toVector.map(toJson))
-      case Some(v: java.util.Map[_, _]) => transformCustomClaims(v.asInstanceOf[java.util.Map[String, Object]])
-      case Some(v)                      => throw new JwtException(UnexpectedJsonValue.format(v))
+  private def transformCustomClaims(claims: java.util.Map[String, Object]): JsonObject = {
+    def fromNumber(number: Number): Json = number match {
+      case v: java.lang.Integer => Json.fromInt(v)
+      case v: java.lang.Long    => Json.fromLong(v)
+      case v: java.lang.Float   => Json.fromFloatOrNull(v)
+      case v: java.lang.Double  => Json.fromDoubleOrNull(v)
+    }
+    def fromMap(map: java.util.Map[_, _]): Json = {
+      Json.fromJsonObject(transformCustomClaims(map.asInstanceOf[java.util.Map[String, Object]]))
+    }
+    def toJson(value: Any): Json = Option(value) match {
+      case None                          => Json.Null
+      case Some(v: java.lang.String)     => Json.fromString(v)
+      case Some(v: java.math.BigInteger) => Json.fromBigInt(v)
+      case Some(v: java.math.BigDecimal) => Json.fromBigDecimal(v)
+      case Some(v: java.lang.Number)     => fromNumber(v)
+      case Some(v: java.lang.Boolean)    => Json.fromBoolean(v)
+      case Some(v: java.util.List[_])    => Json.arr(v.asScala.toVector.map(toJson): _*)
+      case Some(v: java.util.Map[_, _])  => fromMap(v)
+      case Some(v)                       => throw new JwtException(UnexpectedJsonValue.format(v))
     }
 
-    JObject(claims.asScala.toMap.map { case (name, value) => name -> toJson(value) })
+    JsonObject.fromIterable(claims.asScala.toMap.map { case (name, value) => name -> toJson(value) })
   }
 }
 

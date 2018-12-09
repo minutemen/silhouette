@@ -20,12 +20,12 @@ package silhouette.authenticator.format
 import java.time.Instant
 
 import io.circe.syntax._
+import io.circe.{ Json, JsonObject }
 import silhouette.authenticator.{ Authenticator, StatefulWrites, StatelessWrites }
 import silhouette.crypto.Base64
 import silhouette.jwt
 
 import scala.concurrent.Future
-import scala.json.ast.{ JArray, JObject, JString }
 
 /**
  * A format which transforms an [[Authenticator]] into a JWT.
@@ -54,20 +54,22 @@ final case class JwtWrites(
    * @param authenticator The authenticator to transform.
    * @return A JWT on success, an error on failure.
    */
-  override def write(authenticator: Authenticator): Future[String] = Future.fromTry {
-    writes.write(jwt.Claims(
-      issuer = issuer,
-      subject = Some(Base64.encode(authenticator.loginInfo.asJson.toString())),
-      audience = audience,
-      expirationTime = authenticator.expires,
-      notBefore = notBefore,
-      issuedAt = authenticator.touched,
-      jwtID = Some(authenticator.id),
-      custom = JObject(Seq(
-        Some("tags" -> JArray(authenticator.tags.map(JString).toVector)),
-        authenticator.fingerprint.map("fingerprint" -> JString(_)),
-        authenticator.payload.map("payload" -> _)
-      ).flatten.toMap)
-    ))
+  override def write(authenticator: Authenticator): Future[String] = {
+    Future.fromTry {
+      writes.write(jwt.Claims(
+        issuer = issuer,
+        subject = Some(Base64.encode(authenticator.loginInfo.asJson.toString())),
+        audience = audience,
+        expirationTime = authenticator.expires,
+        notBefore = notBefore,
+        issuedAt = authenticator.touched,
+        jwtID = Some(authenticator.id),
+        custom = JsonObject.fromIterable(Seq(
+          Some("tags" -> Json.arr(authenticator.tags.map(Json.fromString): _*)),
+          authenticator.fingerprint.map("fingerprint" -> Json.fromString(_)),
+          authenticator.payload.map("payload" -> _)
+        ).flatten)
+      ))
+    }
   }
 }
