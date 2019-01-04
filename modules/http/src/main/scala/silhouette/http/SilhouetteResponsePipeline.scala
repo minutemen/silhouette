@@ -25,13 +25,11 @@ import silhouette.RichSeq._
  * @param status The HTTP status code.
  * @param headers The headers.
  * @param cookies The cookies.
- * @param session The session.
  */
 protected[silhouette] case class SilhouetteResponse(
   status: Status,
   headers: Seq[Header] = Seq(),
-  cookies: Seq[Cookie] = Seq(),
-  session: Map[String, String] = Map()
+  cookies: Seq[Cookie] = Seq()
 )
 
 /**
@@ -68,7 +66,7 @@ final protected[silhouette] case class SilhouetteResponsePipeline(response: Silh
     val groupedHeaders = headers.groupByPreserveOrder(_.name).map {
       case (key, h) => Header(key, h.flatMap(_.values): _*)
     }
-    val newHeaders = groupedHeaders.foldLeft(response.headers) {
+    val newHeaders = groupedHeaders.foldLeft(this.headers) {
       case (acc, header) =>
         acc.indexWhere(_.name == header.name) match {
           case -1 => acc :+ header
@@ -96,7 +94,7 @@ final protected[silhouette] case class SilhouetteResponsePipeline(response: Silh
    */
   override def withCookies(cookies: Cookie*): ResponsePipeline[SilhouetteResponse] = {
     val filteredCookies = cookies.groupByPreserveOrder(_.name).map(_._2.last)
-    val newCookies = filteredCookies.foldLeft(response.cookies) {
+    val newCookies = filteredCookies.foldLeft(this.cookies) {
       case (acc, cookie) =>
         acc.indexWhere(_.name == cookie.name) match {
           case -1 => acc :+ cookie
@@ -105,44 +103,6 @@ final protected[silhouette] case class SilhouetteResponsePipeline(response: Silh
     }
 
     copy(response.copy(cookies = newCookies))
-  }
-
-  /**
-   * Gets the session data.
-   *
-   * @return The session data.
-   */
-  override def session: Map[String, String] = response.session
-
-  /**
-   * Creates a new response pipeline with the given session data.
-   *
-   * @inheritdoc
-   *
-   * @param data The session data to add.
-   * @return A new response pipeline instance with the added session data.
-   */
-  override def withSession(data: (String, String)*): ResponsePipeline[SilhouetteResponse] = {
-    val filteredData = data.groupByPreserveOrder(_._1).map(_._2.last)
-    val newData = filteredData.foldLeft(response.session) {
-      case (acc, (key, value)) => acc + (key -> value)
-    }
-
-    copy(response.copy(session = newData))
-  }
-
-  /**
-   * Removes session data from response.
-   *
-   * @param keys The session keys to remove.
-   * @return A new response pipeline instance with the removed session data.
-   */
-  override def withoutSession(keys: String*): ResponsePipeline[SilhouetteResponse] = {
-    val newData = keys.foldLeft(response.session) {
-      case (acc, key) => acc - key
-    }
-
-    copy(response.copy(session = newData))
   }
 
   /**

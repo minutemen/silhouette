@@ -68,7 +68,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
         case None =>
           skipped("authorizationURI is not defined, so this step isn't needed for provider: " + c.provider.getClass)
         case Some(_) =>
-          c.stateHandler.serialize(c.state) returns Some("session-value")
+          c.stateHandler.serialize(c.state) returns Some("value")
           c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
           c.stateHandler.state returns Future.successful(c.state)
           c.config.authorizationURI returns None
@@ -84,22 +84,24 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
         case None =>
           skipped("authorizationURI is not defined, so this step isn't needed for provider: " + c.provider.getClass)
         case Some(authorizationURI) =>
-          val sessionKey = "session-key"
-          val sessionValue = "session-value"
+          val headerName = "header-name"
+          val headerValue = "header-value"
 
-          c.stateHandler.serialize(c.state) returns Some(sessionValue)
+          c.stateHandler.serialize(c.state) returns Some(headerValue)
           c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
           c.stateHandler.state returns Future.successful(c.state)
           c.stateHandler.publish[SilhouetteRequest, SilhouetteResponse](any(), any())(any()) answers { (a, _) =>
             val result = a.asInstanceOf[Array[Any]](0).asInstanceOf[Fake.Response]
             val state = a.asInstanceOf[Array[Any]](1).asInstanceOf[c.TestState]
 
-            result.withSession(sessionKey -> c.stateHandler.serialize(state).getOrElse(""))
+            result.withHeaders(Header(headerName, c.stateHandler.serialize(state).getOrElse("")))
           }
 
           result(c.provider.authenticate()(Fake.request)) { result =>
             await(result).status must equalTo(Status.`See Other`)
-            await(result).session.get(sessionKey) must beSome(c.stateHandler.serialize(c.state).getOrElse(""))
+            await(result).header(headerName) must beSome(
+              Header(headerName, c.stateHandler.serialize(c.state).getOrElse(""))
+            )
             await(result).header(Header.Name.Location) must beSome.which { header =>
               val urlParams = c.urlParams(header.values.head)
               val params = List(
@@ -485,19 +487,13 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
         val uri = ConfigURI(s"$scheme://www.example.com/request-path/something")
         val request = Fake.request(uri)
 
-        val sessionKey = "session-key"
-        val sessionValue = "session-value"
-
         c.config.redirectURI returns redirectUri
 
-        c.stateHandler.serialize(c.state) returns Some(sessionValue)
+        c.stateHandler.serialize(c.state) returns Some("value")
         c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
         c.stateHandler.state returns Future.successful(c.state)
         c.stateHandler.publish[SilhouetteRequest, SilhouetteResponse](any(), any())(any()) answers { (a, _) =>
-          val result = a.asInstanceOf[Array[Any]](0).asInstanceOf[Fake.Response]
-          val state = a.asInstanceOf[Array[Any]](1).asInstanceOf[BaseContext#TestState]
-
-          result.withSession(sessionKey -> c.stateHandler.serialize(state).getOrElse(""))
+          a.asInstanceOf[Array[Any]](0).asInstanceOf[Fake.Response]
         }
 
         redirectUri match {

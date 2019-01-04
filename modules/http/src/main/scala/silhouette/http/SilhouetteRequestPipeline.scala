@@ -17,7 +17,7 @@
  */
 package silhouette.http
 
-import java.net.{ URI, URLEncoder }
+import java.net.URI
 
 import silhouette.RichSeq._
 
@@ -28,7 +28,6 @@ import silhouette.RichSeq._
  * @param method      The HTTP request method.
  * @param headers     The headers.
  * @param cookies     The cookies.
- * @param session     The session.
  * @param queryParams The query params.
  */
 protected[silhouette] case class SilhouetteRequest(
@@ -36,7 +35,6 @@ protected[silhouette] case class SilhouetteRequest(
   method: Method,
   headers: Seq[Header] = Seq(),
   cookies: Seq[Cookie] = Seq(),
-  session: Map[String, String] = Map(),
   queryParams: Map[String, Seq[String]] = Map()
 )
 
@@ -51,7 +49,7 @@ final protected[silhouette] case class SilhouetteRequestPipeline(request: Silhou
   /**
    * Gets the absolute URI of the request target.
    *
-   * This must contain the absolute URI of thr request target, because we need this to resolve relative URIs
+   * This must contain the absolute URI of the request target, because we need this to resolve relative URIs
    * against this.
    *
    * @return The absolute URI of the request target.
@@ -61,7 +59,7 @@ final protected[silhouette] case class SilhouetteRequestPipeline(request: Silhou
   /**
    * Creates a new request pipeline with the given URI.
    *
-   * This must contain the absolute URI of thr request target, because we need this to resolve relative URIs
+   * This must contain the absolute URI of the request target, because we need this to resolve relative URIs
    * against this URI.
    *
    * @param uri The absolute URI of the request target.
@@ -140,42 +138,6 @@ final protected[silhouette] case class SilhouetteRequestPipeline(request: Silhou
     }
 
     copy(request.copy(cookies = newCookies))
-  }
-
-  /**
-   * Gets the session data.
-   *
-   * @return The session data.
-   */
-  override def session: Map[String, String] = request.session
-
-  /**
-   * Creates a new request pipeline with the given session data.
-   *
-   * @inheritdoc
-   *
-   * @param data The session data to set.
-   * @return A new request pipeline instance with the set session data.
-   */
-  override def withSession(data: (String, String)*): RequestPipeline[SilhouetteRequest] = {
-    val filteredData = data.groupByPreserveOrder(_._1).map(_._2.last)
-    val newData = filteredData.foldLeft(request.session) {
-      case (acc, (key, value)) => acc + (key -> value)
-    }
-
-    copy(request.copy(session = newData))
-  }
-
-  /**
-   * Gets the raw query string.
-   *
-   * @return The raw query string.
-   */
-  override def rawQueryString: String = {
-    queryParams.foldLeft(Seq[String]()) {
-      case (acc, (key, value)) =>
-        acc :+ value.map(URLEncoder.encode(key, "UTF-8") + "=" + URLEncoder.encode(_, "UTF-8")).mkString("&")
-    }.mkString("&")
   }
 
   /**

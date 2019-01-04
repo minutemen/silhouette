@@ -17,6 +17,8 @@
  */
 package silhouette.http
 
+import scala.language.implicitConversions
+
 /**
  * Represents a HTTP request method.
  *
@@ -28,6 +30,9 @@ sealed abstract class Method(val value: String)
  * The HTTP request methods.
  */
 object Method {
+  implicit def toString(method: Method): String = method.value
+  implicit def fromString(method: String): Method = new Method(method) {}
+
   case object GET extends Method("GET")
   case object POST extends Method("POST")
   case object PUT extends Method("PUT")

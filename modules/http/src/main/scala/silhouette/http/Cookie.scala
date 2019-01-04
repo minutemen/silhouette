@@ -27,7 +27,7 @@ package silhouette.http
  * @param maxAge   The cookie expiration date in seconds, `None` for a transient cookie, or a value less than 0 to
  *                 expire a cookie now.
  * @param domain   The cookie domain.
- * @param path     The the cookie path.
+ * @param path     The cookie path.
  * @param secure   Whether this cookie is secured, sent only for HTTPS requests.
  * @param httpOnly Whether this cookie is HTTP only, i.e. not accessible from client-side JavaScript code.
  * @param sameSite Whether this cookie forces the SameSite policy to prevent CSRF attacks.
