@@ -17,7 +17,7 @@
  */
 package silhouette.http
 
-import java.net.URI
+import java.net.{ URI, URLEncoder }
 
 import silhouette.crypto.Hash
 import silhouette.crypto.Hash._
@@ -204,74 +204,22 @@ protected[silhouette] trait RequestPipeline[R] extends RequestExtractor[R] {
   def withCookies(cookies: Cookie*): RequestPipeline[R]
 
   /**
-   * Gets the session data.
-   *
-   * @return The session data.
-   */
-  def session: Map[String, String]
-
-  /**
-   * Creates a new request pipeline with the given session data.
-   *
-   * This method must override any existing session data with the same name. If multiple session data with the
-   * same key are given to this method, then the last session data in the list wins.
-   *
-   * If a request holds the following session data, then this method must implement the following behaviour:
-   * {{{
-   *   Map(
-   *     "test1" -> "value1",
-   *     "test2" -> "value2"
-   *   )
-   * }}}
-   *
-   * Append new session data:
-   * {{{
-   *   withSession("test3" -> "value3")
-   *
-   *   Map(
-   *     "test1" -> "value1",
-   *     "test2" -> "value2",
-   *     "test3" -> "value3"
-   *   )
-   * }}}
-   *
-   * Override the session data with the key `test1`:
-   * {{{
-   *   withSession("test1" -> "value3")
-   *
-   *   Map(
-   *     "test1" -> "value3",
-   *     "test2" -> "value2"
-   *   )
-   * }}}
-   *
-   * Use the last session data if multiple session data with the same key are given:
-   * {{{
-   *   withSession("test1" -> "value3", "test1" -> "value4")
-   *
-   *   Map(
-   *     "test1" -> "value4",
-   *     "test2" -> "value2"
-   *   )
-   * }}}
-   *
-   * @param data The session data to set.
-   * @return A new request pipeline instance with the set session data.
-   */
-  def withSession(data: (String, String)*): RequestPipeline[R]
-
-  /**
    * Gets the raw query string.
    *
    * @return The raw query string.
    */
-  def rawQueryString: String
+  def rawQueryString: String = {
+    queryParams.foldLeft(List[String]()) {
+      case (acc, (key, value)) =>
+        acc :+ value.map(URLEncoder.encode(key, "UTF-8") + "=" + URLEncoder.encode(_, "UTF-8")).mkString("&")
+    }.mkString("&")
+  }
 
   /**
    * Gets all query params.
    *
    * While there is no definitive standard, most web frameworks allow duplicate params with the
-   * same name. Therefore we must define a query param values as sequence of values.
+   * same name. Therefore we must define a query param values as list of values.
    *
    * @return All query params.
    */
@@ -281,7 +229,7 @@ protected[silhouette] trait RequestPipeline[R] extends RequestExtractor[R] {
    * Gets the values for a query param.
    *
    * While there is no definitive standard, most web frameworks allow duplicate params with the
-   * same name. Therefore we must define a query param values as sequence of values.
+   * same name. Therefore we must define a query param values as list of values.
    *
    * @param name The name of the query param for which the values should be returned.
    * @return A list of param values for the given name or an empty list if no params for the given name could be found.

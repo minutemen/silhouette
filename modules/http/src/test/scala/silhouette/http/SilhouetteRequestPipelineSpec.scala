@@ -127,36 +127,6 @@ class SilhouetteRequestPipelineSpec extends Specification {
     }
   }
 
-  "The `session` method" should {
-    "return all session data" in new Context {
-      requestPipeline.session must be equalTo request.session
-    }
-  }
-
-  "The `withSession` method" should {
-    "append new session data" in new Context {
-      requestPipeline.withSession("test3" -> "value3").session must be equalTo Map(
-        "test1" -> "value1",
-        "test2" -> "value2",
-        "test3" -> "value3"
-      )
-    }
-
-    "override existing session data" in new Context {
-      requestPipeline.withSession("test1" -> "value3").session must be equalTo Map(
-        "test1" -> "value3",
-        "test2" -> "value2"
-      )
-    }
-
-    "use the last session data if multiple session data with the same name are given" in new Context {
-      requestPipeline.withSession("test1" -> "value3", "test1" -> "value4").session must be equalTo Map(
-        "test1" -> "value4",
-        "test2" -> "value2"
-      )
-    }
-  }
-
   "The `rawQueryString` method" should {
     "return the raw query string" in new Context {
       requestPipeline.rawQueryString must be equalTo "test1=value1&test1=value2&test2=value1"
@@ -263,12 +233,11 @@ class SilhouetteRequestPipelineSpec extends Specification {
       val userAgent = "test-user-agent"
       val acceptLanguage = "test-accept-language"
       val acceptCharset = "test-accept-charset"
-      val acceptEncoding = "test-accept-encoding"
       requestPipeline.withHeaders(
-        Header("User-Agent", userAgent),
-        Header("Accept-Language", acceptLanguage),
-        Header("Accept-Charset", acceptCharset),
-        Header("Accept-Encoding", "gzip", "deflate")
+        Header(Header.Name.`User-Agent`, userAgent),
+        Header(Header.Name.`Accept-Language`, acceptLanguage),
+        Header(Header.Name.`Accept-Charset`, acceptCharset),
+        Header(Header.Name.`Accept-Encoding`, "gzip", "deflate")
       ).fingerprint(request => Hash.sha1(new StringBuilder()
           .append(request.headers.find(_.name == Header.Name.`User-Agent`).map(_.value).getOrElse("")).append(":")
           .append(request.headers.find(_.name == Header.Name.`Accept-Language`).map(_.value).getOrElse("")).append(":")
@@ -305,10 +274,6 @@ class SilhouetteRequestPipelineSpec extends Specification {
       cookies = Seq(
         Cookie("test1", "value1"),
         Cookie("test2", "value2")
-      ),
-      session = Map(
-        "test1" -> "value1",
-        "test2" -> "value2"
       ),
       queryParams = Map(
         "test1" -> Seq("value1", "value2"),

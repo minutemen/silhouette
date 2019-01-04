@@ -123,48 +123,6 @@ class SilhouetteResponsePipelineSpec extends Specification {
     }
   }
 
-  "The `session` method" should {
-    "return all session data" in new Context {
-      responsePipeline.session must be equalTo response.session
-    }
-  }
-
-  "The `withSession` method" should {
-    "append new session data" in new Context {
-      responsePipeline.withSession("test3" -> "value3").session must be equalTo Map(
-        "test1" -> "value1",
-        "test2" -> "value2",
-        "test3" -> "value3"
-      )
-    }
-
-    "override existing session data" in new Context {
-      responsePipeline.withSession("test1" -> "value3").session must be equalTo Map(
-        "test1" -> "value3",
-        "test2" -> "value2"
-      )
-    }
-
-    "use the last session data if multiple session data with the same name are given" in new Context {
-      responsePipeline.withSession("test1" -> "value3", "test1" -> "value4").session must be equalTo Map(
-        "test1" -> "value4",
-        "test2" -> "value2"
-      )
-    }
-  }
-
-  "The `withSession` method" should {
-    "remove session data" in new Context {
-      responsePipeline.withoutSession("test1").session must be equalTo Map(
-        "test2" -> "value2"
-      )
-    }
-
-    "remove multiple keys" in new Context {
-      responsePipeline.withoutSession("test1", "test2").session must beEmpty
-    }
-  }
-
   "The `unbox` method" should {
     "return the handled response" in new Context {
       responsePipeline.unbox must be equalTo response
@@ -188,10 +146,6 @@ class SilhouetteResponsePipelineSpec extends Specification {
       cookies = Seq(
         Cookie("test1", "value1"),
         Cookie("test2", "value2")
-      ),
-      session = Map(
-        "test1" -> "value1",
-        "test2" -> "value2"
       )
     )
 

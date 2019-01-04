@@ -32,14 +32,12 @@ package object http {
       method: Method = Method.GET,
       headers: Seq[Header] = Seq(),
       cookies: Seq[Cookie] = Seq(),
-      session: Map[String, String] = Map(),
       queryParams: Map[String, Seq[String]] = Map()
     ): Request = SilhouetteRequestPipeline(SilhouetteRequest(
       uri,
       method,
       headers,
       cookies,
-      session,
       queryParams
     ))
     def request: Request = request()
