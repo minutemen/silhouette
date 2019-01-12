@@ -19,10 +19,10 @@ package silhouette.provider.oauth2
 
 import java.nio.file.Paths
 
-import silhouette.{ LoginInfo, ConfigURI }
-import silhouette.http.client.BodyFormat._
-import silhouette.http.client.{ Body, Response }
-import silhouette.http.{ Header, Method, Status }
+import silhouette.{ ConfigURI, LoginInfo }
+import silhouette.http.BodyFormat._
+import silhouette.http.client.Response
+import silhouette.http.{ Body, Header, Method, Status }
 import silhouette.provider.oauth2.DropboxProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social.SocialProvider.UnspecifiedProfileError

@@ -20,11 +20,48 @@ package silhouette.http
 import com.typesafe.scalalogging.LazyLogging
 
 /**
+ * Represents the result of an extraction try.
+ */
+protected[silhouette] sealed trait ExtractionResult
+
+/**
+ * Indicates that no body was sent in the request.
+ */
+protected[silhouette] case object EmptyBody extends ExtractionResult
+
+/**
+ * Indicates that the body isn't of the specific content type.
+ *
+ * @param found    The found content type.
+ * @param expected The list of expected content types.
+ */
+protected[silhouette] case class WrongContentType(found: MimeType, expected: Seq[MimeType]) extends ExtractionResult
+
+/**
+ * Indicates that the value couldn't be found in the body.
+ */
+protected[silhouette] case object NotFound extends ExtractionResult
+
+/**
+ * Indicates that an error occurred during the extraction try.
+ *
+ * @param error The extraction error.
+ */
+protected[silhouette] case class ExtractionError(error: Throwable) extends ExtractionResult
+
+/**
+ * Represents the extracted value.
+ *
+ * @param value The extracted value.
+ */
+protected[silhouette] case class ExtractedValue(value: String) extends ExtractionResult
+
+/**
  * Adds the ability to extract values from a request.
  *
  * @tparam R The type of the request.
  */
-trait RequestExtractor[R] extends LazyLogging {
+protected[silhouette] trait RequestExtractor[R] extends LazyLogging {
   self: RequestPipeline[R] =>
 
   /**
@@ -33,7 +70,7 @@ trait RequestExtractor[R] extends LazyLogging {
   type Parts = Seq[RequestPart.Value]
 
   /**
-   * The request body extractor used to extract values from request body.
+   * The body extractor implementation.
    */
   val bodyExtractor: RequestBodyExtractor[R]
 
@@ -43,14 +80,14 @@ trait RequestExtractor[R] extends LazyLogging {
    * @param name  The name of the value to extract.
    * @param parts Some request parts from which a value can be extracted or None to extract values from any part
    *              of the request.
-   * @return The extracted value as string.
+   * @return Maybe the extracted value as string.
    */
   def extractString(name: String, parts: Option[Parts] = None): Option[String] = {
     fromQueryString(name, parts)
       .orElse(fromHeaders(name, parts))
-      .orElse(fromFormUrlEncoded(name, parts))
-      .orElse(fromJson(name, parts))
-      .orElse(fromXml(name, parts))
+      .orElse(fromFormUrlEncodedBody(name, parts))
+      .orElse(fromJsonBody(name, parts))
+      .orElse(fromXmlBody(name, parts))
   }
 
   /**
@@ -58,7 +95,7 @@ trait RequestExtractor[R] extends LazyLogging {
    *
    * @param name  The name of the value to extract.
    * @param parts The request parts from which a value can be extracted.
-   * @return The extracted value as string.
+   * @return Maybe the extracted value as string.
    */
   protected def fromQueryString(name: String, parts: Option[Parts]): Option[String] = {
     isAllowed(RequestPart.QueryString, parts) {
@@ -72,7 +109,7 @@ trait RequestExtractor[R] extends LazyLogging {
    *
    * @param name  The name of the value to extract.
    * @param parts The request parts from which a value can be extracted.
-   * @return The extracted value as string.
+   * @return Maybe the extracted value as string.
    */
   protected def fromHeaders(name: String, parts: Option[Parts]): Option[String] = {
     isAllowed(RequestPart.Headers, parts) {
@@ -86,15 +123,11 @@ trait RequestExtractor[R] extends LazyLogging {
    *
    * @param name  The name of the value to extract.
    * @param parts The request parts from which a value can be extracted.
-   * @return The extracted value as string.
+   * @return Maybe the extracted value as string.
    */
-  protected def fromFormUrlEncoded(name: String, parts: Option[Parts]): Option[String] = {
+  protected def fromFormUrlEncodedBody(name: String, parts: Option[Parts]): Option[String] = {
     isAllowed(RequestPart.FormUrlEncodedBody, parts) {
-      bodyExtractor.fromFormUrlEncoded(name).flatMap {
-        case (body, maybeValue) =>
-          logger.debug(s"Try to extract value with name `$name` from form url encoded body: $body")
-          maybeValue
-      }
+      fromBody("form-url-encoded", name, (bodyExtractor.fromFormUrlEncoded _).curried)
     }
   }
 
@@ -103,15 +136,11 @@ trait RequestExtractor[R] extends LazyLogging {
    *
    * @param name  The name of the value to extract.
    * @param parts The request parts from which a value can be extracted.
-   * @return The extracted value.
+   * @return Maybe the extracted value as string.
    */
-  protected def fromJson(name: String, parts: Option[Parts]): Option[String] = {
+  protected def fromJsonBody(name: String, parts: Option[Parts]): Option[String] = {
     isAllowed(RequestPart.JsonBody, parts) {
-      bodyExtractor.fromJson(name).flatMap {
-        case (body, maybeValue) =>
-          logger.debug(s"Try to extract value with name `$name` from Json body: $body")
-          maybeValue
-      }
+      fromBody("JSON", name, (bodyExtractor.fromJson _).curried)
     }
   }
 
@@ -120,15 +149,45 @@ trait RequestExtractor[R] extends LazyLogging {
    *
    * @param name  The name of the value to extract.
    * @param parts The request parts from which a value can be extracted.
-   * @return The extracted value.
+   * @return Maybe the extracted value as string.
    */
-  protected def fromXml(name: String, parts: Option[Parts]): Option[String] = {
+  protected def fromXmlBody(name: String, parts: Option[Parts]): Option[String] = {
     isAllowed(RequestPart.XMLBody, parts) {
-      bodyExtractor.fromXml(name).flatMap {
-        case (body, maybeValue) =>
-          logger.debug(s"Try to extract value with name `$name` from Xml body: $body")
-          maybeValue
-      }
+      fromBody("XML", name, (bodyExtractor.fromXml _).curried)
+    }
+  }
+
+  /**
+   * Extracts a value from a body with the help of the concrete extractor.
+   *
+   * @param `type`    The type of the body as string.
+   * @param name      The name of the value to extract.
+   * @param extractor The extractor function.
+   * @return Maybe the extracted value as string.
+   */
+  private def fromBody(`type`: String, name: String, extractor: R => String => ExtractionResult): Option[String] = {
+    logger.debug(s"Try to extract value with name `$name` from ${`type`} body")
+    extractor(request)(name) match {
+      case EmptyBody =>
+        logger.debug("Body is empty")
+        None
+      case WrongContentType(found, expected) =>
+        logger.debug(s"Body isn't of content type ${expected.mkString(", ")}; instead found $found")
+        None
+      case NotFound =>
+        logger.debug(s"Couldn't found value with name `$name`in body: ${bodyExtractor.raw(request)}")
+        None
+      case ExtractedValue(value) =>
+        logger.debug(
+          s"Successfully extracted value with name `$name` from ${`type`} body: ${bodyExtractor.raw(request)}"
+        )
+        Some(value)
+      case ExtractionError(error) =>
+        logger.error(
+          s"Failed to extract value with name `$name` from ${`type`} body: ${bodyExtractor.raw(request)}",
+          error
+        )
+        None
     }
   }
 
@@ -151,42 +210,42 @@ trait RequestExtractor[R] extends LazyLogging {
 /**
  * The body extractor helps to extract values from the body of a request.
  */
-trait RequestBodyExtractor[R] {
+protected[silhouette] trait RequestBodyExtractor[R] {
 
   /**
-   * The value of the body.
+   * Gets the raw string representation of the body for debugging purpose.
    *
-   * If the body isn't from the specific type, then the value should be None.
-   * If the body is from the specific type then the value should be Some.
-   *   - The first tuple value should be the string representation of the body.
-   *   - The second tuple value should be either the extracted value or None if the value couldn't
-   *     be found for the given name.
+   * @param request The request from which the body should be extracted.
+   * @return The raw string representation of the body for debugging purpose.
    */
-  type BodyValue = Option[(String, Option[String])]
+  def raw(request: R): String
 
   /**
-   * Extracts a value from Json body.
+   * Extracts a value from JSON body.
    *
-   * @param name The name of the value to extract.
-   * @return [[BodyValue]]
+   * @param request The request from which the body should be extracted.
+   * @param name    The name of the value to extract.
+   * @return The extracted value on success, otherwise an error on failure.
    */
-  def fromJson(name: String): BodyValue
+  def fromJson(request: R, name: String): ExtractionResult
 
   /**
-   * Extracts a value from Xml body.
+   * Extracts a value from XML body.
    *
-   * @param name The name of the value to extract.
-   * @return [[BodyValue]]
+   * @param request The request from which the body should be extracted.
+   * @param name    The name of the value to extract.
+   * @return The extracted value on success, otherwise an error on failure.
    */
-  def fromXml(name: String): BodyValue
+  def fromXml(request: R, name: String): ExtractionResult
 
   /**
-   * Extracts a value from form url encoded body.
+   * Extracts a value from form-url-encoded body.
    *
-   * @param name The name of the value to extract.
-   * @return [[BodyValue]]
+   * @param request The request from which the body should be extracted.
+   * @param name    The name of the value to extract.
+   * @return The extracted value on success, otherwise an error on failure.
    */
-  def fromFormUrlEncoded(name: String): BodyValue
+  def fromFormUrlEncoded(request: R, name: String): ExtractionResult
 }
 
 /**
@@ -215,7 +274,7 @@ object RequestPart extends Enumeration {
   val XMLBody = Value("xml-body")
 
   /**
-   * Allows to extract a request value from a form-urlencoded body.
+   * Allows to extract a request value from a form-url-encoded body.
    */
-  val FormUrlEncodedBody = Value("form-urlencoded-body")
+  val FormUrlEncodedBody = Value("form-url-encoded-body")
 }

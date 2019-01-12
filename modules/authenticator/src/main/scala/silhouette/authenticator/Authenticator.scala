@@ -21,7 +21,7 @@ import java.time.{ Clock, Instant }
 
 import io.circe.Json
 import silhouette.LoginInfo
-import silhouette.authenticator.Authenticator.Implicits._
+import silhouette.RichInstant._
 import silhouette.http.RequestPipeline
 
 import scala.concurrent.duration._
@@ -112,7 +112,7 @@ final case class Authenticator(
    * @param fingerprintGenerator The fingerprint generator.
    * @return A copy of this authenticator with a custom fingerprint.
    */
-  def withFingerPrint[R](fingerprintGenerator: R => String)(
+  def withFingerPrint[R](fingerprintGenerator: RequestPipeline[R] => String)(
     implicit
     requestPipeline: RequestPipeline[R]
   ): Authenticator =
@@ -153,55 +153,5 @@ final case class Authenticator(
     ec: ExecutionContext
   ): Future[Boolean] = {
     Future.sequence(validators.map(_.isValid(this))).map(!_.exists(!_))
-  }
-}
-
-/**
- * The `Authenticator` companion object.
- */
-object Authenticator {
-
-  /**
-   * Some implicits.
-   */
-  object Implicits {
-
-    /**
-     * Defines additional methods on an `DateTime` instance.
-     *
-     * @param instant The [[java.time.Instant]] instance on which the additional methods should be defined.
-     */
-    implicit class RichInstant(instant: Instant) {
-
-      /**
-       * Adds a duration to an instant.
-       *
-       * @param duration The duration to add.
-       * @return An [[java.time.Instant]] instance with the added duration.
-       */
-      def +(duration: FiniteDuration): Instant = {
-        instant.plusMillis(duration.toMillis)
-      }
-
-      /**
-       * Subtracts an instant from an instant and returns the duration of it.
-       *
-       * @param sub The instant to subtract.
-       * @return An [[java.time.Instant]] instance with the added instance.
-       */
-      def -(sub: Instant): FiniteDuration = {
-        FiniteDuration(instant.minusMillis(sub.toEpochMilli).toEpochMilli, MILLISECONDS)
-      }
-
-      /**
-       * Subtracts a duration from an instant.
-       *
-       * @param duration The duration to subtract.
-       * @return A [[java.time.Instant]] instance with the subtracted duration.
-       */
-      def -(duration: FiniteDuration): Instant = {
-        instant.minusMillis(duration.toMillis)
-      }
-    }
   }
 }

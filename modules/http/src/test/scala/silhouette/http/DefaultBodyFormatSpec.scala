@@ -15,20 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.http.client
+package silhouette.http
 
 import io.circe.Json
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.TransformException
-import silhouette.http.MimeType
-import silhouette.http.client.BodyFormat._
-import silhouette.http.client.DefaultBodyFormat._
+import silhouette.http.BodyFormat._
+import silhouette.http.DefaultBodyFormat._
+import silhouette.http.client.UnsupportedContentTypeException
 
 import scala.xml.Node
 
 /**
- * Test case for the [[DefaultBodyFormat]] class.
+ * Test case for the [[silhouette.http.DefaultBodyFormat]] class.
  */
 class DefaultBodyFormatSpec extends Specification {
 
@@ -37,10 +37,9 @@ class DefaultBodyFormatSpec extends Specification {
       validStringBody.raw must be equalTo validString
     }
 
-    // Todo: Check if this reult is correct?
-    /*"return the raw string of a form URL encoded body" in new Context {
+    "return the raw string of a form URL encoded body" in new Context {
       validFormUrlEncodedBody.raw must be equalTo validFormUrlEncodedString
-    }*/
+    }
 
     "return the raw string of a JSON body" in new Context {
       validJsonBody.raw must be equalTo validJson
@@ -57,7 +56,7 @@ class DefaultBodyFormatSpec extends Specification {
     }
 
     "transform a Body as Map[String, Seq[String]]" in new Context {
-      validFormUrlEncodedBody.as[Map[String, Seq[String]]] must beSuccessfulTry(validFormUrlEncodedMap)
+      validFormUrlEncodedBody.as[Map[String, Seq[String]]] must beSuccessfulTry(validFormUrlEncoded)
     }
 
     "transform a Body as Json object" in new Context {
@@ -82,10 +81,10 @@ class DefaultBodyFormatSpec extends Specification {
       }
     }
 
-    "return a Failure on unsupported content-type" in new Context {
+    "return a Failure on unsupported content type" in new Context {
       validXmlBody.as[String] must beFailedTry.like {
         case e: UnsupportedContentTypeException =>
-          e.getMessage must be equalTo errorMsg(MimeType.`text/plain`, MimeType.`application/xml`)
+          e.getMessage must be equalTo errorMsg(MimeType.`text/plain`, XmlBody.contentType)
       }
       validXmlBody.as[Map[String, Seq[String]]] must beFailedTry.like {
         case e: UnsupportedContentTypeException =>
@@ -95,31 +94,31 @@ class DefaultBodyFormatSpec extends Specification {
       }
       validXmlBody.as[Json] must beFailedTry.like {
         case e: UnsupportedContentTypeException =>
-          e.getMessage must be equalTo errorMsg(MimeType.`application/json`, MimeType.`application/xml`)
+          e.getMessage must be equalTo errorMsg(JsonBody.allowedTypes, MimeType.`application/xml`)
       }
       validJsonBody.as[Node] must beFailedTry.like {
         case e: UnsupportedContentTypeException =>
-          e.getMessage must be equalTo errorMsg(MimeType.`application/xml`, MimeType.`application/json`)
+          e.getMessage must be equalTo errorMsg(XmlBody.allowedTypes, MimeType.`application/json`)
       }
     }
   }
 
   "The `read` method of the BodyFormat[String]` format" should {
     "throw an `UnsupportedContentTypeException` if the content type isn't of type `text/plain`" in new Context {
-      BodyFormat.stringFormat.read(validXmlBody) must beFailedTry.like {
+      BodyFormat.stringReads.read(validXmlBody) must beFailedTry.like {
         case e: UnsupportedContentTypeException =>
           e.getMessage must be equalTo errorMsg(MimeType.`text/plain`, MimeType.`application/xml`)
       }
     }
 
     "return a string from a body" in new Context {
-      BodyFormat.stringFormat.read(validStringBody) must beSuccessfulTry.withValue(validString)
+      BodyFormat.stringReads.read(validStringBody) must beSuccessfulTry.withValue(validString)
     }
   }
 
   "The `write` method of the `BodyFormat[String]` format" should {
     "return a Body instance" in new Context {
-      val body = BodyFormat.stringFormat.write(validString)
+      val body = BodyFormat.stringWrites(Body.DefaultCodec).write(validString)
 
       body.contentType must be equalTo validStringBody.contentType
       body.codec must be equalTo validStringBody.codec
@@ -130,7 +129,7 @@ class DefaultBodyFormatSpec extends Specification {
   "The `read` method of the BodyFormat[Map[String, Seq[String]]]` format" should {
     "throw an `UnsupportedContentTypeException` if the content type isn't of type " +
       "`application/x-www-form-urlencoded`" in new Context {
-        BodyFormat.formUrlEncodedFormat.read(validXmlBody) must beFailedTry.like {
+        BodyFormat.formUrlEncodedReads.read(validXmlBody) must beFailedTry.like {
           case e: UnsupportedContentTypeException =>
             e.getMessage must be equalTo errorMsg(
               MimeType.`application/x-www-form-urlencoded`, MimeType.`application/xml`
@@ -139,19 +138,19 @@ class DefaultBodyFormatSpec extends Specification {
       }
 
     "return a Map[String, Seq[String]] from a valid form URL encoded body" in new Context {
-      BodyFormat.formUrlEncodedFormat.read(validFormUrlEncodedBody) must beSuccessfulTry
-        .withValue(validFormUrlEncodedMap)
+      BodyFormat.formUrlEncodedReads.read(validFormUrlEncodedBody) must beSuccessfulTry
+        .withValue(validFormUrlEncoded)
     }
 
     "return a Map[String, Seq[String]] from an empty form URL encoded body" in new Context {
-      BodyFormat.formUrlEncodedFormat.read(emptyFormUrlEncodedBody) must beSuccessfulTry
-        .withValue(emptyFormUrlEncodedMap)
+      BodyFormat.formUrlEncodedReads.read(emptyFormUrlEncodedBody) must beSuccessfulTry
+        .withValue(emptyFormUrlEncoded)
     }
   }
 
   "The `write` method of the `BodyFormat[Map[String, Seq[String]]]` format" should {
     "return a Body instance" in new Context {
-      val body = BodyFormat.formUrlEncodedFormat.write(validFormUrlEncodedMap)
+      val body = BodyFormat.formUrlEncodedWrites(Body.DefaultCodec).write(validFormUrlEncoded)
 
       body.contentType must be equalTo validFormUrlEncodedBody.contentType
       body.codec must be equalTo validFormUrlEncodedBody.codec
@@ -161,28 +160,28 @@ class DefaultBodyFormatSpec extends Specification {
 
   "The `read` method of the BodyFormat[Json]` format" should {
     "throw an `UnsupportedContentTypeException` if the content type isn't of type `application/json`" in new Context {
-      BodyFormat.circeJsonFormat.read(validXmlBody) must beFailedTry.like {
+      BodyFormat.circeJsonReads.read(validXmlBody) must beFailedTry.like {
         case e: UnsupportedContentTypeException =>
-          e.getMessage must be equalTo errorMsg(MimeType.`application/json`, MimeType.`application/xml`)
+          e.getMessage must be equalTo errorMsg(JsonBody.allowedTypes, MimeType.`application/xml`)
       }
     }
 
     "throw an `TransformException` if the given JSON body is invalid" in new Context {
-      BodyFormat.circeJsonFormat.read(invalidJsonBody) must beFailedTry.withThrowable[TransformException]
+      BodyFormat.circeJsonReads.read(invalidJsonBody) must beFailedTry.withThrowable[TransformException]
     }
 
     "return a Json object from a valid JSON body" in new Context {
-      BodyFormat.circeJsonFormat.read(validJsonBody) must beSuccessfulTry.withValue(parseJson(validJson))
+      BodyFormat.circeJsonReads.read(validJsonBody) must beSuccessfulTry.withValue(parseJson(validJson))
     }
 
     "return a Json object from an empty JSON body" in new Context {
-      BodyFormat.circeJsonFormat.read(emptyJsonBody) must beSuccessfulTry.withValue(parseJson(emptyJson))
+      BodyFormat.circeJsonReads.read(emptyJsonBody) must beSuccessfulTry.withValue(parseJson(emptyJson))
     }
   }
 
   "The `write` method of the `BodyFormat[Json]` format" should {
     "return a Body instance" in new Context {
-      val body = BodyFormat.circeJsonFormat.write(parseJson(validJson))
+      val body = BodyFormat.circeJsonWrites(Body.DefaultCodec).write(parseJson(validJson))
 
       body.contentType must be equalTo validJsonBody.contentType
       body.codec must be equalTo validJsonBody.codec
@@ -192,24 +191,24 @@ class DefaultBodyFormatSpec extends Specification {
 
   "The `read` method of the BodyFormat[Node]` format" should {
     "throw an `UnsupportedContentTypeException` if the content type isn't of type `application/xml`" in new Context {
-      BodyFormat.scalaXmlFormat.read(validJsonBody) must beFailedTry.like {
+      BodyFormat.scalaXmlReads.read(validJsonBody) must beFailedTry.like {
         case e: UnsupportedContentTypeException =>
-          e.getMessage must be equalTo errorMsg(MimeType.`application/xml`, MimeType.`application/json`)
+          e.getMessage must be equalTo errorMsg(XmlBody.allowedTypes, MimeType.`application/json`)
       }
     }
 
     "throw an `TransformException` if the given XML body is invalid" in new Context {
-      BodyFormat.scalaXmlFormat.read(invalidXmlBody) must beFailedTry.withThrowable[TransformException]
+      BodyFormat.scalaXmlReads.read(invalidXmlBody) must beFailedTry.withThrowable[TransformException]
     }
 
     "return a Node object from a valid XML body" in new Context {
-      BodyFormat.scalaXmlFormat.read(validXmlBody) must beSuccessfulTry.withValue(parseXml(validXml))
+      BodyFormat.scalaXmlReads.read(validXmlBody) must beSuccessfulTry.withValue(parseXml(validXml))
     }
   }
 
   "The `write` method of the `BodyFormat[Node]` format" should {
     "return a Body instance" in new Context {
-      val body = BodyFormat.scalaXmlFormat.write(parseXml(validXml))
+      val body = BodyFormat.scalaXmlWrites(Body.DefaultCodec).write(parseXml(validXml))
 
       body.contentType must be equalTo validXmlBody.contentType
       body.codec must be equalTo validXmlBody.codec
@@ -222,11 +221,10 @@ class DefaultBodyFormatSpec extends Specification {
    */
   trait Context extends Scope {
     val validString = "some string"
-    val validFormUrlEncodedString = "param1=value%201&param2=value%202"
-    val validFormUrlEncodedMap = Map("value1" -> Seq("value 1"), "value2" -> Seq("value 2"))
-    val emptyFormUrlEncodedString = ""
-    val emptyFormUrlEncodedMap = Map.empty[String, Seq[String]]
-    val invalidFormUrlEncoded = "param1=value 1&param2=value 2"
+    val validFormUrlEncoded = Map("param1" -> Seq("value 1"), "param2" -> Seq("value 2"))
+    val emptyFormUrlEncoded = Map.empty[String, Seq[String]]
+    val validFormUrlEncodedString = "param1=value+1&param2=value+2"
+    val invalidFormUrlEncodedString = "param1=value 1&param2=value 2"
     val validJson = "{\"a\":\"b\"}"
     val invalidJson = "{a: }"
     val emptyJson = "{}"
@@ -234,12 +232,12 @@ class DefaultBodyFormatSpec extends Specification {
     val invalidXml = "<a>b<a>"
 
     val validStringBody = Body.from(validString)
-    val validFormUrlEncodedBody = Body.from(validFormUrlEncodedMap)
+    val validFormUrlEncodedBody = Body.from(validFormUrlEncoded)
     val invalidFormUrlEncodedBody = Body(
       contentType = MimeType.`application/x-www-form-urlencoded`,
-      data = invalidFormUrlEncoded.getBytes(Body.DefaultCodec.charSet)
+      data = invalidFormUrlEncodedString.getBytes(Body.DefaultCodec.charSet)
     )
-    val emptyFormUrlEncodedBody = Body.from(emptyFormUrlEncodedMap)
+    val emptyFormUrlEncodedBody = Body.from(emptyFormUrlEncoded)
     val validJsonBody = Body.from(parseJson(validJson))
     val invalidJsonBody = Body(
       contentType = MimeType.`application/json`,
@@ -260,6 +258,16 @@ class DefaultBodyFormatSpec extends Specification {
      * @return The error message.
      */
     def errorMsg(expected: MimeType, actual: MimeType): String = UnsupportedContentType.format(expected, actual)
+
+    /**
+     * Helper message to create the `UnsupportedContentType` error messages.
+     *
+     * @param allowed The list of allowed mime types.
+     * @param actual   The actual mime type.
+     * @return The error message.
+     */
+    def errorMsg(allowed: Seq[MimeType], actual: MimeType): String =
+      UnsupportedContentType.format(allowed.mkString(", "), actual)
 
     /**
      * Helper method that parses JSON.

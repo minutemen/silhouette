@@ -29,22 +29,27 @@ import silhouette.RichSeq._
  * @param headers     The headers.
  * @param cookies     The cookies.
  * @param queryParams The query params.
+ * @param body        An optional request body.
  */
-protected[silhouette] case class SilhouetteRequest(
+final protected[silhouette] case class SilhouetteRequest(
   uri: URI,
   method: Method,
   headers: Seq[Header] = Seq(),
   cookies: Seq[Cookie] = Seq(),
-  queryParams: Map[String, Seq[String]] = Map()
+  queryParams: Map[String, Seq[String]] = Map(),
+  body: Option[Body] = None
 )
 
 /**
- * The request pipeline implementation based on the `SilhouetteRequest`.
+ * The request pipeline implementation based on the [[SilhouetteRequest]].
  *
- * @param request The request this pipeline handles.
+ * @param request       The request this pipeline handles.
+ * @param bodyExtractor The request body extractor used to extract values from request body.
  */
-final protected[silhouette] case class SilhouetteRequestPipeline(request: SilhouetteRequest)
-  extends RequestPipeline[SilhouetteRequest] {
+final protected[silhouette] case class SilhouetteRequestPipeline(
+  request: SilhouetteRequest,
+  bodyExtractor: RequestBodyExtractor[SilhouetteRequest] = new SilhouetteRequestBodyExtractor
+) extends RequestPipeline[SilhouetteRequest] {
 
   /**
    * Gets the absolute URI of the request target.
@@ -65,7 +70,7 @@ final protected[silhouette] case class SilhouetteRequestPipeline(request: Silhou
    * @param uri The absolute URI of the request target.
    * @return A new request pipeline instance with the set URI.
    */
-  override def withUri(uri: URI): RequestPipeline[SilhouetteRequest] = copy(request.copy(uri = uri))
+  override def withUri(uri: URI): SilhouetteRequestPipeline = copy(request.copy(uri = uri))
 
   /**
    * Gets the HTTP request method.
@@ -80,7 +85,7 @@ final protected[silhouette] case class SilhouetteRequestPipeline(request: Silhou
    * @param method The HTTP request method to set.
    * @return A new request pipeline instance with the set HTTP request method.
    */
-  override def withMethod(method: Method): RequestPipeline[SilhouetteRequest] = copy(request.copy(method = method))
+  override def withMethod(method: Method): SilhouetteRequestPipeline = copy(request.copy(method = method))
 
   /**
    * Gets all headers.
@@ -97,7 +102,7 @@ final protected[silhouette] case class SilhouetteRequestPipeline(request: Silhou
    * @param headers The headers to set.
    * @return A new request pipeline instance with the set headers.
    */
-  override def withHeaders(headers: Header*): RequestPipeline[SilhouetteRequest] = {
+  override def withHeaders(headers: Header*): SilhouetteRequestPipeline = {
     val groupedHeaders = headers.groupByPreserveOrder(_.name).map {
       case (key, h) => Header(key, h.flatMap(_.values): _*)
     }
@@ -127,7 +132,7 @@ final protected[silhouette] case class SilhouetteRequestPipeline(request: Silhou
    * @param cookies The cookies to set.
    * @return A new request pipeline instance with the set cookies.
    */
-  override def withCookies(cookies: Cookie*): RequestPipeline[SilhouetteRequest] = {
+  override def withCookies(cookies: Cookie*): SilhouetteRequestPipeline = {
     val filteredCookies = cookies.groupByPreserveOrder(_.name).map(_._2.last)
     val newCookies = filteredCookies.foldLeft(request.cookies) {
       case (acc, cookie) =>
@@ -155,7 +160,7 @@ final protected[silhouette] case class SilhouetteRequestPipeline(request: Silhou
    * @param params The query params to set.
    * @return A new request pipeline instance with the set query params.
    */
-  override def withQueryParams(params: (String, String)*): RequestPipeline[SilhouetteRequest] = {
+  override def withQueryParams(params: (String, String)*): SilhouetteRequestPipeline = {
     val newParams = params.groupByPreserveOrder(_._1).map {
       case (key, value) => key -> value.map(_._2)
     }.foldLeft(request.queryParams) {
@@ -166,39 +171,19 @@ final protected[silhouette] case class SilhouetteRequestPipeline(request: Silhou
   }
 
   /**
+   * Creates a new request pipeline with the given body extractor.
+   *
+   * @param bodyExtractor The body extractor to set.
+   * @return A new request pipeline instance with the set body extractor.
+   */
+  override def withBodyExtractor(bodyExtractor: RequestBodyExtractor[SilhouetteRequest]): SilhouetteRequestPipeline = {
+    copy(bodyExtractor = bodyExtractor)
+  }
+
+  /**
    * Unboxes the request this pipeline handles.
    *
    * @return The request this pipeline handles.
    */
   override def unbox: SilhouetteRequest = request
-
-  /**
-   * The request body extractor used to extract values from request body.
-   */
-  override val bodyExtractor: RequestBodyExtractor[SilhouetteRequest] = new RequestBodyExtractor[SilhouetteRequest] {
-
-    /**
-     * Extracts a value from Json body.
-     *
-     * @param name The name of the value to extract.
-     * @return [[BodyValue]]
-     */
-    override def fromJson(name: String): BodyValue = None
-
-    /**
-     * Extracts a value from Xml body.
-     *
-     * @param name The name of the value to extract.
-     * @return [[BodyValue]]
-     */
-    override def fromXml(name: String): BodyValue = None
-
-    /**
-     * Extracts a value from form url encoded body.
-     *
-     * @param name The name of the value to extract.
-     * @return [[BodyValue]]
-     */
-    override def fromFormUrlEncoded(name: String): BodyValue = None
-  }
 }

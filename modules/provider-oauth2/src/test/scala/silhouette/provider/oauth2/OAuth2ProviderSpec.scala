@@ -26,8 +26,8 @@ import org.specs2.matcher.ThrownExpectations
 import org.specs2.mock.Mockito
 import org.specs2.specification.Scope
 import silhouette.http._
-import silhouette.http.client.BodyFormat._
-import silhouette.http.client.{ Body, Response }
+import BodyFormat._
+import silhouette.http.client.Response
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
 import silhouette.provider.social.state.handler.UserStateItem

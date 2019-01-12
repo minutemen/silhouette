@@ -34,6 +34,8 @@ object MimeType {
   implicit def fromString(mimeType: String): MimeType = MimeType(mimeType)
 
   final val `text/plain` = MimeType("text/plain")
+  final val `text/json` = MimeType("text/json")
+  final val `text/xml` = MimeType("text/xml")
   final val `application/x-www-form-urlencoded` = MimeType("application/x-www-form-urlencoded")
   final val `application/json` = MimeType("application/json")
   final val `application/xml` = MimeType("application/xml")

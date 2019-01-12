@@ -17,7 +17,7 @@
  */
 package silhouette.http.client
 
-import silhouette.http.Status
+import silhouette.http.{ Body, Status }
 
 /**
  * The response an HTTP client returns after a request.

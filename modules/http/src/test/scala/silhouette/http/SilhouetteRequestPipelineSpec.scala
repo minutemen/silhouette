@@ -19,10 +19,14 @@ package silhouette.http
 
 import java.net.URI
 
+import io.circe.Json
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.crypto.Hash
 import silhouette.crypto.Hash._
+import silhouette.http.BodyFormat._
+
+import scala.xml.{ Node, XML }
 
 /**
  * Test case for the [[SilhouetteRequestPipeline]] class.
@@ -195,6 +199,12 @@ class SilhouetteRequestPipelineSpec extends Specification {
     }
   }
 
+  "The `withBodyExtractor` method" should {
+    "set a new body extractor for the request" in new Context {
+      requestPipeline.withBodyExtractor(new CustomBodyExtractor).bodyExtractor.raw(request) must be equalTo "custom"
+    }
+  }
+
   "The default `fingerprint` method" should {
     "return fingerprint including the `User-Agent` header" in new Context {
       val userAgent = "test-user-agent"
@@ -239,10 +249,10 @@ class SilhouetteRequestPipelineSpec extends Specification {
         Header(Header.Name.`Accept-Charset`, acceptCharset),
         Header(Header.Name.`Accept-Encoding`, "gzip", "deflate")
       ).fingerprint(request => Hash.sha1(new StringBuilder()
-          .append(request.headers.find(_.name == Header.Name.`User-Agent`).map(_.value).getOrElse("")).append(":")
-          .append(request.headers.find(_.name == Header.Name.`Accept-Language`).map(_.value).getOrElse("")).append(":")
-          .append(request.headers.find(_.name == Header.Name.`Accept-Charset`).map(_.value).getOrElse("")).append(":")
-          .append(request.headers.find(_.name == Header.Name.`Accept-Encoding`).map(_.value).getOrElse(""))
+          .append(request.headerValue(Header.Name.`User-Agent`).getOrElse("")).append(":")
+          .append(request.headerValue(Header.Name.`Accept-Language`).getOrElse("")).append(":")
+          .append(request.headerValue(Header.Name.`Accept-Charset`).getOrElse("")).append(":")
+          .append(request.headerValue(Header.Name.`Accept-Encoding`).getOrElse(""))
           .toString()
         )) must be equalTo Hash.sha1(
           userAgent + ":" + acceptLanguage + ":" + acceptCharset + ":gzip,deflate"
@@ -256,10 +266,143 @@ class SilhouetteRequestPipelineSpec extends Specification {
     }
   }
 
+  "The `extractString` method" should {
+    "extract a value from query string if all parts are allowed" in new Context {
+      requestPipeline.extractString("test1") must beSome("value1")
+    }
+
+    "extract a value from query string if part is allowed" in new Context {
+      requestPipeline.extractString("test1", Some(Seq(RequestPart.QueryString))) must beSome("value1")
+    }
+
+    "do not extract a value from query string if part isn't allowed" in new Context {
+      requestPipeline.extractString("test1", Some(Seq())) must beNone
+    }
+
+    "extract a value from headers if all parts are allowed" in new Context {
+      requestPipeline.extractString("TEST1") must beSome("value1,value2")
+    }
+
+    "extract a value from headers if part is allowed" in new Context {
+      requestPipeline.extractString("TEST1", Some(Seq(RequestPart.Headers))) must beSome("value1,value2")
+    }
+
+    "do not extract a value from headers if part isn't allowed" in new Context {
+      requestPipeline.extractString("TEST1", Some(Seq())) must beNone
+    }
+
+    "extract a value from URL encoded body if all parts are allowed" in new Context {
+      override val requestPipeline = withBody(Body.from(Map("code" -> Seq("value"))))
+
+      requestPipeline.extractString("code") must beSome("value")
+    }
+
+    "extract a value from URL encoded body if part is allowed" in new Context {
+      override val requestPipeline = withBody(Body.from(Map("code" -> Seq("value"))))
+
+      requestPipeline.extractString("code", Some(Seq(RequestPart.FormUrlEncodedBody))) must beSome("value")
+    }
+
+    "do not extract a value from URL encoded body if part isn't allowed" in new Context {
+      override val requestPipeline = withBody(Body.from(Map("code" -> Seq("value"))))
+
+      requestPipeline.extractString("code", Some(Seq())) must beNone
+    }
+
+    "return None if the value couldn't be found in form URL encoded body" in new Context {
+      override val requestPipeline = withBody(Body.from(Map("code" -> Seq("value"))))
+
+      requestPipeline.extractString("none") must beNone
+    }
+
+    "return None if an error occurred during the extraction from a forum URL encoded body" in new Context {
+      override val requestPipeline = withBody(
+        Body(FormUrlEncodedBody.contentType, Body.DefaultCodec, "%".getBytes(Body.DefaultCodec.charSet))
+      )
+
+      requestPipeline.extractString("none") must beNone
+    }
+
+    "extract a value from Json body if all parts are allowed" in new Context {
+      override val requestPipeline = withBody(Body.from(Json.obj("code" -> Json.fromString("value"))))
+
+      requestPipeline.extractString("code") must beSome("value")
+    }
+
+    "extract a value from Json body if part is allowed" in new Context {
+      override val requestPipeline = withBody(Body.from(Json.obj("code" -> Json.fromString("value"))))
+
+      requestPipeline.extractString("code", Some(Seq(RequestPart.JsonBody))) must beSome("value")
+    }
+
+    "do not extract a value from Json body if part isn't allowed" in new Context {
+      override val requestPipeline = withBody(Body.from(Json.obj("code" -> Json.fromString("value"))))
+
+      requestPipeline.extractString("code", Some(Seq())) must beNone
+    }
+
+    "return None if the value couldn't be found in JSON body" in new Context {
+      override val requestPipeline = withBody(Body.from(Json.obj("code" -> Json.fromString("value"))))
+
+      requestPipeline.extractString("none") must beNone
+    }
+
+    "return None if an error occurred during the extraction from a JSON body" in new Context {
+      override val requestPipeline = withBody(
+        Body(JsonBody.contentType, Body.DefaultCodec, "{".getBytes(Body.DefaultCodec.charSet))
+      )
+
+      requestPipeline.extractString("none") must beNone
+    }
+
+    "extract a value from XML body if all parts are allowed" in new Context {
+      override val requestPipeline = withBody(Body.from(XML.loadString("<code>value</code>"): Node))
+
+      requestPipeline.extractString("code") must beSome("value")
+    }
+
+    "extract a value from XML body if part is allowed" in new Context {
+      override val requestPipeline = withBody(Body.from(XML.loadString("<code>value</code>"): Node))
+
+      requestPipeline.extractString("code", Some(Seq(RequestPart.XMLBody))) must beSome("value")
+    }
+
+    "do not extract a value from XML body if part isn't allowed" in new Context {
+      override val requestPipeline = withBody(Body.from(XML.loadString("<code>value</code>"): Node))
+
+      requestPipeline.extractString("code", Some(Seq())) must beNone
+    }
+
+    "return None if the value couldn't be found in XML body" in new Context {
+      override val requestPipeline = withBody(Body.from(XML.loadString("<code>value</code>"): Node))
+
+      requestPipeline.extractString("none") must beNone
+    }
+
+    "return None if an error occurred during the extraction from a XML body" in new Context {
+      override val requestPipeline = withBody(
+        Body(XmlBody.contentType, Body.DefaultCodec, "<code>".getBytes(Body.DefaultCodec.charSet))
+      )
+
+      requestPipeline.extractString("none") must beNone
+    }
+
+    "return None if no value could be found in the request" in new Context {
+      requestPipeline.extractString("none") must beNone
+    }
+  }
+
   /**
    * The context.
    */
   trait Context extends Scope {
+
+    /**
+     * A custom body extractor for testing.
+     */
+    case class CustomBodyExtractor() extends SilhouetteRequestBodyExtractor {
+      override def raw(request: SilhouetteRequest): String = "custom"
+    }
 
     /**
      * A request.
@@ -285,5 +428,15 @@ class SilhouetteRequestPipelineSpec extends Specification {
      * A request pipeline which handles a request.
      */
     val requestPipeline = SilhouetteRequestPipeline(request)
+
+    /**
+     * A helper that creates a request pipeline with a body.
+     *
+     * @param body The body to create the request with.
+     * @return A request pipeline with the given body.
+     */
+    def withBody(body: Body): SilhouetteRequestPipeline = {
+      SilhouetteRequestPipeline(request.copy(body = Some(body)))
+    }
   }
 }

@@ -24,8 +24,8 @@ import com.typesafe.scalalogging.LazyLogging
 import io.circe.{ Decoder, Encoder, HCursor, Json }
 import monocle.Optional
 import silhouette.http._
-import silhouette.http.client.BodyFormat._
-import silhouette.http.client.{ Body, Response }
+import BodyFormat._
+import silhouette.http.client.Response
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social.state.handler.UserStateItemHandler
 import silhouette.provider.social.state.{ StateHandler, StateItem }
@@ -206,20 +206,19 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
   def refresh(refreshToken: String): Future[OAuth2Info] = {
     config.refreshURI match {
       case Some(uri) =>
+        val params = Map(
+          GrantType -> Seq(RefreshToken),
+          RefreshToken -> Seq(refreshToken)
+        ) ++
+          config.refreshParams.mapValues(Seq(_)) ++
+          config.scope.map(scope => Map(Scope -> Seq(scope))).getOrElse(Map())
+
         httpClient
           .withUri(uri)
           .withHeaders(authorizationHeader)
           .withHeaders(refreshHeaders: _*)
           .withMethod(Method.POST)
-          .withBody(
-            Body.from(Map(
-              GrantType -> Seq(RefreshToken),
-              RefreshToken -> Seq(refreshToken)
-            ) ++
-              config.refreshParams.mapValues(Seq(_)) ++
-              config.scope.map(scope => Map(Scope -> Seq(scope))).getOrElse(Map())
-            )
-          )
+          .withBody(Body.from(params))
           .execute
           .flatMap { response =>
             logger.debug("[%s] Access token response: [%s]".format(id, response.body.raw))
@@ -307,19 +306,19 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
    * @return The auth info containing the access token.
    */
   protected def getAccessToken[R](code: String)(implicit request: RequestPipeline[R]): Future[OAuth2Info] = {
+    val params = Map(
+      GrantType -> Seq(AuthorizationCode),
+      Code -> Seq(code)
+    ) ++
+      config.accessTokenParams.mapValues(Seq(_)) ++
+      config.redirectURI.map(uri => Map(RedirectUri -> Seq(resolveCallbackUri(uri).toString))).getOrElse(Map())
+
     httpClient
       .withUri(config.accessTokenURI)
       .withHeaders(authorizationHeader)
       .withHeaders(accessTokenHeaders: _*)
       .withMethod(Method.POST)
-      .withBody(Body.from(
-        Map(
-          GrantType -> Seq(AuthorizationCode),
-          Code -> Seq(code)
-        ) ++
-          config.accessTokenParams.mapValues(Seq(_)) ++
-          config.redirectURI.map(uri => Map(RedirectUri -> Seq(resolveCallbackUri(uri).toString))).getOrElse(Map())
-      ))
+      .withBody(Body.from(params))
       .execute
       .flatMap { response =>
         logger.debug("[%s] Access token response: [%s]".format(id, response.body.raw))
@@ -335,7 +334,7 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
    * @see https://tools.ietf.org/html/rfc6749#section-5.1
    */
   protected def buildInfo(response: Response): Try[OAuth2Info] = {
-    import silhouette.http.client.BodyFormat.circeJsonFormat
+    import BodyFormat.circeJsonReads
     response.status match {
       case Status.OK =>
         response.body.as[Json] match {

@@ -20,9 +20,9 @@ package silhouette.provider.oauth2
 import java.net.URI
 import java.nio.file.Paths
 
-import silhouette.http.client.BodyFormat._
-import silhouette.http.client.{ Body, Response }
-import silhouette.http.{ Method, Status }
+import silhouette.http.BodyFormat._
+import silhouette.http.client.Response
+import silhouette.http.{ Body, Method, Status }
 import silhouette.provider.oauth2.GoogleProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social.SocialProvider.UnspecifiedProfileError
