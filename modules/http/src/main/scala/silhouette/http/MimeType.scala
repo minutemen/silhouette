@@ -39,4 +39,5 @@ object MimeType {
   final val `application/x-www-form-urlencoded` = MimeType("application/x-www-form-urlencoded")
   final val `application/json` = MimeType("application/json")
   final val `application/xml` = MimeType("application/xml")
+  final val `application/octet-stream` = MimeType("application/octet-stream")
 }
