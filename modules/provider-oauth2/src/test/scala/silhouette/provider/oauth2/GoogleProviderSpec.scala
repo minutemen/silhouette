@@ -20,7 +20,7 @@ package silhouette.provider.oauth2
 import java.net.URI
 import java.nio.file.Paths
 
-import silhouette.http.BodyFormat._
+import silhouette.http.BodyWrites._
 import silhouette.http.client.Response
 import silhouette.http.{ Body, Method, Status }
 import silhouette.provider.oauth2.GoogleProvider._

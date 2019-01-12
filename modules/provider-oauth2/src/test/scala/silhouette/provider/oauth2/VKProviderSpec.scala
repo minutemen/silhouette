@@ -21,7 +21,7 @@ import java.net.URI
 import java.nio.file.Paths
 
 import io.circe.Decoder
-import silhouette.http.BodyFormat._
+import silhouette.http.BodyWrites._
 import silhouette.http.client.Response
 import silhouette.http.{ Body, Method, Status }
 import silhouette.provider.oauth2.VKProvider._

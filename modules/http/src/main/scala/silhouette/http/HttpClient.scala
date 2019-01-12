@@ -22,6 +22,7 @@ import java.net.URI
 import silhouette.http.client.Response
 
 import scala.concurrent.Future
+import scala.io.Codec
 
 /**
  * A client which can be used to process HTTP requests.
@@ -76,11 +77,13 @@ private[silhouette] trait HttpClient {
    * Returns a copy of this instance with a new body.
    *
    * @tparam T The type of the body.
-   * @param body   The body to set.
-   * @param format The format which converts the given format into a body instance.
+   * @param body   The new body.
+   * @param codec  The codec of the resulting body.
+   * @param writes The format which converts the given format into a body instance.
    * @return A request builder to provide a fluent interface.
    */
-  def withBody[T](body: T)(implicit format: BodyFormat[T]): HttpClient = withBody(format.write(body))
+  def withBody[T](body: T, codec: Codec = Body.DefaultCodec)(implicit writes: Codec => BodyWrites[T]): HttpClient =
+    withBody(writes(codec).write(body))
 
   /**
    * Execute the request and produce a response.

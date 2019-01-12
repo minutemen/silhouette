@@ -24,7 +24,6 @@ import com.typesafe.scalalogging.LazyLogging
 import io.circe.{ Decoder, Encoder, HCursor, Json }
 import monocle.Optional
 import silhouette.http._
-import BodyFormat._
 import silhouette.http.client.Response
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social.state.handler.UserStateItemHandler
@@ -334,7 +333,7 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
    * @see https://tools.ietf.org/html/rfc6749#section-5.1
    */
   protected def buildInfo(response: Response): Try[OAuth2Info] = {
-    import BodyFormat.circeJsonReads
+    import BodyReads.circeJsonReads
     response.status match {
       case Status.OK =>
         response.body.as[Json] match {

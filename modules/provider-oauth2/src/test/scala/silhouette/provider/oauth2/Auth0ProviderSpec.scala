@@ -20,8 +20,7 @@ package silhouette.provider.oauth2
 import java.net.URI
 import java.nio.file.Paths
 
-import silhouette.{ ConfigURI, LoginInfo }
-import silhouette.http.BodyFormat._
+import silhouette.http.BodyWrites._
 import silhouette.http.client.Response
 import silhouette.http.{ Body, Header, Method, Status }
 import silhouette.provider.oauth2.Auth0Provider._
@@ -29,6 +28,7 @@ import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social.SocialProvider.UnspecifiedProfileError
 import silhouette.provider.social.{ CommonSocialProfile, ProfileRetrievalException }
 import silhouette.specs2.BaseFixture
+import silhouette.{ ConfigURI, LoginInfo }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

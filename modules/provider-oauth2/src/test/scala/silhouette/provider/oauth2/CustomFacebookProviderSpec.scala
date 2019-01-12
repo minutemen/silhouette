@@ -23,14 +23,14 @@ import java.time.Clock
 
 import io.circe.Json
 import io.circe.optics.JsonPath._
-import silhouette.http.BodyFormat._
+import silhouette.http.BodyWrites._
 import silhouette.http.client.Response
 import silhouette.http.{ Body, HttpClient, Method, Status }
 import silhouette.provider.oauth2.FacebookProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social.SocialProvider.UnspecifiedProfileError
-import silhouette.provider.social.state.StateHandler
 import silhouette.provider.social._
+import silhouette.provider.social.state.StateHandler
 import silhouette.specs2.BaseFixture
 import silhouette.{ ConfigURI, LoginInfo }
 

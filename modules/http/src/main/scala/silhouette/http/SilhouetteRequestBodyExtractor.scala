@@ -17,7 +17,7 @@
  */
 package silhouette.http
 
-import silhouette.http.BodyFormat._
+import silhouette.http.BodyReads._
 
 import scala.util.{ Failure, Success }
 

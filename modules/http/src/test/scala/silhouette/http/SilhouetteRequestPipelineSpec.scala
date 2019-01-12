@@ -24,7 +24,7 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.crypto.Hash
 import silhouette.crypto.Hash._
-import silhouette.http.BodyFormat._
+import silhouette.http.BodyWrites._
 
 import scala.xml.{ Node, XML }
 
