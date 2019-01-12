@@ -19,7 +19,7 @@ package silhouette.http
 
 import java.net.URI
 
-import silhouette.http.client.{ Body, BodyFormat, Response }
+import silhouette.http.client.Response
 
 import scala.concurrent.Future
 

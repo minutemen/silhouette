@@ -25,9 +25,6 @@ import silhouette.crypto.Hash._
 /**
  * Decorates a framework specific request implementation.
  *
- * Frameworks should create an implicit conversion between the implementation of this pipeline and
- * the Framework specific request instance.
- *
  * @tparam R The type of the request.
  */
 protected[silhouette] trait RequestPipeline[R] extends RequestExtractor[R] {
@@ -87,6 +84,14 @@ protected[silhouette] trait RequestPipeline[R] extends RequestExtractor[R] {
    * @return Some header for the given name, None if no header for the given name could be found.
    */
   def header(name: Header.Name): Option[Header] = headers.find(_.name == name)
+
+  /**
+   * Gets the header value for the given name.
+   *
+   * @param name The name of the header for which the header value should be returned.
+   * @return Some header value for the given name, None if no header for the given name could be found.
+   */
+  def headerValue(name: Header.Name): Option[String] = header(name).map(_.value)
 
   /**
    * Creates a new request pipeline with the given headers.
@@ -287,6 +292,14 @@ protected[silhouette] trait RequestPipeline[R] extends RequestExtractor[R] {
   def withQueryParams(params: (String, String)*): RequestPipeline[R]
 
   /**
+   * Creates a new request pipeline with the given body extractor.
+   *
+   * @param bodyExtractor The body extractor to set.
+   * @return A new request pipeline instance with the set body extractor.
+   */
+  def withBodyExtractor(bodyExtractor: RequestBodyExtractor[R]): RequestPipeline[R]
+
+  /**
    * Generates a default fingerprint from common request headers.
    *
    * A generator which creates a SHA1 fingerprint from `User-Agent`, `Accept-Language` and `Accept-Charset` headers.
@@ -301,9 +314,9 @@ protected[silhouette] trait RequestPipeline[R] extends RequestExtractor[R] {
    */
   def fingerprint: String = {
     Hash.sha1(new StringBuilder()
-      .append(headers.find(_.name == Header.Name.`User-Agent`).map(_.value).getOrElse("")).append(":")
-      .append(headers.find(_.name == Header.Name.`Accept-Language`).map(_.value).getOrElse("")).append(":")
-      .append(headers.find(_.name == Header.Name.`Accept-Charset`).map(_.value).getOrElse(""))
+      .append(headerValue(Header.Name.`User-Agent`).getOrElse("")).append(":")
+      .append(headerValue(Header.Name.`Accept-Language`).getOrElse("")).append(":")
+      .append(headerValue(Header.Name.`Accept-Charset`).getOrElse(""))
       .toString()
     )
   }
@@ -314,7 +327,7 @@ protected[silhouette] trait RequestPipeline[R] extends RequestExtractor[R] {
    * @param generator A generator function to create a fingerprint from request.
    * @return A fingerprint of the client.
    */
-  def fingerprint(generator: R => String): String = generator(request)
+  def fingerprint(generator: RequestPipeline[R] => String): String = generator(this)
 
   /**
    * Indicates if the request is a secure HTTPS request.

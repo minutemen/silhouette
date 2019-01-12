@@ -62,7 +62,7 @@ final protected[silhouette] case class SilhouetteResponsePipeline(response: Silh
    * @param headers The headers to add.
    * @return A new response pipeline instance with the added headers.
    */
-  override def withHeaders(headers: Header*): ResponsePipeline[SilhouetteResponse] = {
+  override def withHeaders(headers: Header*): SilhouetteResponsePipeline = {
     val groupedHeaders = headers.groupByPreserveOrder(_.name).map {
       case (key, h) => Header(key, h.flatMap(_.values): _*)
     }
@@ -92,7 +92,7 @@ final protected[silhouette] case class SilhouetteResponsePipeline(response: Silh
    * @param cookies The cookies to add.
    * @return A new response pipeline instance with the added cookies.
    */
-  override def withCookies(cookies: Cookie*): ResponsePipeline[SilhouetteResponse] = {
+  override def withCookies(cookies: Cookie*): SilhouetteResponsePipeline = {
     val filteredCookies = cookies.groupByPreserveOrder(_.name).map(_._2.last)
     val newCookies = filteredCookies.foldLeft(this.cookies) {
       case (acc, cookie) =>

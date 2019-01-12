@@ -24,7 +24,7 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.LoginInfo
-import silhouette.authenticator.Authenticator.Implicits._
+import silhouette.RichInstant._
 import silhouette.http.{ Fake, RequestPipeline, SilhouetteRequest }
 import silhouette.specs2.WaitPatience
 
@@ -82,7 +82,7 @@ class AuthenticatorSpec(implicit ev: ExecutionEnv) extends Specification with Mo
     }
 
     "set a custom fingerprint" in new Context {
-      val fingerPrintGenerator = (_: SilhouetteRequest) => "test.fingerprint"
+      val fingerPrintGenerator = (_: RequestPipeline[SilhouetteRequest]) => "test.fingerprint"
       implicit val request: RequestPipeline[SilhouetteRequest] = Fake.request
 
       authenticator.withFingerPrint(fingerPrintGenerator).fingerprint must
