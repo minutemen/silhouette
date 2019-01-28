@@ -89,8 +89,8 @@ trait SocialProvider[C] extends Provider with SocialProfileBuilder with Executio
    */
   def retrieveProfile(authInfo: A): Future[Profile] = {
     buildProfile(authInfo).recoverWith {
-      case e if !e.isInstanceOf[ProfileRetrievalException] =>
-        Future.failed(new ProfileRetrievalException(UnspecifiedProfileError.format(id), Some(e)))
+      case e =>
+        Future.failed(new ProfileRetrievalException(ProfileError.format(id), Some(e)))
     }
   }
 
@@ -118,5 +118,5 @@ object SocialProvider {
   /**
    * Some error messages.
    */
-  val UnspecifiedProfileError = "[%s] Error retrieving profile information"
+  val ProfileError = "[%s] Error retrieving profile information"
 }

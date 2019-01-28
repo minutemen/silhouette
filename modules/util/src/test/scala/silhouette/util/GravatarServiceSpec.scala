@@ -17,14 +17,12 @@
  */
 package silhouette.util
 
-import java.net.URI
-
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import silhouette.http.client.Response
-import silhouette.http.{ HttpClient, Method, Status }
+import silhouette.http.client.{ Request, Response }
+import silhouette.http.{ HttpClient, Status }
 import silhouette.specs2.WaitPatience
 import silhouette.util.GravatarService._
 
@@ -106,9 +104,7 @@ class GravatarServiceSpec(implicit ev: ExecutionEnv) extends Specification with 
      */
     val httpClient = {
       val m = mock[HttpClient].smart
-      m.withUri(any[URI]()) returns m
-      m.withMethod(Method.GET) returns m
-      m.execute returns Future.successful(response)
+      m.execute(any[Request]()) returns Future.successful(response)
       m
     }
 

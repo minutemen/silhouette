@@ -27,7 +27,7 @@ import org.specs2.mock.Mockito
 import org.specs2.specification.Scope
 import silhouette.http.BodyWrites._
 import silhouette.http._
-import silhouette.http.client.Response
+import silhouette.http.client.{ Request, Response }
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
 import silhouette.provider.social.state.handler.UserStateItem
@@ -199,18 +199,13 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
 
     "fail with UnexpectedResponseException if Json cannot be parsed from response" in {
       val code = "my.code"
-      val httpResponse = mock[Response].smart
       val request = Fake.request.withQueryParams(Code -> code)
+      val httpResponse = Response(
+        Status.OK,
+        Body(MimeType.`application/json`, data = "<html></html>".getBytes(Codec.UTF8.charSet))
+      )
 
-      httpResponse.status returns Status.OK
-      httpResponse.body returns Body(MimeType.`application/json`, data = "<html></html>".getBytes(Codec.UTF8.charSet))
-
-      c.httpClient.withUri(c.config.accessTokenURI) returns c.httpClient
-      c.httpClient.withHeaders(any()) returns c.httpClient
-      c.httpClient.withBody(any[Body]()) returns c.httpClient
-      c.httpClient.withMethod(Method.POST) returns c.httpClient
-      c.httpClient.execute returns Future.successful(httpResponse)
-
+      c.httpClient.execute(any[Request]()) returns Future.successful(httpResponse)
       c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
       c.stateHandler.state returns Future.successful(c.state)
 
@@ -223,42 +218,26 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
 
     "fail with UnexpectedResponseException for an unexpected response" in {
       val code = "my.code"
-      val httpResponse = mock[Response].smart
       val request = Fake.request.withQueryParams(Code -> code)
+      val httpResponse = Response(Status.Unauthorized, Body.from("Unauthorized"))
 
-      httpResponse.status returns Status.Unauthorized
-      httpResponse.body returns Body.from("Unauthorized")
-
-      c.httpClient.withUri(c.config.accessTokenURI) returns c.httpClient
-      c.httpClient.withHeaders(any()) returns c.httpClient
-      c.httpClient.withBody(any[Body]()) returns c.httpClient
-      c.httpClient.withMethod(Method.POST) returns c.httpClient
-      c.httpClient.execute returns Future.successful(httpResponse)
-
+      c.httpClient.execute(any[Request]()) returns Future.successful(httpResponse)
       c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
       c.stateHandler.state returns Future.successful(c.state)
 
       failed[UnexpectedResponseException](c.provider.authenticate()(request)) {
         case e => e.getMessage must be equalTo UnexpectedResponse.format(
-          c.provider.id, httpResponse.body.raw, Status.Unauthorized
+          c.provider.id, httpResponse.body.map(_.raw).getOrElse(""), Status.Unauthorized
         )
       }
     }
 
     "fail with UnexpectedResponseException if OAuth2Info can be build because of an unexpected response" in {
       val code = "my.code"
-      val httpResponse = mock[Response].smart
       val request = Fake.request.withQueryParams(Code -> code)
+      val httpResponse = Response(Status.OK, Body.from(Json.obj()))
 
-      httpResponse.status returns Status.OK
-      httpResponse.body returns Body.from(Json.obj())
-
-      c.httpClient.withUri(c.config.accessTokenURI) returns c.httpClient
-      c.httpClient.withHeaders(any()) returns c.httpClient
-      c.httpClient.withBody(any[Body]()) returns c.httpClient
-      c.httpClient.withMethod(Method.POST) returns c.httpClient
-      c.httpClient.execute returns Future.successful(httpResponse)
-
+      c.httpClient.execute(any[Request]()) returns Future.successful(httpResponse)
       c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
       c.stateHandler.state returns Future.successful(c.state)
 
@@ -269,7 +248,6 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
 
     "return the auth info" in {
       val code = "my.code"
-      val httpResponse = mock[Response].smart
       val request = Fake.request.withQueryParams(Code -> code)
       val body = Body.from(Map(
         GrantType -> Seq(AuthorizationCode),
@@ -279,21 +257,18 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
         c.config.redirectURI.map(uri => Map(RedirectUri -> Seq(uri.toString))).getOrElse(Map())
       )
 
-      httpResponse.status returns Status.OK
-      httpResponse.body returns Body.from(c.oAuth2InfoJson)
+      val httpResponse = Response(Status.OK, Body.from(c.oAuth2InfoJson))
+      val requestCaptor = capture[Request]
 
-      c.httpClient.withUri(c.config.accessTokenURI) returns c.httpClient
-      c.httpClient.withHeaders(any()) returns c.httpClient
-      c.httpClient.withBody(body) returns c.httpClient
-      c.httpClient.withMethod(Method.POST) returns c.httpClient
-      c.httpClient.execute returns Future.successful(httpResponse)
-
+      c.httpClient.execute(any[Request]()) returns Future.successful(httpResponse)
       c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
       c.stateHandler.state returns Future.successful(c.state)
 
       authInfo(c.provider.authenticate()(request))(_ must be equalTo c.oAuth2Info)
-      there was one(c.httpClient).withHeaders(c.authorizationHeader)
-      there was one(c.httpClient).withBody(body)
+      there was one(c.httpClient).execute(requestCaptor)
+
+      requestCaptor.value.headers must contain(c.authorizationHeader)
+      requestCaptor.value.body must beSome(body)
     }
   }
 
@@ -301,18 +276,11 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
     val c = context
     "return stateful auth info" in {
       val code = "my.code"
-      val httpResponse = mock[Response].smart
       implicit val request: Fake.Request = Fake.request.withQueryParams(Code -> code)
 
-      httpResponse.status returns Status.OK
-      httpResponse.body returns Body.from(c.oAuth2InfoJson)
+      val httpResponse = Response(Status.OK, Body.from(c.oAuth2InfoJson))
 
-      c.httpClient.withUri(c.config.accessTokenURI) returns c.httpClient
-      c.httpClient.withHeaders(any()) returns c.httpClient
-      c.httpClient.withBody(any[Body]()) returns c.httpClient
-      c.httpClient.withMethod(Method.POST) returns c.httpClient
-      c.httpClient.execute returns Future.successful(httpResponse)
-
+      c.httpClient.execute(any[Request]()) returns Future.successful(httpResponse)
       c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
       c.stateHandler.state returns Future.successful(c.state)
       c.stateHandler.withHandler(any[StateItemHandler]()) returns c.stateHandler
@@ -341,20 +309,13 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       c.config.refreshURI match {
         case None =>
           skipped("refreshURI is not defined, so this step isn't needed for provider: " + c.provider.getClass)
-        case Some(refreshURI) =>
+        case Some(_) =>
           val refreshToken = "some-refresh-token"
-          val httpResponse = mock[Response].smart
-
-          httpResponse.status returns Status.OK
-          httpResponse.body returns Body(
+          val httpResponse = Response(Status.OK, Body(
             MimeType.`application/json`, data = "<html></html>".getBytes(Codec.UTF8.charSet)
-          )
+          ))
 
-          c.httpClient.withUri(refreshURI) returns c.httpClient
-          c.httpClient.withHeaders(any()) returns c.httpClient
-          c.httpClient.withBody(any[Body]()) returns c.httpClient
-          c.httpClient.withMethod(Method.POST) returns c.httpClient
-          c.httpClient.execute returns Future.successful(httpResponse)
+          c.httpClient.execute(any[Request]()) returns Future.successful(httpResponse)
 
           failed[UnexpectedResponseException](c.provider.refresh(refreshToken)) {
             case e =>
@@ -368,22 +329,15 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       c.config.refreshURI match {
         case None =>
           skipped("refreshURI is not defined, so this step isn't needed for provider: " + c.provider.getClass)
-        case Some(refreshURI) =>
+        case Some(_) =>
           val refreshToken = "some-refresh-token"
-          val httpResponse = mock[Response].smart
+          val httpResponse = Response(Status.Unauthorized, Body.from("Unauthorized"))
 
-          httpResponse.status returns Status.Unauthorized
-          httpResponse.body returns Body.from("Unauthorized")
-
-          c.httpClient.withUri(refreshURI) returns c.httpClient
-          c.httpClient.withHeaders(any()) returns c.httpClient
-          c.httpClient.withBody(any[Body]()) returns c.httpClient
-          c.httpClient.withMethod(Method.POST) returns c.httpClient
-          c.httpClient.execute returns Future.successful(httpResponse)
+          c.httpClient.execute(any[Request]()) returns Future.successful(httpResponse)
 
           failed[UnexpectedResponseException](c.provider.refresh(refreshToken)) {
             case e => e.getMessage must be equalTo UnexpectedResponse.format(
-              c.provider.id, httpResponse.body.raw, Status.Unauthorized
+              c.provider.id, httpResponse.body.map(_.raw).getOrElse(""), Status.Unauthorized
             )
           }: Result
       }
@@ -393,18 +347,11 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       c.config.refreshURI match {
         case None =>
           skipped("refreshURI is not defined, so this step isn't needed for provider: " + c.provider.getClass)
-        case Some(refreshURI) =>
+        case Some(_) =>
           val refreshToken = "some-refresh-token"
-          val httpResponse = mock[Response].smart
+          val httpResponse = Response(Status.OK, Body.from(Json.obj()))
 
-          httpResponse.status returns Status.OK
-          httpResponse.body returns Body.from(Json.obj())
-
-          c.httpClient.withUri(refreshURI) returns c.httpClient
-          c.httpClient.withHeaders(any()) returns c.httpClient
-          c.httpClient.withBody(any[Body]()) returns c.httpClient
-          c.httpClient.withMethod(Method.POST) returns c.httpClient
-          c.httpClient.execute returns Future.successful(httpResponse)
+          c.httpClient.execute(any[Request]()) returns Future.successful(httpResponse)
 
           failed[UnexpectedResponseException](c.provider.refresh(refreshToken)) {
             case e => e.getMessage must startWith(InvalidInfoFormat.format(c.provider.id, ""))
@@ -418,7 +365,6 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
           skipped("refreshURI is not defined, so this step isn't needed for provider: " + c.provider.getClass)
         case Some(refreshURI) =>
           val refreshToken = "some-refresh-token"
-          val httpResponse = mock[Response].smart
           val body = Body.from(Map(
             GrantType -> Seq(RefreshToken),
             RefreshToken -> Seq(refreshToken)
@@ -426,19 +372,18 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
             c.config.refreshParams.mapValues(Seq(_)) ++
             c.config.scope.map(scope => Map(Scope -> Seq(scope))).getOrElse(Map())
           )
+          val httpResponse = Response(Status.OK, Body.from(c.oAuth2InfoJson))
+          val requestCaptor = capture[Request]
 
-          httpResponse.status returns Status.OK
-          httpResponse.body returns Body.from(c.oAuth2InfoJson)
-
-          c.httpClient.withUri(refreshURI) returns c.httpClient
-          c.httpClient.withHeaders(any()) returns c.httpClient
-          c.httpClient.withBody(body) returns c.httpClient
-          c.httpClient.withMethod(Method.POST) returns c.httpClient
-          c.httpClient.execute returns Future.successful(httpResponse)
+          c.httpClient.execute(any[Request]()) returns Future.successful(httpResponse)
 
           await(c.provider.refresh(refreshToken)) must be equalTo c.oAuth2Info
-          there was one(c.httpClient).withHeaders(c.authorizationHeader)
-          there was one(c.httpClient).withBody(body): Result
+
+          there was one(c.httpClient).execute(requestCaptor)
+
+          requestCaptor.value.method must be equalTo Method.POST
+          requestCaptor.value.headers must contain(c.authorizationHeader)
+          requestCaptor.value.body must beSome(body): Result
       }
     }
   }

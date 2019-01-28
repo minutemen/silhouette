@@ -21,11 +21,12 @@ import java.net.URI
 import java.nio.file.Paths
 
 import silhouette.http.BodyWrites._
-import silhouette.http.client.Response
-import silhouette.http.{ Body, Method, Status }
+import silhouette.http.Method.GET
+import silhouette.http.client.{ Request, Response }
+import silhouette.http.{ Body, Status }
 import silhouette.provider.oauth2.GitHubProvider._
-import silhouette.provider.oauth2.OAuth2Provider._
-import silhouette.provider.social.SocialProvider.UnspecifiedProfileError
+import silhouette.provider.oauth2.OAuth2Provider.UnexpectedResponse
+import silhouette.provider.social.SocialProvider.ProfileError
 import silhouette.provider.social.{ CommonSocialProfile, ProfileRetrievalException }
 import silhouette.specs2.BaseFixture
 import silhouette.{ ConfigURI, LoginInfo }
@@ -41,64 +42,54 @@ class GitHubProviderSpec extends OAuth2ProviderSpec {
   "The `retrieveProfile` method" should {
     "fail with ProfileRetrievalException if API returns error" in new Context {
       val apiResult = ErrorJson.asJson
-      val httpResponse = mock[Response].smart
-      httpResponse.status returns Status.`Bad Request`
-      httpResponse.body returns Body.from(apiResult)
-
-      httpClient.withUri(DefaultApiURI.format(oAuth2Info.accessToken)) returns httpClient
-      httpClient.withMethod(Method.GET) returns httpClient
-      httpClient.execute returns Future.successful(httpResponse)
+      val httpResponse = Response(Status.`Bad Request`, Body.from(apiResult))
+      val httpRequest = Request(GET, DefaultApiURI.format(oAuth2Info.accessToken))
+      httpClient.execute(httpRequest) returns Future.successful(httpResponse)
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
-        case e => e.getMessage must equalTo(SpecifiedProfileError.format(
-          provider.id,
-          Status.`Bad Request`,
-          apiResult
-        ))
+        case e =>
+          e.getMessage must equalTo(ProfileError.format(provider.id))
+          e.getCause.getMessage must equalTo(UnexpectedResponse.format(
+            provider.id,
+            apiResult,
+            Status.`Bad Request`
+          ))
       }
     }
 
     "fail with ProfileRetrievalException if an unexpected error occurred" in new Context {
       val httpResponse = mock[Response].smart
+      val httpRequest = Request(GET, DefaultApiURI.format(oAuth2Info.accessToken))
+
       httpResponse.status returns Status.`Internal Server Error`
       httpResponse.body throws new RuntimeException("")
-
-      httpClient.withUri(DefaultApiURI.format(oAuth2Info.accessToken)) returns httpClient
-      httpClient.withMethod(Method.GET) returns httpClient
-      httpClient.execute returns Future.successful(httpResponse)
+      httpClient.execute(httpRequest) returns Future.successful(httpResponse)
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
-        case e => e.getMessage must equalTo(UnspecifiedProfileError.format(ID))
+        case e => e.getMessage must equalTo(ProfileError.format(ID))
       }
     }
 
     "use the overridden API URI" in new Context {
       val uri = DefaultApiURI.copy(uri = DefaultApiURI.uri + "&new")
       val apiResult = UserProfileJson.asJson
-      val httpResponse = mock[Response].smart
-      httpResponse.status returns Status.OK
-      httpResponse.body returns Body.from(apiResult)
+      val httpResponse = Response(Status.OK, Body.from(apiResult))
+      val httpRequest = Request(GET, uri.format(oAuth2Info.accessToken))
 
       config.apiURI returns Some(uri)
-
-      httpClient.withUri(uri.format(oAuth2Info.accessToken)) returns httpClient
-      httpClient.withMethod(Method.GET) returns httpClient
-      httpClient.execute returns Future.successful(httpResponse)
+      httpClient.execute(httpRequest) returns Future.successful(httpResponse)
 
       await(provider.retrieveProfile(oAuth2Info))
 
-      there was one(httpClient).withUri(uri.format(oAuth2Info.accessToken))
+      there was one(httpClient).execute(httpRequest)
     }
 
     "return the social profile" in new Context {
       val apiResult = UserProfileJson.asJson
-      val httpResponse = mock[Response].smart
-      httpResponse.status returns Status.OK
-      httpResponse.body returns Body.from(apiResult)
+      val httpResponse = Response(Status.OK, Body.from(apiResult))
+      val httpRequest = Request(GET, DefaultApiURI.format(oAuth2Info.accessToken))
 
-      httpClient.withUri(DefaultApiURI.format(oAuth2Info.accessToken)) returns httpClient
-      httpClient.withMethod(Method.GET) returns httpClient
-      httpClient.execute returns Future.successful(httpResponse)
+      httpClient.execute(httpRequest) returns Future.successful(httpResponse)
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>
         p must be equalTo CommonSocialProfile(

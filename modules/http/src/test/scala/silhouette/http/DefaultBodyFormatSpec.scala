@@ -24,7 +24,6 @@ import silhouette.TransformException
 import silhouette.http.BodyReads._
 import silhouette.http.BodyWrites._
 import silhouette.http.DefaultBodyReads._
-import silhouette.http.client.UnsupportedContentTypeException
 
 import scala.xml.Node
 

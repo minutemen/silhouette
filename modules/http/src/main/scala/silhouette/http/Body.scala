@@ -23,7 +23,6 @@ import io.circe.parser.parse
 import io.circe.{ Json, ParsingFailure }
 import silhouette.http.DefaultBodyReads._
 import silhouette.http.MimeType._
-import silhouette.http.client.UnsupportedContentTypeException
 import silhouette.{ Reads, TransformException, Writes }
 
 import scala.annotation.implicitNotFound

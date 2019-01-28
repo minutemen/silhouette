@@ -21,12 +21,15 @@ import java.time.Clock
 
 import io.circe.Json
 import io.circe.optics.JsonPath._
-import silhouette.{ ConfigURI, LoginInfo }
+import silhouette.http.Method.GET
 import silhouette.http._
+import silhouette.http.client.Request
+import silhouette.provider.UnexpectedResponseException
 import silhouette.provider.oauth2.DropboxProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
 import silhouette.provider.social.state.StateHandler
+import silhouette.{ ConfigURI, LoginInfo }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -50,20 +53,19 @@ trait BaseDropboxProvider extends OAuth2Provider {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
-    httpClient.withUri(config.apiURI.getOrElse[ConfigURI](DefaultApiURI))
-      .withHeaders(Header(Header.Name.Authorization, s"Bearer ${authInfo.accessToken}"))
-      .withMethod(Method.GET)
-      .execute
-      .flatMap { response =>
-        withParsedJson(response.body) { json =>
-          response.status match {
-            case Status.OK =>
-              profileParser.parse(json, authInfo)
-            case status =>
-              Future.failed(new ProfileRetrievalException(SpecifiedProfileError.format(id, status, json)))
-          }
+    val uri = config.apiURI.getOrElse[ConfigURI](DefaultApiURI)
+    val request = Request(GET, uri).withHeaders(Header(Header.Name.Authorization, s"Bearer ${authInfo.accessToken}"))
+
+    httpClient.execute(request).flatMap { response =>
+      withParsedJson(response) { json =>
+        response.status match {
+          case Status.OK =>
+            profileParser.parse(json, authInfo)
+          case status =>
+            Future.failed(new UnexpectedResponseException(UnexpectedResponse.format(id, json, status)))
         }
       }
+    }
   }
 }
 

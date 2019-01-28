@@ -22,7 +22,10 @@ import java.time.Clock
 
 import io.circe.Json
 import io.circe.optics.JsonPath._
-import silhouette.http.{ Header, HttpClient, Method, Status }
+import silhouette.http.Method.GET
+import silhouette.http.client.Request
+import silhouette.http.{ Header, HttpClient, Status }
+import silhouette.provider.UnexpectedResponseException
 import silhouette.provider.oauth2.GitHubProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
@@ -61,19 +64,18 @@ trait BaseGitHubProvider extends OAuth2Provider {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
-    httpClient.withUri(config.apiURI.getOrElse(DefaultApiURI).format(authInfo.accessToken))
-      .withMethod(Method.GET)
-      .execute
-      .flatMap { response =>
-        withParsedJson(response.body) { json =>
-          response.status match {
-            case Status.OK =>
-              profileParser.parse(json, authInfo)
-            case status =>
-              Future.failed(new ProfileRetrievalException(SpecifiedProfileError.format(id, status, json)))
-          }
+    val uri = config.apiURI.getOrElse(DefaultApiURI).format(authInfo.accessToken)
+
+    httpClient.execute(Request(GET, uri)).flatMap { response =>
+      withParsedJson(response) { json =>
+        response.status match {
+          case Status.OK =>
+            profileParser.parse(json, authInfo)
+          case status =>
+            Future.failed(new UnexpectedResponseException(UnexpectedResponse.format(id, json, status)))
         }
       }
+    }
   }
 }
 

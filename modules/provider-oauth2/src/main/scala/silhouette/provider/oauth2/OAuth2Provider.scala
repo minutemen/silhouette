@@ -23,18 +23,19 @@ import java.time.{ Clock, Instant }
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.{ Decoder, Encoder, HCursor, Json }
 import monocle.Optional
+import silhouette.http.Method.POST
 import silhouette.http._
-import silhouette.http.client.Response
+import silhouette.http.client.{ Request, Response }
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social.state.handler.UserStateItemHandler
 import silhouette.provider.social.state.{ StateHandler, StateItem }
-import silhouette.provider.social.{ ProfileRetrievalException, SocialStateProvider, StatefulAuthInfo }
+import silhouette.provider.social.{ SocialStateProvider, StatefulAuthInfo }
 import silhouette.provider.{ AccessDeniedException, UnexpectedResponseException }
 import silhouette.{ AuthInfo, ConfigURI, ConfigurationException }
 
 import scala.concurrent.Future
 import scala.reflect.ClassTag
-import scala.util.{ Failure, Success, Try }
+import scala.util.{ Failure, Success }
 
 /**
  * The OAuth2 info.
@@ -212,16 +213,14 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
           config.refreshParams.mapValues(Seq(_)) ++
           config.scope.map(scope => Map(Scope -> Seq(scope))).getOrElse(Map())
 
-        httpClient
-          .withUri(uri)
-          .withHeaders(authorizationHeader)
-          .withHeaders(refreshHeaders: _*)
-          .withMethod(Method.POST)
-          .withBody(Body.from(params))
-          .execute
-          .flatMap { response =>
-            logger.debug("[%s] Access token response: [%s]".format(id, response.body.raw))
-            Future.fromTry(buildInfo(response))
+        httpClient.execute(
+          Request(POST, uri)
+            .withHeaders(authorizationHeader)
+            .withHeaders(refreshHeaders: _*)
+            .withBody(Body.from(params))
+        ).flatMap { response =>
+            logger.debug("[%s] Access token response: [%s]".format(id, response.body.map(_.raw).getOrElse("")))
+            buildInfo(response)
           }
       case None =>
         Future.failed(new ConfigurationException(RefreshUriUndefined.format(id)))
@@ -312,16 +311,14 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
       config.accessTokenParams.mapValues(Seq(_)) ++
       config.redirectURI.map(uri => Map(RedirectUri -> Seq(resolveCallbackUri(uri).toString))).getOrElse(Map())
 
-    httpClient
-      .withUri(config.accessTokenURI)
-      .withHeaders(authorizationHeader)
-      .withHeaders(accessTokenHeaders: _*)
-      .withMethod(Method.POST)
-      .withBody(Body.from(params))
-      .execute
-      .flatMap { response =>
-        logger.debug("[%s] Access token response: [%s]".format(id, response.body.raw))
-        Future.fromTry(buildInfo(response))
+    httpClient.execute(
+      Request(POST, config.accessTokenURI)
+        .withHeaders(authorizationHeader)
+        .withHeaders(accessTokenHeaders: _*)
+        .withBody(Body.from(params))
+    ).flatMap { response =>
+        logger.debug("[%s] Access token response: [%s]".format(id, response.body.map(_.raw).getOrElse("")))
+        buildInfo(response)
       }
   }
 
@@ -332,36 +329,42 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
    * @return The OAuth2 info on success, otherwise a failure.
    * @see https://tools.ietf.org/html/rfc6749#section-5.1
    */
-  protected def buildInfo(response: Response): Try[OAuth2Info] = {
-    import BodyReads.circeJsonReads
+  protected def buildInfo(response: Response): Future[OAuth2Info] = {
     response.status match {
       case Status.OK =>
-        response.body.as[Json] match {
-          case Success(json) => json.as[OAuth2Info].fold(
-            error => Failure(new UnexpectedResponseException(InvalidInfoFormat.format(id), Some(error))),
-            info => Success(info)
+        withParsedJson(response) { json =>
+          json.as[OAuth2Info].fold(
+            error => Future.failed(new UnexpectedResponseException(InvalidInfoFormat.format(id), Some(error))),
+            info => Future.successful(info)
           )
-          case Failure(error) =>
-            Failure(new UnexpectedResponseException(JsonParseError.format(id, response.body.raw), Some(error)))
         }
       case status =>
-        Failure(new UnexpectedResponseException(UnexpectedResponse.format(id, response.body.raw, status)))
+        Future.failed(
+          new UnexpectedResponseException(UnexpectedResponse.format(id, response.body.map(_.raw).getOrElse(""), status))
+        )
     }
   }
 
   /**
    * Helper that executes the builder code with the parsed JSON body.
    *
-   * @param body    The body to parse as JSON.
-   * @param builder The profile builder block that parses the profile from the given JSON.
-   * @return The parsed profile.
+   * @param response The response from the provider.
+   * @param handler  The handler block that processes the given JSON.
+   * @tparam T The type that the handler function returns.
+   * @return The result of the handler function.
    */
-  protected def withParsedJson(body: Body)(builder: Json => Future[Profile]): Future[Profile] = {
-    body.as[Json] match {
-      case Failure(error) => Future.failed(
-        new ProfileRetrievalException(JsonParseError.format(id, body.raw), Some(error))
-      )
-      case Success(json) => builder(json)
+  protected def withParsedJson[T](response: Response)(handler: Json => Future[T]): Future[T] = {
+    import BodyReads.circeJsonReads
+    response.body match {
+      case None =>
+        Future.failed(new UnexpectedResponseException(EmptyBodyError.format(id, response.status)))
+      case Some(body) =>
+        body.as[Json] match {
+          case Failure(error) => Future.failed(
+            new UnexpectedResponseException(JsonParseError.format(id, body.raw), Some(error))
+          )
+          case Success(json) => handler(json)
+        }
     }
   }
 }
@@ -379,7 +382,7 @@ object OAuth2Provider extends OAuth2Constants {
    */
   implicit class RichMonocleOptional[T](optional: Optional[Json, T]) {
     def getOrError(json: Json, path: String, id: String): T = optional.getOption(json).getOrElse(
-      throw new ProfileRetrievalException(JsonPathError.format(id, path, json))
+      throw new UnexpectedResponseException(JsonPathError.format(id, path, json))
     )
   }
 
@@ -393,7 +396,7 @@ object OAuth2Provider extends OAuth2Constants {
   val JsonParseError = "[%s] Cannot parse response `%s` to Json"
   val JsonPathError = "[%s] Cannot access json path `%s` from Json: %s"
   val UnexpectedResponse = "[%s] Got unexpected response `%s`; status: %s"
-  val SpecifiedProfileError = "[%s] Error retrieving profile information. Status: %s, Json: %s"
+  val EmptyBodyError = "[%s] The request doesn't return a body; status: %s"
 }
 
 /**

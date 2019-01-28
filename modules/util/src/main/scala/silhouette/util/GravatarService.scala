@@ -23,6 +23,7 @@ import java.net.URLEncoder._
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
 import silhouette.crypto.Hash._
+import silhouette.http.client.Request
 import silhouette.http.{ HttpClient, Method, Status }
 import silhouette.util.GravatarService._
 import silhouette.{ ConfigURI, ExecutionContextProvider }
@@ -54,7 +55,7 @@ class GravatarService @Inject() (
       case Some(hash) =>
         val encodedParams = settings.params.map { p => encode(p._1, "UTF-8") + "=" + encode(p._2, "UTF-8") }
         val url = (if (settings.secure) SecureURI else InsecureURI).format(hash, encodedParams.mkString("?", "&", ""))
-        httpClient.withUri(url).withMethod(Method.GET).execute.map {
+        httpClient.execute(Request(url, Method.GET)).map {
           _.status match {
             case Status.OK => Some(url.toURI)
             case status =>

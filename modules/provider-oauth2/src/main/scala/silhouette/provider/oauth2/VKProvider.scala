@@ -22,7 +22,10 @@ import java.time.Clock
 
 import io.circe.optics.JsonPath._
 import io.circe.{ Decoder, HCursor, Json }
-import silhouette.http.{ HttpClient, Method }
+import silhouette.http.HttpClient
+import silhouette.http.Method.GET
+import silhouette.http.client.Request
+import silhouette.provider.UnexpectedResponseException
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.oauth2.VKProvider._
 import silhouette.provider.social._
@@ -60,20 +63,19 @@ trait BaseVKProvider extends OAuth2Provider {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
-    httpClient.withUri(config.apiURI.getOrElse(DefaultApiURI).format(authInfo.accessToken))
-      .withMethod(Method.GET)
-      .execute
-      .flatMap { response =>
-        withParsedJson(response.body) { json =>
-          // The API returns a 200 status code for errors, so we must rely on the JSON here to detect an error
-          root.error.json.getOption(json) match {
-            case Some(_) =>
-              Future.failed(new ProfileRetrievalException(SpecifiedProfileError.format(id, response.status, json)))
-            case _ =>
-              profileParser.parse(json, authInfo)
-          }
+    val uri = config.apiURI.getOrElse(DefaultApiURI).format(authInfo.accessToken)
+
+    httpClient.execute(Request(GET, uri)).flatMap { response =>
+      withParsedJson(response) { json =>
+        // The API returns a 200 status code for errors, so we must rely on the JSON here to detect an error
+        root.error.json.getOption(json) match {
+          case Some(_) =>
+            Future.failed(new UnexpectedResponseException(UnexpectedResponse.format(id, json, response.status)))
+          case _ =>
+            profileParser.parse(json, authInfo)
         }
       }
+    }
   }
 }
 
@@ -101,7 +103,7 @@ class VKProfileParser extends SocialProfileParser[Json, CommonSocialProfile, OAu
         )
       }
       case None =>
-        Future.failed(new ProfileRetrievalException(JsonPathError.format(ID, "response", json)))
+        Future.failed(new UnexpectedResponseException(JsonPathError.format(ID, "response", json)))
 
     }
   }

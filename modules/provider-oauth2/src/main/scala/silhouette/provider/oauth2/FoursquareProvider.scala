@@ -22,7 +22,10 @@ import java.time.Clock
 
 import io.circe.Json
 import io.circe.optics.JsonPath._
+import silhouette.http.Method.GET
 import silhouette.http._
+import silhouette.http.client.Request
+import silhouette.provider.UnexpectedResponseException
 import silhouette.provider.oauth2.FoursquareProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
@@ -53,24 +56,23 @@ trait BaseFoursquareProvider extends OAuth2Provider {
    */
   override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
     val version = config.customProperties.getOrElse(ApiVersion, DefaultApiVersion)
-    httpClient.withUri(config.apiURI.getOrElse[ConfigURI](DefaultApiURI).format(authInfo.accessToken, version))
-      .withMethod(Method.GET)
-      .execute
-      .flatMap { response =>
-        withParsedJson(response.body) { json =>
-          response.status match {
-            case Status.OK =>
-              val errorType = root.meta.errorType.string.getOption(json)
-              if (errorType.contains("deprecated")) {
-                logger.info("This implementation may be deprecated! Please contact the Silhouette team for a fix!")
-              }
+    val uri = config.apiURI.getOrElse[ConfigURI](DefaultApiURI).format(authInfo.accessToken, version)
 
-              profileParser.parse(json, authInfo)
-            case status =>
-              Future.failed(new ProfileRetrievalException(SpecifiedProfileError.format(id, status, json)))
-          }
+    httpClient.execute(Request(GET, uri)).flatMap { response =>
+      withParsedJson(response) { json =>
+        response.status match {
+          case Status.OK =>
+            val errorType = root.meta.errorType.string.getOption(json)
+            if (errorType.contains("deprecated")) {
+              logger.info("This implementation may be deprecated! Please contact the Silhouette team for a fix!")
+            }
+
+            profileParser.parse(json, authInfo)
+          case status =>
+            Future.failed(new UnexpectedResponseException(UnexpectedResponse.format(id, json, status)))
         }
       }
+    }
   }
 }
 

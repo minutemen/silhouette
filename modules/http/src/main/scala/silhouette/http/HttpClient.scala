@@ -17,15 +17,12 @@
  */
 package silhouette.http
 
-import java.net.URI
-
-import silhouette.http.client.Response
+import silhouette.http.client.{ Request, Response }
 
 import scala.concurrent.Future
-import scala.io.Codec
 
 /**
- * A client which can be used to process HTTP requests.
+ * An HTTP client that takes an [[Request]] and produces a [[Response]].
  *
  * The concrete implementation of this client must be implemented by the framework specific Silhouette binding.
  * The client is no full-blown HTTP client implementation. It implements only the parts which Silhouette depends on,
@@ -34,61 +31,10 @@ import scala.io.Codec
 private[silhouette] trait HttpClient {
 
   /**
-   * Returns a copy of this instance with a new URI.
-   *
-   * @param uri The URI to set.
-   * @return A request builder to provide a fluent interface.
-   */
-  def withUri(uri: URI): HttpClient
-
-  /**
-   * Returns a copy of this instance with a new HTTP method.
-   *
-   * @param method The HTTP method to set.
-   * @return A request builder to provide a fluent interface.
-   */
-  def withMethod(method: Method): HttpClient
-
-  /**
-   * Returns a copy of this instance with the list of headers set.
-   *
-   * @param headers The headers to set.
-   * @return A request builder to provide a fluent interface.
-   */
-  def withHeaders(headers: Header*): HttpClient
-
-  /**
-   * Returns a copy of this instance with the list of query params set.
-   *
-   * @param params The query params to set.
-   * @return A request builder to provide a fluent interface.
-   */
-  def withQueryParams(params: (String, String)*): HttpClient
-
-  /**
-   * Returns a copy of this instance with a new body.
-   *
-   * @param body The body to set.
-   * @return A request builder to provide a fluent interface.
-   */
-  def withBody(body: Body): HttpClient
-
-  /**
-   * Returns a copy of this instance with a new body.
-   *
-   * @tparam T The type of the body.
-   * @param body   The new body.
-   * @param codec  The codec of the resulting body.
-   * @param writes The format which converts the given format into a body instance.
-   * @return A request builder to provide a fluent interface.
-   */
-  def withBody[T](body: T, codec: Codec = Body.DefaultCodec)(implicit writes: Codec => BodyWrites[T]): HttpClient =
-    withBody(writes(codec).write(body))
-
-  /**
    * Execute the request and produce a response.
    *
-   * @return The response.
+   * @param request The request to execute.
+   * @return The resulting response.
    */
-  def execute: Future[Response]
+  def execute(request: Request): Future[Response]
 }
