@@ -31,7 +31,7 @@ import silhouette.http.{ Body, Header, Status }
  * @param headers The HTTP response headers.
  * @param body    An optional HTTP body.
  */
-private[silhouette] class Response(
+protected[silhouette] class Response(
   val status: Status,
   val headers: List[Header] = List(),
   val body: Option[Body] = None
@@ -40,7 +40,7 @@ private[silhouette] class Response(
 /**
  * The companion object.
  */
-object Response {
+protected[silhouette] object Response {
 
   /**
    * Creates a new response.

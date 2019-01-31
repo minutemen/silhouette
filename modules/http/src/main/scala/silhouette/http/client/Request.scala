@@ -32,7 +32,7 @@ import scala.io.Codec
  * @param queryParams The query params.
  * @param body        The request body.
  */
-private[silhouette] case class Request(
+protected[silhouette] case class Request(
   uri: URI,
   method: Method = Method.GET,
   headers: List[Header] = List(),
@@ -70,7 +70,7 @@ private[silhouette] case class Request(
    * @param params The query params to set.
    * @return A request to provide a fluent interface.
    */
-  def withQueryParams(params: (String, String)*): Request = copy(queryParams = this.queryParams ++ queryParams)
+  def withQueryParams(params: (String, String)*): Request = copy(queryParams = this.queryParams ++ params)
 
   /**
    * Returns a copy of this instance with a new body.
@@ -96,7 +96,7 @@ private[silhouette] case class Request(
 /**
  * The companion object.
  */
-object Request {
+protected[silhouette] object Request {
 
   /**
    * Constructs a [[Request]].
