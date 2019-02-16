@@ -25,12 +25,7 @@ package silhouette.http
  *
  * @tparam R The type of the response.
  */
-protected[silhouette] trait ResponsePipeline[R] {
-
-  /**
-   * The framework specific response implementation.
-   */
-  val response: R
+trait ResponsePipeline[R] {
 
   /**
    * Gets the HTTP status code.

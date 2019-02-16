@@ -35,7 +35,8 @@ protected[silhouette] case object EmptyBody extends ExtractionResult
  * @param found    The found content type.
  * @param expected The list of expected content types.
  */
-protected[silhouette] case class WrongContentType(found: MimeType, expected: Seq[MimeType]) extends ExtractionResult
+protected[silhouette] final case class WrongContentType(found: MimeType, expected: Seq[MimeType])
+  extends ExtractionResult
 
 /**
  * Indicates that the value couldn't be found in the body.
@@ -47,14 +48,14 @@ protected[silhouette] case object NotFound extends ExtractionResult
  *
  * @param error The extraction error.
  */
-protected[silhouette] case class ExtractionError(error: Throwable) extends ExtractionResult
+protected[silhouette] final case class ExtractionError(error: Throwable) extends ExtractionResult
 
 /**
  * Represents the extracted value.
  *
  * @param value The extracted value.
  */
-protected[silhouette] case class ExtractedValue(value: String) extends ExtractionResult
+protected[silhouette] final case class ExtractedValue(value: String) extends ExtractionResult
 
 /**
  * Adds the ability to extract values from a request.
@@ -70,9 +71,14 @@ protected[silhouette] trait RequestExtractor[R] extends LazyLogging {
   type Parts = Seq[RequestPart.Value]
 
   /**
+   * The framework specific request implementation.
+   */
+  protected val request: R
+
+  /**
    * The body extractor implementation.
    */
-  val bodyExtractor: RequestBodyExtractor[R]
+  protected val bodyExtractor: RequestBodyExtractor[R]
 
   /**
    * Extracts a string from a request.
@@ -210,7 +216,7 @@ protected[silhouette] trait RequestExtractor[R] extends LazyLogging {
 /**
  * The body extractor helps to extract values from the body of a request.
  */
-protected[silhouette] trait RequestBodyExtractor[R] {
+trait RequestBodyExtractor[R] {
 
   /**
    * Gets the raw string representation of the body for debugging purpose.

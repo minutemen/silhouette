@@ -39,7 +39,7 @@ import scala.util.{ Failure, Success, Try }
  *
  * @param jwtReads The underlying JWT reads implementation.
  */
-final case class JwtReads(jwtReads: jwt.Reads) extends StatelessReads with StatefulReads {
+final case class JwtReads(jwtReads: jwt.Reads) extends StatelessReads[String] with StatefulReads[String] {
 
   /**
    * Transforms a JWT into an [[Authenticator]].

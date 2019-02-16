@@ -78,7 +78,7 @@ class AuthenticatorSpec(implicit ev: ExecutionEnv) extends Specification with Mo
     "set a default fingerprint" in new Context {
       implicit val request: RequestPipeline[SilhouetteRequest] = Fake.request
 
-      authenticator.withFingerPrint().fingerprint must beSome(request.fingerprint)
+      authenticator.withFingerPrint().fingerprint must beSome(request.fingerprint())
     }
 
     "set a custom fingerprint" in new Context {

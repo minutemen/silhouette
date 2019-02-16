@@ -15,29 +15,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.provider
+package silhouette.authenticator
 
+import com.typesafe.scalalogging.LazyLogging
+import javax.inject.Inject
 import silhouette._
+import silhouette.authenticator.AuthenticatorProvider._
 import silhouette.http.RequestPipeline
+import silhouette.provider.RequestProvider
 
 import scala.concurrent.Future
 
 /**
- * A provider which can be hooked into a request.
+ * A request provider implementation that supports authentication with an authenticator.
  *
- * It scans the request for credentials and returns the [[AuthState]] for it.
- *
+ * @param pipeline The authentication pipeline which transforms a request into an [[AuthState]].
  * @tparam R The type of the request.
  * @tparam I The type of the identity.
- * @tparam C The type of the credential.
  */
-trait RequestProvider[R, I <: Identity, C <: Credentials] extends Provider {
+class AuthenticatorProvider[R, I <: Identity] @Inject() (
+  pipeline: silhouette.Reads[RequestPipeline[R], Future[AuthState[I, Authenticator]]]
+) extends RequestProvider[R, I, Authenticator] with LazyLogging {
+
+  /**
+   * Gets the provider ID.
+   *
+   * @return The provider ID.
+   */
+  override def id: String = ID
 
   /**
    * Authenticates an identity based on credentials sent in a request.
    *
    * @param request The request pipeline.
-   * @return The [[AuthState]].
+   * @return Some login info on successful authentication or None if the authentication was unsuccessful.
    */
-  def authenticate(request: RequestPipeline[R]): Future[AuthState[I, C]]
+  override def authenticate(request: RequestPipeline[R]): Future[AuthState[I, Authenticator]] =
+    pipeline.read(request)
+}
+
+/**
+ * The companion object.
+ */
+object AuthenticatorProvider {
+
+  /**
+   * The provider constants.
+   */
+  val ID = "authenticator"
 }

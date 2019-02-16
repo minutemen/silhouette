@@ -55,11 +55,9 @@ final case class CookieTransport(config: CookieTransportConfig)
    * Retrieves the payload, stored in a cookie, from request.
    *
    * @param request The request pipeline to retrieve the payload from.
-   * @tparam R The type of the request.
    * @return Some payload or None if no payload could be found in request.
    */
-  override def retrieve[R](request: RequestPipeline[R]): Option[String] =
-    request.cookie(config.name).map(_.value)
+  override def retrieve(request: Request): Option[String] = request.cookie(config.name).map(_.value)
 
   /**
    * Adds a cookie with the given payload to the request.
@@ -116,18 +114,16 @@ final case class CookieTransport(config: CookieTransportConfig)
  * A reads that tries to retrieve some payload, stored in a cookie, from the given request.
  *
  * @param name The name of the cookie to retrieve to payload from.
- * @tparam R The type of the request.
  */
-final case class RetrieveFromCookie[R](name: String) extends RetrieveReads[R, String] {
+final case class RetrieveFromCookie(name: String) extends RetrieveReads[String] {
 
   /**
    * Reads payload from a cookie stored in the given request.
    *
-   * @param requestPipeline The request pipeline.
+   * @param request The request.
    * @return The retrieved payload.
    */
-  override def read(requestPipeline: RequestPipeline[R]): Option[String] =
-    CookieTransport(CookieTransportConfig(name)).retrieve(requestPipeline)
+  override def read(request: Request): Option[String] = CookieTransport(CookieTransportConfig(name)).retrieve(request)
 }
 
 /**

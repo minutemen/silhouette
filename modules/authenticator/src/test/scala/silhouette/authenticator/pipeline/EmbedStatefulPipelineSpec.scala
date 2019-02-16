@@ -84,7 +84,7 @@ class EmbedStatefulPipelineSpec(implicit ev: ExecutionEnv) extends Specification
      * A writes that transforms the [[Authenticator]] into a serialized form of the [[Authenticator]].
      */
     val statefulWrites = {
-      val m = mock[StatefulWrites]
+      val m = mock[StatefulWrites[String]]
       m.write(authenticator) returns Future.successful(authenticator.toString)
       m
     }

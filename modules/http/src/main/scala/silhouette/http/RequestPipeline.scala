@@ -17,32 +17,14 @@
  */
 package silhouette.http
 
-import java.net.{ URI, URLEncoder }
-
-import silhouette.crypto.Hash
-import silhouette.crypto.Hash._
+import java.net.URI
 
 /**
- * Decorates a framework specific request implementation.
+ * Allows to modify a framework specific request implementation.
  *
  * @tparam R The type of the request.
  */
-protected[silhouette] trait RequestPipeline[R] extends RequestExtractor[R] {
-
-  /**
-   * The framework specific request implementation.
-   */
-  val request: R
-
-  /**
-   * Gets the absolute URI of the request target.
-   *
-   * This must contain the absolute URI of thr request target, because we need this to resolve relative URIs
-   * against this.
-   *
-   * @return The absolute URI of the request target.
-   */
-  def uri: URI
+trait RequestPipeline[R] extends Request with RequestExtractor[R] {
 
   /**
    * Creates a new request pipeline with the given URI.
@@ -56,42 +38,12 @@ protected[silhouette] trait RequestPipeline[R] extends RequestExtractor[R] {
   def withUri(uri: URI): RequestPipeline[R]
 
   /**
-   * Gets the HTTP request method.
-   *
-   * @return The HTTP request method.
-   */
-  def method: Method
-
-  /**
    * Creates a new request pipeline with the given HTTP request method.
    *
    * @param method The HTTP request method to set.
    * @return A new request pipeline instance with the set HTTP request method.
    */
   def withMethod(method: Method): RequestPipeline[R]
-
-  /**
-   * Gets all headers.
-   *
-   * @return All headers.
-   */
-  def headers: Seq[Header]
-
-  /**
-   * Gets the header for the given name.
-   *
-   * @param name The name of the header for which the header should be returned.
-   * @return Some header for the given name, None if no header for the given name could be found.
-   */
-  def header(name: Header.Name): Option[Header] = headers.find(_.name == name)
-
-  /**
-   * Gets the header value for the given name.
-   *
-   * @param name The name of the header for which the header value should be returned.
-   * @return Some header value for the given name, None if no header for the given name could be found.
-   */
-  def headerValue(name: Header.Name): Option[String] = header(name).map(_.value)
 
   /**
    * Creates a new request pipeline with the given headers.
@@ -144,21 +96,6 @@ protected[silhouette] trait RequestPipeline[R] extends RequestExtractor[R] {
   def withHeaders(headers: Header*): RequestPipeline[R]
 
   /**
-   * Gets the list of cookies.
-   *
-   * @return The list of cookies.
-   */
-  def cookies: Seq[Cookie]
-
-  /**
-   * Gets a cookie.
-   *
-   * @param name The name for which the cookie should be returned.
-   * @return Some cookie or None if no cookie for the given name could be found.
-   */
-  def cookie(name: String): Option[Cookie] = cookies.find(_.name == name)
-
-  /**
    * Creates a new request pipeline with the given cookies.
    *
    * This method must override any existing cookie with the same name. If multiple cookies with the
@@ -207,39 +144,6 @@ protected[silhouette] trait RequestPipeline[R] extends RequestExtractor[R] {
    * @return A new request pipeline instance with the set cookies.
    */
   def withCookies(cookies: Cookie*): RequestPipeline[R]
-
-  /**
-   * Gets the raw query string.
-   *
-   * @return The raw query string.
-   */
-  def rawQueryString: String = {
-    queryParams.foldLeft(List[String]()) {
-      case (acc, (key, value)) =>
-        acc :+ value.map(URLEncoder.encode(key, "UTF-8") + "=" + URLEncoder.encode(_, "UTF-8")).mkString("&")
-    }.mkString("&")
-  }
-
-  /**
-   * Gets all query params.
-   *
-   * While there is no definitive standard, most web frameworks allow duplicate params with the
-   * same name. Therefore we must define a query param values as list of values.
-   *
-   * @return All query params.
-   */
-  def queryParams: Map[String, Seq[String]]
-
-  /**
-   * Gets the values for a query param.
-   *
-   * While there is no definitive standard, most web frameworks allow duplicate params with the
-   * same name. Therefore we must define a query param values as list of values.
-   *
-   * @param name The name of the query param for which the values should be returned.
-   * @return A list of param values for the given name or an empty list if no params for the given name could be found.
-   */
-  def queryParam(name: String): Seq[String] = queryParams.getOrElse(name, Nil)
 
   /**
    * Creates a new request pipeline with the given query params.
@@ -300,41 +204,12 @@ protected[silhouette] trait RequestPipeline[R] extends RequestExtractor[R] {
   def withBodyExtractor(bodyExtractor: RequestBodyExtractor[R]): RequestPipeline[R]
 
   /**
-   * Generates a default fingerprint from common request headers.
-   *
-   * A generator which creates a SHA1 fingerprint from `User-Agent`, `Accept-Language` and `Accept-Charset` headers.
-   *
-   * The `Accept` header would also be a good candidate, but this header makes problems in applications
-   * which uses content negotiation. So the default fingerprint generator doesn't include it.
-   *
-   * The same with `Accept-Encoding`. But in Chromium/Blink based browser the content of this header may
-   * be changed during requests.
-   *
-   * @return A default fingerprint from the request.
-   */
-  def fingerprint: String = {
-    Hash.sha1(new StringBuilder()
-      .append(headerValue(Header.Name.`User-Agent`).getOrElse("")).append(":")
-      .append(headerValue(Header.Name.`Accept-Language`).getOrElse("")).append(":")
-      .append(headerValue(Header.Name.`Accept-Charset`).getOrElse(""))
-      .toString()
-    )
-  }
-
-  /**
    * Generates a fingerprint from request.
    *
    * @param generator A generator function to create a fingerprint from request.
    * @return A fingerprint of the client.
    */
   def fingerprint(generator: RequestPipeline[R] => String): String = generator(this)
-
-  /**
-   * Indicates if the request is a secure HTTPS request.
-   *
-   * @return True if the request is a secure HTTPS request, false otherwise.
-   */
-  def isSecure: Boolean = uri.getScheme == "https"
 
   /**
    * Unboxes the framework specific request implementation.

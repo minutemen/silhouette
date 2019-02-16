@@ -43,11 +43,11 @@ class JwtReadsSpec(implicit ev: ExecutionEnv) extends Specification with Mockito
 
   "The instance" should {
     "be a StatelessReads" in new Context {
-      jwtReads must beAnInstanceOf[StatelessReads]
+      jwtReads must beAnInstanceOf[StatelessReads[String]]
     }
 
     "be a StatefulReads" in new Context {
-      jwtReads must beAnInstanceOf[StatefulReads]
+      jwtReads must beAnInstanceOf[StatefulReads[String]]
     }
   }
 

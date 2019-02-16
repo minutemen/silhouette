@@ -29,7 +29,7 @@ import scala.concurrent.Future
  * backing store. This writes doesn't store the authenticator directly. This should be done in a
  * [[silhouette.authenticator.WritePipeline]] instead.
  */
-final case class SatWrites() extends StatefulWrites {
+final case class SatWrites() extends StatefulWrites[String] {
 
   /**
    * Transforms an [[Authenticator]] into a simple authentication token.

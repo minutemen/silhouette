@@ -19,13 +19,13 @@ package silhouette.provider.http
 
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
-import silhouette.http.RequestPipeline
+import silhouette._
 import silhouette.http.transport.RetrieveBasicCredentialsFromHeader
+import silhouette.http.{ BasicCredentials, RequestPipeline }
 import silhouette.password.PasswordHasherRegistry
 import silhouette.provider.RequestProvider
 import silhouette.provider.http.BasicAuthProvider._
 import silhouette.provider.password.PasswordProvider
-import silhouette.{ ConfigurationException, LoginInfo }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -42,17 +42,24 @@ import scala.concurrent.{ ExecutionContext, Future }
  *                               [[LoginInfo]].
  * @param authInfoWriter         A function that writes the [[silhouette.password.PasswordInfo]] for the given
  *                               [[LoginInfo]].
+ * @param identityReader         The reader to retrieve the [[Identity]] for the [[LoginInfo]].
  * @param passwordHasherRegistry The password hashers used by the application.
  * @param ec                     The execution context to handle the asynchronous operations.
+ * @tparam R The type of the request.
+ * @tparam I The type of the identity.
  */
-class BasicAuthProvider @Inject() (
+class BasicAuthProvider[R, I <: Identity] @Inject() (
   protected val authInfoReader: PasswordProvider#AuthInfoReader,
   protected val authInfoWriter: PasswordProvider#AuthInfoWriter,
+  protected val identityReader: LoginInfo => Future[Option[I]],
   protected val passwordHasherRegistry: PasswordHasherRegistry
 )(
   implicit
   val ec: ExecutionContext
-) extends RequestProvider with PasswordProvider with LazyLogging {
+) extends RequestProvider[R, I, BasicCredentials]
+  with PasswordProvider
+  with ExecutionContextProvider
+  with LazyLogging {
 
   /**
    * Gets the provider ID.
@@ -65,25 +72,29 @@ class BasicAuthProvider @Inject() (
    * Authenticates an identity based on credentials sent in a request.
    *
    * @param request The request pipeline.
-   * @tparam R The type of the request.
    * @return Some login info on successful authentication or None if the authentication was unsuccessful.
    */
-  override def authenticate[R](request: RequestPipeline[R]): Future[Option[LoginInfo]] = {
+  override def authenticate(request: RequestPipeline[R]): Future[AuthState[I, BasicCredentials]] = {
     RetrieveBasicCredentialsFromHeader().read(request) match {
       case Some(credentials) =>
         val loginInfo = LoginInfo(id, credentials.username)
-        authenticate(loginInfo, credentials.password).map {
-          case Authenticated => Some(loginInfo)
+        authenticate(loginInfo, credentials.password).flatMap {
+          case Successful =>
+            identityReader(loginInfo).map {
+              case Some(identity) => Authenticated(identity, credentials, loginInfo)
+              case None           => MissingIdentity(credentials, loginInfo)
+            }
           case InvalidPassword(error) =>
             logger.debug(error)
-            None
-          case UnsupportedHasher(error) => throw new ConfigurationException(error)
+            Future.successful(InvalidCredentials(credentials))
+          case UnsupportedHasher(error) =>
+            Future.failed(new ConfigurationException(error))
           case NotFound(error) =>
             logger.debug(error)
-            None
+            Future.successful(InvalidCredentials(credentials))
         }
       case None =>
-        Future.successful(None)
+        Future.successful(MissingCredentials())
     }
   }
 }

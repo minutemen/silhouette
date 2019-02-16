@@ -37,10 +37,9 @@ final case class HeaderTransport(name: Header.Name)
    * Retrieves the payload, stored in a header, from request.
    *
    * @param request The request pipeline to retrieve the payload from.
-   * @tparam R The type of the request.
    * @return Some payload or None if no payload could be found in request.
    */
-  override def retrieve[R](request: RequestPipeline[R]): Option[String] = request.header(name).map(_.value)
+  override def retrieve(request: Request): Option[String] = request.header(name).map(_.value)
 
   /**
    * Adds a header with the given payload to the request.
@@ -69,18 +68,16 @@ final case class HeaderTransport(name: Header.Name)
  * A reads that tries to retrieve some payload, stored in a header, from the given request.
  *
  * @param name The name of the header in which the payload will be transported.
- * @tparam R The type of the request.
  */
-final case class RetrieveFromHeader[R](name: Header.Name) extends RetrieveReads[R, String] {
+final case class RetrieveFromHeader(name: Header.Name) extends RetrieveReads[String] {
 
   /**
    * Reads payload from a request header.
    *
-   * @param requestPipeline The request pipeline.
+   * @param request The request.
    * @return The retrieved payload.
    */
-  override def read(requestPipeline: RequestPipeline[R]): Option[String] =
-    HeaderTransport(name).retrieve(requestPipeline)
+  override def read(request: Request): Option[String] = HeaderTransport(name).retrieve(request)
 }
 
 /**
@@ -89,19 +86,18 @@ final case class RetrieveFromHeader[R](name: Header.Name) extends RetrieveReads[
  * Reads from header in the form "Authorization: Bearer some.token".
  *
  * @param name The name of the header in which the payload will be transported; Defaults to Authorization.
- * @tparam R The type of the request.
  */
-final case class RetrieveBearerTokenFromHeader[R](name: Header.Name = Header.Name.Authorization)
-  extends RetrieveReads[R, BearerToken] {
+final case class RetrieveBearerTokenFromHeader(name: Header.Name = Header.Name.Authorization)
+  extends RetrieveReads[BearerToken] {
 
   /**
    * Reads a bearer token from a header.
    *
-   * @param requestPipeline The request pipeline.
+   * @param request The request.
    * @return The retrieved payload.
    */
-  override def read(requestPipeline: RequestPipeline[R]): Option[BearerToken] =
-    RetrieveFromHeader[R](name)(requestPipeline) andThenTry BearerAuthSchemeFormat() toOption
+  override def read(request: Request): Option[BearerToken] =
+    RetrieveFromHeader(name)(request) andThenTry BearerAuthSchemeFormat() toOption
 }
 
 /**
@@ -110,19 +106,18 @@ final case class RetrieveBearerTokenFromHeader[R](name: Header.Name = Header.Nam
  * Reads from header in the form "Authorization: Basic user:password".
  *
  * @param name The name of the header in which the payload will be transported; Defaults to Authorization.
- * @tparam R The type of the request.
  */
-final case class RetrieveBasicCredentialsFromHeader[R](name: Header.Name = Header.Name.Authorization)
-  extends RetrieveReads[R, BasicCredentials] {
+final case class RetrieveBasicCredentialsFromHeader(name: Header.Name = Header.Name.Authorization)
+  extends RetrieveReads[BasicCredentials] {
 
   /**
    * Reads payload from a header.
    *
-   * @param requestPipeline The request pipeline.
+   * @param request The request.
    * @return The retrieved payload.
    */
-  override def read(requestPipeline: RequestPipeline[R]): Option[BasicCredentials] =
-    RetrieveFromHeader[R](name)(requestPipeline) andThenTry BasicAuthSchemeFormat() toOption
+  override def read(request: Request): Option[BasicCredentials] =
+    RetrieveFromHeader(name)(request) andThenTry BasicAuthSchemeFormat() toOption
 }
 
 /**

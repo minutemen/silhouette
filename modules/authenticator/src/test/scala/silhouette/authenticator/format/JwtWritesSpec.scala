@@ -42,11 +42,11 @@ class JwtWritesSpec(implicit ev: ExecutionEnv) extends Specification with Mockit
 
   "The instance" should {
     "be a StatelessWrites" in new Context {
-      jwtWrites must beAnInstanceOf[StatelessWrites]
+      jwtWrites must beAnInstanceOf[StatelessWrites[String]]
     }
 
     "be a StatefulWrites" in new Context {
-      jwtWrites must beAnInstanceOf[StatefulWrites]
+      jwtWrites must beAnInstanceOf[StatefulWrites[String]]
     }
   }
 

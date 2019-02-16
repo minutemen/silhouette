@@ -47,7 +47,7 @@ final protected[silhouette] case class SilhouetteRequest(
  * @param bodyExtractor The request body extractor used to extract values from request body.
  */
 final protected[silhouette] case class SilhouetteRequestPipeline(
-  request: SilhouetteRequest,
+  override protected val request: SilhouetteRequest,
   bodyExtractor: RequestBodyExtractor[SilhouetteRequest] = new SilhouetteRequestBodyExtractor
 ) extends RequestPipeline[SilhouetteRequest] {
 

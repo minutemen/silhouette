@@ -66,6 +66,13 @@ lazy val `silhouette-authenticator` = (project in file("modules/authenticator"))
     `silhouette-crypto`,
     `silhouette-http`,
     `silhouette-jwt`,
+    `silhouette-provider`,
+    `silhouette-specs2` % Test
+  )
+
+lazy val `silhouette-authorization` = (project in file("modules/authorization"))
+  .dependsOn(
+    `silhouette-core`,
     `silhouette-specs2` % Test
   )
 
@@ -152,6 +159,7 @@ lazy val silhouette = (project in file("."))
     `silhouette-jwt`,
     `silhouette-jwt-jose4j`,
     `silhouette-authenticator`,
+    `silhouette-authorization`,
     `silhouette-password`,
     `silhouette-password-bcrypt`,
     `silhouette-provider`,

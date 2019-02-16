@@ -37,7 +37,7 @@ protected[silhouette] case class SilhouetteResponse(
  *
  * @param response The response this pipeline handles.
  */
-final protected[silhouette] case class SilhouetteResponsePipeline(response: SilhouetteResponse)
+final protected[silhouette] case class SilhouetteResponsePipeline(protected val response: SilhouetteResponse)
   extends ResponsePipeline[SilhouetteResponse] {
 
   /**

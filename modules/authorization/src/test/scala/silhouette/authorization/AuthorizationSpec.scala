@@ -15,13 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.authenticator
+package silhouette.authorization
 
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import silhouette.authenticator.Authorization._
+import silhouette.authorization.Authorization._
 import silhouette.specs2.WaitPatience
 import silhouette.{ Identity, LoginInfo }
 
@@ -34,47 +34,47 @@ class AuthorizationSpec(implicit ev: ExecutionEnv) extends Specification with Mo
 
   "The `Authorized` authorization" should {
     "return true" in new Context {
-      Authorized().isAuthorized(user, authenticator) must beEqualTo(true).awaitWithPatience
+      Authorized.isAuthorized(user, TestContext()) must beEqualTo(true).awaitWithPatience
     }
   }
 
   "The `Unauthorized` authorization" should {
     "return true" in new Context {
-      Unauthorized().isAuthorized(user, authenticator) must beEqualTo(false).awaitWithPatience
+      Unauthorized.isAuthorized(user, TestContext()) must beEqualTo(false).awaitWithPatience
     }
   }
 
   "The `RichAuthorization` class" should {
     "allow to negate an authorization" in new Context {
-      (!Authorized[User]()).isAuthorized(user, authenticator) must beEqualTo(false).awaitWithPatience
-      (!Unauthorized[User]()).isAuthorized(user, authenticator) must beEqualTo(true).awaitWithPatience
+      (!Authorized).isAuthorized(user, TestContext()) must beEqualTo(false).awaitWithPatience
+      (!Unauthorized).isAuthorized(user, TestContext()) must beEqualTo(true).awaitWithPatience
     }
 
     "allow to perform a logical AND operation" in new Context {
-      (Authorized[User]() && Unauthorized[User]()).isAuthorized(user, authenticator) must
+      (Authorized && Unauthorized).isAuthorized(user, TestContext()) must
         beEqualTo(false).awaitWithPatience
 
-      (Authorized[User]() && Authorized[User]()).isAuthorized(user, authenticator) must
+      (Authorized && Authorized).isAuthorized(user, TestContext()) must
         beEqualTo(true).awaitWithPatience
 
-      (Unauthorized[User]() && Unauthorized[User]()).isAuthorized(user, authenticator) must
+      (Unauthorized && Unauthorized).isAuthorized(user, TestContext()) must
         beEqualTo(false).awaitWithPatience
 
-      (Unauthorized[User]() && Authorized[User]()).isAuthorized(user, authenticator) must
+      (Unauthorized && Authorized).isAuthorized(user, TestContext()) must
         beEqualTo(false).awaitWithPatience
     }
 
     "allow to perform a logical OR operation" in new Context {
-      (Authorized[User]() || Unauthorized[User]()).isAuthorized(user, authenticator) must
+      (Authorized || Unauthorized).isAuthorized(user, TestContext()) must
         beEqualTo(true).awaitWithPatience
 
-      (Authorized[User]() || Authorized[User]()).isAuthorized(user, authenticator) must
+      (Authorized || Authorized).isAuthorized(user, TestContext()) must
         beEqualTo(true).awaitWithPatience
 
-      (Unauthorized[User]() || Unauthorized[User]()).isAuthorized(user, authenticator) must
+      (Unauthorized || Unauthorized).isAuthorized(user, TestContext()) must
         beEqualTo(false).awaitWithPatience
 
-      (Unauthorized[User]() || Authorized[User]()).isAuthorized(user, authenticator) must
+      (Unauthorized || Authorized).isAuthorized(user, TestContext()) must
         beEqualTo(true).awaitWithPatience
     }
   }
@@ -90,6 +90,11 @@ class AuthorizationSpec(implicit ev: ExecutionEnv) extends Specification with Mo
     case class User(loginInfo: LoginInfo) extends Identity
 
     /**
+     * A test context.
+     */
+    case class TestContext() extends AuthorizationContext
+
+    /**
      * The login info.
      */
     val loginInfo = LoginInfo("credentials", "john@doe.com")
@@ -98,13 +103,5 @@ class AuthorizationSpec(implicit ev: ExecutionEnv) extends Specification with Mo
      * The identity implementation.
      */
     val user = User(loginInfo)
-
-    /**
-     * The authenticator instance to test.
-     */
-    val authenticator = Authenticator(
-      id = "test-id",
-      loginInfo = loginInfo
-    )
   }
 }

@@ -20,9 +20,9 @@ package silhouette.authenticator
 import java.time.{ Clock, Instant }
 
 import io.circe.Json
-import silhouette.LoginInfo
+import silhouette.{ Credentials, LoginInfo }
 import silhouette.RichInstant._
-import silhouette.http.RequestPipeline
+import silhouette.http.{ Request, RequestPipeline }
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
@@ -56,7 +56,8 @@ final case class Authenticator(
   expires: Option[Instant] = None,
   fingerprint: Option[String] = None,
   tags: Seq[String] = Seq(),
-  payload: Option[Json] = None) {
+  payload: Option[Json] = None
+) extends Credentials {
 
   /**
    * Gets the duration the authenticator expires in.
@@ -99,11 +100,11 @@ final case class Authenticator(
   /**
    * Returns a copy of this authenticator with a default fingerprint.
    *
-   * @param requestPipeline The request pipeline.
+   * @param request The request.
    * @return A copy of this authenticator with a default fingerprint.
    */
-  def withFingerPrint[R]()(implicit requestPipeline: RequestPipeline[R]): Authenticator =
-    copy(fingerprint = Some(requestPipeline.fingerprint))
+  def withFingerPrint()(implicit request: Request): Authenticator =
+    copy(fingerprint = Some(request.fingerprint()))
 
   /**
    * Returns a copy of this authenticator with a custom fingerprint.
@@ -148,7 +149,7 @@ final case class Authenticator(
    * @param ec         The execution context to perform the async operations.
    * @return True if the authenticator is valid, false otherwise.
    */
-  def isValid[R](validators: Set[Validator])(
+  def isValid(validators: Set[Validator])(
     implicit
     ec: ExecutionContext
   ): Future[Boolean] = {

@@ -19,31 +19,28 @@ package silhouette.authenticator.pipeline
 
 import silhouette.Fitting._
 import silhouette.authenticator._
-import silhouette.{ Identity, LoginInfo }
+import silhouette.{ AuthState, Identity, LoginInfo }
 
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.language.postfixOps
 
 /**
- * An authentication pipeline which reads a serialized representation of an authenticator from a source and
- * transforms it to an authentication state.
+ * An authentication pipeline which reads an authenticator from a source and transforms it to an authentication state.
  *
- * @param reads          The reads which transforms a string into an authenticator.
+ * @param reads          The reads which transforms a source into an authenticator.
  * @param identityReader The reader to retrieve the [[Identity]] for the [[LoginInfo]] stored in the
  *                       [[silhouette.authenticator.Authenticator]] from the persistence layer.
  * @param validators     The list of validators to apply to the [[silhouette.authenticator.Authenticator]].
- * @param authorization  The [[Authorization]] to apply to the [[silhouette.authenticator.Authenticator]] and
- *                       the [[Identity]].
+ * @tparam S The type of the source.
+ * @tparam I The type of the identity.
  */
-final case class ReadsAuthenticationPipeline[I <: Identity](
-  reads: Reads,
-  identityReader: LoginInfo => Future[Option[I]],
-  override val validators: Set[Validator] = Set(),
-  override val authorization: Authorization[I] = Authorized()
+final case class ReadsAuthenticationPipeline[S, I <: Identity](
+  reads: Reads[S],
+  override protected val identityReader: LoginInfo => Future[Option[I]],
+  override protected val validators: Set[Validator] = Set()
 )(
   implicit
   ec: ExecutionContext
-) extends AuthenticationPipeline[Option[String], I] {
+) extends AuthenticationPipeline[Option[S], I] {
 
   /**
    * Apply the pipeline.
@@ -51,5 +48,5 @@ final case class ReadsAuthenticationPipeline[I <: Identity](
    * @param source The source to read the authenticator from.
    * @return An authentication state.
    */
-  override def read(source: Option[String]): Future[State[I]] = source andThenFuture reads toState
+  override def read(source: Option[S]): Future[AuthState[I, Authenticator]] = source.andThenFuture(reads).toState
 }

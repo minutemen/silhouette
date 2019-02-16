@@ -44,11 +44,10 @@ trait RetrieveFromRequest extends RequestTransport {
   /**
    * Retrieves payload from the given request.
    *
-   * @param request The request pipeline to retrieve the payload from.
-   * @tparam R The type of the request.
+   * @param request The request to retrieve the payload from.
    * @return Some payload or None if no payload could be found in request.
    */
-  def retrieve[R](request: RequestPipeline[R]): Option[String]
+  def retrieve(request: Request): Option[String]
 }
 
 /**
@@ -109,10 +108,9 @@ trait DiscardFromResponse extends ResponseTransport {
 /**
  * A reads that tries to retrieve some payload from the request.
  *
- * @tparam R The type of the request.
  * @tparam P The type of the payload.
  */
-trait RetrieveReads[R, P] extends Reads[RequestPipeline[R], Option[P]]
+trait RetrieveReads[P] extends Reads[Request, Option[P]]
 
 /**
  * A writes that smuggles some payload into the request.

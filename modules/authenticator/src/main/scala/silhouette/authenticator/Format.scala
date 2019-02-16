@@ -20,31 +20,43 @@ package silhouette.authenticator
 import scala.concurrent.Future
 
 /**
- * Transforms a string into an [[Authenticator]].
+ * Transforms a source into an [[Authenticator]].
+ *
+ * @tparam S The source type.
  */
-trait Reads extends silhouette.Reads[String, Future[Authenticator]]
+trait Reads[S] extends silhouette.Reads[S, Future[Authenticator]]
 
 /**
- * Transforms an [[Authenticator]] into a string.
+ * Transforms an [[Authenticator]] into a target.
+ *
+ * @tparam T The target type.
  */
-trait Writes extends silhouette.Writes[Authenticator, Future[String]]
+trait Writes[T] extends silhouette.Writes[Authenticator, Future[T]]
 
 /**
  * A marker trait for a [[Reads]] that can transform a stateful [[Authenticator]].
+ *
+ * @tparam S The source type.
  */
-trait StatefulReads extends Reads
+trait StatefulReads[S] extends Reads[S]
 
 /**
  * A marker trait for a [[Writes]] that can transform a stateful [[Authenticator]].
+ *
+ * @tparam T The target type.
  */
-trait StatefulWrites extends Writes
+trait StatefulWrites[T] extends Writes[T]
 
 /**
  * A marker trait for a [[Reads]] that can transform a stateless [[Authenticator]].
+ *
+ * @tparam S The source type.
  */
-trait StatelessReads extends Reads
+trait StatelessReads[S] extends Reads[S]
 
 /**
  * A marker trait for a [[Writes]] that can transform a stateless [[Authenticator]].
+ *
+ * @tparam T The target type.
  */
-trait StatelessWrites extends Writes
+trait StatelessWrites[T] extends Writes[T]

@@ -37,7 +37,7 @@ class SatReadsSpec(implicit ev: ExecutionEnv) extends Specification with Mockito
 
   "The instance" should {
     "be a StatefulReads" in new Context {
-      satReads must beAnInstanceOf[StatefulReads]
+      satReads must beAnInstanceOf[StatefulReads[String]]
     }
   }
 

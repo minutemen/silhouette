@@ -23,7 +23,7 @@ package silhouette
  * @tparam A The source type.
  * @tparam B The target type.
  */
-trait Reads[A, B] { self =>
+trait Reads[-A, +B] { self =>
 
   /**
    * Transforms from source `A` to target `B`.

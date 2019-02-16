@@ -376,7 +376,7 @@ object Fitting {
    * Helper to connect a `Reads[A, Future[B]]` directly to a [[scala.concurrent.Future]].
    *
    * We already have an implicit converter that converts a `Future[A]` to a `Future[Fitting[A]]` and an implicit
-   * class which adds a `andThenFuture` method to  a `Future[Fitting[A]]`. But this cannot be applied to a `Future[A]`
+   * class which adds a `andThenFuture` method to a `Future[Fitting[A]]`. But this cannot be applied to a `Future[A]`
    * alone, because Scala cannot chain implicits. So we do this manually here.
    *
    * @param value The type to monkey patch.

@@ -30,11 +30,9 @@ final case class QueryStringTransport(name: String)
    * Retrieves the payload, stored in the query string, from request.
    *
    * @param request The request pipeline to retrieve the payload from.
-   * @tparam R The type of the request.
    * @return Some value or None if no payload could be found in request.
    */
-  override def retrieve[R](request: RequestPipeline[R]): Option[String] =
-    request.queryParam(name).headOption
+  override def retrieve(request: Request): Option[String] = request.queryParam(name).headOption
 
   /**
    * Adds a query param with the given payload to the request.
@@ -52,18 +50,16 @@ final case class QueryStringTransport(name: String)
  * A reads that tries to retrieve some payload, stored in a query param, from the given request.
  *
  * @param name The name of the query param in which the payload will be transported.
- * @tparam R The type of the request.
  */
-final case class RetrieveFromQueryString[R](name: String) extends RetrieveReads[R, String] {
+final case class RetrieveFromQueryString(name: String) extends RetrieveReads[String] {
 
   /**
    * Reads payload from a query string param stored in the given request.
    *
-   * @param requestPipeline The request pipeline.
+   * @param request The request pipeline.
    * @return The retrieved payload.
    */
-  override def read(requestPipeline: RequestPipeline[R]): Option[String] =
-    QueryStringTransport(name).retrieve(requestPipeline)
+  override def read(request: Request): Option[String] = QueryStringTransport(name).retrieve(request)
 }
 
 /**

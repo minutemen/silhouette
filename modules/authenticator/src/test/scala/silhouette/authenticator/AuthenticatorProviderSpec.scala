@@ -15,84 +15,97 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.authenticator.pipeline
+package silhouette.authenticator
 
 import org.specs2.concurrent.ExecutionEnv
-import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
-import silhouette.authenticator._
+import org.specs2.specification.Scope
+import silhouette._
+import silhouette.authenticator.pipeline.ReadsAuthenticationPipeline
+import silhouette.http.{ Cookie, Fake, SilhouetteRequest }
+import silhouette.http.transport.RetrieveFromCookie
 import silhouette.specs2.WaitPatience
-import silhouette.{ Reads => _, _ }
 
 import scala.concurrent.Future
 
 /**
- * Test case for the [[ReadsAuthenticationPipeline]] class.
+ * Test case for the [[AuthenticatorProvider]] class.
  *
  * @param ev The execution environment.
  */
-class ReadsAuthenticationPipelineSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
+class AuthenticatorProviderSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
 
-  "The `read` method" should {
-    "return the `MissingCredentials` state if no token was given" in new Context {
-      pipeline.read(None) must beEqualTo(MissingCredentials()).awaitWithPatience
+  "The `authenticate` method" should {
+    "return the `MissingCredentials` state if no token was found in request" in new Context {
+      val request = Fake.request
+
+      provider.authenticate(request) must beEqualTo(MissingCredentials()).awaitWithPatience
     }
 
     "throws an `AuthenticatorException` if the token couldn't be transformed into an authenticator" in new Context {
       val exception = new AuthenticatorException("Parse error")
+      val request = Fake.request.withCookies(Cookie("test", token))
 
       reads.read(token) returns Future.failed(exception)
 
-      pipeline.read(Some(token)) must throwA[AuthenticatorException].like {
+      provider.authenticate(request) must throwA[AuthenticatorException].like {
         case e => e.getMessage must beEqualTo(exception.getMessage)
       }.awaitWithPatience
     }
 
     "return the `InvalidCredentials` state if the authenticator is invalid" in new Context {
+      val request = Fake.request.withCookies(Cookie("test", token))
+
       reads.read(token) returns Future.successful(authenticator)
       validator.isValid(authenticator) returns Future.successful(false)
 
-      pipeline.read(Some(token)) must beEqualTo(InvalidCredentials(authenticator)).awaitWithPatience
+      provider.authenticate(request) must beEqualTo(InvalidCredentials(authenticator)).awaitWithPatience
     }
 
     "throws an `AuthenticatorException` if the validator throws an exception" in new Context {
       val exception = new AuthenticatorException("Validation error")
+      val request = Fake.request.withCookies(Cookie("test", token))
 
       reads.read(token) returns Future.successful(authenticator)
       validator.isValid(authenticator) returns Future.failed(exception)
 
-      pipeline.read(Some(token)) must throwA[AuthenticatorException].like {
+      provider.authenticate(request) must throwA[AuthenticatorException].like {
         case e => e.getMessage must beEqualTo(exception.getMessage)
       }.awaitWithPatience
     }
 
     "return the `MissingIdentity` state if the identity couldn't be found for the login info" in new Context {
+      val request = Fake.request.withCookies(Cookie("test", token))
+
       reads.read(token) returns Future.successful(authenticator)
       validator.isValid(authenticator) returns Future.successful(true)
       identityReader.apply(loginInfo) returns Future.successful(None)
 
-      pipeline.read(Some(token)) must beEqualTo(MissingIdentity(authenticator, loginInfo)).awaitWithPatience
+      provider.authenticate(request) must beEqualTo(MissingIdentity(authenticator, loginInfo)).awaitWithPatience
     }
 
     "throws an `AuthenticatorException` if the identity reader throws an exception" in new Context {
       val exception = new AuthenticatorException("Retrieval error")
+      val request = Fake.request.withCookies(Cookie("test", token))
 
       reads.read(token) returns Future.successful(authenticator)
       validator.isValid(authenticator) returns Future.successful(true)
       identityReader.apply(loginInfo) returns Future.failed(exception)
 
-      pipeline.read(Some(token)) must throwA[AuthenticatorException].like {
+      provider.authenticate(request) must throwA[AuthenticatorException].like {
         case e => e.getMessage must beEqualTo(exception.getMessage)
       }.awaitWithPatience
     }
 
     "return the `Authenticated` state if the authentication process was successful" in new Context {
+      val request = Fake.request.withCookies(Cookie("test", token))
+
       reads.read(token) returns Future.successful(authenticator)
       validator.isValid(authenticator) returns Future.successful(true)
       identityReader.apply(loginInfo) returns Future.successful(Some(user))
 
-      pipeline.read(Some(token)) must beEqualTo(Authenticated(user, authenticator, loginInfo)).awaitWithPatience
+      provider.authenticate(request) must beEqualTo(Authenticated(user, authenticator, loginInfo)).awaitWithPatience
     }
   }
 
@@ -143,8 +156,10 @@ class ReadsAuthenticationPipelineSpec(implicit ev: ExecutionEnv) extends Specifi
     val validator = mock[Validator].smart
 
     /**
-     * The pipeline to test.
+     * The provider to test.
      */
-    val pipeline = ReadsAuthenticationPipeline(reads, identityReader, Set(validator))
+    val provider = new AuthenticatorProvider[SilhouetteRequest, User](
+      RetrieveFromCookie("test") andThen ReadsAuthenticationPipeline(reads, identityReader, Set(validator))
+    )
   }
 }

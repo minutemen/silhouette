@@ -40,7 +40,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  */
 final case class EmbedStatefulPipeline[R](
   statefulWriter: Authenticator => Future[Authenticator],
-  authenticatorWrites: StatefulWrites,
+  authenticatorWrites: StatefulWrites[String],
   embedWrites: EmbedWrites[R, String]
 )(
   implicit

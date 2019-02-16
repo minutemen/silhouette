@@ -17,7 +17,7 @@
  */
 package silhouette.http
 
-import silhouette.http.client.{ Request, Response }
+import silhouette.http.client.Response
 
 import scala.concurrent.Future
 
@@ -36,5 +36,5 @@ private[silhouette] trait HttpClient {
    * @param request The request to execute.
    * @return The resulting response.
    */
-  def execute(request: Request): Future[Response]
+  def execute(request: client.Request): Future[Response]
 }

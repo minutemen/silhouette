@@ -22,7 +22,7 @@ import silhouette.crypto.Base64
 import silhouette.http.AuthScheme.{ Basic, Bearer }
 
 /**
- * Test case for the [[HttpCredentials]] trait.
+ * Test case for the [[HttpCredentials]] based implementations.
  */
 class HttpCredentialsSpec extends Specification {
 

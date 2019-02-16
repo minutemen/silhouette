@@ -36,7 +36,7 @@ import scala.concurrent.{ ExecutionContext, Future }
  * @tparam R The type of the response.
  */
 final case class EmbedStatelessPipeline[R](
-  authenticatorWrites: StatelessWrites,
+  authenticatorWrites: StatelessWrites[String],
   embedWrites: EmbedWrites[R, String]
 )(
   implicit

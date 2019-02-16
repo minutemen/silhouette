@@ -45,7 +45,7 @@ trait PasswordProvider extends Provider with ExecutionContextProvider {
   /**
    * Indicates that the authentication was successful.
    */
-  case object Authenticated extends State
+  case object Successful extends State
 
   /**
    * Indicates that the entered password doesn't match with the stored one.
@@ -90,10 +90,10 @@ trait PasswordProvider extends Provider with ExecutionContextProvider {
         case Some(hasher) if hasher.matches(passwordInfo, password) =>
           if ((passwordHasherRegistry isDeprecated hasher) || (hasher isDeprecated passwordInfo).contains(true)) {
             authInfoWriter(loginInfo, passwordHasherRegistry.current.hash(password)).map { _ =>
-              Authenticated
+              Successful
             }
           } else {
-            Future.successful(Authenticated)
+            Future.successful(Successful)
           }
         case Some(_) => Future.successful(InvalidPassword(PasswordDoesNotMatch.format(id)))
         case None => Future.successful(UnsupportedHasher(HasherIsNotRegistered.format(

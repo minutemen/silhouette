@@ -75,7 +75,7 @@ class PasswordLoginProvider @Inject() (
   def authenticate(credentials: PasswordCredentials): Future[LoginInfo] = {
     loginInfo(credentials).flatMap { loginInfo =>
       authenticate(loginInfo, credentials.password).map {
-        case Authenticated            => loginInfo
+        case Successful               => loginInfo
         case InvalidPassword(error)   => throw new InvalidPasswordException(error)
         case UnsupportedHasher(error) => throw new ConfigurationException(error)
         case NotFound(error)          => throw new IdentityNotFoundException(error)

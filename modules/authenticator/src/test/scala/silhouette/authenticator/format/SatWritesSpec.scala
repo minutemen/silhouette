@@ -34,7 +34,7 @@ class SatWritesSpec(implicit ev: ExecutionEnv) extends Specification with Mockit
 
   "The instance" should {
     "be a StatefulWrites" in new Context {
-      satWrites must beAnInstanceOf[StatefulWrites]
+      satWrites must beAnInstanceOf[StatefulWrites[String]]
     }
   }
 

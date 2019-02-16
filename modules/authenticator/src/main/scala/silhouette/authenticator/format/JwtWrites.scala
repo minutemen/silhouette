@@ -46,7 +46,7 @@ final case class JwtWrites(
   issuer: Option[String] = None,
   audience: Option[List[String]] = None,
   notBefore: Option[Instant] = None
-) extends StatelessWrites with StatefulWrites {
+) extends StatelessWrites[String] with StatefulWrites[String] {
 
   /**
    * Transforms an [[Authenticator]] into a JWT.

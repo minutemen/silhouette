@@ -35,7 +35,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 final case class SatReads(reader: String => Future[Option[Authenticator]])(
   implicit
   ex: ExecutionContext
-) extends StatefulReads {
+) extends StatefulReads[String] {
 
   /**
    * Transforms a simple authentication token into an [[Authenticator]].

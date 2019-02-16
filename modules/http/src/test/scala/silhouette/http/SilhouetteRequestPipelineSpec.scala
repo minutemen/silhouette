@@ -208,19 +208,19 @@ class SilhouetteRequestPipelineSpec extends Specification {
   "The default `fingerprint` method" should {
     "return fingerprint including the `User-Agent` header" in new Context {
       val userAgent = "test-user-agent"
-      requestPipeline.withHeaders(Header("User-Agent", userAgent)).fingerprint must
+      requestPipeline.withHeaders(Header("User-Agent", userAgent)).fingerprint() must
         be equalTo Hash.sha1(userAgent + "::")
     }
 
     "return fingerprint including the `Accept-Language` header" in new Context {
       val acceptLanguage = "test-accept-language"
-      requestPipeline.withHeaders(Header("Accept-Language", acceptLanguage)).fingerprint must
+      requestPipeline.withHeaders(Header("Accept-Language", acceptLanguage)).fingerprint() must
         be equalTo Hash.sha1(":" + acceptLanguage + ":")
     }
 
     "return fingerprint including the `Accept-Charset` header" in new Context {
       val acceptCharset = "test-accept-charset"
-      requestPipeline.withHeaders(Header("Accept-Charset", acceptCharset)).fingerprint must
+      requestPipeline.withHeaders(Header("Accept-Charset", acceptCharset)).fingerprint() must
         be equalTo Hash.sha1("::" + acceptCharset)
     }
 
@@ -232,7 +232,7 @@ class SilhouetteRequestPipelineSpec extends Specification {
         Header("User-Agent", userAgent),
         Header("Accept-Language", acceptLanguage),
         Header("Accept-Charset", acceptCharset)
-      ).fingerprint must be equalTo Hash.sha1(
+      ).fingerprint() must be equalTo Hash.sha1(
           userAgent + ":" + acceptLanguage + ":" + acceptCharset
         )
     }
