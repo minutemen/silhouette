@@ -31,7 +31,8 @@ trait Validator {
    *
    * @param authenticator The authenticator to validate.
    * @param ec            The execution context to perform the async operations.
-   * @return [[Valid]] if the authenticator is valid, [[Invalid]] otherwise.
+   * @return [[silhouette.authenticator.Validator.Valid]] if the authenticator is valid,
+   *        [[silhouette.authenticator.Validator.Invalid]] otherwise.
    */
   def isValid(authenticator: Authenticator)(
     implicit
