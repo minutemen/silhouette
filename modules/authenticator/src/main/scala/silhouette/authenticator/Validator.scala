@@ -17,6 +17,8 @@
  */
 package silhouette.authenticator
 
+import silhouette.authenticator.Validator._
+
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
@@ -29,10 +31,33 @@ trait Validator {
    *
    * @param authenticator The authenticator to validate.
    * @param ec            The execution context to perform the async operations.
-   * @return True if the authenticator is valid, false otherwise.
+   * @return [[Valid]] if the authenticator is valid, [[Invalid]] otherwise.
    */
   def isValid(authenticator: Authenticator)(
     implicit
     ec: ExecutionContext
-  ): Future[Boolean]
+  ): Future[Status]
+}
+
+/**
+ * The companion object.
+ */
+object Validator {
+
+  /**
+   * The validation status.
+   */
+  sealed trait Status
+
+  /**
+   * Indicates that the validation was successful.
+   */
+  case object Valid extends Status
+
+  /**
+   * Indicates that the validation failed.
+   *
+   * @param errors The validation errors.
+   */
+  final case class Invalid(errors: Seq[String]) extends Status
 }

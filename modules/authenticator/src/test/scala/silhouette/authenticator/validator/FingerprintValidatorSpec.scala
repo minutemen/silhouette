@@ -21,9 +21,11 @@ import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import silhouette.specs2.WaitPatience
 import silhouette.LoginInfo
 import silhouette.authenticator.Authenticator
+import silhouette.authenticator.Validator.{ Invalid, Valid }
+import silhouette.authenticator.validator.FingerprintValidator._
+import silhouette.specs2.WaitPatience
 
 /**
  * Test case for the [[FingerprintValidator]] class.
@@ -33,19 +35,21 @@ import silhouette.authenticator.Authenticator
 class FingerprintValidatorSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
 
   "The `isValid` method" should {
-    "return always true if no fingerprint is stored in the authenticator" in new Context {
+    "return always Valid if no fingerprint is stored in the authenticator" in new Context {
       FingerprintValidator("test")
-        .isValid(authenticator) must beTrue.awaitWithPatience
+        .isValid(authenticator) must beEqualTo(Valid).awaitWithPatience
     }
 
-    "return true if fingerprint stored in the authenticator matches the given fingerprint" in new Context {
+    "return Valid if fingerprint stored in the authenticator matches the given fingerprint" in new Context {
       FingerprintValidator("test")
-        .isValid(authenticator.copy(fingerprint = Some("test"))) must beTrue.awaitWithPatience
+        .isValid(authenticator.copy(fingerprint = Some("test"))) must beEqualTo(Valid).awaitWithPatience
     }
 
-    "return false if fingerprint stored in the authenticator doesn't match the given fingerprint" in new Context {
+    "return Invalid if fingerprint stored in the authenticator doesn't match the given fingerprint" in new Context {
       FingerprintValidator("invalid")
-        .isValid(authenticator.copy(fingerprint = Some("test"))) must beFalse.awaitWithPatience
+        .isValid(authenticator.copy(fingerprint = Some("test"))) must beEqualTo(Invalid(Seq(
+          Error.format("invalid", "test")
+        ))).awaitWithPatience
     }
   }
 

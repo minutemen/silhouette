@@ -44,10 +44,12 @@ final case class MissingCredentials[I <: Identity, C <: Credentials]() extends A
  * Represents a state where invalid credentials were found.
  *
  * @param credentials The found credentials.
+ * @param errors      The validation errors.
  * @tparam I The type of the identity.
  * @tparam C The type of the credentials.
  */
-final case class InvalidCredentials[I <: Identity, C <: Credentials](credentials: C) extends AuthState[I, C]
+final case class InvalidCredentials[I <: Identity, C <: Credentials](credentials: C, errors: Seq[String])
+  extends AuthState[I, C]
 
 /**
  * Represents a state where the credentials but no identity were found.

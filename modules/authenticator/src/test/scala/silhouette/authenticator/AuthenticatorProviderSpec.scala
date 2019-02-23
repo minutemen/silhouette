@@ -22,6 +22,7 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette._
+import silhouette.authenticator.Validator.{ Invalid, Valid }
 import silhouette.authenticator.pipeline.ReadsAuthenticationPipeline
 import silhouette.http.{ Cookie, Fake, SilhouetteRequest }
 import silhouette.http.transport.RetrieveFromCookie
@@ -56,11 +57,12 @@ class AuthenticatorProviderSpec(implicit ev: ExecutionEnv) extends Specification
 
     "return the `InvalidCredentials` state if the authenticator is invalid" in new Context {
       val request = Fake.request.withCookies(Cookie("test", token))
+      val errors = Seq("Invalid authenticator")
 
       reads.read(token) returns Future.successful(authenticator)
-      validator.isValid(authenticator) returns Future.successful(false)
+      validator.isValid(authenticator) returns Future.successful(Invalid(errors))
 
-      provider.authenticate(request) must beEqualTo(InvalidCredentials(authenticator)).awaitWithPatience
+      provider.authenticate(request) must beEqualTo(InvalidCredentials(authenticator, errors)).awaitWithPatience
     }
 
     "throws an `AuthenticatorException` if the validator throws an exception" in new Context {
@@ -79,7 +81,7 @@ class AuthenticatorProviderSpec(implicit ev: ExecutionEnv) extends Specification
       val request = Fake.request.withCookies(Cookie("test", token))
 
       reads.read(token) returns Future.successful(authenticator)
-      validator.isValid(authenticator) returns Future.successful(true)
+      validator.isValid(authenticator) returns Future.successful(Valid)
       identityReader.apply(loginInfo) returns Future.successful(None)
 
       provider.authenticate(request) must beEqualTo(MissingIdentity(authenticator, loginInfo)).awaitWithPatience
@@ -90,7 +92,7 @@ class AuthenticatorProviderSpec(implicit ev: ExecutionEnv) extends Specification
       val request = Fake.request.withCookies(Cookie("test", token))
 
       reads.read(token) returns Future.successful(authenticator)
-      validator.isValid(authenticator) returns Future.successful(true)
+      validator.isValid(authenticator) returns Future.successful(Valid)
       identityReader.apply(loginInfo) returns Future.failed(exception)
 
       provider.authenticate(request) must throwA[AuthenticatorException].like {
@@ -102,7 +104,7 @@ class AuthenticatorProviderSpec(implicit ev: ExecutionEnv) extends Specification
       val request = Fake.request.withCookies(Cookie("test", token))
 
       reads.read(token) returns Future.successful(authenticator)
-      validator.isValid(authenticator) returns Future.successful(true)
+      validator.isValid(authenticator) returns Future.successful(Valid)
       identityReader.apply(loginInfo) returns Future.successful(Some(user))
 
       provider.authenticate(request) must beEqualTo(Authenticated(user, authenticator, loginInfo)).awaitWithPatience

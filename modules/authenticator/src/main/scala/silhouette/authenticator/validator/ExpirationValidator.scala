@@ -19,6 +19,8 @@ package silhouette.authenticator.validator
 
 import java.time.Clock
 
+import silhouette.authenticator.Validator._
+import silhouette.authenticator.validator.ExpirationValidator._
 import silhouette.authenticator.{ Authenticator, Validator }
 
 import scala.concurrent.duration._
@@ -43,7 +45,18 @@ final case class ExpirationValidator(clock: Clock) extends Validator {
   override def isValid(authenticator: Authenticator)(
     implicit
     ec: ExecutionContext
-  ): Future[Boolean] = Future.successful {
-    authenticator.expiresIn(clock).forall(_ > 0.millis)
+  ): Future[Status] = Future.successful {
+    if (authenticator.expiresIn(clock).forall(_ >= 0.millis)) {
+      Valid
+    } else {
+      Invalid(Seq(Error.format(authenticator.expiresIn(clock).map(_.neg()).getOrElse(0.millis))))
+    }
   }
+}
+
+/**
+ * The companion object.
+ */
+object ExpirationValidator {
+  val Error = "Authenticator is expired %s ago"
 }

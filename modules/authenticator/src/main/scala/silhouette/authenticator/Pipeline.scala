@@ -19,6 +19,7 @@ package silhouette.authenticator
 
 import silhouette.Fitting.futureFittingToFutureOption
 import silhouette._
+import silhouette.authenticator.Validator.{ Invalid, Valid }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -137,8 +138,8 @@ trait AuthenticationPipeline[S, I <: Identity]
     ec: ExecutionContext
   ): Future[AuthState[I, Authenticator]] = {
     authenticator.isValid(validators).flatMap {
-      case false => Future.successful(InvalidCredentials(authenticator))
-      case true => identityReader(authenticator.loginInfo).map {
+      case Invalid(errors) => Future.successful(InvalidCredentials(authenticator, errors))
+      case Valid => identityReader(authenticator.loginInfo).map {
         case Some(identity) => Authenticated[I, Authenticator](identity, authenticator, authenticator.loginInfo)
         case None           => MissingIdentity(authenticator, authenticator.loginInfo)
       }

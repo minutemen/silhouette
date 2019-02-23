@@ -53,7 +53,9 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
 
       authInfoReader.apply(loginInfo) returns Future.successful(None)
 
-      provider.authenticate(request) must beEqualTo(InvalidCredentials(credentials)).awaitWithPatience
+      provider.authenticate(request) must beEqualTo(
+        InvalidCredentials(credentials, Seq(PasswordInfoNotFound.format(provider.id, loginInfo)))
+      ).awaitWithPatience
     }
 
     "return the `InvalidCredentials` state if password does not match" in new Context {
@@ -63,7 +65,9 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
       fooHasher.matches(passwordInfo, credentials.password) returns false
       authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
 
-      provider.authenticate(request) must beEqualTo(InvalidCredentials(credentials)).awaitWithPatience
+      provider.authenticate(request) must beEqualTo(
+        InvalidCredentials(credentials, Seq(PasswordDoesNotMatch.format(provider.id)))
+      ).awaitWithPatience
     }
 
     "return the `MissingCredentials` state if provider isn't responsible" in new Context {

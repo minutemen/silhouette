@@ -17,6 +17,8 @@
  */
 package silhouette.authenticator.validator
 
+import silhouette.authenticator.Validator._
+import silhouette.authenticator.validator.FingerprintValidator._
 import silhouette.authenticator.{ Authenticator, Validator }
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -40,7 +42,18 @@ final case class FingerprintValidator(fingerprint: String) extends Validator {
   override def isValid(authenticator: Authenticator)(
     implicit
     ec: ExecutionContext
-  ): Future[Boolean] = Future.successful {
-    authenticator.fingerprint.forall(_ == fingerprint)
+  ): Future[Status] = Future.successful {
+    if (authenticator.fingerprint.forall(_ == fingerprint)) {
+      Valid
+    } else {
+      Invalid(Seq(Error.format(fingerprint, authenticator.fingerprint.getOrElse(""))))
+    }
   }
+}
+
+/**
+ * The companion object.
+ */
+object FingerprintValidator {
+  val Error = "Fingerprint `%s` doesn't match the authenticators fingerprint `%s`"
 }

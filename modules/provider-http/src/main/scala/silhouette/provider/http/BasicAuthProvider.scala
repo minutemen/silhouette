@@ -17,7 +17,6 @@
  */
 package silhouette.provider.http
 
-import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
 import silhouette._
 import silhouette.http.transport.RetrieveBasicCredentialsFromHeader
@@ -58,8 +57,7 @@ class BasicAuthProvider[R, I <: Identity] @Inject() (
   val ec: ExecutionContext
 ) extends RequestProvider[R, I, BasicCredentials]
   with PasswordProvider
-  with ExecutionContextProvider
-  with LazyLogging {
+  with ExecutionContextProvider {
 
   /**
    * Gets the provider ID.
@@ -84,14 +82,15 @@ class BasicAuthProvider[R, I <: Identity] @Inject() (
               case Some(identity) => Authenticated(identity, credentials, loginInfo)
               case None           => MissingIdentity(credentials, loginInfo)
             }
+
           case InvalidPassword(error) =>
-            logger.debug(error)
-            Future.successful(InvalidCredentials(credentials))
+            Future.successful(InvalidCredentials(credentials, Seq(error)))
+
           case UnsupportedHasher(error) =>
             Future.failed(new ConfigurationException(error))
+
           case NotFound(error) =>
-            logger.debug(error)
-            Future.successful(InvalidCredentials(credentials))
+            Future.successful(InvalidCredentials(credentials, Seq(error)))
         }
       case None =>
         Future.successful(MissingCredentials())

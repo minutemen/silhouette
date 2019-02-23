@@ -25,6 +25,7 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.LoginInfo
 import silhouette.RichInstant._
+import silhouette.authenticator.Validator.{ Invalid, Valid }
 import silhouette.http.{ Fake, RequestPipeline, SilhouetteRequest }
 import silhouette.specs2.WaitPatience
 
@@ -125,24 +126,37 @@ class AuthenticatorSpec(implicit ev: ExecutionEnv) extends Specification with Mo
   }
 
   "The `isValid` method" should {
-    "return false if at least one validator fails" in new Context {
+    "return Invalid if at least one validator fails" in new Context {
+      val errors = Seq("error1", "error2")
       val validator1 = mock[Validator].smart
       val validator2 = mock[Validator].smart
-      validator1.isValid(authenticator) returns Future.successful(true)
-      validator2.isValid(authenticator) returns Future.successful(false)
+      validator1.isValid(authenticator) returns Future.successful(Valid)
+      validator2.isValid(authenticator) returns Future.successful(Invalid(errors))
       val validators = Set(validator1, validator2)
 
-      authenticator.isValid(validators) must beFalse.awaitWithPatience
+      authenticator.isValid(validators) must beEqualTo(Invalid(errors)).awaitWithPatience
     }
 
-    "return true if all validators are successful" in new Context {
+    "return Valid if all validators are successful" in new Context {
       val validator1 = mock[Validator].smart
       val validator2 = mock[Validator].smart
-      validator1.isValid(authenticator) returns Future.successful(true)
-      validator2.isValid(authenticator) returns Future.successful(true)
+      validator1.isValid(authenticator) returns Future.successful(Valid)
+      validator2.isValid(authenticator) returns Future.successful(Valid)
       val validators = Set(validator1, validator2)
 
-      authenticator.isValid(validators) must beTrue.awaitWithPatience
+      authenticator.isValid(validators) must beEqualTo(Valid).awaitWithPatience
+    }
+
+    "combine all error messages from all validators" in new Context {
+      val validator1 = mock[Validator].smart
+      val validator2 = mock[Validator].smart
+      validator1.isValid(authenticator) returns Future.successful(Invalid(Seq("error1", "error2")))
+      validator2.isValid(authenticator) returns Future.successful(Invalid(Seq("error3", "error4")))
+      val validators = Set(validator1, validator2)
+
+      authenticator.isValid(validators) must beEqualTo(
+        Invalid(Seq("error1", "error2", "error3", "error4"))
+      ).awaitWithPatience
     }
   }
 

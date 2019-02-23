@@ -23,9 +23,11 @@ import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import silhouette.specs2.WaitPatience
 import silhouette.LoginInfo
 import silhouette.authenticator.Authenticator
+import silhouette.authenticator.Validator.{ Invalid, Valid }
+import silhouette.authenticator.validator.ExpirationValidator._
+import silhouette.specs2.WaitPatience
 
 import scala.concurrent.duration._
 
@@ -37,19 +39,21 @@ import scala.concurrent.duration._
 class ExpirationValidatorSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
 
   "The `isValid` method" should {
-    "return always true if the `expires` property isn't set" in new Context {
+    "return always Valid if the `expires` property isn't set" in new Context {
       ExpirationValidator(clock)
-        .isValid(authenticator) must beTrue.awaitWithPatience
+        .isValid(authenticator) must beEqualTo(Valid).awaitWithPatience
     }
 
-    "return true if the authenticator is not expired" in new Context {
-      ExpirationValidator(Clock.fixed(instant.plusSeconds(59), UTC))
-        .isValid(authenticator.withExpiry(1.minute, clock)) must beTrue.awaitWithPatience
-    }
-
-    "return false if the authenticator is expired" in new Context {
+    "return Valid if the authenticator is not expired" in new Context {
       ExpirationValidator(Clock.fixed(instant.plusSeconds(60), UTC))
-        .isValid(authenticator.withExpiry(1.minute, clock)) must beFalse.awaitWithPatience
+        .isValid(authenticator.withExpiry(1.minute, clock)) must beEqualTo(Valid).awaitWithPatience
+    }
+
+    "return Invalid if the authenticator is expired" in new Context {
+      ExpirationValidator(Clock.fixed(instant.plusSeconds(61), UTC))
+        .isValid(authenticator.withExpiry(1.minute, clock)) must beEqualTo(
+          Invalid(Seq(Error.format(1000.millis)))
+        ).awaitWithPatience
     }
   }
 

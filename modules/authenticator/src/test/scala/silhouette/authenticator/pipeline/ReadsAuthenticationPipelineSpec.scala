@@ -21,6 +21,7 @@ import org.specs2.concurrent.ExecutionEnv
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
+import silhouette.authenticator.Validator.{ Invalid, Valid }
 import silhouette.authenticator._
 import silhouette.specs2.WaitPatience
 import silhouette.{ Reads => _, _ }
@@ -50,10 +51,12 @@ class ReadsAuthenticationPipelineSpec(implicit ev: ExecutionEnv) extends Specifi
     }
 
     "return the `InvalidCredentials` state if the authenticator is invalid" in new Context {
-      reads.read(token) returns Future.successful(authenticator)
-      validator.isValid(authenticator) returns Future.successful(false)
+      val errors = Seq("Authenticator is invalid")
 
-      pipeline.read(Some(token)) must beEqualTo(InvalidCredentials(authenticator)).awaitWithPatience
+      reads.read(token) returns Future.successful(authenticator)
+      validator.isValid(authenticator) returns Future.successful(Invalid(errors))
+
+      pipeline.read(Some(token)) must beEqualTo(InvalidCredentials(authenticator, errors)).awaitWithPatience
     }
 
     "throws an `AuthenticatorException` if the validator throws an exception" in new Context {
@@ -69,7 +72,7 @@ class ReadsAuthenticationPipelineSpec(implicit ev: ExecutionEnv) extends Specifi
 
     "return the `MissingIdentity` state if the identity couldn't be found for the login info" in new Context {
       reads.read(token) returns Future.successful(authenticator)
-      validator.isValid(authenticator) returns Future.successful(true)
+      validator.isValid(authenticator) returns Future.successful(Valid)
       identityReader.apply(loginInfo) returns Future.successful(None)
 
       pipeline.read(Some(token)) must beEqualTo(MissingIdentity(authenticator, loginInfo)).awaitWithPatience
@@ -79,7 +82,7 @@ class ReadsAuthenticationPipelineSpec(implicit ev: ExecutionEnv) extends Specifi
       val exception = new AuthenticatorException("Retrieval error")
 
       reads.read(token) returns Future.successful(authenticator)
-      validator.isValid(authenticator) returns Future.successful(true)
+      validator.isValid(authenticator) returns Future.successful(Valid)
       identityReader.apply(loginInfo) returns Future.failed(exception)
 
       pipeline.read(Some(token)) must throwA[AuthenticatorException].like {
@@ -89,7 +92,7 @@ class ReadsAuthenticationPipelineSpec(implicit ev: ExecutionEnv) extends Specifi
 
     "return the `Authenticated` state if the authentication process was successful" in new Context {
       reads.read(token) returns Future.successful(authenticator)
-      validator.isValid(authenticator) returns Future.successful(true)
+      validator.isValid(authenticator) returns Future.successful(Valid)
       identityReader.apply(loginInfo) returns Future.successful(Some(user))
 
       pipeline.read(Some(token)) must beEqualTo(Authenticated(user, authenticator, loginInfo)).awaitWithPatience

@@ -21,9 +21,11 @@ import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import silhouette.specs2.WaitPatience
 import silhouette.LoginInfo
 import silhouette.authenticator.Authenticator
+import silhouette.authenticator.Validator.{ Invalid, Valid }
+import silhouette.authenticator.validator.BackingStoreValidator._
+import silhouette.specs2.WaitPatience
 
 import scala.concurrent.Future
 
@@ -35,12 +37,13 @@ import scala.concurrent.Future
 class BackingStoreValidatorSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
 
   "The `isValid` method" should {
-    "return true if the authenticator is valid" in new Context {
-      BackingStoreValidator(_ => Future.successful(true)).isValid(authenticator) must beTrue.awaitWithPatience
+    "return Valid if the authenticator is valid" in new Context {
+      BackingStoreValidator(_ => Future.successful(true)).isValid(authenticator) must beEqualTo(Valid).awaitWithPatience
     }
 
-    "return false if the authenticator is invalid" in new Context {
-      BackingStoreValidator(_ => Future.successful(false)).isValid(authenticator) must beFalse.awaitWithPatience
+    "return Invalid if the authenticator is invalid" in new Context {
+      BackingStoreValidator(_ => Future.successful(false)).isValid(authenticator) must
+        beEqualTo(Invalid(Seq(Error))).awaitWithPatience
     }
   }
 

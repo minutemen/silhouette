@@ -19,9 +19,11 @@ package silhouette.authenticator.validator
 
 import java.time.Clock
 
+import silhouette.authenticator.Validator._
+import silhouette.authenticator.validator.SlidingWindowValidator._
 import silhouette.authenticator.{ Authenticator, Validator }
 
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
@@ -49,7 +51,18 @@ final case class SlidingWindowValidator(idleTimeout: FiniteDuration, clock: Cloc
   override def isValid(authenticator: Authenticator)(
     implicit
     ec: ExecutionContext
-  ): Future[Boolean] = Future.successful {
-    authenticator.touchedAt(clock).forall(_ <= idleTimeout)
+  ): Future[Status] = Future.successful {
+    if (authenticator.touchedAt(clock).forall(_ <= idleTimeout)) {
+      Valid
+    } else {
+      Invalid(Seq(Error.format(authenticator.touchedAt(clock).getOrElse(0.millis) - idleTimeout)))
+    }
   }
+}
+
+/**
+ * The companion object.
+ */
+object SlidingWindowValidator {
+  val Error = "Authenticator timed out %s ago"
 }

@@ -17,6 +17,8 @@
  */
 package silhouette.authenticator.validator
 
+import silhouette.authenticator.Validator._
+import silhouette.authenticator.validator.BackingStoreValidator._
 import silhouette.authenticator.{ Authenticator, Validator }
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -41,5 +43,15 @@ final case class BackingStoreValidator(validator: Authenticator => Future[Boolea
   override def isValid(authenticator: Authenticator)(
     implicit
     ec: ExecutionContext
-  ): Future[Boolean] = validator(authenticator)
+  ): Future[Status] = validator(authenticator).map {
+    case true  => Valid
+    case false => Invalid(Seq(Error))
+  }
+}
+
+/**
+ * The companion object.
+ */
+object BackingStoreValidator {
+  val Error = "Couldn't validate the authenticator against the backing store"
 }

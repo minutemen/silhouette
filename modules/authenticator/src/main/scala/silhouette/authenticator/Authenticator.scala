@@ -20,9 +20,10 @@ package silhouette.authenticator
 import java.time.{ Clock, Instant }
 
 import io.circe.Json
-import silhouette.{ Credentials, LoginInfo }
 import silhouette.RichInstant._
+import silhouette.authenticator.Validator._
 import silhouette.http.{ Request, RequestPipeline }
+import silhouette.{ Credentials, LoginInfo }
 
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
@@ -152,7 +153,12 @@ final case class Authenticator(
   def isValid(validators: Set[Validator])(
     implicit
     ec: ExecutionContext
-  ): Future[Boolean] = {
-    Future.sequence(validators.map(_.isValid(this))).map(!_.exists(!_))
+  ): Future[Status] = {
+    Future.sequence(validators.map(_.isValid(this))).map {
+      _.collect { case Invalid(errors) => errors }.flatten.toList match {
+        case Nil    => Valid
+        case errors => Invalid(errors)
+      }
+    }
   }
 }
