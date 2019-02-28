@@ -30,7 +30,7 @@ package silhouette
  * @tparam I The type of the identity.
  * @tparam C The type of the credentials.
  */
-sealed trait AuthState[I <: Identity, C <: Credentials]
+sealed trait AuthState[I <: Identity, +C <: Credentials]
 
 /**
  * Represents a state where no credentials were found.
@@ -38,7 +38,7 @@ sealed trait AuthState[I <: Identity, C <: Credentials]
  * @tparam I The type of the identity.
  * @tparam C The type of the credentials.
  */
-final case class MissingCredentials[I <: Identity, C <: Credentials]() extends AuthState[I, C]
+final case class MissingCredentials[I <: Identity, +C <: Credentials]() extends AuthState[I, C]
 
 /**
  * Represents a state where invalid credentials were found.
@@ -48,7 +48,7 @@ final case class MissingCredentials[I <: Identity, C <: Credentials]() extends A
  * @tparam I The type of the identity.
  * @tparam C The type of the credentials.
  */
-final case class InvalidCredentials[I <: Identity, C <: Credentials](credentials: C, errors: Seq[String])
+final case class InvalidCredentials[I <: Identity, +C <: Credentials](credentials: C, errors: Seq[String])
   extends AuthState[I, C]
 
 /**
@@ -59,7 +59,7 @@ final case class InvalidCredentials[I <: Identity, C <: Credentials](credentials
  * @tparam I The type of the identity.
  * @tparam C The type of the credentials.
  */
-final case class MissingIdentity[I <: Identity, C <: Credentials](credentials: C, loginInfo: LoginInfo)
+final case class MissingIdentity[I <: Identity, +C <: Credentials](credentials: C, loginInfo: LoginInfo)
   extends AuthState[I, C]
 
 /**
@@ -71,7 +71,7 @@ final case class MissingIdentity[I <: Identity, C <: Credentials](credentials: C
  * @tparam I The type of the identity.
  * @tparam C The type of the credentials.
  */
-final case class Authenticated[I <: Identity, C <: Credentials](
+final case class Authenticated[I <: Identity, +C <: Credentials](
   identity: I,
   credentials: C,
   loginInfo: LoginInfo
