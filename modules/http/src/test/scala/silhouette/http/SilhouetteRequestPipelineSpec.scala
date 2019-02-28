@@ -201,7 +201,8 @@ class SilhouetteRequestPipelineSpec extends Specification {
 
   "The `withBodyExtractor` method" should {
     "set a new body extractor for the request" in new Context {
-      requestPipeline.withBodyExtractor(new CustomBodyExtractor).bodyExtractor.raw(request) must be equalTo "custom"
+      requestPipeline.withBodyExtractor(new CustomBodyExtractor)
+        .bodyExtractor.raw(request.body) must be equalTo "custom"
     }
   }
 
@@ -401,7 +402,7 @@ class SilhouetteRequestPipelineSpec extends Specification {
      * A custom body extractor for testing.
      */
     case class CustomBodyExtractor() extends SilhouetteRequestBodyExtractor {
-      override def raw(request: SilhouetteRequest): String = "custom"
+      override def raw(body: Option[Body]): String = "custom"
     }
 
     /**

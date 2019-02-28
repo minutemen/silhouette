@@ -48,8 +48,18 @@ final protected[silhouette] case class SilhouetteRequest(
  */
 final protected[silhouette] case class SilhouetteRequestPipeline(
   override protected val request: SilhouetteRequest,
-  bodyExtractor: RequestBodyExtractor[SilhouetteRequest] = new SilhouetteRequestBodyExtractor
+  bodyExtractor: RequestBodyExtractor[Option[Body]] = new SilhouetteRequestBodyExtractor
 ) extends RequestPipeline[SilhouetteRequest] {
+
+  /**
+   * The type of the request body.
+   */
+  type RB = Option[Body]
+
+  /**
+   * Maybe the framework specific request body.
+   */
+  override protected val requestBody: RB = request.body
 
   /**
    * Gets the absolute URI of the request target.
@@ -176,14 +186,7 @@ final protected[silhouette] case class SilhouetteRequestPipeline(
    * @param bodyExtractor The body extractor to set.
    * @return A new request pipeline instance with the set body extractor.
    */
-  override def withBodyExtractor(bodyExtractor: RequestBodyExtractor[SilhouetteRequest]): SilhouetteRequestPipeline = {
+  override def withBodyExtractor(bodyExtractor: RequestBodyExtractor[RB]): SilhouetteRequestPipeline = {
     copy(bodyExtractor = bodyExtractor)
   }
-
-  /**
-   * Unboxes the request this pipeline handles.
-   *
-   * @return The request this pipeline handles.
-   */
-  override def unbox: SilhouetteRequest = request
 }

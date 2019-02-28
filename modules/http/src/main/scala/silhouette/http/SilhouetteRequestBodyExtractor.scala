@@ -22,27 +22,27 @@ import silhouette.http.BodyReads._
 import scala.util.{ Failure, Success }
 
 /**
- * The request body extractor based on the [[SilhouetteRequest]].
+ * The request body extractor based on the [[Body]].
  */
-class SilhouetteRequestBodyExtractor extends RequestBodyExtractor[SilhouetteRequest] {
+class SilhouetteRequestBodyExtractor extends RequestBodyExtractor[Option[Body]] {
 
   /**
    * Gets the raw string representation of the body for debugging purpose.
    *
-   * @param request The request from which the body should be extracted.
+   * @param maybeBody Maybe the body to extract from.
    * @return The raw string representation of the body for debugging purpose.
    */
-  override def raw(request: SilhouetteRequest): String = request.body.map(_.raw).getOrElse("")
+  override def raw(maybeBody: Option[Body]): String = maybeBody.map(_.raw).getOrElse("")
 
   /**
    * Extracts a value from JSON body.
    *
-   * @param request The request from which the body should be extracted.
-   * @param name    The name of the value to extract.
+   * @param maybeBody Maybe the body to extract from.
+   * @param name      The name of the value to extract.
    * @return The extracted value on success, otherwise an error on failure.
    */
-  override def fromJson(request: SilhouetteRequest, name: String): ExtractionResult = {
-    request.body match {
+  override def fromJson(maybeBody: Option[Body], name: String): ExtractionResult = {
+    maybeBody match {
       case Some(body @ JsonBody(_, _)) =>
         body.as[JsonBody.Type] match {
           case Success(json) =>
@@ -60,12 +60,12 @@ class SilhouetteRequestBodyExtractor extends RequestBodyExtractor[SilhouetteRequ
   /**
    * Extracts a value from XML body.
    *
-   * @param request The request from which the body should be extracted.
-   * @param name    The name of the value to extract.
+   * @param maybeBody Maybe the body to extract from.
+   * @param name      The name of the value to extract.
    * @return The extracted value on success, otherwise an error on failure.
    */
-  override def fromXml(request: SilhouetteRequest, name: String): ExtractionResult = {
-    request.body match {
+  override def fromXml(maybeBody: Option[Body], name: String): ExtractionResult = {
+    maybeBody match {
       case Some(body @ XmlBody(_, _)) =>
         body.as[XmlBody.Type] match {
           case Success(node) =>
@@ -83,12 +83,12 @@ class SilhouetteRequestBodyExtractor extends RequestBodyExtractor[SilhouetteRequ
   /**
    * Extracts a value from form-url-encoded body.
    *
-   * @param request The request from which the body should be extracted.
-   * @param name    The name of the value to extract.
+   * @param maybeBody Maybe the body to extract from.
+   * @param name      The name of the value to extract.
    * @return The extracted value on success, otherwise an error on failure.
    */
-  override def fromFormUrlEncoded(request: SilhouetteRequest, name: String): ExtractionResult = {
-    request.body match {
+  override def fromFormUrlEncoded(maybeBody: Option[Body], name: String): ExtractionResult = {
+    maybeBody match {
       case Some(body @ FormUrlEncodedBody(_, _)) =>
         body.as[FormUrlEncodedBody.Type] match {
           case Success(formUrlEncoded) =>

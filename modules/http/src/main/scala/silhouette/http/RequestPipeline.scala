@@ -24,7 +24,22 @@ import java.net.URI
  *
  * @tparam R The type of the request.
  */
-trait RequestPipeline[R] extends Request with RequestExtractor[R] {
+trait RequestPipeline[+R] extends Request with RequestExtractor[R] {
+
+  /**
+   * The type of the request body.
+   */
+  type RB
+
+  /**
+   * The framework specific request implementation.
+   */
+  protected val request: R
+
+  /**
+   * The framework specific request body.
+   */
+  protected val requestBody: RB
 
   /**
    * Creates a new request pipeline with the given URI.
@@ -201,7 +216,7 @@ trait RequestPipeline[R] extends Request with RequestExtractor[R] {
    * @param bodyExtractor The body extractor to set.
    * @return A new request pipeline instance with the set body extractor.
    */
-  def withBodyExtractor(bodyExtractor: RequestBodyExtractor[R]): RequestPipeline[R]
+  def withBodyExtractor(bodyExtractor: RequestBodyExtractor[RB]): RequestPipeline[R]
 
   /**
    * Generates a fingerprint from request.
@@ -216,5 +231,5 @@ trait RequestPipeline[R] extends Request with RequestExtractor[R] {
    *
    * @return The framework specific request implementation.
    */
-  def unbox: R
+  def unbox: R = request
 }

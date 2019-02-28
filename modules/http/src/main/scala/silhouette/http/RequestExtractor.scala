@@ -62,7 +62,7 @@ protected[silhouette] final case class ExtractedValue(value: String) extends Ext
  *
  * @tparam R The type of the request.
  */
-protected[silhouette] trait RequestExtractor[R] extends LazyLogging {
+protected[silhouette] trait RequestExtractor[+R] extends LazyLogging {
   self: RequestPipeline[R] =>
 
   /**
@@ -71,14 +71,9 @@ protected[silhouette] trait RequestExtractor[R] extends LazyLogging {
   type Parts = Seq[RequestPart.Value]
 
   /**
-   * The framework specific request implementation.
-   */
-  protected val request: R
-
-  /**
    * The body extractor implementation.
    */
-  protected val bodyExtractor: RequestBodyExtractor[R]
+  protected val bodyExtractor: RequestBodyExtractor[RB]
 
   /**
    * Extracts a string from a request.
@@ -171,9 +166,11 @@ protected[silhouette] trait RequestExtractor[R] extends LazyLogging {
    * @param extractor The extractor function.
    * @return Maybe the extracted value as string.
    */
-  private def fromBody(`type`: String, name: String, extractor: R => String => ExtractionResult): Option[String] = {
+  private def fromBody(
+    `type`: String, name: String, extractor: RB => String => ExtractionResult
+  ): Option[String] = {
     logger.debug(s"Try to extract value with name `$name` from ${`type`} body")
-    extractor(request)(name) match {
+    extractor(requestBody)(name) match {
       case EmptyBody =>
         logger.debug("Body is empty")
         None
@@ -181,16 +178,16 @@ protected[silhouette] trait RequestExtractor[R] extends LazyLogging {
         logger.debug(s"Body isn't of content type ${expected.mkString(", ")}; instead found $found")
         None
       case NotFound =>
-        logger.debug(s"Couldn't found value with name `$name`in body: ${bodyExtractor.raw(request)}")
+        logger.debug(s"Couldn't found value with name `$name`in body: ${bodyExtractor.raw(requestBody)}")
         None
       case ExtractedValue(value) =>
         logger.debug(
-          s"Successfully extracted value with name `$name` from ${`type`} body: ${bodyExtractor.raw(request)}"
+          s"Successfully extracted value with name `$name` from ${`type`} body: ${bodyExtractor.raw(requestBody)}"
         )
         Some(value)
       case ExtractionError(error) =>
         logger.error(
-          s"Failed to extract value with name `$name` from ${`type`} body: ${bodyExtractor.raw(request)}",
+          s"Failed to extract value with name `$name` from ${`type`} body: ${bodyExtractor.raw(requestBody)}",
           error
         )
         None
@@ -216,42 +213,42 @@ protected[silhouette] trait RequestExtractor[R] extends LazyLogging {
 /**
  * The body extractor helps to extract values from the body of a request.
  */
-trait RequestBodyExtractor[R] {
+trait RequestBodyExtractor[B] {
 
   /**
    * Gets the raw string representation of the body for debugging purpose.
    *
-   * @param request The request from which the body should be extracted.
+   * @param body The body to extract from.
    * @return The raw string representation of the body for debugging purpose.
    */
-  def raw(request: R): String
+  def raw(body: B): String
 
   /**
    * Extracts a value from JSON body.
    *
-   * @param request The request from which the body should be extracted.
-   * @param name    The name of the value to extract.
+   * @param body The body to extract from.
+   * @param name The name of the value to extract.
    * @return The extracted value on success, otherwise an error on failure.
    */
-  def fromJson(request: R, name: String): ExtractionResult
+  def fromJson(body: B, name: String): ExtractionResult
 
   /**
    * Extracts a value from XML body.
    *
-   * @param request The request from which the body should be extracted.
-   * @param name    The name of the value to extract.
+   * @param body The body to extract from.
+   * @param name The name of the value to extract.
    * @return The extracted value on success, otherwise an error on failure.
    */
-  def fromXml(request: R, name: String): ExtractionResult
+  def fromXml(body: B, name: String): ExtractionResult
 
   /**
    * Extracts a value from form-url-encoded body.
    *
-   * @param request The request from which the body should be extracted.
-   * @param name    The name of the value to extract.
+   * @param body The body to extract from.
+   * @param name The name of the value to extract.
    * @return The extracted value on success, otherwise an error on failure.
    */
-  def fromFormUrlEncoded(request: R, name: String): ExtractionResult
+  def fromFormUrlEncoded(body: B, name: String): ExtractionResult
 }
 
 /**
