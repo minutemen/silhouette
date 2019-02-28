@@ -18,6 +18,7 @@
 package silhouette.http
 
 import silhouette.http.BodyReads._
+import silhouette.http.RequestBodyExtractor._
 
 import scala.util.{ Failure, Success }
 
@@ -53,7 +54,7 @@ class SilhouetteRequestBodyExtractor extends RequestBodyExtractor[Option[Body]] 
           case Failure(error) => ExtractionError(error)
         }
       case Some(body) => WrongContentType(body.contentType, JsonBody.allowedTypes)
-      case None       => EmptyBody
+      case None       => WithoutBody
     }
   }
 
@@ -76,7 +77,7 @@ class SilhouetteRequestBodyExtractor extends RequestBodyExtractor[Option[Body]] 
           case Failure(error) => ExtractionError(error)
         }
       case Some(body) => WrongContentType(body.contentType, XmlBody.allowedTypes)
-      case None       => EmptyBody
+      case None       => WithoutBody
     }
   }
 
@@ -99,7 +100,7 @@ class SilhouetteRequestBodyExtractor extends RequestBodyExtractor[Option[Body]] 
           case Failure(error) => ExtractionError(error)
         }
       case Some(body) => WrongContentType(body.contentType, JsonBody.allowedTypes)
-      case None       => EmptyBody
+      case None       => WithoutBody
     }
   }
 }

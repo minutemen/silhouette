@@ -18,44 +18,7 @@
 package silhouette.http
 
 import com.typesafe.scalalogging.LazyLogging
-
-/**
- * Represents the result of an extraction try.
- */
-protected[silhouette] sealed trait ExtractionResult
-
-/**
- * Indicates that no body was sent in the request.
- */
-protected[silhouette] case object EmptyBody extends ExtractionResult
-
-/**
- * Indicates that the body isn't of the specific content type.
- *
- * @param found    The found content type.
- * @param expected The list of expected content types.
- */
-protected[silhouette] final case class WrongContentType(found: MimeType, expected: Seq[MimeType])
-  extends ExtractionResult
-
-/**
- * Indicates that the value couldn't be found in the body.
- */
-protected[silhouette] case object NotFound extends ExtractionResult
-
-/**
- * Indicates that an error occurred during the extraction try.
- *
- * @param error The extraction error.
- */
-protected[silhouette] final case class ExtractionError(error: Throwable) extends ExtractionResult
-
-/**
- * Represents the extracted value.
- *
- * @param value The extracted value.
- */
-protected[silhouette] final case class ExtractedValue(value: String) extends ExtractionResult
+import silhouette.http.RequestBodyExtractor._
 
 /**
  * Adds the ability to extract values from a request.
@@ -171,7 +134,7 @@ protected[silhouette] trait RequestExtractor[+R] extends LazyLogging {
   ): Option[String] = {
     logger.debug(s"Try to extract value with name `$name` from ${`type`} body")
     extractor(requestBody)(name) match {
-      case EmptyBody =>
+      case WithoutBody =>
         logger.debug("Body is empty")
         None
       case WrongContentType(found, expected) =>
@@ -249,6 +212,50 @@ trait RequestBodyExtractor[B] {
    * @return The extracted value on success, otherwise an error on failure.
    */
   def fromFormUrlEncoded(body: B, name: String): ExtractionResult
+}
+
+/**
+ * The companion object.
+ */
+object RequestBodyExtractor {
+
+  /**
+   * Represents the result of an extraction try.
+   */
+  protected[silhouette] sealed trait ExtractionResult
+
+  /**
+   * Indicates that no body was sent in the request.
+   */
+  protected[silhouette] case object WithoutBody extends ExtractionResult
+
+  /**
+   * Indicates that the body isn't of the specific content type.
+   *
+   * @param found    The found content type.
+   * @param expected The list of expected content types.
+   */
+  protected[silhouette] final case class WrongContentType(found: MimeType, expected: Seq[MimeType])
+    extends ExtractionResult
+
+  /**
+   * Indicates that the value couldn't be found in the body.
+   */
+  protected[silhouette] case object NotFound extends ExtractionResult
+
+  /**
+   * Indicates that an error occurred during the extraction try.
+   *
+   * @param error The extraction error.
+   */
+  protected[silhouette] final case class ExtractionError(error: Throwable) extends ExtractionResult
+
+  /**
+   * Represents the extracted value.
+   *
+   * @param value The extracted value.
+   */
+  protected[silhouette] final case class ExtractedValue(value: String) extends ExtractionResult
 }
 
 /**
