@@ -21,7 +21,6 @@ import java.net.URI
 import java.time.Clock
 
 import io.circe.Json
-import io.circe.optics.JsonPath._
 import silhouette.http.Method.GET
 import silhouette.http.client.Request
 import silhouette.http.{ HttpClient, Status }
@@ -37,10 +36,9 @@ import scala.concurrent.{ ExecutionContext, Future }
 /**
  * Base Google OAuth2 Provider.
  *
- * @see https://developers.google.com/+/api/auth-migration#timetable
- * @see https://developers.google.com/+/api/auth-migration#oauth2login
- * @see https://developers.google.com/accounts/docs/OAuth2Login
- * @see https://developers.google.com/+/api/latest/people
+ * @see https://developers.google.com/people/api/rest/v1/people/get
+ * @see https://developers.google.com/people/v1/how-tos/authorizing
+ * @see https://developers.google.com/identity/protocols/OAuth2
  */
 trait BaseGoogleProvider extends OAuth2Provider {
 
@@ -74,30 +72,61 @@ trait BaseGoogleProvider extends OAuth2Provider {
 /**
  * The profile parser for the common social profile.
  */
-class GoogleProfileParser extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
+class GoogleProfileParser(implicit val ec: ExecutionContext)
+  extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
 
   /**
    * Parses the social profile.
+   *
+   * @see https://developers.google.com/people/api/rest/v1/people#Person.Name
+   * @see https://developers.google.com/people/api/rest/v1/people#Person.EmailAddress
+   * @see https://developers.google.com/people/api/rest/v1/people#Person.Photo
    *
    * @param json     The content returned from the provider.
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = Future.successful {
-    val avatarURL = root.image.url.string.getOption(json).map(uri => new URI(uri))
-    val isDefaultAvatar = root.image.isDefault.boolean.getOption(json).getOrElse(false)
+  override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = {
+    json.hcursor.downField("names").downAt(isPrimary).focus.map(_.hcursor) match {
+      case Some(names) =>
+        val maybeID = names.downField("metadata").downField("source").downField("id").as[String]
+        Future.fromTry(maybeID.getOrError(names.value, "metadata.source.id", ID)).map { id =>
+          val email = json.hcursor.downField("emailAddresses").downAt(isPrimary).downField("value").as[String].toOption
+          val maybePrimaryPhoto = json.hcursor.downField("photos").downAt(isPrimary).focus
+          val maybeAvatarURL = maybePrimaryPhoto.flatMap(
+            _.hcursor.downField("url").as[String].toOption.map(uri => new URI(uri))
+          )
+          val isDefaultAvatar = maybePrimaryPhoto.exists(
+            _.hcursor.downField("default").as[Boolean].toOption.getOrElse(false)
+          )
 
-    // https://developers.google.com/+/api/latest/people#emails.type
-    val email = root.emails.each.filter(root.`type`.string.exist(_ == "account")).value.string.getAll(json).headOption
+          CommonSocialProfile(
+            loginInfo = LoginInfo(ID, id),
+            firstName = names.downField("givenName").as[String].toOption,
+            lastName = names.downField("familyName").as[String].toOption,
+            fullName = names.downField("displayName").as[String].toOption,
+            email = email,
+            avatarUri = if (isDefaultAvatar) None else maybeAvatarURL // skip the default avatar picture
+          )
 
-    CommonSocialProfile(
-      loginInfo = LoginInfo(ID, root.id.string.getOrError(json, "id", ID)),
-      firstName = root.name.givenName.string.getOption(json),
-      lastName = root.name.familyName.string.getOption(json),
-      fullName = root.displayName.string.getOption(json),
-      email = email,
-      avatarUri = if (isDefaultAvatar) None else avatarURL // skip the default avatar picture
-    )
+        }
+      case None =>
+        Future.failed(new UnexpectedResponseException(NoPrimaryEntry.format(ID, "names", json)))
+    }
+  }
+
+  /**
+   * Indicates if the entry in the array is the primary entry.
+   *
+   * The profile contains many categories, each containing an array that contains one or more entries to the category.
+   * The primary entry is marked with the "metadata.primary" property. This function indicates if the traversed entry
+   * is the primary entry, by checking if the "metadata.primary" property is set to true.
+   *
+   * @param json The entry from a JSON array.
+   * @return True if the entry is the primary entry, false otherwise.
+   */
+  private def isPrimary(json: Json): Boolean = {
+    json.hcursor.downField("metadata").downField("primary").as[Boolean].toOption.getOrElse(false)
   }
 }
 
@@ -153,5 +182,11 @@ object GoogleProvider {
   /**
    * Default provider endpoint.
    */
-  val DefaultApiURI = ConfigURI("https://www.googleapis.com/plus/v1/people/me?access_token=%s")
+  val DefaultApiURI = ConfigURI("https://people.googleapis.com/v1/people/me?personFields=names,photos,emailAddresses" +
+    "&access_token=%s")
+
+  /**
+   * The error messages.
+   */
+  val NoPrimaryEntry = "Couldn't find a primary entry for path `%s` in Json: %s"
 }

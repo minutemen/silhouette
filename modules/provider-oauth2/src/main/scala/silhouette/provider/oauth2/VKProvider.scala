@@ -20,7 +20,6 @@ package silhouette.provider.oauth2
 import java.net.URI
 import java.time.Clock
 
-import io.circe.optics.JsonPath._
 import io.circe.{ Decoder, HCursor, Json }
 import silhouette.http.HttpClient
 import silhouette.http.Method.GET
@@ -68,7 +67,7 @@ trait BaseVKProvider extends OAuth2Provider {
     httpClient.execute(Request(GET, uri)).flatMap { response =>
       withParsedJson(response) { json =>
         // The API returns a 200 status code for errors, so we must rely on the JSON here to detect an error
-        root.error.json.getOption(json) match {
+        json.hcursor.downField("error").focus match {
           case Some(_) =>
             Future.failed(new UnexpectedResponseException(UnexpectedResponse.format(id, json, response.status)))
           case _ =>
@@ -82,7 +81,8 @@ trait BaseVKProvider extends OAuth2Provider {
 /**
  * The profile parser for the common social profile.
  */
-class VKProfileParser extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
+class VKProfileParser(implicit val ec: ExecutionContext)
+  extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
 
   /**
    * Parses the social profile.
@@ -92,16 +92,17 @@ class VKProfileParser extends SocialProfileParser[Json, CommonSocialProfile, OAu
    * @return The social profile from the given result.
    */
   override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = {
-    root.response.each.json.getAll(json).headOption match {
-      case Some(response) => Future.successful {
-        CommonSocialProfile(
-          loginInfo = LoginInfo(ID, root.id.long.getOrError(response, "id", ID).toString),
-          firstName = root.first_name.string.getOption(response),
-          lastName = root.last_name.string.getOption(response),
-          email = authInfo.params.flatMap(_.get("email")),
-          avatarUri = root.photo_max_orig.string.getOption(response).map(uri => new URI(uri))
-        )
-      }
+    json.hcursor.downField("response").downArray.focus.map(_.hcursor) match {
+      case Some(response) =>
+        Future.fromTry(response.downField("id").as[Long].getOrError(response.value, "id", ID)).map { id =>
+          CommonSocialProfile(
+            loginInfo = LoginInfo(ID, id.toString),
+            firstName = response.downField("first_name").as[String].toOption,
+            lastName = response.downField("last_name").as[String].toOption,
+            email = authInfo.params.flatMap(_.get("email")),
+            avatarUri = response.downField("photo_max_orig").as[String].toOption.map(uri => new URI(uri))
+          )
+        }
       case None =>
         Future.failed(new UnexpectedResponseException(JsonPathError.format(ID, "response", json)))
 

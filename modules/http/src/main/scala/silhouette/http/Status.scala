@@ -17,6 +17,7 @@
  */
 package silhouette.http
 
+import scala.collection.compat.immutable.ArraySeq
 import scala.language.implicitConversions
 
 /**
@@ -42,8 +43,10 @@ object Status {
    *
    * @see fromInt
    */
-  private lazy val statuses: Seq[Status] = this.getClass.getDeclaredFields.filter(_.getType == classOf[Status])
-    .map(_.get(this).asInstanceOf[Status])
+  private lazy val statuses: Seq[Status] = {
+    ArraySeq.unsafeWrapArray(this.getClass.getDeclaredFields).filter(_.getType == classOf[Status])
+      .map(_.get(this).asInstanceOf[Status])
+  }
 
   implicit def toInt(status: Status): Int = status.code
   implicit def fromInt(code: Int): Status = statuses.find(status => status.code == code)

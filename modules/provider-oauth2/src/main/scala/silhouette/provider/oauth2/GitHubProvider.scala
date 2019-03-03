@@ -21,7 +21,6 @@ import java.net.URI
 import java.time.Clock
 
 import io.circe.Json
-import io.circe.optics.JsonPath._
 import silhouette.http.Method.GET
 import silhouette.http.client.Request
 import silhouette.http.{ Header, HttpClient, Status }
@@ -82,7 +81,8 @@ trait BaseGitHubProvider extends OAuth2Provider {
 /**
  * The profile parser for the common social profile.
  */
-class GitHubProfileParser extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
+class GitHubProfileParser(implicit val ec: ExecutionContext)
+  extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
 
   /**
    * Parses the social profile.
@@ -91,13 +91,15 @@ class GitHubProfileParser extends SocialProfileParser[Json, CommonSocialProfile,
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = Future.successful {
-    CommonSocialProfile(
-      loginInfo = LoginInfo(ID, root.id.long.getOrError(json, "id", ID).toString),
-      fullName = root.name.string.getOption(json),
-      email = root.email.string.getOption(json),
-      avatarUri = root.avatar_url.string.getOption(json).map(uri => new URI(uri))
-    )
+  override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = {
+    Future.fromTry(json.hcursor.downField("id").as[Long].getOrError(json, "id", ID)).map { id =>
+      CommonSocialProfile(
+        loginInfo = LoginInfo(ID, id.toString),
+        fullName = json.hcursor.downField("name").as[String].toOption,
+        email = json.hcursor.downField("email").as[String].toOption,
+        avatarUri = json.hcursor.downField("avatar_url").as[String].toOption.map(uri => new URI(uri))
+      )
+    }
   }
 }
 

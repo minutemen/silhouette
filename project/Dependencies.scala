@@ -20,8 +20,8 @@ import sbt._
 object Dependencies {
 
   object Version {
-    val specs2 = "4.3.3"
-    val circe = "0.10.1"
+    val specs2 = "4.3.6"
+    val circe = "0.11.1"
   }
 
   val resolvers = Seq()
@@ -37,18 +37,17 @@ object Dependencies {
     object Circe {
       val core = "io.circe" %% "circe-core" % Version.circe
       val parser = "io.circe" %% "circe-parser" % Version.circe
-      val optics = "io.circe" %% "circe-optics" % "0.10.0"
     }
 
-    val mockito = "org.mockito" % "mockito-core" % "1.10.19"
     val jbcrypt = "org.mindrot" % "jbcrypt" % "0.3m"
     val slf4jApi = "org.slf4j" % "slf4j-api" % "1.7.13"
     val inject = "javax.inject" % "javax.inject" % "1"
     val commonCodec = "commons-codec" % "commons-codec" % "1.10"
     val jose4j = "org.bitbucket.b_c" % "jose4j" % "0.5.4"
     val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15on" % "1.56"
-    val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
-    val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.7.2"
+    val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.1.1"
+    val collectionCombat = "org.scala-lang.modules" %% "scala-collection-compat" % "0.3.0"
+    val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0"
     val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
   }
 }

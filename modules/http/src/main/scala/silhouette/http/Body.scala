@@ -26,8 +26,10 @@ import silhouette.http.MimeType._
 import silhouette.{ Reads, TransformException, Writes }
 
 import scala.annotation.implicitNotFound
-import scala.collection.mutable
+import scala.collection.compat._
+import scala.collection.compat.immutable.ArraySeq
 import scala.io.Codec
+import scala.language.implicitConversions
 import scala.util.{ Failure, Success, Try }
 import scala.xml._
 
@@ -40,6 +42,9 @@ import scala.xml._
  * Since Scala 2.8, Scala arrays are just Java arrays, so we aren't free to make the hashCode method return
  * a different answer than Java does. (https://issues.scala-lang.org/browse/SI-1607)
  *
+ * Since Scala 2.13, [[scala.collection.mutable.WrappedArray]] is deprecated. `ArraySeq` should be used instead.
+ * We use @see https://github.com/scala/scala-collection-compat to workaround this issue.
+ *
  * @param contentType The content type of the body.
  * @param codec       The codec of the body.
  * @param data        The body data.
@@ -47,7 +52,7 @@ import scala.xml._
 protected[silhouette] final case class Body(
   contentType: MimeType,
   codec: Codec = Body.DefaultCodec,
-  data: mutable.WrappedArray[Byte]
+  data: immutable.ArraySeq[Byte]
 ) {
 
   /**
@@ -55,7 +60,7 @@ protected[silhouette] final case class Body(
    *
    * @return The content as raw string.
    */
-  def raw: String = new String(data.array, codec.charSet)
+  def raw: String = new String(data.toArray, codec.charSet)
 
   /**
    * Tries to transforms the body into a T, throwing an exception if it can't. An implicit BodyReads[T] must be defined.
@@ -88,6 +93,14 @@ private[silhouette] object Body {
    */
   def from[T](value: T, codec: Codec = Body.DefaultCodec)(implicit writes: Codec => BodyWrites[T]): Body =
     writes(codec).write(value)
+
+  /**
+   * Converts an `Array[Byte]` to an `ArraySeq[Byte]` instance.
+   *
+   * @param data The data to convert.
+   * @return The converted data.
+   */
+  implicit def toArraySeq(data: Array[Byte]): ArraySeq[Byte] = ArraySeq.unsafeWrapArray(data)
 }
 
 /**
@@ -96,7 +109,7 @@ private[silhouette] object Body {
 private[silhouette] object TextBody {
   type Type = String
   final val contentType = `text/plain`
-  def unapply(body: Body): Option[(Codec, mutable.WrappedArray[Byte])] = body.contentType match {
+  def unapply(body: Body): Option[(Codec, immutable.ArraySeq[Byte])] = body.contentType match {
     case this.contentType => Some((body.codec, body.data))
     case _                => None
   }
@@ -108,7 +121,7 @@ private[silhouette] object TextBody {
 private[silhouette] object FormUrlEncodedBody {
   type Type = Map[String, Seq[String]]
   final val contentType = `application/x-www-form-urlencoded`
-  def unapply(body: Body): Option[(Codec, mutable.WrappedArray[Byte])] = body.contentType match {
+  def unapply(body: Body): Option[(Codec, immutable.ArraySeq[Byte])] = body.contentType match {
     case this.contentType => Some((body.codec, body.data))
     case _                => None
   }
@@ -121,7 +134,7 @@ private[silhouette] object JsonBody {
   type Type = Json
   final val contentType = `application/json`
   final val allowedTypes = Seq(contentType, `text/json`)
-  def unapply(body: Body): Option[(Codec, mutable.WrappedArray[Byte])] = body.contentType match {
+  def unapply(body: Body): Option[(Codec, immutable.ArraySeq[Byte])] = body.contentType match {
     case ct if this.allowedTypes contains ct => Some((body.codec, body.data))
     case _                                   => None
   }
@@ -134,7 +147,7 @@ private[silhouette] object XmlBody {
   type Type = Node
   final val contentType = `application/xml`
   final val allowedTypes = Seq(contentType, `text/xml`)
-  def unapply(body: Body): Option[(Codec, mutable.WrappedArray[Byte])] = body.contentType match {
+  def unapply(body: Body): Option[(Codec, immutable.ArraySeq[Byte])] = body.contentType match {
     case ct if this.allowedTypes contains ct => Some((body.codec, body.data))
     case _                                   => None
   }
@@ -180,7 +193,7 @@ private[silhouette] trait DefaultBodyReads {
    */
   implicit val stringReads: BodyReads[TextBody.Type] = {
     case TextBody(codec, bytes) =>
-      Try(new String(bytes.array, codec.charSet))
+      Try(new String(bytes.toArray, codec.charSet))
     case Body(ct, _, _) =>
       Failure(new UnsupportedContentTypeException(UnsupportedContentType.format(TextBody.contentType, ct)))
   }
@@ -193,12 +206,12 @@ private[silhouette] trait DefaultBodyReads {
   implicit val formUrlEncodedReads: BodyReads[FormUrlEncodedBody.Type] = {
     case FormUrlEncodedBody(codec, bytes) =>
       Try {
-        val data = new String(bytes.array, codec.charSet)
+        val data = new String(bytes.toArray, codec.charSet)
         val split = "[&;]".r.split(data)
         val pairs: Seq[(String, String)] = if (split.length == 1 && split(0).isEmpty) {
           Seq.empty
         } else {
-          split.map { param =>
+          ArraySeq.unsafeWrapArray(split).map { param =>
             val parts = param.split("=", -1)
             val key = URLDecoder.decode(parts(0), codec.charSet.name())
             val value = URLDecoder.decode(parts.lift(1).getOrElse(""), codec.charSet.name())
@@ -207,8 +220,8 @@ private[silhouette] trait DefaultBodyReads {
         }
 
         pairs
-          .groupBy(_._1)
-          .map(param => param._1 -> param._2.map(_._2))(scala.collection.breakOut)
+          .groupBy(_._1).iterator
+          .map(param => param._1 -> param._2.map(_._2)).toMap
       }
     case Body(ct, _, _) =>
       Failure(new UnsupportedContentTypeException(UnsupportedContentType.format(FormUrlEncodedBody.contentType, ct)))
@@ -221,7 +234,7 @@ private[silhouette] trait DefaultBodyReads {
    */
   implicit val circeJsonReads: BodyReads[JsonBody.Type] = {
     case JsonBody(codec, bytes) =>
-      parse(new String(bytes.array, codec.charSet)) match {
+      parse(new String(bytes.toArray, codec.charSet)) match {
         case Left(ParsingFailure(msg, e)) => Failure(new TransformException(msg, Option(e)))
         case Right(json)                  => Success(json)
       }
@@ -238,7 +251,7 @@ private[silhouette] trait DefaultBodyReads {
    */
   implicit val scalaXmlReads: BodyReads[XmlBody.Type] = {
     case XmlBody(codec, bytes) =>
-      Try(XML.loadString(new String(bytes.array, codec.charSet))).recover {
+      Try(XML.loadString(new String(bytes.toArray, codec.charSet))).recover {
         case e: SAXParseException => throw new TransformException(e.getMessage, Option(e))
       }
     case Body(ct, _, _) =>
@@ -252,6 +265,7 @@ private[silhouette] trait DefaultBodyReads {
  * Provides implicit [[BodyWrites]] for the body types supported by Silhouette.
  */
 private[silhouette] trait DefaultBodyWrites {
+  import Body._
 
   /**
    * Transforms a string into a [[Body]].

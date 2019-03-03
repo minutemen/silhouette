@@ -49,9 +49,16 @@ trait BaseFixture {
     val path: Path
 
     lazy val asString: String = scala.io.Source.fromInputStream(inputStream)(scala.io.Codec("UTF-8")).mkString
-    lazy val asJson: Json = parse(asString).getOrElse(throw new RuntimeException(s"Cannot parse Json from: $asString"))
+    lazy val asJson: Json = parse(asString) match {
+      case Left(e)     => throw new RuntimeException(s"Cannot parse Json from: $asString", e)
+      case Right(json) => json
+    }
     lazy val asXml: Elem = XML.load(inputStream)
-    def as[T](implicit d: Decoder[T]): T = asJson.as[T].getOrElse(throw new RuntimeException("Cannot decode JSON"))
+
+    def as[T](implicit d: Decoder[T]): T = asJson.as[T] match {
+      case Left(e)     => throw new RuntimeException(s"Cannot decode JSON", e)
+      case Right(json) => json
+    }
   }
 
   /**

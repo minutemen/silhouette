@@ -21,7 +21,6 @@ import java.net.URI
 import java.time.Clock
 
 import io.circe.Json
-import io.circe.optics.JsonPath._
 import silhouette.http.Method.GET
 import silhouette.http.client.Request
 import silhouette.http.{ HttpClient, Status }
@@ -72,7 +71,8 @@ trait BaseLinkedInProvider extends OAuth2Provider {
 /**
  * The profile parser for the common social profile.
  */
-class LinkedInProfileParser extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
+class LinkedInProfileParser(implicit val ec: ExecutionContext)
+  extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
 
   /**
    * Parses the social profile.
@@ -81,15 +81,17 @@ class LinkedInProfileParser extends SocialProfileParser[Json, CommonSocialProfil
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = Future.successful {
-    CommonSocialProfile(
-      loginInfo = LoginInfo(ID, root.id.string.getOrError(json, "id", ID)),
-      firstName = root.firstName.string.getOption(json),
-      lastName = root.lastName.string.getOption(json),
-      fullName = root.formattedName.string.getOption(json),
-      email = root.emailAddress.string.getOption(json),
-      avatarUri = root.pictureUrl.string.getOption(json).map(uri => new URI(uri))
-    )
+  override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = {
+    Future.fromTry(json.hcursor.downField("id").as[String].getOrError(json, "id", ID)).map { id =>
+      CommonSocialProfile(
+        loginInfo = LoginInfo(ID, id),
+        firstName = json.hcursor.downField("firstName").as[String].toOption,
+        lastName = json.hcursor.downField("lastName").as[String].toOption,
+        fullName = json.hcursor.downField("formattedName").as[String].toOption,
+        email = json.hcursor.downField("emailAddress").as[String].toOption,
+        avatarUri = json.hcursor.downField("pictureUrl").as[String].toOption.map(uri => new URI(uri))
+      )
+    }
   }
 }
 
