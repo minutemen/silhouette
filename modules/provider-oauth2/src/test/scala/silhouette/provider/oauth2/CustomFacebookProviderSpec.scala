@@ -22,7 +22,6 @@ import java.nio.file.Paths
 import java.time.Clock
 
 import io.circe.Json
-import io.circe.optics.JsonPath._
 import silhouette.http.BodyWrites._
 import silhouette.http.Method.GET
 import silhouette.http._
@@ -193,7 +192,7 @@ class CustomFacebookProviderSpec extends OAuth2ProviderSpec {
      * The profile parser implementation.
      */
     override val profileParser = (json: Json, authInfo: OAuth2Info) => {
-      new FacebookProfileParser().parse(json, authInfo).map { commonProfile =>
+      new FacebookProfileParser()(ec).parse(json, authInfo).map { commonProfile =>
         CustomSocialProfile(
           loginInfo = commonProfile.loginInfo,
           firstName = commonProfile.firstName,
@@ -201,7 +200,7 @@ class CustomFacebookProviderSpec extends OAuth2ProviderSpec {
           fullName = commonProfile.fullName,
           avatarUri = commonProfile.avatarUri,
           email = commonProfile.email,
-          gender = root.gender.string.getOption(json)
+          gender = json.hcursor.downField("gender").as[String].toOption
         )
       }(ec)
     }

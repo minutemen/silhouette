@@ -20,7 +20,6 @@ package silhouette.provider.oauth2
 import java.time.Clock
 
 import io.circe.Json
-import io.circe.optics.JsonPath._
 import silhouette.http.Method.GET
 import silhouette.http._
 import silhouette.http.client.Request
@@ -71,8 +70,11 @@ trait BaseDropboxProvider extends OAuth2Provider {
 
 /**
  * The profile parser for the common social profile.
+ *
+ * @param ec The execution context.
  */
-class DropboxProfileParser extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
+class DropboxProfileParser(implicit val ec: ExecutionContext)
+  extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
 
   /**
    * Parses the social profile.
@@ -81,13 +83,15 @@ class DropboxProfileParser extends SocialProfileParser[Json, CommonSocialProfile
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = Future.successful {
-    CommonSocialProfile(
-      loginInfo = LoginInfo(ID, root.uid.long.getOrError(json, "uid", ID).toString),
-      firstName = root.name_details.given_name.string.getOption(json),
-      lastName = root.name_details.surname.string.getOption(json),
-      fullName = root.display_name.string.getOption(json)
-    )
+  override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = {
+    Future.fromTry(json.hcursor.downField("uid").as[Long].getOrError(json, "uid", ID)).map { id =>
+      CommonSocialProfile(
+        loginInfo = LoginInfo(ID, id.toString),
+        firstName = json.hcursor.downField("name_details").downField("given_name").as[String].toOption,
+        lastName = json.hcursor.downField("name_details").downField("surname").as[String].toOption,
+        fullName = json.hcursor.downField("display_name").as[String].toOption
+      )
+    }
   }
 }
 

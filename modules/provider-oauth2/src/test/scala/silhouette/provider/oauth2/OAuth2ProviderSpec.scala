@@ -25,6 +25,7 @@ import org.specs2.execute.Result
 import org.specs2.matcher.ThrownExpectations
 import org.specs2.mock.Mockito
 import org.specs2.specification.Scope
+import silhouette.http.Body._
 import silhouette.http.BodyWrites._
 import silhouette.http._
 import silhouette.http.client.{ Request, Response }
@@ -112,7 +113,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
                 c.config.redirectURI.map(uri => RedirectUri -> uri.toString)
               ).flatten ++ c.config.authorizationParams.toList
 
-              header.values.head must be equalTo (authorizationURI + params.map { p =>
+              header.values.head must be equalTo (authorizationURI.toString + params.map { p =>
                 encode(p._1, "UTF-8") + "=" + encode(p._2, "UTF-8")
               }.mkString("?", "&", ""))
             }
@@ -212,7 +213,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       failed[UnexpectedResponseException](c.provider.authenticate()(request)) {
         case e =>
           e.getMessage must startWith(JsonParseError.format(c.provider.id, "<html></html>"))
-          e.getCause.getMessage must be equalTo "expected json value got < (line 1, column 1)"
+          e.getCause.getMessage must startWith("expected json value")
       }
     }
 
@@ -253,7 +254,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
         GrantType -> Seq(AuthorizationCode),
         Code -> Seq(code)
       ) ++
-        c.config.accessTokenParams.mapValues(Seq(_)) ++
+        c.config.accessTokenParams.map { case (key, value) => key -> Seq(value) } ++
         c.config.redirectURI.map(uri => Map(RedirectUri -> Seq(uri.toString))).getOrElse(Map())
       )
 
@@ -320,7 +321,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
           failed[UnexpectedResponseException](c.provider.refresh(refreshToken)) {
             case e =>
               e.getMessage must startWith(JsonParseError.format(c.provider.id, "<html></html>"))
-              e.getCause.getMessage must be equalTo "expected json value got < (line 1, column 1)"
+              e.getCause.getMessage must startWith("expected json value")
           }: Result
       }
     }
@@ -363,13 +364,13 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       c.config.refreshURI match {
         case None =>
           skipped("refreshURI is not defined, so this step isn't needed for provider: " + c.provider.getClass)
-        case Some(refreshURI) =>
+        case Some(_) =>
           val refreshToken = "some-refresh-token"
           val body = Body.from(Map(
             GrantType -> Seq(RefreshToken),
             RefreshToken -> Seq(refreshToken)
           ) ++
-            c.config.refreshParams.mapValues(Seq(_)) ++
+            c.config.refreshParams.map { case (key, value) => key -> Seq(value) } ++
             c.config.scope.map(scope => Map(Scope -> Seq(scope))).getOrElse(Map())
           )
           val httpResponse = Response(Status.OK, Body.from(c.oAuth2InfoJson))

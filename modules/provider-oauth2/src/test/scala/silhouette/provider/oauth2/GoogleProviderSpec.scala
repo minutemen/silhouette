@@ -57,6 +57,23 @@ class GoogleProviderSpec extends OAuth2ProviderSpec {
       }
     }
 
+    "fail with ProfileRetrievalException if API returns missing People API config" in new Context {
+      val apiResult = MissingApiConfigJson.asJson
+      val httpResponse = Response(Status.`Forbidden`, Body.from(apiResult))
+      val httpRequest = Request(GET, DefaultApiURI.format(oAuth2Info.accessToken))
+      httpClient.execute(httpRequest) returns Future.successful(httpResponse)
+
+      failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
+        case e =>
+          e.getMessage must equalTo(ProfileError.format(provider.id))
+          e.getCause.getMessage must equalTo(UnexpectedResponse.format(
+            provider.id,
+            apiResult,
+            Status.`Forbidden`
+          ))
+      }
+    }
+
     "fail with ProfileRetrievalException if an unexpected error occurred" in new Context {
       val httpResponse = mock[Response].smart
       val httpRequest = Request(GET, DefaultApiURI.format(oAuth2Info.accessToken))
@@ -66,7 +83,7 @@ class GoogleProviderSpec extends OAuth2ProviderSpec {
       httpClient.execute(httpRequest) returns Future.successful(httpResponse)
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
-        case e => e.getMessage must equalTo(ProfileError.format(ID))
+        case e => e.getMessage must equalTo(ProfileError.format(provider.id))
       }
     }
 
@@ -182,6 +199,7 @@ class GoogleProviderSpec extends OAuth2ProviderSpec {
     override val ErrorJson = BaseFixture.load(Paths.get("google.error.json"))
     override val AccessTokenJson = BaseFixture.load(Paths.get("google.access.token.json"))
     override val UserProfileJson = BaseFixture.load(Paths.get("google.profile.json"))
+    val MissingApiConfigJson = BaseFixture.load(Paths.get("google.error.api.missing.json"))
     val DefaultImageJson = BaseFixture.load(Paths.get("google.img.default.json"))
     val NonDefaultImageJson = BaseFixture.load(Paths.get("google.img.non-default.json"))
     val WithoutEmailJson = BaseFixture.load(Paths.get("google.without.email.json"))

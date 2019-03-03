@@ -19,10 +19,8 @@ package silhouette.provider.oauth2
 
 import java.net.URLEncoder._
 import java.time.{ Clock, Instant }
-
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.{ Decoder, Encoder, HCursor, Json }
-import monocle.Optional
 import silhouette.http.Method.POST
 import silhouette.http._
 import silhouette.http.client.{ Request, Response }
@@ -35,7 +33,7 @@ import silhouette.{ AuthInfo, ConfigURI, ConfigurationException }
 
 import scala.concurrent.Future
 import scala.reflect.ClassTag
-import scala.util.{ Failure, Success }
+import scala.util.{ Failure, Success, Try }
 
 /**
  * The OAuth2 info.
@@ -210,7 +208,7 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
           GrantType -> Seq(RefreshToken),
           RefreshToken -> Seq(refreshToken)
         ) ++
-          config.refreshParams.mapValues(Seq(_)) ++
+          config.refreshParams.map { case (key, value) => key -> Seq(value) } ++
           config.scope.map(scope => Map(Scope -> Seq(scope))).getOrElse(Map())
 
         httpClient.execute(
@@ -250,7 +248,7 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
       case e @ AccessDenied => new AccessDeniedException(AuthorizationError.format(id, e))
       case e                => new UnexpectedResponseException(AuthorizationError.format(id, e))
     } match {
-      case Some(throwable) => Future.failed(throwable)
+      case Some(exception) => Future.failed(exception)
       case None => request.extractString(Code) match {
         // We're being redirected back from the authorization server with the access code and the state
         case Some(code) => right(code).map(Right.apply)
@@ -272,26 +270,28 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
     implicit
     request: RequestPipeline[R]
   ): Future[ResponsePipeline[SilhouetteResponse]] = {
-    stateHandler.state.map { state =>
-      val params = List(
-        Some(ClientID -> config.clientID),
-        Some(ResponseType -> Code),
-        stateHandler.serialize(state).map(State -> _),
-        config.scope.map(Scope -> _),
-        config.redirectURI.map(uri => RedirectUri -> resolveCallbackUri(uri).toString)
-      ).flatten ++ config.authorizationParams.toList
+    config.authorizationURI match {
+      case Some(authorizationURI) =>
+        stateHandler.state.map { state =>
+          val params = List(
+            Some(ClientID -> config.clientID),
+            Some(ResponseType -> Code),
+            stateHandler.serialize(state).map(State -> _),
+            config.scope.map(Scope -> _),
+            config.redirectURI.map(uri => RedirectUri -> resolveCallbackUri(uri).toString)
+          ).flatten ++ config.authorizationParams.toList
 
-      val encodedParams = params.map { p => encode(p._1, "UTF-8") + "=" + encode(p._2, "UTF-8") }
-      val uri = config.authorizationURI.getOrElse {
-        throw new ConfigurationException(AuthorizationUriUndefined.format(id))
-      } + encodedParams.mkString("?", "&", "")
-      val redirectResponse = SilhouetteResponse(Status.`See Other`)
-      val redirectResponsePipeline = SilhouetteResponsePipeline(redirectResponse)
-        .withHeaders(Header(Header.Name.Location, uri))
-      val redirect = stateHandler.publish(redirectResponsePipeline, state)
-      logger.debug("[%s] Use authorization URI: %s".format(id, config.authorizationURI))
-      logger.debug("[%s] Redirecting to: %s".format(id, uri))
-      redirect
+          val encodedParams = params.map { p => encode(p._1, "UTF-8") + "=" + encode(p._2, "UTF-8") }
+          val uri = authorizationURI.toString + encodedParams.mkString("?", "&", "")
+          val redirectResponse = SilhouetteResponse(Status.`See Other`)
+          val redirectResponsePipeline = SilhouetteResponsePipeline(redirectResponse)
+            .withHeaders(Header(Header.Name.Location, uri))
+          val redirect = stateHandler.publish(redirectResponsePipeline, state)
+          logger.debug("[%s] Use authorization URI: %s".format(id, config.authorizationURI))
+          logger.debug("[%s] Redirecting to: %s".format(id, uri))
+          redirect
+        }
+      case None => Future.failed(new ConfigurationException(AuthorizationUriUndefined.format(id)))
     }
   }
 
@@ -308,7 +308,7 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
       GrantType -> Seq(AuthorizationCode),
       Code -> Seq(code)
     ) ++
-      config.accessTokenParams.mapValues(Seq(_)) ++
+      config.accessTokenParams.map { case (key, value) => key -> Seq(value) } ++
       config.redirectURI.map(uri => Map(RedirectUri -> Seq(resolveCallbackUri(uri).toString))).getOrElse(Map())
 
     httpClient.execute(
@@ -375,15 +375,15 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
 object OAuth2Provider extends OAuth2Constants {
 
   /**
-   * Monkey patches a `Optional[Json, T]` instance.
+   * Monkey patches a `Decoder.Result[T]` instance.
    *
-   * @param optional The instance to patch.
+   * @param result The instance to patch.
    * @tparam T The type of the result.
    */
-  implicit class RichMonocleOptional[T](optional: Optional[Json, T]) {
-    def getOrError(json: Json, path: String, id: String): T = optional.getOption(json).getOrElse(
-      throw new UnexpectedResponseException(JsonPathError.format(id, path, json))
-    )
+  implicit class RichDecoderResult[T](result: Decoder.Result[T]) {
+    def getOrError(json: Json, path: String, id: String): Try[T] = result.toTry.recoverWith {
+      case e: Exception => Failure(new UnexpectedResponseException(JsonPathError.format(id, path, json), Some(e)))
+    }
   }
 
   /**
@@ -394,7 +394,7 @@ object OAuth2Provider extends OAuth2Constants {
   val AuthorizationError = "[%s] Authorization server returned error: %s"
   val InvalidInfoFormat = "[%s] Cannot build OAuth2Info because of invalid response format"
   val JsonParseError = "[%s] Cannot parse response `%s` to Json"
-  val JsonPathError = "[%s] Cannot access json path `%s` from Json: %s"
+  val JsonPathError = "[%s] Cannot access json path `%s` in Json: %s"
   val UnexpectedResponse = "[%s] Got unexpected response `%s`; status: %s"
   val EmptyBodyError = "[%s] The request doesn't return a body; status: %s"
 }

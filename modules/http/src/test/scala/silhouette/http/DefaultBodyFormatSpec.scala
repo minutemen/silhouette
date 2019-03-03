@@ -21,6 +21,7 @@ import io.circe.Json
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.TransformException
+import silhouette.http.Body._
 import silhouette.http.BodyReads._
 import silhouette.http.BodyWrites._
 import silhouette.http.DefaultBodyReads._

@@ -21,7 +21,6 @@ import java.net.URI
 import java.time.Clock
 
 import io.circe.Json
-import io.circe.optics.JsonPath._
 import silhouette.http.Method.GET
 import silhouette.http.client.Request
 import silhouette.http.{ HttpClient, Status }
@@ -72,8 +71,11 @@ trait BaseFacebookProvider extends OAuth2Provider {
 
 /**
  * The profile parser for the common social profile.
+ *
+ * @param ec The execution context.
  */
-class FacebookProfileParser extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
+class FacebookProfileParser(implicit val ec: ExecutionContext)
+  extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
 
   /**
    * Parses the social profile.
@@ -82,15 +84,18 @@ class FacebookProfileParser extends SocialProfileParser[Json, CommonSocialProfil
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = Future.successful {
-    CommonSocialProfile(
-      loginInfo = LoginInfo(ID, root.id.string.getOrError(json, "id", ID)),
-      firstName = root.first_name.string.getOption(json),
-      lastName = root.last_name.string.getOption(json),
-      fullName = root.name.string.getOption(json),
-      email = root.email.string.getOption(json),
-      avatarUri = root.picture.data.url.string.getOption(json).map(uri => new URI(uri))
-    )
+  override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = {
+    Future.fromTry(json.hcursor.downField("id").as[String].getOrError(json, "id", ID)).map { id =>
+      CommonSocialProfile(
+        loginInfo = LoginInfo(ID, id),
+        firstName = json.hcursor.downField("first_name").as[String].toOption,
+        lastName = json.hcursor.downField("last_name").as[String].toOption,
+        fullName = json.hcursor.downField("name").as[String].toOption,
+        email = json.hcursor.downField("email").as[String].toOption,
+        avatarUri = json.hcursor.downField("picture")
+          .downField("data").downField("url").as[String].toOption.map(uri => new URI(uri))
+      )
+    }
   }
 }
 

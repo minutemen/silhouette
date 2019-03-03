@@ -21,7 +21,6 @@ import java.net.URI
 import java.time.Clock
 
 import io.circe.Json
-import io.circe.optics.JsonPath._
 import silhouette.http.Method.GET
 import silhouette.http.client.Request
 import silhouette.http.{ HttpClient, Status }
@@ -72,7 +71,8 @@ trait BaseInstagramProvider extends OAuth2Provider {
 /**
  * The profile parser for the common social profile.
  */
-class InstagramProfileParser extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
+class InstagramProfileParser(implicit val ec: ExecutionContext)
+  extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
 
   /**
    * Parses the social profile.
@@ -81,13 +81,19 @@ class InstagramProfileParser extends SocialProfileParser[Json, CommonSocialProfi
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = Future.successful {
-    val data = root.data.json.getOrError(json, "data", ID)
-    CommonSocialProfile(
-      loginInfo = LoginInfo(ID, root.id.string.getOrError(data, "id", ID)),
-      fullName = root.full_name.string.getOption(data),
-      avatarUri = root.profile_picture.string.getOption(data).map(uri => new URI(uri))
-    )
+  override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = {
+    json.hcursor.downField("data").focus.map(_.hcursor) match {
+      case Some(data) =>
+        Future.fromTry(data.downField("id").as[String].getOrError(data.value, "id", ID)).map { id =>
+          CommonSocialProfile(
+            loginInfo = LoginInfo(ID, id),
+            fullName = data.downField("full_name").as[String].toOption,
+            avatarUri = data.downField("profile_picture").as[String].toOption.map(uri => new URI(uri))
+          )
+        }
+      case None =>
+        Future.failed(new UnexpectedResponseException(JsonPathError.format(ID, "data", json)))
+    }
   }
 }
 

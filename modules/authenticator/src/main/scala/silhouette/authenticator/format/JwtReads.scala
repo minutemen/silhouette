@@ -19,7 +19,6 @@ package silhouette.authenticator.format
 
 import io.circe.Json
 import io.circe.jawn.decode
-import io.circe.optics.JsonPath._
 import silhouette.authenticator.format.JwtReads._
 import silhouette.authenticator.{ Authenticator, AuthenticatorException, StatefulReads, StatelessReads }
 import silhouette.crypto.Base64
@@ -56,9 +55,9 @@ final case class JwtReads(jwtReads: jwt.Reads) extends StatelessReads[String] wi
           .getOrElse(throw new AuthenticatorException(MissingClaimValue.format("subject"))))).get,
         touched = claims.issuedAt,
         expires = claims.expirationTime,
-        tags = root.tags.each.string.getAll(custom),
-        fingerprint = root.fingerprint.string.getOption(custom),
-        payload = root.payload.json.getOption(custom)
+        tags = custom.hcursor.downField("tags").as[Seq[String]].getOrElse(Seq()),
+        fingerprint = custom.hcursor.downField("fingerprint").as[String].toOption,
+        payload = custom.hcursor.downField("payload").focus
       )
     }
   }

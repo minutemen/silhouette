@@ -21,7 +21,6 @@ import java.net.URI
 import java.time.Clock
 
 import io.circe.Json
-import io.circe.optics.JsonPath._
 import silhouette.http.Method.GET
 import silhouette.http._
 import silhouette.http.client.Request
@@ -62,7 +61,7 @@ trait BaseFoursquareProvider extends OAuth2Provider {
       withParsedJson(response) { json =>
         response.status match {
           case Status.OK =>
-            val errorType = root.meta.errorType.string.getOption(json)
+            val errorType = json.hcursor.downField("meta").downField("errorType").as[String].toOption
             if (errorType.contains("deprecated")) {
               logger.info("This implementation may be deprecated! Please contact the Silhouette team for a fix!")
             }
@@ -80,8 +79,9 @@ trait BaseFoursquareProvider extends OAuth2Provider {
  * The profile parser for the common social profile.
  *
  * @param config The provider config.
+ * @param ec     The execution context.
  */
-class FoursquareProfileParser(config: OAuth2Config)
+class FoursquareProfileParser(config: OAuth2Config)(implicit val ec: ExecutionContext)
   extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
 
   /**
@@ -91,20 +91,25 @@ class FoursquareProfileParser(config: OAuth2Config)
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = Future.successful {
-    val user = root.response.user.json.getOrError(json, "response.user", ID)
-    val avatarURLPart1 = root.photo.prefix.string.getOption(user)
-    val avatarURLPart2 = root.photo.suffix.string.getOption(user)
-    val resolution = config.customProperties.getOrElse(AvatarResolution, DefaultAvatarResolution)
+  override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = {
+    json.hcursor.downField("response").downField("user").focus.map(_.hcursor) match {
+      case Some(user) =>
+        Future.fromTry(user.downField("id").as[String].getOrError(user.value, "id", ID)).map { id =>
+          val avatarURLPart1 = user.downField("photo").downField("prefix").as[String].toOption
+          val avatarURLPart2 = user.downField("photo").downField("suffix").as[String].toOption
+          val resolution = config.customProperties.getOrElse(AvatarResolution, DefaultAvatarResolution)
 
-    CommonSocialProfile(
-      loginInfo = LoginInfo(ID, root.id.string.getOrError(user, "id", ID)),
-      firstName = root.firstName.string.getOption(user),
-      lastName = root.lastName.string.getOption(user),
-      email = root.contact.email.string.getOption(user).filter(!_.isEmpty),
-      avatarUri = for (prefix <- avatarURLPart1; postfix <- avatarURLPart2)
-        yield new URI(prefix + resolution + postfix)
-    )
+          CommonSocialProfile(
+            loginInfo = LoginInfo(ID, id),
+            firstName = user.downField("firstName").as[String].toOption,
+            lastName = user.downField("lastName").as[String].toOption,
+            email = user.downField("contact").downField("email").as[String].toOption.filter(!_.isEmpty),
+            avatarUri = for (prefix <- avatarURLPart1; postfix <- avatarURLPart2)
+              yield new URI(prefix + resolution + postfix)
+          )
+        }
+      case None => Future.failed(new UnexpectedResponseException(JsonPathError.format(ID, "response.user", json)))
+    }
   }
 }
 

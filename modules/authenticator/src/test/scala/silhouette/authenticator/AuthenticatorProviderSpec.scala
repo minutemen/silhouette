@@ -21,12 +21,12 @@ import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import silhouette._
 import silhouette.authenticator.Validator.{ Invalid, Valid }
 import silhouette.authenticator.pipeline.ReadsAuthenticationPipeline
-import silhouette.http.{ Cookie, Fake, SilhouetteRequest }
 import silhouette.http.transport.RetrieveFromCookie
+import silhouette.http.{ Cookie, Fake, SilhouetteRequest }
 import silhouette.specs2.WaitPatience
+import silhouette.{ Reads => _, _ }
 
 import scala.concurrent.Future
 
