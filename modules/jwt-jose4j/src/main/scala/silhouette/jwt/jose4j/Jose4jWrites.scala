@@ -78,7 +78,7 @@ final case class Jose4jWrites(producer: Jose4jProducer) extends Writes {
     def toJava(value: Json): Object = value.fold[Object](
       jsonNull = None.orNull,
       jsonBoolean = (x: Boolean) => Boolean.box(x),
-      jsonNumber = (x: JsonNumber) => x.toBigDecimal.getOrElse(new Integer(0)),
+      jsonNumber = (x: JsonNumber) => x.toBigDecimal.getOrElse(Integer.valueOf(0)),
       jsonString = (x: String) => x,
       jsonArray = (x: Vector[Json]) => x.map(toJava).asJava,
       jsonObject = (x: JsonObject) => transformCustomClaims(x)
