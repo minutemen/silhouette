@@ -35,7 +35,12 @@ import scala.concurrent.Future
  */
 class AuthenticatorProvider[R, I <: Identity] @Inject() (
   pipeline: silhouette.Reads[RequestPipeline[R], Future[AuthState[I, Authenticator]]]
-) extends RequestProvider[R, I, Authenticator] with LazyLogging {
+) extends RequestProvider[R, I] with LazyLogging {
+
+  /**
+   * The type of the credentials.
+   */
+  override type C = Authenticator
 
   /**
    * Gets the provider ID.

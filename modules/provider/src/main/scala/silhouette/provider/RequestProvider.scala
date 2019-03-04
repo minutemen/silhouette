@@ -29,9 +29,13 @@ import scala.concurrent.Future
  *
  * @tparam R The type of the request.
  * @tparam I The type of the identity.
- * @tparam C The type of the credential.
  */
-trait RequestProvider[R, I <: Identity, +C <: Credentials] extends Provider {
+trait RequestProvider[R, I <: Identity] extends Provider {
+
+  /**
+   * The type of the credentials.
+   */
+  type C <: Credentials
 
   /**
    * Authenticates an identity based on credentials sent in a request.

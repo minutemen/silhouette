@@ -55,9 +55,14 @@ class BasicAuthProvider[R, I <: Identity] @Inject() (
 )(
   implicit
   val ec: ExecutionContext
-) extends RequestProvider[R, I, BasicCredentials]
+) extends RequestProvider[R, I]
   with PasswordProvider
   with ExecutionContextProvider {
+
+  /**
+   * The type of the credentials.
+   */
+  override type C = BasicCredentials
 
   /**
    * Gets the provider ID.
