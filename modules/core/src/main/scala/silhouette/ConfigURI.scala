@@ -36,7 +36,6 @@ case class ConfigURI(uri: String) {
    * Uses the underlying string as a pattern (in a fashion similar to printf in C), and uses the supplied arguments
    * to fill in the holes.
    *
-   * @see [[scala.collection.immutable.StringLike.format]]
    * @param args The arguments used to instantiating the pattern.
    */
   def format(args: Any*): ConfigURI = ConfigURI(uri.format(args: _*))
