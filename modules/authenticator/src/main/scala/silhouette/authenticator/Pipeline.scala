@@ -107,7 +107,9 @@ trait AuthenticationPipeline[S, I <: Identity]
   final protected def toState[T](future: Future[T], transformer: T => Future[AuthState[I, Authenticator]])(
     implicit
     ec: ExecutionContext
-  ): Future[AuthState[I, Authenticator]] = future.flatMap(transformer)
+  ): Future[AuthState[I, Authenticator]] = {
+    future.flatMap(transformer).recover { case e: Exception => AuthFailure(e) }
+  }
 
   /**
    * Transforms the given optional [[Authenticator]] into an [[AuthState]].

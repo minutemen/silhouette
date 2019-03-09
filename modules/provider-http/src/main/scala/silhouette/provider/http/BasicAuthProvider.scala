@@ -92,7 +92,7 @@ class BasicAuthProvider[R, I <: Identity] @Inject() (
             Future.successful(InvalidCredentials(credentials, Seq(error)))
 
           case UnsupportedHasher(error) =>
-            Future.failed(new ConfigurationException(error))
+            Future.successful(AuthFailure(new ConfigurationException(error)))
 
           case NotFound(error) =>
             Future.successful(InvalidCredentials(credentials, Seq(error)))

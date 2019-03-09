@@ -44,14 +44,15 @@ class AuthenticatorProviderSpec(implicit ev: ExecutionEnv) extends Specification
       provider.authenticate(request) must beEqualTo(MissingCredentials()).awaitWithPatience
     }
 
-    "throws an `AuthenticatorException` if the token couldn't be transformed into an authenticator" in new Context {
+    "return the `AuthFailure` state if the token couldn't be transformed into an authenticator" in new Context {
       val exception = new AuthenticatorException("Parse error")
       val request = Fake.request.withCookies(Cookie("test", token))
 
       reads.read(token) returns Future.failed(exception)
 
-      provider.authenticate(request) must throwA[AuthenticatorException].like {
-        case e => e.getMessage must beEqualTo(exception.getMessage)
+      provider.authenticate(request) must beLike[AuthState[User, Authenticator]] {
+        case AuthFailure(e) =>
+          e.getMessage must be equalTo exception.getMessage
       }.awaitWithPatience
     }
 
@@ -65,15 +66,16 @@ class AuthenticatorProviderSpec(implicit ev: ExecutionEnv) extends Specification
       provider.authenticate(request) must beEqualTo(InvalidCredentials(authenticator, errors)).awaitWithPatience
     }
 
-    "throws an `AuthenticatorException` if the validator throws an exception" in new Context {
+    "return the `AuthFailure` state if the validator throws an exception" in new Context {
       val exception = new AuthenticatorException("Validation error")
       val request = Fake.request.withCookies(Cookie("test", token))
 
       reads.read(token) returns Future.successful(authenticator)
       validator.isValid(authenticator) returns Future.failed(exception)
 
-      provider.authenticate(request) must throwA[AuthenticatorException].like {
-        case e => e.getMessage must beEqualTo(exception.getMessage)
+      provider.authenticate(request) must beLike[AuthState[User, Authenticator]] {
+        case AuthFailure(e) =>
+          e.getMessage must be equalTo exception.getMessage
       }.awaitWithPatience
     }
 
@@ -87,7 +89,7 @@ class AuthenticatorProviderSpec(implicit ev: ExecutionEnv) extends Specification
       provider.authenticate(request) must beEqualTo(MissingIdentity(authenticator, loginInfo)).awaitWithPatience
     }
 
-    "throws an `AuthenticatorException` if the identity reader throws an exception" in new Context {
+    "return the `AuthFailure` state if the identity reader throws an exception" in new Context {
       val exception = new AuthenticatorException("Retrieval error")
       val request = Fake.request.withCookies(Cookie("test", token))
 
@@ -95,8 +97,9 @@ class AuthenticatorProviderSpec(implicit ev: ExecutionEnv) extends Specification
       validator.isValid(authenticator) returns Future.successful(Valid)
       identityReader.apply(loginInfo) returns Future.failed(exception)
 
-      provider.authenticate(request) must throwA[AuthenticatorException].like {
-        case e => e.getMessage must beEqualTo(exception.getMessage)
+      provider.authenticate(request) must beLike[AuthState[User, Authenticator]] {
+        case AuthFailure(e) =>
+          e.getMessage must be equalTo exception.getMessage
       }.awaitWithPatience
     }
 

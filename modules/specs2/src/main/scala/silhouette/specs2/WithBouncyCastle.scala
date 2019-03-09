@@ -22,19 +22,21 @@ import java.security.Security
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.specs2.mutable.Specification
 
+import scala.util.{ Failure, Try }
+
 /**
  * Add the Bouncy Castle JCE provider to a test.
  */
 trait WithBouncyCastle {
   self: Specification =>
 
-  try {
+  Try {
     val provider = new BouncyCastleProvider()
     if (Option(Security.getProvider(provider.getName)).isDefined) {
       Security.removeProvider(provider.getName)
     }
     Security.addProvider(provider)
-  } catch {
-    case e: Exception => throw new RuntimeException("Could not initialize bouncy castle encryption", e)
+  }.recoverWith {
+    case e: Exception => Failure(new RuntimeException("Could not initialize bouncy castle encryption", e))
   }
 }

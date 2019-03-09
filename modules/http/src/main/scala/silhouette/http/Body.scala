@@ -251,8 +251,8 @@ private[silhouette] trait DefaultBodyReads {
    */
   implicit val scalaXmlReads: BodyReads[XmlBody.Type] = {
     case XmlBody(codec, bytes) =>
-      Try(XML.loadString(new String(bytes.toArray, codec.charSet))).recover {
-        case e: SAXParseException => throw new TransformException(e.getMessage, Option(e))
+      Try(XML.loadString(new String(bytes.toArray, codec.charSet))).recoverWith {
+        case e: SAXParseException => Failure(new TransformException(e.getMessage, Option(e)))
       }
     case Body(ct, _, _) =>
       Failure(new UnsupportedContentTypeException(

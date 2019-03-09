@@ -188,9 +188,9 @@ class DefaultStateHandler(val handlers: Set[StateItemHandler], signer: Signer)(i
               items.map {
                 case ItemStructure(item) => handlers.find(_.canHandle(item)) match {
                   case Some(handler) => handler.unserialize(item)
-                  case None          => throw new SocialProviderException(MissingItemHandlerError.format(item))
+                  case None          => Future.failed(new SocialProviderException(MissingItemHandlerError.format(item)))
                 }
-                case item => throw new SocialProviderException(ItemExtractionError.format(item))
+                case item => Future.failed(new SocialProviderException(ItemExtractionError.format(item)))
               }
             }.map(items => State(items.toSet))
         }

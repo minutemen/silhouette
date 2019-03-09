@@ -23,8 +23,7 @@ import silhouette.jwt.jose4j.Jose4jWrites._
 import silhouette.jwt.{ JwtException, Writes }
 
 import scala.collection.JavaConverters._
-import scala.language.implicitConversions
-import scala.util.Try
+import scala.util.{ Failure, Success, Try }
 
 /**
  * JWT transformer based on the [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library.
@@ -41,15 +40,15 @@ final case class Jose4jWrites(producer: Jose4jProducer) extends Writes {
    * @param jwt The JWT claims object to transform.
    * @return The JWT string representation or an error if the JWT claims object couldn't be transformed.
    */
-  override def write(jwt: silhouette.jwt.Claims): Try[String] = Try(producer.produce(jwt))
+  override def write(jwt: silhouette.jwt.Claims): Try[String] = toJose4j(jwt).map(producer.produce)
 
   /**
    * Converts the Silhouette claims instance to a jose4j claims instance.
    *
    * @param claims The Silhouette claims instance.
-   * @return The jose4j claims instance.
+   * @return The jose4j claims instance on success, otherwise a failure.
    */
-  implicit private def toJose4j(claims: silhouette.jwt.Claims): JwtClaims = {
+  private def toJose4j(claims: silhouette.jwt.Claims): Try[JwtClaims] = {
     val result = new JwtClaims()
     claims.issuer.foreach(result.setIssuer)
     claims.subject.foreach(result.setSubject)
@@ -58,14 +57,19 @@ final case class Jose4jWrites(producer: Jose4jProducer) extends Writes {
     claims.notBefore.foreach(v => result.setNotBefore(NumericDate.fromSeconds(v.getEpochSecond)))
     claims.issuedAt.foreach(v => result.setIssuedAt(NumericDate.fromSeconds(v.getEpochSecond)))
     claims.jwtID.foreach(result.setJwtId)
-    transformCustomClaims(claims.custom).asScala.foreach {
-      case (k, v) =>
-        if (silhouette.jwt.ReservedClaims.contains(k)) {
-          throw new JwtException(OverrideReservedClaim.format(k, silhouette.jwt.ReservedClaims.mkString(", ")))
-        }
-        result.setClaim(k, v)
+
+    val (reservedClaims, customClaims) = transformCustomClaims(claims.custom).asScala.partition {
+      case (k, _) =>
+        silhouette.jwt.ReservedClaims.contains(k)
     }
-    result
+
+    reservedClaims.headOption match {
+      case Some((key, _)) =>
+        Failure(new JwtException(OverrideReservedClaim.format(key, silhouette.jwt.ReservedClaims.mkString(", "))))
+      case None =>
+        customClaims.foreach { case (k, v) => result.setClaim(k, v) }
+        Success(result)
+    }
   }
 
   /**

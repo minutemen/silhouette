@@ -73,7 +73,7 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
 
       service.find[UnsupportedInfo](loginInfo) must throwA[ConfigurationException].like {
         case e => e.getMessage must startWith(FindError.format(classOf[UnsupportedInfo]))
-      }
+      }.awaitWithPatience
     }
   }
 
@@ -104,7 +104,7 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
 
       service.add(loginInfo, new UnsupportedInfo) must throwA[ConfigurationException].like {
         case e => e.getMessage must startWith(AddError.format(classOf[UnsupportedInfo]))
-      }
+      }.awaitWithPatience
     }
   }
 
@@ -135,7 +135,7 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
 
       service.update(loginInfo, new UnsupportedInfo) must throwA[ConfigurationException].like {
         case e => e.getMessage must startWith(UpdateError.format(classOf[UnsupportedInfo]))
-      }
+      }.awaitWithPatience
     }
   }
 
@@ -166,7 +166,7 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
 
       service.save(loginInfo, new UnsupportedInfo) must throwA[ConfigurationException].like {
         case e => e.getMessage must startWith(SaveError.format(classOf[UnsupportedInfo]))
-      }
+      }.awaitWithPatience
     }
   }
 
@@ -203,7 +203,7 @@ class DelegableAuthInfoRepositorySpec(implicit ev: ExecutionEnv)
 
       service.remove[UnsupportedInfo](loginInfo) must throwA[ConfigurationException].like {
         case e => e.getMessage must startWith(RemoveError.format(classOf[UnsupportedInfo]))
-      }
+      }.awaitWithPatience
     }
   }
 

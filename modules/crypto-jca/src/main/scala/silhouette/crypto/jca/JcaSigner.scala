@@ -57,15 +57,16 @@ class JcaSigner(config: JcaSignerConfig) extends Signer {
    * @return The verified raw data, or an error if the message isn't valid.
    */
   override def extract(message: String): Try[String] = {
-    for {
+    (for {
       (_, actualSignature, actualData) <- fragment(message)
       (_, expectedSignature, _) <- fragment(sign(actualData))
-    } yield {
-      if (constantTimeEquals(expectedSignature, actualSignature)) {
-        actualData
-      } else {
-        throw new CryptoException(BadSignature)
-      }
+    } yield (actualData, expectedSignature, actualSignature)).flatMap {
+      case (actualData, expectedSignature, actualSignature) =>
+        if (constantTimeEquals(expectedSignature, actualSignature)) {
+          Success(actualData)
+        } else {
+          Failure(new CryptoException(BadSignature))
+        }
     }
   }
 
@@ -106,7 +107,6 @@ class JcaSigner(config: JcaSignerConfig) extends Signer {
  * The companion object.
  */
 object JcaSigner {
-
   val BadSignature = "Bad signature"
   val UnknownVersion = "Unknown version: %s"
   val InvalidMessageFormat = "Invalid message format; Expected [VERSION]-[SIGNATURE]-[DATA]"

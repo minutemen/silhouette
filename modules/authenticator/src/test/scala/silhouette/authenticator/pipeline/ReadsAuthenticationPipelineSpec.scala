@@ -40,13 +40,14 @@ class ReadsAuthenticationPipelineSpec(implicit ev: ExecutionEnv) extends Specifi
       pipeline.read(None) must beEqualTo(MissingCredentials()).awaitWithPatience
     }
 
-    "throws an `AuthenticatorException` if the token couldn't be transformed into an authenticator" in new Context {
+    "returns the `AuthFailure` state if the token couldn't be transformed into an authenticator" in new Context {
       val exception = new AuthenticatorException("Parse error")
 
       reads.read(token) returns Future.failed(exception)
 
-      pipeline.read(Some(token)) must throwA[AuthenticatorException].like {
-        case e => e.getMessage must beEqualTo(exception.getMessage)
+      pipeline.read(Some(token)) must beLike[AuthState[User, Authenticator]] {
+        case AuthFailure(e) =>
+          e.getMessage must be equalTo exception.getMessage
       }.awaitWithPatience
     }
 
@@ -59,14 +60,15 @@ class ReadsAuthenticationPipelineSpec(implicit ev: ExecutionEnv) extends Specifi
       pipeline.read(Some(token)) must beEqualTo(InvalidCredentials(authenticator, errors)).awaitWithPatience
     }
 
-    "throws an `AuthenticatorException` if the validator throws an exception" in new Context {
+    "returns the `AuthFailure` state if the validator throws an exception" in new Context {
       val exception = new AuthenticatorException("Validation error")
 
       reads.read(token) returns Future.successful(authenticator)
       validator.isValid(authenticator) returns Future.failed(exception)
 
-      pipeline.read(Some(token)) must throwA[AuthenticatorException].like {
-        case e => e.getMessage must beEqualTo(exception.getMessage)
+      pipeline.read(Some(token)) must beLike[AuthState[User, Authenticator]] {
+        case AuthFailure(e) =>
+          e.getMessage must be equalTo exception.getMessage
       }.awaitWithPatience
     }
 
@@ -78,15 +80,16 @@ class ReadsAuthenticationPipelineSpec(implicit ev: ExecutionEnv) extends Specifi
       pipeline.read(Some(token)) must beEqualTo(MissingIdentity(authenticator, loginInfo)).awaitWithPatience
     }
 
-    "throws an `AuthenticatorException` if the identity reader throws an exception" in new Context {
+    "returns the `AuthFailure` state if the identity reader throws an exception" in new Context {
       val exception = new AuthenticatorException("Retrieval error")
 
       reads.read(token) returns Future.successful(authenticator)
       validator.isValid(authenticator) returns Future.successful(Valid)
       identityReader.apply(loginInfo) returns Future.failed(exception)
 
-      pipeline.read(Some(token)) must throwA[AuthenticatorException].like {
-        case e => e.getMessage must beEqualTo(exception.getMessage)
+      pipeline.read(Some(token)) must beLike[AuthState[User, Authenticator]] {
+        case AuthFailure(e) =>
+          e.getMessage must be equalTo exception.getMessage
       }.awaitWithPatience
     }
 

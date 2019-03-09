@@ -51,7 +51,7 @@ class DelegableAuthInfoRepository(daos: DelegableAuthInfoDAO[_]*)(implicit ec: E
   override def find[T <: AuthInfo](loginInfo: LoginInfo)(implicit tag: ClassTag[T]): Future[Option[T]] = {
     daos.find(_.classTag == tag) match {
       case Some(dao) => dao.find(loginInfo).map(_.map(_.asInstanceOf[T]))
-      case _         => throw new ConfigurationException(FindError.format(tag.runtimeClass))
+      case None      => Future.failed(new ConfigurationException(FindError.format(tag.runtimeClass)))
     }
   }
 
@@ -66,7 +66,7 @@ class DelegableAuthInfoRepository(daos: DelegableAuthInfoDAO[_]*)(implicit ec: E
   override def add[T <: AuthInfo](loginInfo: LoginInfo, authInfo: T): Future[T] = {
     daos.find(_.classTag.runtimeClass == authInfo.getClass) match {
       case Some(dao) => dao.asInstanceOf[AuthInfoDAO[T]].add(loginInfo, authInfo)
-      case _         => throw new ConfigurationException(AddError.format(authInfo.getClass))
+      case None      => Future.failed(new ConfigurationException(AddError.format(authInfo.getClass)))
     }
   }
 
@@ -81,7 +81,7 @@ class DelegableAuthInfoRepository(daos: DelegableAuthInfoDAO[_]*)(implicit ec: E
   override def update[T <: AuthInfo](loginInfo: LoginInfo, authInfo: T): Future[T] = {
     daos.find(_.classTag.runtimeClass == authInfo.getClass) match {
       case Some(dao) => dao.asInstanceOf[AuthInfoDAO[T]].update(loginInfo, authInfo)
-      case _         => throw new ConfigurationException(UpdateError.format(authInfo.getClass))
+      case None      => Future.failed(new ConfigurationException(UpdateError.format(authInfo.getClass)))
     }
   }
 
@@ -98,7 +98,7 @@ class DelegableAuthInfoRepository(daos: DelegableAuthInfoDAO[_]*)(implicit ec: E
   override def save[T <: AuthInfo](loginInfo: LoginInfo, authInfo: T): Future[T] = {
     daos.find(_.classTag.runtimeClass == authInfo.getClass) match {
       case Some(dao) => dao.asInstanceOf[AuthInfoDAO[T]].save(loginInfo, authInfo)
-      case _         => throw new ConfigurationException(SaveError.format(authInfo.getClass))
+      case None      => Future.failed(new ConfigurationException(SaveError.format(authInfo.getClass)))
     }
   }
 
@@ -113,7 +113,7 @@ class DelegableAuthInfoRepository(daos: DelegableAuthInfoDAO[_]*)(implicit ec: E
   override def remove[T <: AuthInfo](loginInfo: LoginInfo)(implicit tag: ClassTag[T]): Future[Unit] = {
     daos.find(_.classTag == tag) match {
       case Some(dao) => dao.remove(loginInfo)
-      case _         => throw new ConfigurationException(RemoveError.format(tag.runtimeClass))
+      case None      => Future.failed(new ConfigurationException(RemoveError.format(tag.runtimeClass)))
     }
   }
 }

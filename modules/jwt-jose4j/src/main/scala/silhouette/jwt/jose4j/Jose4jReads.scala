@@ -25,7 +25,7 @@ import silhouette.jwt.jose4j.Jose4jReads._
 import silhouette.jwt.{ Claims, JwtException, Reads, ReservedClaims }
 
 import scala.collection.JavaConverters._
-import scala.util.{ Failure, Try }
+import scala.util.{ Failure, Success, Try }
 
 /**
  * JWT reads based on the [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library.
@@ -43,7 +43,12 @@ final case class Jose4jReads(consumer: Jose4jConsumer) extends Reads {
    * @return The transformed JWT claims object or an error if the string couldn't be transformed.
    */
   override def read(str: String): Try[Claims] = {
-    consumer.consume(str).map(toSilhouette).recoverWith {
+    (for {
+      jwtClaims <- consumer.consume(str)
+      silhouetteClaims <- toSilhouette(jwtClaims)
+    } yield {
+      silhouetteClaims
+    }).recoverWith {
       case e =>
         Failure(new JwtException(FraudulentJwtToken.format(str), Some(e)))
     }
@@ -53,59 +58,63 @@ final case class Jose4jReads(consumer: Jose4jConsumer) extends Reads {
    * Converts the jose4j claims instance to a Silhouette claims instance.
    *
    * @param claims The jose4j claims instance.
-   * @return The Silhouette claims instance.
+   * @return The Silhouette claims instance on success, a failure on error.
    */
-  private def toSilhouette(claims: JwtClaims): Claims = {
-    Claims(
-      issuer = Option(claims.getIssuer),
-      subject = Option(claims.getSubject),
-      audience = Option(claims.getAudience).map(_.asScala.toList) match {
-        case Some(Nil) => None
-        case s         => s
-      },
-      expirationTime = Option(claims.getExpirationTime).map(_.getValue)
-        .map(seconds => Instant.ofEpochSecond(seconds)),
-      notBefore = Option(claims.getNotBefore).map(_.getValue)
-        .map(seconds => Instant.ofEpochSecond(seconds)),
-      issuedAt = Option(claims.getIssuedAt).map(_.getValue)
-        .map(seconds => Instant.ofEpochSecond(seconds)),
-      jwtID = Option(claims.getJwtId),
-      custom = claims.getClaimsMap(ReservedClaims.asJava).asScala match {
-        case l if l.isEmpty => JsonObject.empty
-        case l              => transformCustomClaims(l.asJava)
-      }
-    )
+  private def toSilhouette(claims: JwtClaims): Try[Claims] = {
+    val maybeCustom = claims.getClaimsMap(ReservedClaims.asJava).asScala match {
+      case l if l.isEmpty => Success(JsonObject.empty)
+      case l              => transformCustomClaims(l.asJava)
+    }
+
+    maybeCustom.map { custom =>
+      Claims(
+        issuer = Option(claims.getIssuer),
+        subject = Option(claims.getSubject),
+        audience = Option(claims.getAudience).map(_.asScala.toList) match {
+          case Some(Nil) => None
+          case s         => s
+        },
+        expirationTime = Option(claims.getExpirationTime).map(_.getValue)
+          .map(seconds => Instant.ofEpochSecond(seconds)),
+        notBefore = Option(claims.getNotBefore).map(_.getValue)
+          .map(seconds => Instant.ofEpochSecond(seconds)),
+        issuedAt = Option(claims.getIssuedAt).map(_.getValue)
+          .map(seconds => Instant.ofEpochSecond(seconds)),
+        jwtID = Option(claims.getJwtId),
+        custom = custom
+      )
+    }
   }
 
   /**
    * Transforms recursively the custom claims.
    *
    * @param claims The custom claims to Transforms.
-   * @return A Json object representing the custom claims.
+   * @return A Json object representing the custom claims on success, otherwise a failure.
    */
-  private def transformCustomClaims(claims: java.util.Map[String, Object]): JsonObject = {
+  private def transformCustomClaims(claims: java.util.Map[String, Object]): Try[JsonObject] = {
     def fromNumber(number: Number): Json = number match {
       case v: java.lang.Integer => Json.fromInt(v)
       case v: java.lang.Long    => Json.fromLong(v)
       case v: java.lang.Float   => Json.fromFloatOrNull(v)
       case v: java.lang.Double  => Json.fromDoubleOrNull(v)
     }
-    def fromMap(map: java.util.Map[_, _]): Json = {
-      Json.fromJsonObject(transformCustomClaims(map.asInstanceOf[java.util.Map[String, Object]]))
+    def fromMap(map: java.util.Map[_, _]): Try[Json] = {
+      transformCustomClaims(map.asInstanceOf[java.util.Map[String, Object]]).map(Json.fromJsonObject)
     }
-    def toJson(value: Any): Json = Option(value) match {
-      case None                          => Json.Null
-      case Some(v: java.lang.String)     => Json.fromString(v)
-      case Some(v: java.math.BigInteger) => Json.fromBigInt(v)
-      case Some(v: java.math.BigDecimal) => Json.fromBigDecimal(v)
-      case Some(v: java.lang.Number)     => fromNumber(v)
-      case Some(v: java.lang.Boolean)    => Json.fromBoolean(v)
-      case Some(v: java.util.List[_])    => Json.arr(v.asScala.toVector.map(toJson): _*)
+    def toJson(value: Any): Try[Json] = Option(value) match {
+      case None                          => Success(Json.Null)
+      case Some(v: java.lang.String)     => Success(Json.fromString(v))
+      case Some(v: java.math.BigInteger) => Success(Json.fromBigInt(v))
+      case Some(v: java.math.BigDecimal) => Success(Json.fromBigDecimal(v))
+      case Some(v: java.lang.Number)     => Success(fromNumber(v))
+      case Some(v: java.lang.Boolean)    => Success(Json.fromBoolean(v))
+      case Some(v: java.util.List[_])    => Try(Json.arr(v.asScala.toVector.map(value => toJson(value).get): _*))
       case Some(v: java.util.Map[_, _])  => fromMap(v)
-      case Some(v)                       => throw new JwtException(UnexpectedJsonValue.format(v))
+      case Some(v)                       => Failure(new JwtException(UnexpectedJsonValue.format(v)))
     }
 
-    JsonObject.fromIterable(claims.asScala.toMap.map { case (name, value) => name -> toJson(value) })
+    Try(JsonObject.fromIterable(claims.asScala.toMap.map { case (name, value) => name -> toJson(value).get }))
   }
 }
 

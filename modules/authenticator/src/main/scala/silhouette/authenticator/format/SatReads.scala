@@ -43,9 +43,12 @@ final case class SatReads(reader: String => Future[Option[Authenticator]])(
    * @param token The simple authentication token to transform.
    * @return An authenticator on success, an error on failure.
    */
-  override def read(token: String): Future[Authenticator] = reader(token).map(_.getOrElse(
-    throw new AuthenticatorException(MissingAuthenticator.format(token))
-  ))
+  override def read(token: String): Future[Authenticator] = reader(token).flatMap {
+    case Some(authenticator) =>
+      Future.successful(authenticator)
+    case None =>
+      Future.failed(new AuthenticatorException(MissingAuthenticator.format(token)))
+  }
 }
 
 /**

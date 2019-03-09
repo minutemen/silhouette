@@ -74,11 +74,11 @@ class PasswordLoginProvider @Inject() (
    */
   def authenticate(credentials: PasswordCredentials): Future[LoginInfo] = {
     loginInfo(credentials).flatMap { loginInfo =>
-      authenticate(loginInfo, credentials.password).map {
-        case Successful               => loginInfo
-        case InvalidPassword(error)   => throw new InvalidPasswordException(error)
-        case UnsupportedHasher(error) => throw new ConfigurationException(error)
-        case NotFound(error)          => throw new IdentityNotFoundException(error)
+      authenticate(loginInfo, credentials.password).flatMap {
+        case Successful               => Future.successful(loginInfo)
+        case InvalidPassword(error)   => Future.failed(new InvalidPasswordException(error))
+        case UnsupportedHasher(error) => Future.failed(new ConfigurationException(error))
+        case NotFound(error)          => Future.failed(new IdentityNotFoundException(error))
       }
     }
   }

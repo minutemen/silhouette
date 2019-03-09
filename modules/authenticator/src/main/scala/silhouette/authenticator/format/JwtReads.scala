@@ -47,18 +47,28 @@ final case class JwtReads(jwtReads: jwt.Reads) extends StatelessReads[String] wi
    * @return An authenticator on success, an error on failure.
    */
   override def read(jwt: String): Future[Authenticator] = Future.fromTry {
-    jwtReads.read(jwt).map { claims =>
+    jwtReads.read(jwt).flatMap { claims =>
       val custom = Json.fromJsonObject(claims.custom)
-      Authenticator(
-        id = claims.jwtID.getOrElse(throw new AuthenticatorException(MissingClaimValue.format("jwtID"))),
-        loginInfo = buildLoginInfo(Base64.decode(claims.subject
-          .getOrElse(throw new AuthenticatorException(MissingClaimValue.format("subject"))))).get,
-        touched = claims.issuedAt,
-        expires = claims.expirationTime,
-        tags = custom.hcursor.downField("tags").as[Seq[String]].getOrElse(Seq()),
-        fingerprint = custom.hcursor.downField("fingerprint").as[String].toOption,
-        payload = custom.hcursor.downField("payload").focus
-      )
+      val maybeID = claims.jwtID.map(Success.apply)
+        .getOrElse(Failure(new AuthenticatorException(MissingClaimValue.format("jwtID"))))
+      val maybeSubject = claims.subject.map(Success.apply)
+        .getOrElse(Failure(new AuthenticatorException(MissingClaimValue.format("subject"))))
+
+      for {
+        id <- maybeID
+        subject <- maybeSubject
+        loginInfo <- buildLoginInfo(Base64.decode(subject))
+      } yield {
+        Authenticator(
+          id = id,
+          loginInfo = loginInfo,
+          touched = claims.issuedAt,
+          expires = claims.expirationTime,
+          tags = custom.hcursor.downField("tags").as[Seq[String]].getOrElse(Seq()),
+          fingerprint = custom.hcursor.downField("fingerprint").as[String].toOption,
+          payload = custom.hcursor.downField("payload").focus
+        )
+      }
     }
   }
 

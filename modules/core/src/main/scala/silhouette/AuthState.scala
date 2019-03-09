@@ -30,7 +30,14 @@ package silhouette
  * @tparam I The type of the identity.
  * @tparam C The type of the credentials.
  */
-sealed trait AuthState[I <: Identity, +C <: Credentials]
+sealed trait AuthState[I <: Identity, +C <: Credentials] extends Product with Serializable
+
+/**
+ * Represents a state where a failure occurred in the authentication process.
+ *
+ * @param cause An exception that indicates the cause.
+ */
+final case class AuthFailure[I <: Identity, +C <: Credentials](cause: Exception) extends AuthState[I, C]
 
 /**
  * Represents a state where no credentials were found.

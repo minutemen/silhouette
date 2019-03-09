@@ -37,14 +37,15 @@ import scala.concurrent.Future
 class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderSpec with Mockito with WaitPatience {
 
   "The `authenticate` method" should {
-    "throws a `ConfigurationException` if a unsupported hasher was stored" in new Context {
+    "return the `AuthFailure` state if a unsupported hasher was stored" in new Context {
       val passwordInfo = PasswordInfo("unknown", "hashed(s3cr3t)")
       val request = Fake.request.withHeaders(BasicAuthorizationHeader(credentials))
 
       authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
 
-      provider.authenticate(request) must throwA[ConfigurationException].like {
-        case e => e.getMessage must beEqualTo(HasherIsNotRegistered.format(provider.id, "unknown", "foo, bar"))
+      provider.authenticate(request) must beLike[AuthState[User, BasicCredentials]] {
+        case AuthFailure(e) =>
+          e.getMessage must be equalTo HasherIsNotRegistered.format(provider.id, "unknown", "foo, bar")
       }.awaitWithPatience
     }
 
