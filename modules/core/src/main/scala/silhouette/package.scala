@@ -26,7 +26,8 @@ import scala.annotation.tailrec
 package object silhouette {
 
   /**
-   * Monkey patches the [[ACursor]] class to get the `downAt` function back, which was removed in version 0.12.0-M4.
+   * Monkey patches the [[io.circe.ACursor]] class to get the `downAt` function back, which was removed in
+   * version 0.12.0-M4.
    *
    * @see https://gitter.im/circe/circe?at=5d3f71eff0ff3e2bba8ece73
    * @param cursor The cursor to patch.

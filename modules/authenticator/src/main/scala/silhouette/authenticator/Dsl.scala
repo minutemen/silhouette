@@ -30,7 +30,7 @@ import scala.language.implicitConversions
 object Dsl {
 
   /**
-   * A DSL for working with [[RetrieveReads]] implementations.
+   * A DSL for working with [[silhouette.http.RetrieveReads]] implementations.
    *
    * @tparam T The type of the value the reads returns.
    */
@@ -39,7 +39,7 @@ object Dsl {
   }
 
   /**
-   * A DSL for working with [[AuthenticatorReads]] implementations.
+   * A DSL for working with [[silhouette.authenticator.Reads]] implementations.
    *
    * @tparam T The type of the value that the reads transforms into an [[Authenticator]].
    */
@@ -48,7 +48,7 @@ object Dsl {
   }
 
   /**
-   * Transforms a [[RequestPipeline]] into a [[RetrieveDsl]].
+   * Transforms a [[silhouette.http.RequestPipeline]] into a [[RetrieveDsl]].
    *
    * @param requestPipeline The request pipeline to transform.
    *
