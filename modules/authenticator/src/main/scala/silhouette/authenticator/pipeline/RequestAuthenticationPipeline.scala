@@ -17,36 +17,40 @@
  */
 package silhouette.authenticator.pipeline
 
-import silhouette.Fitting._
-import silhouette.authenticator._
+import silhouette.authenticator.{ AuthenticationPipeline, Authenticator, Validator }
+import silhouette.http.RequestPipeline
 import silhouette.{ AuthState, Identity, LoginInfo }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * An authentication pipeline which reads an authenticator from a source and transforms it to an authentication state.
+ * An authentication pipeline which reads an authenticator from an HTTP request and transforms it to an
+ * authentication state.
  *
- * @param reads          The reads which transforms a source into an authenticator.
+ * @param handler        The handler which transforms an HTTP request into an authenticator.
  * @param identityReader The reader to retrieve the [[Identity]] for the [[LoginInfo]] stored in the
  *                       [[silhouette.authenticator.Authenticator]] from the persistence layer.
  * @param validators     The list of validators to apply to the [[silhouette.authenticator.Authenticator]].
- * @tparam S The type of the source.
+ * @param ec             The execution context.
+ * @tparam R The type of the request.
  * @tparam I The type of the identity.
  */
-final case class ReadsAuthenticationPipeline[S, I <: Identity](
-  reads: Reads[S],
+final case class RequestAuthenticationPipeline[R, I <: Identity](
+  handler: RequestPipeline[R] => Future[Option[Authenticator]],
   override protected val identityReader: LoginInfo => Future[Option[I]],
   override protected val validators: Set[Validator] = Set()
 )(
   implicit
   ec: ExecutionContext
-) extends AuthenticationPipeline[Option[S], I] {
+) extends AuthenticationPipeline[RequestPipeline[R], I] {
 
   /**
    * Apply the pipeline.
    *
-   * @param source The source to read the authenticator from.
+   * @param requestPipeline The request pipeline to retrieve the authenticator from.
    * @return An authentication state.
    */
-  override def read(source: Option[S]): Future[AuthState[I, Authenticator]] = source.andThenFuture(reads).toState
+  override def read(requestPipeline: RequestPipeline[R]): Future[AuthState[I, Authenticator]] = {
+    handler(requestPipeline).toState
+  }
 }

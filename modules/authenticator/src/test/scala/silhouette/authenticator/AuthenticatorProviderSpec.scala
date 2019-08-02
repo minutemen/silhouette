@@ -21,8 +21,9 @@ import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
+import silhouette.authenticator.Dsl._
 import silhouette.authenticator.Validator.{ Invalid, Valid }
-import silhouette.authenticator.pipeline.ReadsAuthenticationPipeline
+import silhouette.authenticator.pipeline.RequestAuthenticationPipeline
 import silhouette.http.transport.RetrieveFromCookie
 import silhouette.http.{ Cookie, Fake, SilhouetteRequest }
 import silhouette.specs2.WaitPatience
@@ -41,7 +42,7 @@ class AuthenticatorProviderSpec(implicit ev: ExecutionEnv) extends Specification
     "return the `MissingCredentials` state if no token was found in request" in new Context {
       val request = Fake.request
 
-      provider.authenticate(request) must beEqualTo(MissingCredentials()).awaitWithPatience
+      provider.authenticate(request) must beEqualTo(MissingCredentials).awaitWithPatience
     }
 
     "return the `AuthFailure` state if the token couldn't be transformed into an authenticator" in new Context {
@@ -164,7 +165,10 @@ class AuthenticatorProviderSpec(implicit ev: ExecutionEnv) extends Specification
      * The provider to test.
      */
     val provider = new AuthenticatorProvider[SilhouetteRequest, User](
-      RetrieveFromCookie("test") andThen ReadsAuthenticationPipeline(reads, identityReader, Set(validator))
+      RequestAuthenticationPipeline[SilhouetteRequest, User](
+        request => request >> RetrieveFromCookie("test") >> reads,
+        identityReader, Set(validator)
+      )
     )
   }
 }

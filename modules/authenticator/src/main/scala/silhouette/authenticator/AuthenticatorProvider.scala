@@ -21,6 +21,7 @@ import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
 import silhouette._
 import silhouette.authenticator.AuthenticatorProvider._
+import silhouette.authenticator.pipeline.RequestAuthenticationPipeline
 import silhouette.http.RequestPipeline
 import silhouette.provider.RequestProvider
 
@@ -34,7 +35,7 @@ import scala.concurrent.Future
  * @tparam I The type of the identity.
  */
 class AuthenticatorProvider[R, I <: Identity] @Inject() (
-  pipeline: silhouette.Reads[RequestPipeline[R], Future[AuthState[I, Authenticator]]]
+  pipeline: RequestAuthenticationPipeline[R, I]
 ) extends RequestProvider[R, I] with LazyLogging {
 
   /**

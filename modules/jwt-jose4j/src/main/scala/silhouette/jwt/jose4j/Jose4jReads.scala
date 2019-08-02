@@ -24,7 +24,7 @@ import org.jose4j.jwt.JwtClaims
 import silhouette.jwt.jose4j.Jose4jReads._
 import silhouette.jwt.{ Claims, JwtException, Reads, ReservedClaims }
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.{ Failure, Success, Try }
 
 /**

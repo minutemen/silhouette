@@ -18,7 +18,8 @@
 import Dependencies._
 
 libraryDependencies ++= Seq(
-  Library.jose4j
+  Library.jose4j,
+  Library.collectionCombat
 )
 
 //enablePlugins(Doc)

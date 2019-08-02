@@ -124,7 +124,7 @@ trait AuthenticationPipeline[S, I <: Identity]
   ): Future[AuthState[I, Authenticator]] = {
     maybeAuthenticator match {
       case Some(authenticator) => toState(authenticator)
-      case None                => Future.successful(MissingCredentials())
+      case None                => Future.successful(MissingCredentials)
     }
   }
 

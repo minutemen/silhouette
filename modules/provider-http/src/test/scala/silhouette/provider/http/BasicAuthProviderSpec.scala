@@ -72,13 +72,13 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
     }
 
     "return the `MissingCredentials` state if provider isn't responsible" in new Context {
-      provider.authenticate(Fake.request) must beEqualTo(MissingCredentials()).awaitWithPatience
+      provider.authenticate(Fake.request) must beEqualTo(MissingCredentials).awaitWithPatience
     }
 
     "return the `MissingCredentials` state for wrong encoded credentials" in new Context {
       val request = Fake.request.withHeaders(Header(Header.Name.Authorization, "wrong"))
 
-      provider.authenticate(request) must beEqualTo(MissingCredentials()).awaitWithPatience
+      provider.authenticate(request) must beEqualTo(MissingCredentials).awaitWithPatience
     }
 
     "return the `MissingIdentity` state if no identity could be found" in new Context {
@@ -152,7 +152,7 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
           Header(Header.Name.Authorization, Base64.encode("NotBasic foo:bar"))
         )
 
-        provider.authenticate(request) must beEqualTo(MissingCredentials()).awaitWithPatience
+        provider.authenticate(request) must beEqualTo(MissingCredentials).awaitWithPatience
       }
   }
 

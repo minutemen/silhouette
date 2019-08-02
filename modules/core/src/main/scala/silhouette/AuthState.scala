@@ -25,49 +25,52 @@ package silhouette
  * credentials.
  *
  * The goal is it to authenticate an identity and to return a success state, but any of these steps could also fail.
- * This is what any derived state class defines.
+ * This is what any derived state type defines.
  *
  * @tparam I The type of the identity.
  * @tparam C The type of the credentials.
  */
-sealed trait AuthState[I <: Identity, +C <: Credentials] extends Product with Serializable
+sealed trait AuthState[-I <: Identity, -C <: Credentials] extends Product with Serializable
 
 /**
  * Represents a state where a failure occurred in the authentication process.
  *
- * @param cause An exception that indicates the cause.
- */
-final case class AuthFailure[I <: Identity, +C <: Credentials](cause: Exception) extends AuthState[I, C]
-
-/**
- * Represents a state where no credentials were found.
- *
  * @tparam I The type of the identity.
  * @tparam C The type of the credentials.
  */
-final case class MissingCredentials[I <: Identity, +C <: Credentials]() extends AuthState[I, C]
+sealed trait Unauthenticated[-I <: Identity, -C <: Credentials] extends AuthState[I, C]
+
+/**
+ * Represents a state where an exception was thrown in the authentication process.
+ *
+ * @param cause An exception that indicates the cause.
+ */
+final case class AuthFailure(cause: Exception) extends Unauthenticated[Identity, Credentials]
+
+/**
+ * Represents a state where no credentials were found.
+ */
+case object MissingCredentials extends Unauthenticated[Identity, Credentials]
 
 /**
  * Represents a state where invalid credentials were found.
  *
  * @param credentials The found credentials.
  * @param errors      The validation errors.
- * @tparam I The type of the identity.
  * @tparam C The type of the credentials.
  */
-final case class InvalidCredentials[I <: Identity, +C <: Credentials](credentials: C, errors: Seq[String])
-  extends AuthState[I, C]
+final case class InvalidCredentials[C <: Credentials](credentials: C, errors: Seq[String])
+  extends Unauthenticated[Identity, C]
 
 /**
  * Represents a state where the credentials but no identity were found.
  *
  * @param credentials The found credentials.
  * @param loginInfo   The login info for which an attempt was made to retrieve the identity.
- * @tparam I The type of the identity.
  * @tparam C The type of the credentials.
  */
-final case class MissingIdentity[I <: Identity, +C <: Credentials](credentials: C, loginInfo: LoginInfo)
-  extends AuthState[I, C]
+final case class MissingIdentity[C <: Credentials](credentials: C, loginInfo: LoginInfo)
+  extends Unauthenticated[Identity, C]
 
 /**
  * Represents a state where an identity is authenticated and authorized.
@@ -78,7 +81,7 @@ final case class MissingIdentity[I <: Identity, +C <: Credentials](credentials: 
  * @tparam I The type of the identity.
  * @tparam C The type of the credentials.
  */
-final case class Authenticated[I <: Identity, +C <: Credentials](
+final case class Authenticated[I <: Identity, C <: Credentials](
   identity: I,
   credentials: C,
   loginInfo: LoginInfo
