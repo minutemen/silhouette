@@ -22,7 +22,7 @@ import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import silhouette.authenticator.Validator.{ Invalid, Valid }
-import silhouette.authenticator.Dsl._
+import silhouette.authenticator.PipelineDsl._
 import silhouette.authenticator._
 import silhouette.http.{ Cookie, Fake, SilhouetteRequest }
 import silhouette.http.transport.RetrieveFromCookie

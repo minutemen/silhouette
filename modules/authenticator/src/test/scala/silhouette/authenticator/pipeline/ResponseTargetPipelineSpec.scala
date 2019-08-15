@@ -22,19 +22,20 @@ import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import silhouette.LoginInfo
-import silhouette.authenticator.{ Authenticator, StatefulWrites }
+import silhouette.authenticator.{ Authenticator, StatefulWrites, Writes }
 import silhouette.http.transport.EmbedIntoHeader
 import silhouette.http.{ Fake, Header, ResponsePipeline, SilhouetteResponse }
 import silhouette.specs2.WaitPatience
+import silhouette.authenticator.PipelineDsl._
 
 import scala.concurrent.Future
 
 /**
- * Test case for the [[EmbedStatefulPipeline]] class.
+ * Test case for the [[ResponseTargetPipeline]] class.
  *
  * @param ev The execution environment.
  */
-class EmbedStatefulPipelineSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
+class ResponseTargetPipelineSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
 
   "The `write` method" should {
     "write the authenticator with the `statefulWriter`" in new Context {
@@ -83,8 +84,8 @@ class EmbedStatefulPipelineSpec(implicit ev: ExecutionEnv) extends Specification
     /**
      * A writes that transforms the [[Authenticator]] into a serialized form of the [[Authenticator]].
      */
-    val statefulWrites = {
-      val m = mock[StatefulWrites[String]]
+    val authenticatorWrites = {
+      val m = mock[Writes[String]]
       m.write(authenticator) returns Future.successful(authenticator.toString)
       m
     }
@@ -92,6 +93,8 @@ class EmbedStatefulPipelineSpec(implicit ev: ExecutionEnv) extends Specification
     /**
      * The pipeline to test.
      */
-    val pipeline = EmbedStatefulPipeline[SilhouetteResponse](statefulWriter, statefulWrites, EmbedIntoHeader("test"))
+    val pipeline = ResponseTargetPipeline[SilhouetteResponse](authenticator =>
+      authenticator >> authenticatorWrites >> EmbedIntoHeader("test")
+    )
   }
 }

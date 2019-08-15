@@ -27,7 +27,7 @@ import scala.concurrent.Future
  * A simple authentication token represents a string that cannot store authenticator related data in it. Instead
  * it needs a mapping between this string and the authenticator related data, which is commonly handled through a
  * backing store. This writes doesn't store the authenticator directly. This should be done in a
- * [[silhouette.authenticator.WritePipeline]] instead.
+ * [[silhouette.authenticator.TargetPipeline]] instead.
  */
 final case class SatWrites() extends StatefulWrites[String] {
 

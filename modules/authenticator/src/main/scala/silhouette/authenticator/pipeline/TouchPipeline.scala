@@ -19,9 +19,7 @@ package silhouette.authenticator.pipeline
 
 import java.time.Clock
 
-import silhouette.authenticator.{ Authenticator, TransformPipeline }
-
-import scala.concurrent.Future
+import silhouette.authenticator.{ Authenticator, ModifyPipeline }
 
 /**
  * Pipeline which touches an authenticator.
@@ -35,15 +33,15 @@ import scala.concurrent.Future
  *
  * @param clock The clock instance.
  */
-final case class TouchPipeline(clock: Clock) extends TransformPipeline {
+final case class TouchPipeline(clock: Clock) extends ModifyPipeline {
 
   /**
    * Apply the pipeline.
    *
    * @param authenticator The authenticator.
-   * @return The response pipeline that discards the authenticator client side.
+   * @return The touched authenticator.
    */
-  override def write(authenticator: Authenticator): Future[Authenticator] = Future.successful {
+  override def write(authenticator: Authenticator): Authenticator = {
     if (authenticator.isTouched) {
       authenticator.touch(clock)
     } else {
