@@ -22,21 +22,21 @@ import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import silhouette.authenticator.Validator.{ Invalid, Valid }
-import silhouette.authenticator.PipelineDsl._
 import silhouette.authenticator._
-import silhouette.http.{ Cookie, Fake, SilhouetteRequest }
+import silhouette.authenticator.pipeline.Dsl._
 import silhouette.http.transport.RetrieveFromCookie
+import silhouette.http.{ Cookie, Fake, RequestPipeline, SilhouetteRequest }
 import silhouette.specs2.WaitPatience
 import silhouette.{ Reads => _, _ }
 
 import scala.concurrent.Future
 
 /**
- * Test case for the [[RequestAuthenticationPipeline]] class.
+ * Test case for the [[AuthenticationPipeline]] class.
  *
  * @param ev The execution environment.
  */
-class RequestAuthenticationPipelineSpec(implicit ev: ExecutionEnv)
+class AuthenticationPipelineSpec(implicit ev: ExecutionEnv)
   extends Specification with Mockito with WaitPatience {
 
   "The `read` method" should {
@@ -165,7 +165,7 @@ class RequestAuthenticationPipelineSpec(implicit ev: ExecutionEnv)
     /**
      * The pipeline to test.
      */
-    val pipeline = RequestAuthenticationPipeline[SilhouetteRequest, User](
+    val pipeline = AuthenticationPipeline[RequestPipeline[SilhouetteRequest], User](
       request => request >> RetrieveFromCookie("test") >> reads,
       identityReader, Set(validator)
     )

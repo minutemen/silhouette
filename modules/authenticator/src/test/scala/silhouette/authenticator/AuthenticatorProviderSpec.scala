@@ -21,9 +21,8 @@ import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import silhouette.authenticator.PipelineDsl._
 import silhouette.authenticator.Validator.{ Invalid, Valid }
-import silhouette.authenticator.pipeline.RequestAuthenticationPipeline
+import silhouette.authenticator.pipeline.Dsl._
 import silhouette.http.transport.RetrieveFromCookie
 import silhouette.http.{ Cookie, Fake, SilhouetteRequest }
 import silhouette.specs2.WaitPatience
@@ -165,7 +164,7 @@ class AuthenticatorProviderSpec(implicit ev: ExecutionEnv) extends Specification
      * The provider to test.
      */
     val provider = new AuthenticatorProvider[SilhouetteRequest, User](
-      RequestAuthenticationPipeline[SilhouetteRequest, User](
+      AuthenticationPipeline(
         request => request >> RetrieveFromCookie("test") >> reads,
         identityReader, Set(validator)
       )

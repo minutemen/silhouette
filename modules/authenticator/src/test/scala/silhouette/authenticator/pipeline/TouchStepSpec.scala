@@ -27,20 +27,20 @@ import silhouette.authenticator.Authenticator
 import silhouette.specs2.WaitPatience
 
 /**
- * Test case for the [[TouchPipeline]] class.
+ * Test case for the [[TouchStep]] class.
  */
-class TouchPipelineSpec extends Specification with Mockito with WaitPatience {
+class TouchStepSpec extends Specification with Mockito with WaitPatience {
 
-  "The `write` method" should {
-    "touch the authenticator is touching is enabled" in new Context {
-      pipeline.write(authenticator.touch(enableTouchClock)) must beLike[Authenticator] {
+  "The `apply` method" should {
+    "touch the authenticator if touching is enabled" in new Context {
+      step.apply(authenticator.touch(enableTouchClock)) must beLike[Authenticator] {
         case a =>
           a.touched must beSome(pipelineTouchClock.instant())
       }
     }
 
-    "not touch the authenticator is touching is disabled" in new Context {
-      pipeline.write(authenticator) must beLike[Authenticator] {
+    "not touch the authenticator if touching is disabled" in new Context {
+      step.apply(authenticator) must beLike[Authenticator] {
         case a =>
           a.touched must beNone
       }
@@ -73,8 +73,8 @@ class TouchPipelineSpec extends Specification with Mockito with WaitPatience {
     val authenticator = Authenticator(id = "id", loginInfo = loginInfo)
 
     /**
-     * The pipeline to test.
+     * The step to test.
      */
-    val pipeline = TouchPipeline(pipelineTouchClock)
+    val step = TouchStep(pipelineTouchClock)
   }
 }

@@ -19,14 +19,14 @@ package silhouette.authenticator.format
 
 import java.time.Instant
 
-import io.circe.{ Json, JsonObject }
 import io.circe.syntax._
+import io.circe.{ Json, JsonObject }
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import silhouette.LoginInfo
-import silhouette.authenticator.{ Authenticator, StatefulWrites, StatelessWrites }
+import silhouette.authenticator.Authenticator
 import silhouette.crypto.Base64
 import silhouette.jwt.{ Claims, Writes }
 import silhouette.specs2.WaitPatience
@@ -39,16 +39,6 @@ import scala.util.Try
  * @param ev The execution environment.
  */
 class JwtWritesSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
-
-  "The instance" should {
-    "be a StatelessWrites" in new Context {
-      jwtWrites must beAnInstanceOf[StatelessWrites[String]]
-    }
-
-    "be a StatefulWrites" in new Context {
-      jwtWrites must beAnInstanceOf[StatefulWrites[String]]
-    }
-  }
 
   "The `write` method" should {
     "write a claims representation from the authenticator" in new Context {

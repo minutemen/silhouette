@@ -23,7 +23,7 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import silhouette.LoginInfo
 import silhouette.authenticator.format.SatReads.MissingAuthenticator
-import silhouette.authenticator.{ Authenticator, AuthenticatorException, StatefulReads }
+import silhouette.authenticator.{ Authenticator, AuthenticatorException }
 import silhouette.specs2.WaitPatience
 
 import scala.concurrent.Future
@@ -34,12 +34,6 @@ import scala.concurrent.Future
  * @param ev The execution environment.
  */
 class SatReadsSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
-
-  "The instance" should {
-    "be a StatefulReads" in new Context {
-      satReads must beAnInstanceOf[StatefulReads[String]]
-    }
-  }
 
   "The `read` method" should {
     "throw an `AuthenticatorException` if no authenticator couldn't be found for the given token" in new Context {

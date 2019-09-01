@@ -20,7 +20,7 @@ package silhouette.authenticator.format
 import io.circe.Json
 import io.circe.jawn.decode
 import silhouette.authenticator.format.JwtReads._
-import silhouette.authenticator.{ Authenticator, AuthenticatorException, StatefulReads, StatelessReads }
+import silhouette.authenticator.{ Authenticator, AuthenticatorException, Reads }
 import silhouette.crypto.Base64
 import silhouette.{ LoginInfo, jwt }
 
@@ -38,7 +38,7 @@ import scala.util.{ Failure, Success, Try }
  *
  * @param jwtReads The underlying JWT reads implementation.
  */
-final case class JwtReads(jwtReads: jwt.Reads) extends StatelessReads[String] with StatefulReads[String] {
+final case class JwtReads(jwtReads: jwt.Reads) extends Reads[String] {
 
   /**
    * Transforms a JWT into an [[Authenticator]].

@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.authenticator
+package silhouette.authenticator.pipeline
 
 import silhouette.Fitting._
-import silhouette.authenticator.{ Reads => AuthenticatorReads, Writes => AuthenticatorWrites }
+import silhouette.authenticator.{ Authenticator, Reads => AuthenticatorReads, Writes => AuthenticatorWrites }
 import silhouette.http.{ EmbedWrites, RequestPipeline, ResponsePipeline, RetrieveReads }
 
 import scala.concurrent.{ ExecutionContext, Future }
@@ -27,7 +27,7 @@ import scala.language.implicitConversions
 /**
  * A simple DSL to model authenticator pipelines.
  */
-object PipelineDsl {
+object Dsl {
 
   /**
    * A DSL for working with [[silhouette.http.RetrieveReads]] implementations.
@@ -67,6 +67,20 @@ object PipelineDsl {
   }
 
   /**
+   * A DSL for working with [[silhouette.authenticator.pipeline.ModifyStep]] implementations.
+   */
+  trait ModifyStepDsl {
+    def >>(step: ModifyStep): Authenticator
+  }
+
+  /**
+   * A DSL for working with [[silhouette.authenticator.pipeline.AsyncStep]] implementations.
+   */
+  trait AsyncStepDsl {
+    def >>(step: AsyncStep): Future[Authenticator]
+  }
+
+  /**
    * Transforms a [[silhouette.http.RequestPipeline]] into a [[RetrieveReadsDsl]].
    *
    * @param requestPipeline The request pipeline to transform.
@@ -79,7 +93,35 @@ object PipelineDsl {
   }
 
   /**
-   * Transforms a value returned from a [[RetrieveReadsDsl]] into a [[AuthenticatorReadsDsl]].
+   * Transforms an [[Authenticator]] into an [[AuthenticatorWritesDsl]].
+   *
+   * @param authenticator The authenticator to transform.
+   * @tparam T The target type to which an [[Authenticator]] will be converted.
+   * @return An [[AuthenticatorWritesDsl]].
+   */
+  implicit def authenticatorToAuthenticatorWritesDsl[T](authenticator: Authenticator): AuthenticatorWritesDsl[T] =
+    _.write(authenticator)
+
+  /**
+   * Transforms an [[Authenticator]] into a [[ModifyStepDsl]].
+   *
+   * @param authenticator The authenticator to transform.
+   * @return An [[ModifyStepDsl]].
+   */
+  implicit def authenticatorToModifyStepDsl(authenticator: Authenticator): ModifyStepDsl =
+    _.apply(authenticator)
+
+  /**
+   * Transforms an [[Authenticator]] into an [[AsyncStepDsl]].
+   *
+   * @param authenticator The authenticator to transform.
+   * @return An [[AsyncStepDsl]].
+   */
+  implicit def authenticatorToEffectStepDsl(authenticator: Authenticator): AsyncStepDsl =
+    _.apply(authenticator)
+
+  /**
+   * Transforms a value returned from a [[RetrieveReadsDsl]] into an [[AuthenticatorReadsDsl]].
    *
    * @param value The value to transform into an authenticator.
    * @tparam T The type of the value.
@@ -90,18 +132,33 @@ object PipelineDsl {
   }
 
   /**
-   * Transforms an [[Authenticator]] into an [[AuthenticatorWritesDsl]].
+   * Transforms an [[Authenticator]] returned from an [[ModifyStepDsl]] into an [[AuthenticatorWritesDsl]].
    *
-   * @param authenticator The authenticator to transform.
-   * @tparam T The target type to which an [[Authenticator]] will be converted.
+   * @param authenticator The authenticator to transform into T.
+   * @tparam T The type of the result.
    * @return An [[AuthenticatorWritesDsl]].
    */
-  implicit def authenticatorToAuthenticatorWritesDsl[T](authenticator: Authenticator): AuthenticatorWritesDsl[T] = {
-    _.write(authenticator)
+  implicit def modifyStepDslToAuthenticatorWritesDsl[T](
+    authenticator: Authenticator
+  ): AuthenticatorWritesDsl[T] = {
+    writes => writes(authenticator)
   }
 
   /**
-   * Transforms a value returned from an [[AuthenticatorWritesDsl]] into a [[EmbedWritesDsl]].
+   * Transforms an [[Authenticator]] returned from an [[AsyncStepDsl]] into an [[AuthenticatorWritesDsl]].
+   *
+   * @param authenticator The authenticator to transform into T.
+   * @tparam T The type of the result.
+   * @return An [[AuthenticatorWritesDsl]].
+   */
+  implicit def asyncStepDslToAuthenticatorWritesDsl[T](
+    authenticator: Future[Authenticator]
+  ): AuthenticatorWritesDsl[T] = {
+    writes => authenticator andThenFuture writes
+  }
+
+  /**
+   * Transforms a value returned from an [[AuthenticatorWritesDsl]] into an [[EmbedWritesDsl]].
    *
    * @param payload The serialized form of the authenticator to embed into the response.
    * @param ec The implicit execution context.

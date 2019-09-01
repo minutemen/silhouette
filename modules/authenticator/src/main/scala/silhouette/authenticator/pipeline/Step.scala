@@ -19,10 +19,27 @@ package silhouette.authenticator.pipeline
 
 import java.time.Clock
 
-import silhouette.authenticator.{ Authenticator, ModifyPipeline }
+import silhouette.authenticator.Authenticator
+
+import scala.concurrent.Future
 
 /**
- * Pipeline which touches an authenticator.
+ * A step that can be composed with other steps to build an authenticator pipeline.
+ */
+sealed trait Step[A, B] extends (A => B)
+
+/**
+ * Pipeline which modifies an authenticator.
+ */
+trait ModifyStep extends Step[Authenticator, Authenticator]
+
+/**
+ * Pipeline which transforms an authenticator into an async authenticator.
+ */
+trait AsyncStep extends Step[Authenticator, Future[Authenticator]]
+
+/**
+ * Step which touches an authenticator.
  *
  * The authenticator can use sliding window expiration. This means that the authenticator times
  * out after a certain time if it wasn't used. This pipeline touches an authenticator to indicate
@@ -33,7 +50,7 @@ import silhouette.authenticator.{ Authenticator, ModifyPipeline }
  *
  * @param clock The clock instance.
  */
-final case class TouchPipeline(clock: Clock) extends ModifyPipeline {
+final case class TouchStep(clock: Clock) extends ModifyStep {
 
   /**
    * Apply the pipeline.
@@ -41,7 +58,7 @@ final case class TouchPipeline(clock: Clock) extends ModifyPipeline {
    * @param authenticator The authenticator.
    * @return The touched authenticator.
    */
-  override def write(authenticator: Authenticator): Authenticator = {
+  override def apply(authenticator: Authenticator): Authenticator = {
     if (authenticator.isTouched) {
       authenticator.touch(clock)
     } else {

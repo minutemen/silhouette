@@ -22,10 +22,9 @@ import silhouette._
 import silhouette.authenticator.Validator.{ Invalid, Valid }
 
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.language.{ higherKinds, implicitConversions }
 
 /**
- * An authenticator pipeline represents a step in the authentication process which is composed of multiple single steps.
+ * An authenticator pipeline represents a composition of multiple single steps in the authentication process.
  */
 sealed trait Pipeline
 
@@ -176,31 +175,4 @@ final case class TargetPipeline[T](pipeline: Authenticator => T => Future[T])
    * @return The target with the [[Authenticator]].
    */
   override def write(in: (Authenticator, T)): Future[T] = pipeline(in._1)(in._2)
-}
-
-/**
- * Pipeline which modifies an authenticator.
- */
-trait ModifyPipeline extends silhouette.Writes[Authenticator, Authenticator]
-
-/**
- * Pipeline which transforms an authenticator into an effectful authenticator.
- */
-trait EffectPipeline[T[_]] extends silhouette.Writes[Authenticator, T[Authenticator]]
-
-/**
- * The companion object.
- */
-object EffectPipeline {
-
-  /**
-   * Converts an effectful function to an [[EffectPipeline]].
-   *
-   * @param func The function to convert.
-   * @tparam E The type of the effect.
-   * @return An [[EffectPipeline]].
-   */
-  implicit def toEffectPipeline[E[_]](func: Authenticator => E[Authenticator]): EffectPipeline[E[Authenticator]] = {
-    authenticator => func(authenticator)
-  }
 }

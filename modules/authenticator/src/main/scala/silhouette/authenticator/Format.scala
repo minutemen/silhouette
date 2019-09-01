@@ -32,31 +32,3 @@ trait Reads[S] extends silhouette.Reads[S, Future[Authenticator]]
  * @tparam T The target type.
  */
 trait Writes[T] extends silhouette.Writes[Authenticator, Future[T]]
-
-/**
- * A marker trait for a [[Reads]] that can transform a stateful [[Authenticator]].
- *
- * @tparam S The source type.
- */
-trait StatefulReads[S] extends Reads[S]
-
-/**
- * A marker trait for a [[Writes]] that can transform a stateful [[Authenticator]].
- *
- * @tparam T The target type.
- */
-trait StatefulWrites[T] extends Writes[T]
-
-/**
- * A marker trait for a [[Reads]] that can transform a stateless [[Authenticator]].
- *
- * @tparam S The source type.
- */
-trait StatelessReads[S] extends Reads[S]
-
-/**
- * A marker trait for a [[Writes]] that can transform a stateless [[Authenticator]].
- *
- * @tparam T The target type.
- */
-trait StatelessWrites[T] extends Writes[T]

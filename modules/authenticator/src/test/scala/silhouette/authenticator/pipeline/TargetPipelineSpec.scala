@@ -22,26 +22,26 @@ import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import silhouette.LoginInfo
-import silhouette.authenticator.{ Authenticator, StatefulWrites, Writes }
+import silhouette.authenticator.pipeline.Dsl._
+import silhouette.authenticator.{ Authenticator, TargetPipeline, Writes }
 import silhouette.http.transport.EmbedIntoHeader
 import silhouette.http.{ Fake, Header, ResponsePipeline, SilhouetteResponse }
 import silhouette.specs2.WaitPatience
-import silhouette.authenticator.PipelineDsl._
 
 import scala.concurrent.Future
 
 /**
- * Test case for the [[ResponseTargetPipeline]] class.
+ * Test case for the [[TargetPipeline]] class.
  *
  * @param ev The execution environment.
  */
-class ResponseTargetPipelineSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
+class TargetPipelineSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
 
   "The `write` method" should {
     "write the authenticator with the `statefulWriter`" in new Context {
       pipeline.write(authenticator -> responsePipeline)
 
-      there was one(statefulWriter).apply(authenticator)
+      there was one(asyncStep).apply(authenticator)
     }
 
     "embed the authenticator into the response" in new Context {
@@ -73,11 +73,20 @@ class ResponseTargetPipelineSpec(implicit ev: ExecutionEnv) extends Specificatio
     val responsePipeline = Fake.response
 
     /**
-     * A writer to write the stateful [[Authenticator]] to a backing store.
+     * An `AsyncStep` implementation.
      */
-    val statefulWriter = {
-      val m = mock[Authenticator => Future[Authenticator]]
+    val asyncStep = {
+      val m = mock[AsyncStep]
       m.apply(authenticator) returns Future.successful(authenticator)
+      m
+    }
+
+    /**
+     * An `ModifyStep` implementation.
+     */
+    val modifyStep = {
+      val m = mock[ModifyStep]
+      m.apply(authenticator) returns authenticator
       m
     }
 
@@ -93,8 +102,8 @@ class ResponseTargetPipelineSpec(implicit ev: ExecutionEnv) extends Specificatio
     /**
      * The pipeline to test.
      */
-    val pipeline = ResponseTargetPipeline[SilhouetteResponse](authenticator =>
-      authenticator >> authenticatorWrites >> EmbedIntoHeader("test")
+    val pipeline = TargetPipeline[ResponsePipeline[SilhouetteResponse]](authenticator =>
+      authenticator >> modifyStep >> asyncStep >> authenticatorWrites >> EmbedIntoHeader("test")
     )
   }
 }
