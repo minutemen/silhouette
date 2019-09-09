@@ -22,7 +22,8 @@ import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import silhouette.LoginInfo
-import silhouette.authenticator.{ Authenticator, StatefulWrites }
+import silhouette.authenticator.pipeline.Dsl._
+import silhouette.authenticator.{ Authenticator, TargetPipeline, Writes }
 import silhouette.http.transport.EmbedIntoHeader
 import silhouette.http.{ Fake, Header, ResponsePipeline, SilhouetteResponse }
 import silhouette.specs2.WaitPatience
@@ -30,17 +31,17 @@ import silhouette.specs2.WaitPatience
 import scala.concurrent.Future
 
 /**
- * Test case for the [[EmbedStatefulPipeline]] class.
+ * Test case for the [[TargetPipeline]] class.
  *
  * @param ev The execution environment.
  */
-class EmbedStatefulPipelineSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
+class TargetPipelineSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
 
   "The `write` method" should {
     "write the authenticator with the `statefulWriter`" in new Context {
       pipeline.write(authenticator -> responsePipeline)
 
-      there was one(statefulWriter).apply(authenticator)
+      there was one(asyncStep).apply(authenticator)
     }
 
     "embed the authenticator into the response" in new Context {
@@ -72,19 +73,28 @@ class EmbedStatefulPipelineSpec(implicit ev: ExecutionEnv) extends Specification
     val responsePipeline = Fake.response
 
     /**
-     * A writer to write the stateful [[Authenticator]] to a backing store.
+     * An `AsyncStep` implementation.
      */
-    val statefulWriter = {
-      val m = mock[Authenticator => Future[Authenticator]]
+    val asyncStep = {
+      val m = mock[AsyncStep]
       m.apply(authenticator) returns Future.successful(authenticator)
+      m
+    }
+
+    /**
+     * An `ModifyStep` implementation.
+     */
+    val modifyStep = {
+      val m = mock[ModifyStep]
+      m.apply(authenticator) returns authenticator
       m
     }
 
     /**
      * A writes that transforms the [[Authenticator]] into a serialized form of the [[Authenticator]].
      */
-    val statefulWrites = {
-      val m = mock[StatefulWrites[String]]
+    val authenticatorWrites = {
+      val m = mock[Writes[String]]
       m.write(authenticator) returns Future.successful(authenticator.toString)
       m
     }
@@ -92,6 +102,8 @@ class EmbedStatefulPipelineSpec(implicit ev: ExecutionEnv) extends Specification
     /**
      * The pipeline to test.
      */
-    val pipeline = EmbedStatefulPipeline[SilhouetteResponse](statefulWriter, statefulWrites, EmbedIntoHeader("test"))
+    val pipeline = TargetPipeline[ResponsePipeline[SilhouetteResponse]](authenticator =>
+      authenticator >> modifyStep >> asyncStep >> authenticatorWrites >> EmbedIntoHeader("test")
+    )
   }
 }

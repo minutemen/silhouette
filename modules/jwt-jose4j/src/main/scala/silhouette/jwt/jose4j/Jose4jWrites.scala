@@ -22,7 +22,7 @@ import org.jose4j.jwt.{ JwtClaims, NumericDate }
 import silhouette.jwt.jose4j.Jose4jWrites._
 import silhouette.jwt.{ JwtException, Writes }
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.{ Failure, Success, Try }
 
 /**

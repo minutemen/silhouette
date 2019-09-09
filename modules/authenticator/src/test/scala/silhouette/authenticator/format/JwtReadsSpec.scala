@@ -27,7 +27,7 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import silhouette.LoginInfo
 import silhouette.authenticator.format.JwtReads._
-import silhouette.authenticator.{ Authenticator, AuthenticatorException, StatefulReads, StatelessReads }
+import silhouette.authenticator.{ Authenticator, AuthenticatorException }
 import silhouette.crypto.Base64
 import silhouette.jwt.{ Claims, Reads }
 import silhouette.specs2.WaitPatience
@@ -40,16 +40,6 @@ import scala.util.{ Failure, Try }
  * @param ev The execution environment.
  */
 class JwtReadsSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
-
-  "The instance" should {
-    "be a StatelessReads" in new Context {
-      jwtReads must beAnInstanceOf[StatelessReads[String]]
-    }
-
-    "be a StatefulReads" in new Context {
-      jwtReads must beAnInstanceOf[StatefulReads[String]]
-    }
-  }
 
   "The `read` method" should {
     "return a failed future if the underlying reads returns a `Failure`" in new Context {

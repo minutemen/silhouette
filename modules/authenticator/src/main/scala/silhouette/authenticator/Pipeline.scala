@@ -24,7 +24,7 @@ import silhouette.authenticator.Validator.{ Invalid, Valid }
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * An authenticator pipeline represents a step in the authentication process which is composed of multiple single steps.
+ * An authenticator pipeline represents a composition of multiple single steps in the authentication process.
  */
 sealed trait Pipeline
 
@@ -39,11 +39,23 @@ sealed trait Pipeline
  * or any other service. At last we could apply some authorization rules to our identity. Any of these steps in our
  * pipeline can be represented by a [[AuthState]] that describes the result of each step.
  *
+ * @param pipeline       The pipeline which transforms the source into an authenticator.
+ * @param identityReader The reader to retrieve the [[Identity]] for the [[LoginInfo]] stored in the
+ *                       [[silhouette.authenticator.Authenticator]] from the persistence layer.
+ * @param validators     The list of validators to apply to the [[silhouette.authenticator.Authenticator]].
+ * @param ec             The execution context.
+ *
  * @tparam S The type of the source.
  * @tparam I The type of the identity.
  */
-trait AuthenticationPipeline[S, I <: Identity]
-  extends silhouette.Reads[S, Future[AuthState[I, Authenticator]]] with Pipeline { self =>
+case class AuthenticationPipeline[S, I <: Identity](
+  pipeline: S => Future[Option[Authenticator]],
+  identityReader: LoginInfo => Future[Option[I]],
+  validators: Set[Validator] = Set()
+)(
+  implicit
+  ec: ExecutionContext
+) extends silhouette.Reads[S, Future[AuthState[I, Authenticator]]] with Pipeline { self =>
 
   /**
    * Monkey patches a `Future[Authenticator]` to add a `toState` method which allows to transforms an [[Authenticator]]
@@ -85,14 +97,12 @@ trait AuthenticationPipeline[S, I <: Identity]
   }
 
   /**
-   * The reader to retrieve the [[Identity]] for the [[LoginInfo]] stored in the [[Authenticator]].
+   * Apply the pipeline.
+   *
+   * @param requestPipeline The request pipeline to retrieve the authenticator from.
+   * @return An authentication state.
    */
-  protected val identityReader: LoginInfo => Future[Option[I]]
-
-  /**
-   * The list of validators to apply to the [[Authenticator]] from the persistence layer.
-   */
-  protected val validators: Set[Validator] = Set()
+  override def read(requestPipeline: S): Future[AuthState[I, Authenticator]] = pipeline(requestPipeline).toState
 
   /**
    * Transforms the given future into an authentication state by applying another transformation on the result
@@ -124,7 +134,7 @@ trait AuthenticationPipeline[S, I <: Identity]
   ): Future[AuthState[I, Authenticator]] = {
     maybeAuthenticator match {
       case Some(authenticator) => toState(authenticator)
-      case None                => Future.successful(MissingCredentials())
+      case None                => Future.successful(MissingCredentials)
     }
   }
 
@@ -150,14 +160,19 @@ trait AuthenticationPipeline[S, I <: Identity]
 }
 
 /**
- * Pipeline which transforms an authenticator into another authenticator.
- */
-trait TransformPipeline extends silhouette.Writes[Authenticator, Future[Authenticator]]
-
-/**
- * Pipeline which merges an [[Authenticator]] and a target `T` into a target `T` that contains the given
- * [[Authenticator]].
+ * Pipeline which writes an [[Authenticator]] to a target `T`.
  *
+ * @param pipeline A pipeline that writes an [[Authenticator]] to the given target.
  * @tparam T The type of the target.
  */
-trait WritePipeline[T] extends silhouette.Writes[(Authenticator, T), Future[T]]
+final case class TargetPipeline[T](pipeline: Authenticator => T => Future[T])
+  extends silhouette.Writes[(Authenticator, T), Future[T]] {
+
+  /**
+   * Writes an [[Authenticator]] to a target.
+   *
+   * @param in A tuple consisting of the [[Authenticator]] and the target into which it should be written.
+   * @return The target with the [[Authenticator]].
+   */
+  override def write(in: (Authenticator, T)): Future[T] = pipeline(in._1)(in._2)
+}

@@ -19,12 +19,59 @@ package silhouette.authenticator.pipeline
 
 import java.time.Clock
 
-import silhouette.authenticator.{ Authenticator, TransformPipeline }
+import silhouette.authenticator.Authenticator
 
 import scala.concurrent.Future
 
 /**
- * Pipeline which touches an authenticator.
+ * A step that can be composed with other steps to build an authenticator pipeline.
+ */
+sealed trait Step[A, B] extends (A => B)
+
+/**
+ * Pipeline which modifies an authenticator.
+ */
+trait ModifyStep extends Step[Authenticator, Authenticator]
+
+/**
+ * The companion object.
+ */
+object ModifyStep {
+
+  /**
+   * Converts a function that accepts an [[Authenticator]] and returns an [[Authenticator]] into a [[ModifyStep]].
+   *
+   * @param f The function to convert into a [[ModifyStep]].
+   * @return A [[ModifyStep]] instance.
+   */
+  def apply(f: Authenticator => Authenticator): ModifyStep = {
+    authenticator => f(authenticator)
+  }
+}
+
+/**
+ * Pipeline which transforms an authenticator into an async authenticator.
+ */
+trait AsyncStep extends Step[Authenticator, Future[Authenticator]]
+
+/**
+ * The companion object.
+ */
+object AsyncStep {
+
+  /**
+   * Converts a function that accepts an [[Authenticator]] and returns an async [[Authenticator]] into an [[AsyncStep]].
+   *
+   * @param f The function to convert into an [[AsyncStep]].
+   * @return An [[AsyncStep]] instance.
+   */
+  def apply(f: Authenticator => Future[Authenticator]): AsyncStep = {
+    authenticator => f(authenticator)
+  }
+}
+
+/**
+ * Step which touches an authenticator.
  *
  * The authenticator can use sliding window expiration. This means that the authenticator times
  * out after a certain time if it wasn't used. This pipeline touches an authenticator to indicate
@@ -35,15 +82,15 @@ import scala.concurrent.Future
  *
  * @param clock The clock instance.
  */
-final case class TouchPipeline(clock: Clock) extends TransformPipeline {
+final case class TouchStep(clock: Clock) extends ModifyStep {
 
   /**
    * Apply the pipeline.
    *
    * @param authenticator The authenticator.
-   * @return The response pipeline that discards the authenticator client side.
+   * @return The touched authenticator.
    */
-  override def write(authenticator: Authenticator): Future[Authenticator] = Future.successful {
+  override def apply(authenticator: Authenticator): Authenticator = {
     if (authenticator.isTouched) {
       authenticator.touch(clock)
     } else {

@@ -18,7 +18,7 @@
 package silhouette.authenticator.format
 
 import silhouette.authenticator.format.SatReads._
-import silhouette.authenticator.{ Authenticator, AuthenticatorException, StatefulReads }
+import silhouette.authenticator.{ Authenticator, AuthenticatorException, Reads }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -35,7 +35,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 final case class SatReads(reader: String => Future[Option[Authenticator]])(
   implicit
   ex: ExecutionContext
-) extends StatefulReads[String] {
+) extends Reads[String] {
 
   /**
    * Transforms a simple authentication token into an [[Authenticator]].

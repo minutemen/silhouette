@@ -19,34 +19,31 @@ package silhouette.authenticator.pipeline
 
 import java.time.{ Clock, Instant, ZoneId }
 
-import org.specs2.concurrent.ExecutionEnv
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
-import silhouette.specs2.WaitPatience
 import silhouette.LoginInfo
 import silhouette.authenticator.Authenticator
+import silhouette.specs2.WaitPatience
 
 /**
- * Test case for the [[TouchPipeline]] class.
- *
- * @param ev The execution environment.
+ * Test case for the [[TouchStep]] class.
  */
-class TouchPipelineSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
+class TouchStepSpec extends Specification with Mockito with WaitPatience {
 
-  "The `write` method" should {
-    "touch the authenticator is touching is enabled" in new Context {
-      pipeline.write(authenticator.touch(enableTouchClock)) must beLike[Authenticator] {
+  "The `apply` method" should {
+    "touch the authenticator if touching is enabled" in new Context {
+      step.apply(authenticator.touch(enableTouchClock)) must beLike[Authenticator] {
         case a =>
           a.touched must beSome(pipelineTouchClock.instant())
-      }.awaitWithPatience
+      }
     }
 
-    "not touch the authenticator is touching is disabled" in new Context {
-      pipeline.write(authenticator) must beLike[Authenticator] {
+    "not touch the authenticator if touching is disabled" in new Context {
+      step.apply(authenticator) must beLike[Authenticator] {
         case a =>
           a.touched must beNone
-      }.awaitWithPatience
+      }
     }
   }
 
@@ -76,8 +73,8 @@ class TouchPipelineSpec(implicit ev: ExecutionEnv) extends Specification with Mo
     val authenticator = Authenticator(id = "id", loginInfo = loginInfo)
 
     /**
-     * The pipeline to test.
+     * The step to test.
      */
-    val pipeline = TouchPipeline(pipelineTouchClock)
+    val step = TouchStep(pipelineTouchClock)
   }
 }

@@ -17,7 +17,7 @@
  */
 package silhouette.authenticator.format
 
-import silhouette.authenticator.{ Authenticator, StatefulWrites }
+import silhouette.authenticator.{ Authenticator, Writes }
 
 import scala.concurrent.Future
 
@@ -27,9 +27,9 @@ import scala.concurrent.Future
  * A simple authentication token represents a string that cannot store authenticator related data in it. Instead
  * it needs a mapping between this string and the authenticator related data, which is commonly handled through a
  * backing store. This writes doesn't store the authenticator directly. This should be done in a
- * [[silhouette.authenticator.WritePipeline]] instead.
+ * [[silhouette.authenticator.TargetPipeline]] instead.
  */
-final case class SatWrites() extends StatefulWrites[String] {
+final case class SatWrites() extends Writes[String] {
 
   /**
    * Transforms an [[Authenticator]] into a simple authentication token.

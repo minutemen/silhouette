@@ -27,14 +27,14 @@ import silhouette.provider.RequestProvider
 import scala.concurrent.Future
 
 /**
- * A request provider implementation that supports authentication with an authenticator.
+ * A request provider implementation that supports authentication with an [[Authenticator]].
  *
  * @param pipeline The authentication pipeline which transforms a request into an [[AuthState]].
  * @tparam R The type of the request.
  * @tparam I The type of the identity.
  */
 class AuthenticatorProvider[R, I <: Identity] @Inject() (
-  pipeline: silhouette.Reads[RequestPipeline[R], Future[AuthState[I, Authenticator]]]
+  pipeline: AuthenticationPipeline[RequestPipeline[R], I]
 ) extends RequestProvider[R, I] with LazyLogging {
 
   /**
@@ -50,10 +50,10 @@ class AuthenticatorProvider[R, I <: Identity] @Inject() (
   override def id: String = ID
 
   /**
-   * Authenticates an identity based on credentials sent in a request.
+   * Authenticates an identity based on an [[Authenticator]] sent in a request.
    *
    * @param request The request pipeline.
-   * @return Some login info on successful authentication or None if the authentication was unsuccessful.
+   * @return The [[AuthState]].
    */
   override def authenticate(request: RequestPipeline[R]): Future[AuthState[I, Authenticator]] =
     pipeline.read(request)

@@ -20,8 +20,8 @@ import sbt._
 object Dependencies {
 
   object Version {
-    val specs2 = "4.3.6"
-    val circe = "0.11.1"
+    val specs2 = "4.6.0"
+    val circe = "0.12.0-M4"
   }
 
   val resolvers = Seq()
@@ -45,9 +45,9 @@ object Dependencies {
     val commonCodec = "commons-codec" % "commons-codec" % "1.10"
     val jose4j = "org.bitbucket.b_c" % "jose4j" % "0.5.4"
     val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15on" % "1.56"
-    val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.1.1"
-    val collectionCombat = "org.scala-lang.modules" %% "scala-collection-compat" % "0.3.0"
-    val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.0"
+    val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.2.0"
+    val collectionCombat = "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.1"
+    val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
     val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
   }
 }

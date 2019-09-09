@@ -29,7 +29,7 @@ import silhouette.provider.oauth2.GoogleProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
 import silhouette.provider.social.state.StateHandler
-import silhouette.{ ConfigURI, LoginInfo }
+import silhouette.{ ConfigURI, LoginInfo, RichACursor }
 
 import scala.concurrent.{ ExecutionContext, Future }
 

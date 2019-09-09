@@ -188,7 +188,9 @@ final case class ThrowableError(value: Throwable) extends FittingError
  * Represents the `None` type of an option.
  */
 case object NoneError extends FittingError {
-  override val value: Throwable = new IllegalStateException("None value detected")
+  override val value: Throwable = new IllegalStateException(
+    "None value detected! This indicates that a value was not found in an Fitting pipeline"
+  )
 }
 
 /**

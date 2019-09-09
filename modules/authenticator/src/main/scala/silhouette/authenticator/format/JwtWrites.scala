@@ -21,7 +21,7 @@ import java.time.Instant
 
 import io.circe.syntax._
 import io.circe.{ Json, JsonObject }
-import silhouette.authenticator.{ Authenticator, StatefulWrites, StatelessWrites }
+import silhouette.authenticator.{ Authenticator, Writes }
 import silhouette.crypto.Base64
 import silhouette.jwt
 
@@ -46,7 +46,7 @@ final case class JwtWrites(
   issuer: Option[String] = None,
   audience: Option[List[String]] = None,
   notBefore: Option[Instant] = None
-) extends StatelessWrites[String] with StatefulWrites[String] {
+) extends Writes[String] {
 
   /**
    * Transforms an [[Authenticator]] into a JWT.

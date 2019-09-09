@@ -21,9 +21,9 @@ import org.specs2.concurrent.ExecutionEnv
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
-import silhouette.authenticator.{ Authenticator, StatefulWrites }
-import silhouette.specs2.WaitPatience
 import silhouette.LoginInfo
+import silhouette.authenticator.Authenticator
+import silhouette.specs2.WaitPatience
 
 /**
  * Test case for the [[SatWrites]] class.
@@ -31,12 +31,6 @@ import silhouette.LoginInfo
  * @param ev The execution environment.
  */
 class SatWritesSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
-
-  "The instance" should {
-    "be a StatefulWrites" in new Context {
-      satWrites must beAnInstanceOf[StatefulWrites[String]]
-    }
-  }
 
   "The `write` method" should {
     "return the authenticator ID as token" in new Context {
