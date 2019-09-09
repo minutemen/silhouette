@@ -164,7 +164,7 @@ object Dsl {
    * @param ec The implicit execution context.
    * @tparam R The type of the request.
    * @tparam P The type of the payload.
-   * @return A [[EmbedWritesDsl]].
+   * @return An [[EmbedWritesDsl]].
    */
   implicit def authenticatorWritesDslToEmbedWritesDsl[R, P](payload: Future[P])(
     implicit

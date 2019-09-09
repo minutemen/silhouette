@@ -34,9 +34,41 @@ sealed trait Step[A, B] extends (A => B)
 trait ModifyStep extends Step[Authenticator, Authenticator]
 
 /**
+ * The companion object.
+ */
+object ModifyStep {
+
+  /**
+   * Converts a function that accepts an [[Authenticator]] and returns an [[Authenticator]] into a [[ModifyStep]].
+   *
+   * @param f The function to convert into a [[ModifyStep]].
+   * @return A [[ModifyStep]] instance.
+   */
+  def apply(f: Authenticator => Authenticator): ModifyStep = {
+    authenticator => f(authenticator)
+  }
+}
+
+/**
  * Pipeline which transforms an authenticator into an async authenticator.
  */
 trait AsyncStep extends Step[Authenticator, Future[Authenticator]]
+
+/**
+ * The companion object.
+ */
+object AsyncStep {
+
+  /**
+   * Converts a function that accepts an [[Authenticator]] and returns an async [[Authenticator]] into an [[AsyncStep]].
+   *
+   * @param f The function to convert into an [[AsyncStep]].
+   * @return An [[AsyncStep]] instance.
+   */
+  def apply(f: Authenticator => Future[Authenticator]): AsyncStep = {
+    authenticator => f(authenticator)
+  }
+}
 
 /**
  * Step which touches an authenticator.
