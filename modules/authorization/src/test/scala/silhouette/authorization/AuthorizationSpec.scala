@@ -92,7 +92,7 @@ class AuthorizationSpec(implicit ev: ExecutionEnv) extends Specification with Mo
     /**
      * A test context.
      */
-    case class TestContext() extends AuthorizationContext
+    case class TestContext()
 
     /**
      * The login info.

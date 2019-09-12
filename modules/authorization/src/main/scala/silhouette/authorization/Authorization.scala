@@ -22,17 +22,12 @@ import silhouette.Identity
 import scala.concurrent.{ ExecutionContext, Future }
 
 /**
- * An authorization context can contain arbitrary context based data that can be feed into the authorization process.
- */
-trait AuthorizationContext
-
-/**
  * A trait to define an authorization policy that can be applied to an identity to provide access control to resources.
  *
  * @tparam I The type of the identity.
  * @tparam C The type of the context.
  */
-trait Authorization[I <: Identity, C <: AuthorizationContext] {
+trait Authorization[I <: Identity, C] {
 
   /**
    * Checks whether the user is authorized or not.
@@ -47,7 +42,7 @@ trait Authorization[I <: Identity, C <: AuthorizationContext] {
 /**
  * An authorization policy that always grants access to resources.
  */
-case object Authorized extends Authorization[Identity, AuthorizationContext] {
+case object Authorized extends Authorization[Identity, Any] {
 
   /**
    * Checks whether the user is authorized or not.
@@ -56,14 +51,14 @@ case object Authorized extends Authorization[Identity, AuthorizationContext] {
    * @param context  The current context instance.
    * @return True if the user is authorized, false otherwise.
    */
-  override def isAuthorized(identity: Identity, context: AuthorizationContext): Future[Boolean] =
+  override def isAuthorized(identity: Identity, context: Any): Future[Boolean] =
     Future.successful(true)
 }
 
 /**
  * An authorization policy that always denies access to resources.
  */
-case object Unauthorized extends Authorization[Identity, AuthorizationContext] {
+case object Unauthorized extends Authorization[Identity, Any] {
 
   /**
    * Checks whether the user is authorized or not.
@@ -72,7 +67,7 @@ case object Unauthorized extends Authorization[Identity, AuthorizationContext] {
    * @param context  The current context instance.
    * @return True if the user is authorized, false otherwise.
    */
-  override def isAuthorized(identity: Identity, context: AuthorizationContext): Future[Boolean] =
+  override def isAuthorized(identity: Identity, context: Any): Future[Boolean] =
     Future.successful(false)
 }
 
@@ -87,7 +82,7 @@ object Authorization {
    * @param self The `Authorization` instance on which the additional methods should be defined.
    * @param ec   The execution context to handle the asynchronous operations.
    */
-  implicit final class RichAuthorization[I <: Identity, C <: AuthorizationContext](self: Authorization[I, C])(
+  implicit final class RichAuthorization[I <: Identity, C](self: Authorization[I, C])(
     implicit
     ec: ExecutionContext
   ) {
