@@ -43,7 +43,7 @@ class AuthenticationPipelineSpec(implicit ev: ExecutionEnv)
     "return the `MissingCredentials` state if no token was found in request" in new Context {
       val request = Fake.request
 
-      pipeline.read(request) must beEqualTo(MissingCredentials).awaitWithPatience
+      pipeline.read(request) must beEqualTo(MissingCredentials()).awaitWithPatience
     }
 
     "return the `AuthFailure` state if the token couldn't be transformed into an authenticator" in new Context {

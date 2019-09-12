@@ -98,7 +98,7 @@ class BasicAuthProvider[R, I <: Identity] @Inject() (
             Future.successful(InvalidCredentials(credentials, Seq(error)))
         }
       case None =>
-        Future.successful(MissingCredentials)
+        Future.successful(MissingCredentials())
     }
   }
 }
