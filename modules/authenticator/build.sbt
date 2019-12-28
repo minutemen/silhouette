@@ -19,5 +19,7 @@ import Dependencies._
 
 libraryDependencies ++= Seq(
   Library.Circe.core,
+  Library.Cats.core,
+  Library.Cats.effect
 )
 //enablePlugins(Doc)

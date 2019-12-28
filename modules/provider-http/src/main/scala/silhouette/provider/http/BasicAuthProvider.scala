@@ -20,7 +20,7 @@ package silhouette.provider.http
 import javax.inject.Inject
 import silhouette._
 import silhouette.http.transport.RetrieveBasicCredentialsFromHeader
-import silhouette.http.{ BasicCredentials, RequestPipeline }
+import silhouette.http.{ BasicCredentials, RequestPipeline, ResponsePipeline }
 import silhouette.password.PasswordHasherRegistry
 import silhouette.provider.RequestProvider
 import silhouette.provider.http.BasicAuthProvider._
@@ -45,9 +45,10 @@ import scala.concurrent.{ ExecutionContext, Future }
  * @param passwordHasherRegistry The password hashers used by the application.
  * @param ec                     The execution context to handle the asynchronous operations.
  * @tparam R The type of the request.
+ * @tparam P The type of the response.
  * @tparam I The type of the identity.
  */
-class BasicAuthProvider[R, I <: Identity] @Inject() (
+class BasicAuthProvider[R, P, I <: Identity] @Inject() (
   protected val authInfoReader: PasswordProvider#AuthInfoReader,
   protected val authInfoWriter: PasswordProvider#AuthInfoWriter,
   protected val identityReader: LoginInfo => Future[Option[I]],
@@ -55,7 +56,7 @@ class BasicAuthProvider[R, I <: Identity] @Inject() (
 )(
   implicit
   val ec: ExecutionContext
-) extends RequestProvider[R, I]
+) extends RequestProvider[R, P, I]
   with PasswordProvider
   with ExecutionContextProvider {
 
@@ -75,30 +76,24 @@ class BasicAuthProvider[R, I <: Identity] @Inject() (
    * Authenticates an identity based on credentials sent in a request.
    *
    * @param request The request pipeline.
-   * @return Some login info on successful authentication or None if the authentication was unsuccessful.
+   * @param handler A function that returns a [[ResponsePipeline]] for the given [[AuthState]].
+   * @return The [[ResponsePipeline]].
    */
-  override def authenticate(request: RequestPipeline[R]): Future[AuthState[I, BasicCredentials]] = {
+  override def authenticate(request: RequestPipeline[R])(handler: AuthStateHandler): Future[ResponsePipeline[P]] = {
     RetrieveBasicCredentialsFromHeader().read(request) match {
       case Some(credentials) =>
         val loginInfo = LoginInfo(id, credentials.username)
         authenticate(loginInfo, credentials.password).flatMap {
           case Successful =>
-            identityReader(loginInfo).map {
-              case Some(identity) => Authenticated(identity, credentials, loginInfo)
-              case None           => MissingIdentity(credentials, loginInfo)
+            identityReader(loginInfo).flatMap {
+              case Some(identity) => handler(Authenticated(identity, credentials, loginInfo))
+              case None           => handler(MissingIdentity(credentials, loginInfo))
             }
-
-          case InvalidPassword(error) =>
-            Future.successful(InvalidCredentials(credentials, Seq(error)))
-
-          case UnsupportedHasher(error) =>
-            Future.successful(AuthFailure(new ConfigurationException(error)))
-
-          case NotFound(error) =>
-            Future.successful(InvalidCredentials(credentials, Seq(error)))
+          case InvalidPassword(error)   => handler(InvalidCredentials(credentials, Seq(error)))
+          case UnsupportedHasher(error) => handler(AuthFailure(new ConfigurationException(error)))
+          case NotFound(error)          => handler(InvalidCredentials(credentials, Seq(error)))
         }
-      case None =>
-        Future.successful(MissingCredentials())
+      case None => handler(MissingCredentials())
     }
   }
 }

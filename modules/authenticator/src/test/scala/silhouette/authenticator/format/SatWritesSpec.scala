@@ -17,24 +17,21 @@
  */
 package silhouette.authenticator.format
 
-import org.specs2.concurrent.ExecutionEnv
+import cats.effect.SyncIO
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import silhouette.LoginInfo
 import silhouette.authenticator.Authenticator
-import silhouette.specs2.WaitPatience
 
 /**
  * Test case for the [[SatWrites]] class.
- *
- * @param ev The execution environment.
  */
-class SatWritesSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
+class SatWritesSpec extends Specification with Mockito {
 
   "The `write` method" should {
     "return the authenticator ID as token" in new Context {
-      satWrites.write(authenticator) must beEqualTo("id").awaitWithPatience
+      satWrites.write(authenticator).unsafeRunSync() must be equalTo "id"
     }
   }
 
@@ -51,6 +48,6 @@ class SatWritesSpec(implicit ev: ExecutionEnv) extends Specification with Mockit
     /**
      * The SAT authenticator writes.
      */
-    val satWrites = SatWrites()
+    val satWrites = SatWrites[SyncIO]()
   }
 }

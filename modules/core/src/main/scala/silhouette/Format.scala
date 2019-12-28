@@ -40,7 +40,7 @@ trait Reads[-A, +B] { self =>
    * @tparam C The result type of the new transformation function.
    * @return A new composable [[Reads]].
    */
-  def andThen[C](reads: Reads[B, C]): Reads[A, C] = (in: A) => reads.read(self.read(in))
+  def andThen[C](reads: Reads[B, C]): Reads[A, C] = { x => reads.read(self.read(x)) }
 
   /**
    * Build a new [[Reads]] by applying a function to the transformation result of this [[Reads]].
@@ -50,7 +50,7 @@ trait Reads[-A, +B] { self =>
    * @return A new [[Reads]] of type `Reads[A, C]` resulting from applying the given function to the result of this
    *         [[Reads]].
    */
-  def mapR[C](f: B => C): Reads[A, C] = (in: A) => f(self.read(in))
+  def mapReads[C](f: B => C): Reads[A, C] = { x => f(self.read(x)) }
 
   /**
    * If used in a format combinator, this method helps to treat the format combinator as [[Reads]].
@@ -66,7 +66,7 @@ trait Reads[-A, +B] { self =>
  * @tparam A The source type.
  * @tparam B The target type.
  */
-trait Writes[A, B] { self =>
+trait Writes[-A, +B] { self =>
 
   /**
    * Transforms from source `A` to target `B`.
@@ -83,7 +83,7 @@ trait Writes[A, B] { self =>
    * @tparam C The result type of the new transformation function.
    * @return A new composable [[Writes]].
    */
-  def andThen[C](writes: Writes[B, C]): Writes[A, C] = (in: A) => writes.write(self.write(in))
+  def andThen[C](writes: Writes[B, C]): Writes[A, C] = { x => writes.write(self.write(x)) }
 
   /**
    * Build a new [[Writes]] by applying a function to the transformation result of this [[Writes]].
@@ -93,7 +93,7 @@ trait Writes[A, B] { self =>
    * @return A new [[Writes]] of type `Writes[A, C]` resulting from applying the given function to the result of this
    *         [[Writes]].
    */
-  def mapW[C](f: B => C): Writes[A, C] = (in: A) => f(self.write(in))
+  def mapWrites[C](f: B => C): Writes[A, C] = { x => f(self.write(x)) }
 
   /**
    * If used in a format combinator, this method helps to treat the format combinator as [[Writes]].

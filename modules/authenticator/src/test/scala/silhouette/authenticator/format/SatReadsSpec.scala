@@ -17,36 +17,31 @@
  */
 package silhouette.authenticator.format
 
-import org.specs2.concurrent.ExecutionEnv
+import cats.effect.SyncIO
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import silhouette.LoginInfo
 import silhouette.authenticator.format.SatReads.MissingAuthenticator
 import silhouette.authenticator.{ Authenticator, AuthenticatorException }
-import silhouette.specs2.WaitPatience
-
-import scala.concurrent.Future
 
 /**
  * Test case for the [[SatReads]] class.
- *
- * @param ev The execution environment.
  */
-class SatReadsSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
+class SatReadsSpec extends Specification with Mockito {
 
   "The `read` method" should {
     "throw an `AuthenticatorException` if no authenticator couldn't be found for the given token" in new Context {
-      override val satReads = SatReads(_ => Future.successful(None))
+      override val satReads = SatReads[SyncIO](_ => SyncIO.pure(None))
 
-      satReads.read("some.token") must throwA[AuthenticatorException].like {
+      satReads.read("some.token").unsafeRunSync() must throwA[AuthenticatorException].like {
         case e =>
           e.getMessage must be equalTo MissingAuthenticator.format("some.token")
-      }.awaitWithPatience
+      }
     }
 
     "return the found authenticator" in new Context {
-      satReads.read("some.token") must beEqualTo(authenticator).awaitWithPatience
+      satReads.read("some.token").unsafeRunSync() must be equalTo authenticator
     }
   }
 
@@ -63,6 +58,6 @@ class SatReadsSpec(implicit ev: ExecutionEnv) extends Specification with Mockito
     /**
      * The SAT authenticator reads.
      */
-    val satReads = SatReads(_ => Future.successful(Some(authenticator)))
+    val satReads = SatReads[SyncIO](_ => SyncIO.pure(Some(authenticator)))
   }
 }

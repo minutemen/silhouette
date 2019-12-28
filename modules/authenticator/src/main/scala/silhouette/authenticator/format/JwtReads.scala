@@ -17,6 +17,7 @@
  */
 package silhouette.authenticator.format
 
+import cats.effect.Sync
 import io.circe.Json
 import io.circe.jawn.decode
 import silhouette.authenticator.format.JwtReads._
@@ -24,7 +25,6 @@ import silhouette.authenticator.{ Authenticator, AuthenticatorException, Reads }
 import silhouette.crypto.Base64
 import silhouette.{ LoginInfo, jwt }
 
-import scala.concurrent.Future
 import scala.util.{ Failure, Success, Try }
 
 /**
@@ -38,7 +38,7 @@ import scala.util.{ Failure, Success, Try }
  *
  * @param jwtReads The underlying JWT reads implementation.
  */
-final case class JwtReads(jwtReads: jwt.Reads) extends Reads[String] {
+final case class JwtReads[F[_]: Sync](jwtReads: jwt.Reads) extends Reads[F, String] {
 
   /**
    * Transforms a JWT into an [[Authenticator]].
@@ -46,7 +46,7 @@ final case class JwtReads(jwtReads: jwt.Reads) extends Reads[String] {
    * @param jwt The JWT to transform.
    * @return An authenticator on success, an error on failure.
    */
-  override def read(jwt: String): Future[Authenticator] = Future.fromTry {
+  override def read(jwt: String): F[Authenticator] = Sync[F].fromTry {
     jwtReads.read(jwt).flatMap { claims =>
       val custom = Json.fromJsonObject(claims.custom)
       val maybeID = claims.jwtID.map(Success.apply)

@@ -37,15 +37,15 @@ class FormatSpec extends Specification {
     }
   }
 
-  "The `mapR` method" should {
+  "The `mapReads` method" should {
     "transform the result of a reads into another reads" in new Context {
-      testFormat.mapR(_ + "1") read "test" must be equalTo "test1"
+      testFormat.mapReads(_ + "1") read "test" must be equalTo "test1"
     }
   }
 
-  "The `mapW` method" should {
+  "The `mapWrites` method" should {
     "transform the result of a writes into another writes" in new Context {
-      testFormat.mapW(_ + "1") write "test" must be equalTo "test1"
+      testFormat.mapWrites(_ + "1") write "test" must be equalTo "test1"
     }
   }
 

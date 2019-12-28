@@ -21,7 +21,8 @@ object Dependencies {
 
   object Version {
     val specs2 = "4.6.0"
-    val circe = "0.12.0-M4"
+    val circe = "0.12.3"
+    val cats = "2.0.0"
   }
 
   val resolvers = Seq()
@@ -37,6 +38,11 @@ object Dependencies {
     object Circe {
       val core = "io.circe" %% "circe-core" % Version.circe
       val parser = "io.circe" %% "circe-parser" % Version.circe
+    }
+
+    object Cats {
+      val core = "org.typelevel" %% "cats-core" % Version.cats
+      val effect = "org.typelevel" %% "cats-effect" % Version.cats
     }
 
     val jbcrypt = "org.mindrot" % "jbcrypt" % "0.3m"

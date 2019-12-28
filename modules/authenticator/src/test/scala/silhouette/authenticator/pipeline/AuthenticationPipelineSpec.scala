@@ -23,8 +23,6 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import silhouette.authenticator.Validator.{ Invalid, Valid }
 import silhouette.authenticator._
-import silhouette.authenticator.pipeline.Dsl._
-import silhouette.http.transport.RetrieveFromCookie
 import silhouette.http.{ Cookie, Fake, RequestPipeline, SilhouetteRequest }
 import silhouette.specs2.WaitPatience
 import silhouette.{ Reads => _, _ }
@@ -149,7 +147,7 @@ class AuthenticationPipelineSpec(implicit ev: ExecutionEnv)
     /**
      * The reads which transforms a string into an authenticator.
      */
-    val reads = mock[Reads[String]]
+    val reads = mock[Reads[Future, String]]
 
     /**
      * The reader to retrieve the [[Identity]] for the [[LoginInfo]] stored in the
@@ -166,7 +164,7 @@ class AuthenticationPipelineSpec(implicit ev: ExecutionEnv)
      * The pipeline to test.
      */
     val pipeline = AuthenticationPipeline[RequestPipeline[SilhouetteRequest], User](
-      request => request >> RetrieveFromCookie("test") >> reads,
+      _ => Future.successful(Some(Authenticator("test", LoginInfo("", "")))),
       identityReader, Set(validator)
     )
   }

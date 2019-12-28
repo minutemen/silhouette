@@ -19,13 +19,12 @@ package silhouette.authenticator.format
 
 import java.time.Instant
 
+import cats.effect.Sync
 import io.circe.syntax._
 import io.circe.{ Json, JsonObject }
 import silhouette.authenticator.{ Authenticator, Writes }
 import silhouette.crypto.Base64
 import silhouette.jwt
-
-import scala.concurrent.Future
 
 /**
  * A format which transforms an [[Authenticator]] into a JWT.
@@ -41,12 +40,12 @@ import scala.concurrent.Future
  * @param audience  The JWT 'aud' claim.
  * @param notBefore The JWT 'nbf' claim.
  */
-final case class JwtWrites(
+final case class JwtWrites[F[_]: Sync](
   writes: jwt.Writes,
   issuer: Option[String] = None,
   audience: Option[List[String]] = None,
   notBefore: Option[Instant] = None
-) extends Writes[String] {
+) extends Writes[F, String] {
 
   /**
    * Transforms an [[Authenticator]] into a JWT.
@@ -54,8 +53,8 @@ final case class JwtWrites(
    * @param authenticator The authenticator to transform.
    * @return A JWT on success, an error on failure.
    */
-  override def write(authenticator: Authenticator): Future[String] = {
-    Future.fromTry {
+  override def write(authenticator: Authenticator): F[String] = {
+    Sync[F].fromTry {
       writes.write(jwt.Claims(
         issuer = issuer,
         subject = Some(Base64.encode(authenticator.loginInfo.asJson.toString())),

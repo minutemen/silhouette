@@ -22,11 +22,9 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.authenticator.Validator.{ Invalid, Valid }
-import silhouette.authenticator.pipeline.Dsl._
-import silhouette.http.transport.RetrieveFromCookie
-import silhouette.http.{ Cookie, Fake, SilhouetteRequest }
+import silhouette.http.{ Cookie, Fake, SilhouetteRequest, SilhouetteResponse }
 import silhouette.specs2.WaitPatience
-import silhouette.{ Reads => _, _ }
+import silhouette.{ Reads => _, Writes => _, _ }
 
 import scala.concurrent.Future
 
@@ -40,77 +38,120 @@ class AuthenticatorProviderSpec(implicit ev: ExecutionEnv) extends Specification
   "The `authenticate` method" should {
     "return the `MissingCredentials` state if no token was found in request" in new Context {
       val request = Fake.request
+      val response = Fake.response
 
-      provider.authenticate(request) must beEqualTo(MissingCredentials()).awaitWithPatience
+      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns Future.successful(response)
+
+      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+
+      there was one(authStateHandler).apply(authStateCaptor)
+
+      authStateCaptor.value must beEqualTo(MissingCredentials())
     }
 
     "return the `AuthFailure` state if the token couldn't be transformed into an authenticator" in new Context {
       val exception = new AuthenticatorException("Parse error")
       val request = Fake.request.withCookies(Cookie("test", token))
+      val response = Fake.response
 
-      reads.read(token) returns Future.failed(exception)
+      authenticatorReads.read(token) returns Future.failed(exception)
+      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns Future.successful(response)
 
-      provider.authenticate(request) must beLike[AuthState[User, Authenticator]] {
+      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+
+      there was one(authStateHandler).apply(authStateCaptor)
+
+      authStateCaptor.value must beLike[AuthState[User, Authenticator]] {
         case AuthFailure(e) =>
           e.getMessage must be equalTo exception.getMessage
-      }.awaitWithPatience
+      }
     }
 
     "return the `InvalidCredentials` state if the authenticator is invalid" in new Context {
       val request = Fake.request.withCookies(Cookie("test", token))
+      val response = Fake.response
       val errors = Seq("Invalid authenticator")
 
-      reads.read(token) returns Future.successful(authenticator)
+      authenticatorReads.read(token) returns Future.successful(authenticator)
       validator.isValid(authenticator) returns Future.successful(Invalid(errors))
+      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns Future.successful(response)
 
-      provider.authenticate(request) must beEqualTo(InvalidCredentials(authenticator, errors)).awaitWithPatience
+      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+
+      there was one(authStateHandler).apply(authStateCaptor)
+
+      authStateCaptor.value must beEqualTo(InvalidCredentials(authenticator, errors))
     }
 
     "return the `AuthFailure` state if the validator throws an exception" in new Context {
       val exception = new AuthenticatorException("Validation error")
       val request = Fake.request.withCookies(Cookie("test", token))
+      val response = Fake.response
 
-      reads.read(token) returns Future.successful(authenticator)
+      authenticatorReads.read(token) returns Future.successful(authenticator)
       validator.isValid(authenticator) returns Future.failed(exception)
+      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns Future.successful(response)
 
-      provider.authenticate(request) must beLike[AuthState[User, Authenticator]] {
+      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+
+      there was one(authStateHandler).apply(authStateCaptor)
+
+      authStateCaptor.value must beLike[AuthState[User, Authenticator]] {
         case AuthFailure(e) =>
           e.getMessage must be equalTo exception.getMessage
-      }.awaitWithPatience
+      }
     }
 
     "return the `MissingIdentity` state if the identity couldn't be found for the login info" in new Context {
       val request = Fake.request.withCookies(Cookie("test", token))
+      val response = Fake.response
 
-      reads.read(token) returns Future.successful(authenticator)
+      authenticatorReads.read(token) returns Future.successful(authenticator)
       validator.isValid(authenticator) returns Future.successful(Valid)
       identityReader.apply(loginInfo) returns Future.successful(None)
+      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns Future.successful(response)
 
-      provider.authenticate(request) must beEqualTo(MissingIdentity(authenticator, loginInfo)).awaitWithPatience
+      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+
+      there was one(authStateHandler).apply(authStateCaptor)
+
+      authStateCaptor.value must beEqualTo(MissingIdentity(authenticator, loginInfo))
     }
 
     "return the `AuthFailure` state if the identity reader throws an exception" in new Context {
       val exception = new AuthenticatorException("Retrieval error")
       val request = Fake.request.withCookies(Cookie("test", token))
+      val response = Fake.response
 
-      reads.read(token) returns Future.successful(authenticator)
+      authenticatorReads.read(token) returns Future.successful(authenticator)
       validator.isValid(authenticator) returns Future.successful(Valid)
       identityReader.apply(loginInfo) returns Future.failed(exception)
+      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns Future.successful(response)
 
-      provider.authenticate(request) must beLike[AuthState[User, Authenticator]] {
+      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+
+      there was one(authStateHandler).apply(authStateCaptor)
+
+      authStateCaptor.value must beLike[AuthState[User, Authenticator]] {
         case AuthFailure(e) =>
           e.getMessage must be equalTo exception.getMessage
-      }.awaitWithPatience
+      }
     }
 
     "return the `Authenticated` state if the authentication process was successful" in new Context {
       val request = Fake.request.withCookies(Cookie("test", token))
+      val response = Fake.response
 
-      reads.read(token) returns Future.successful(authenticator)
+      authenticatorReads.read(token) returns Future.successful(authenticator)
       validator.isValid(authenticator) returns Future.successful(Valid)
       identityReader.apply(loginInfo) returns Future.successful(Some(user))
+      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns Future.successful(response)
 
-      provider.authenticate(request) must beEqualTo(Authenticated(user, authenticator, loginInfo)).awaitWithPatience
+      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+
+      there was one(authStateHandler).apply(authStateCaptor)
+
+      authStateCaptor.value must beEqualTo(Authenticated(user, authenticator, loginInfo))
     }
   }
 
@@ -147,7 +188,26 @@ class AuthenticatorProviderSpec(implicit ev: ExecutionEnv) extends Specification
     /**
      * The reads which transforms a string into an authenticator.
      */
-    val reads = mock[Reads[String]]
+    val authenticatorReads = mock[Reads[Future, String]]
+
+    /**
+     * A writes that transforms the [[Authenticator]] into a serialized form of the [[Authenticator]].
+     */
+    val authenticatorWrites = {
+      val m = mock[Writes[Future, String]]
+      m.write(authenticator) returns Future.successful(authenticator.toString)
+      m
+    }
+
+    /**
+     * The auth state handler.
+     */
+    val authStateHandler = mock[AuthState[User, Authenticator] => Future[Fake.Response]]
+
+    /**
+     * An argument captor for the auth state handler.
+     */
+    val authStateCaptor = capture[AuthState[User, Authenticator]]
 
     /**
      * The reader to retrieve the [[Identity]] for the [[LoginInfo]] stored in the
@@ -163,11 +223,12 @@ class AuthenticatorProviderSpec(implicit ev: ExecutionEnv) extends Specification
     /**
      * The provider to test.
      */
-    val provider = new AuthenticatorProvider[SilhouetteRequest, User](
+    val provider = new AuthenticatorProvider[SilhouetteRequest, SilhouetteResponse, User](
       AuthenticationPipeline(
-        request => request >> RetrieveFromCookie("test") >> reads,
+        _ => Future.successful(Some(Authenticator("test", LoginInfo("", "")))),
         identityReader, Set(validator)
-      )
+      ),
+      TargetPipeline(_ => _ => Future.successful(Fake.response))
     )
   }
 }

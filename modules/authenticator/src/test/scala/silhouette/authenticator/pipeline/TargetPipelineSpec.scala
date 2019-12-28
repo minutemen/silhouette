@@ -22,9 +22,7 @@ import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import silhouette.LoginInfo
-import silhouette.authenticator.pipeline.Dsl._
 import silhouette.authenticator.{ Authenticator, TargetPipeline, Writes }
-import silhouette.http.transport.EmbedIntoHeader
 import silhouette.http.{ Fake, Header, ResponsePipeline, SilhouetteResponse }
 import silhouette.specs2.WaitPatience
 
@@ -94,7 +92,7 @@ class TargetPipelineSpec(implicit ev: ExecutionEnv) extends Specification with M
      * A writes that transforms the [[Authenticator]] into a serialized form of the [[Authenticator]].
      */
     val authenticatorWrites = {
-      val m = mock[Writes[String]]
+      val m = mock[Writes[Future, String]]
       m.write(authenticator) returns Future.successful(authenticator.toString)
       m
     }
@@ -102,8 +100,6 @@ class TargetPipelineSpec(implicit ev: ExecutionEnv) extends Specification with M
     /**
      * The pipeline to test.
      */
-    val pipeline = TargetPipeline[ResponsePipeline[SilhouetteResponse]](authenticator =>
-      authenticator >> modifyStep >> asyncStep >> authenticatorWrites >> EmbedIntoHeader("test")
-    )
+    val pipeline = TargetPipeline[ResponsePipeline[SilhouetteResponse]](_ => _ => Future.successful(Fake.response))
   }
 }

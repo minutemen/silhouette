@@ -17,10 +17,9 @@
  */
 package silhouette.authenticator.format
 
+import cats.effect.Sync
 import silhouette.authenticator.format.SatReads._
 import silhouette.authenticator.{ Authenticator, AuthenticatorException, Reads }
-
-import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * A reads which transforms a SAT (simple authentication token) into an authenticator.
@@ -30,12 +29,8 @@ import scala.concurrent.{ ExecutionContext, Future }
  * backing store.
  *
  * @param reader The reader to retrieve the [[Authenticator]] for the given token from persistence layer.
- * @param ex     The execution context.
  */
-final case class SatReads(reader: String => Future[Option[Authenticator]])(
-  implicit
-  ex: ExecutionContext
-) extends Reads[String] {
+final case class SatReads[F[_]: Sync](reader: String => F[Option[Authenticator]]) extends Reads[F, String] {
 
   /**
    * Transforms a simple authentication token into an [[Authenticator]].
@@ -43,12 +38,13 @@ final case class SatReads(reader: String => Future[Option[Authenticator]])(
    * @param token The simple authentication token to transform.
    * @return An authenticator on success, an error on failure.
    */
-  override def read(token: String): Future[Authenticator] = reader(token).flatMap {
-    case Some(authenticator) =>
-      Future.successful(authenticator)
-    case None =>
-      Future.failed(new AuthenticatorException(MissingAuthenticator.format(token)))
-  }
+  override def read(token: String): F[Authenticator] = Sync[F].flatMap(reader(token))(
+    _.fold[F[Authenticator]] {
+      Sync[F].raiseError(new AuthenticatorException(MissingAuthenticator.format(token)))
+    } {
+      Sync[F].pure
+    }
+  )
 }
 
 /**

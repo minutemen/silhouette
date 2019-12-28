@@ -15,11 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.authenticator.pipeline
+package silhouette
 
 /**
- * A simple DSL to model authenticator pipelines.
+ * A simple non-empty list implementation.
  */
-object Dsl {
+case class NonEmptyList[+A](head: A, tail: List[A] = List()) {
 
+  /**
+   * Converts the non-empty list into a [[List]].
+   *
+   * @return A [[List]] representation of this non-empty list.
+   */
+  def toList: List[A] = head +: tail
+}
+
+/**
+ * The companion object.
+ */
+object NonEmptyList {
+  def apply[A](head: A, tail: A*): NonEmptyList[A] = new NonEmptyList[A](head, tail.toList)
 }

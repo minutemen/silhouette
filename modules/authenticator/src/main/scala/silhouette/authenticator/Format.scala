@@ -17,18 +17,18 @@
  */
 package silhouette.authenticator
 
-import scala.concurrent.Future
-
 /**
  * Transforms a source into an [[Authenticator]].
  *
+ * @tparam F The effect type.
  * @tparam S The source type.
  */
-trait Reads[S] extends silhouette.Reads[S, Future[Authenticator]]
+trait Reads[F[_], S] extends silhouette.Reads[S, F[Authenticator]]
 
 /**
  * Transforms an [[Authenticator]] into a target.
  *
+ * @tparam F The effect type.
  * @tparam T The target type.
  */
-trait Writes[T] extends silhouette.Writes[Authenticator, Future[T]]
+trait Writes[F[_], T] extends silhouette.Writes[Authenticator, F[T]]

@@ -28,7 +28,7 @@ object BasicSettings extends AutoPlugin {
     organization := "group.minutemen",
     resolvers ++= Dependencies.resolvers,
     scalaVersion := crossScalaVersions.value.head,
-    crossScalaVersions := Seq("2.12.8", "2.13.0"),
+    crossScalaVersions := Seq("2.13.1", "2.12.10"),
     scalacOptions ++= Seq(
       "-deprecation", // Emit warning and location for usages of deprecated APIs.
       "-feature", // Emit warning and location for usages of features that should be imported explicitly.
@@ -38,6 +38,16 @@ object BasicSettings extends AutoPlugin {
       "-Ywarn-dead-code", // Warn when dead code is identified.
       "-Ywarn-numeric-widen" // Warn when numerics are widened.
     ),
+    scalacOptions ++= {
+      if (Util.priorTo213(scalaVersion.value)) {
+        Seq(
+          "-language:higherKinds",
+          "-Ypartial-unification",
+          "-Ywarn-adapted-args",    // Warn if an argument list is modified to match the receiver.
+          "-Ywarn-nullary-override" // Warn when non-nullary overrides nullary, e.g. def foo() over def foo.
+        )
+      } else { Nil }
+    },
     scalacOptions in Test ~= { options: Seq[String] =>
       options filterNot (_ == "-Ywarn-dead-code") // Allow dead code in tests (to support using mockito).
     },
@@ -179,3 +189,12 @@ object Publish extends AutoPlugin {
   )
 }
 */
+
+
+object Util {
+  def priorTo213(scalaVersion: String): Boolean =
+    CrossVersion.partialVersion(scalaVersion) match {
+      case Some((2, minor)) if minor < 13 => true
+      case _                              => false
+    }
+}

@@ -40,100 +40,158 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
     "return the `AuthFailure` state if a unsupported hasher was stored" in new Context {
       val passwordInfo = PasswordInfo("unknown", "hashed(s3cr3t)")
       val request = Fake.request.withHeaders(BasicAuthorizationHeader(credentials))
+      val response = Fake.response
 
       authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
+      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns Future.successful(response)
 
-      provider.authenticate(request) must beLike[AuthState[User, BasicCredentials]] {
+      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+
+      there was one(authStateHandler).apply(authStateCaptor)
+
+      authStateCaptor.value must beLike[AuthState[User, BasicCredentials]] {
         case AuthFailure(e) =>
           e.getMessage must be equalTo HasherIsNotRegistered.format(provider.id, "unknown", "foo, bar")
-      }.awaitWithPatience
+      }
     }
 
     "return the `InvalidCredentials` state if no auth info could be found for the given credentials" in new Context {
       val request = Fake.request.withHeaders(BasicAuthorizationHeader(credentials))
+      val response = Fake.response
 
       authInfoReader.apply(loginInfo) returns Future.successful(None)
+      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns Future.successful(response)
 
-      provider.authenticate(request) must beEqualTo(
+      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+
+      there was one(authStateHandler).apply(authStateCaptor)
+
+      authStateCaptor.value must beEqualTo(
         InvalidCredentials(credentials, Seq(PasswordInfoNotFound.format(provider.id, loginInfo)))
-      ).awaitWithPatience
+      )
     }
 
     "return the `InvalidCredentials` state if password does not match" in new Context {
       val passwordInfo = PasswordInfo("foo", "hashed(s3cr3t)")
       val request = Fake.request.withHeaders(BasicAuthorizationHeader(credentials))
+      val response = Fake.response
 
       fooHasher.matches(passwordInfo, credentials.password) returns false
       authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
+      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns Future.successful(response)
 
-      provider.authenticate(request) must beEqualTo(
+      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+
+      there was one(authStateHandler).apply(authStateCaptor)
+
+      authStateCaptor.value must beEqualTo(
         InvalidCredentials(credentials, Seq(PasswordDoesNotMatch.format(provider.id)))
-      ).awaitWithPatience
+      )
     }
 
     "return the `MissingCredentials` state if provider isn't responsible" in new Context {
-      provider.authenticate(Fake.request) must beEqualTo(MissingCredentials()).awaitWithPatience
+      val request = Fake.request
+      val response = Fake.response
+      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns Future.successful(response)
+
+      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+
+      there was one(authStateHandler).apply(authStateCaptor)
+
+      authStateCaptor.value must beEqualTo(MissingCredentials())
     }
 
     "return the `MissingCredentials` state for wrong encoded credentials" in new Context {
       val request = Fake.request.withHeaders(Header(Header.Name.Authorization, "wrong"))
+      val response = Fake.response
 
-      provider.authenticate(request) must beEqualTo(MissingCredentials()).awaitWithPatience
+      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns Future.successful(response)
+
+      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+
+      there was one(authStateHandler).apply(authStateCaptor)
+
+      authStateCaptor.value must beEqualTo(MissingCredentials())
     }
 
     "return the `MissingIdentity` state if no identity could be found" in new Context {
       val passwordInfo = PasswordInfo("foo", "hashed(s3cr3t)")
       val request = Fake.request.withHeaders(BasicAuthorizationHeader(credentials))
+      val response = Fake.response
 
       fooHasher.matches(passwordInfo, credentials.password) returns true
       authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
       identityReader.apply(loginInfo) returns Future.successful(None)
+      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns Future.successful(response)
 
-      provider.authenticate(request) must beEqualTo(MissingIdentity(credentials, loginInfo)).awaitWithPatience
+      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+
+      there was one(authStateHandler).apply(authStateCaptor)
+
+      authStateCaptor.value must beEqualTo(MissingIdentity(credentials, loginInfo))
     }
 
     "return the `Authenticated` state if passwords does match" in new Context {
       val passwordInfo = PasswordInfo("foo", "hashed(s3cr3t)")
       val request = Fake.request.withHeaders(BasicAuthorizationHeader(credentials))
+      val response = Fake.response
 
       fooHasher.matches(passwordInfo, credentials.password) returns true
       authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
       identityReader.apply(loginInfo) returns Future.successful(Some(user))
+      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns Future.successful(response)
 
-      provider.authenticate(request) must beEqualTo(Authenticated(user, credentials, loginInfo)).awaitWithPatience
+      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+
+      there was one(authStateHandler).apply(authStateCaptor)
+
+      authStateCaptor.value must beEqualTo(Authenticated(user, credentials, loginInfo))
     }
 
     "handle a colon in a password" in new Context {
       val credentialsWithColon = BasicCredentials(credentials.username, "s3c:r3t")
       val passwordInfo = PasswordInfo("foo", "hashed(s3c:r3t)")
       val request = Fake.request.withHeaders(BasicAuthorizationHeader(credentialsWithColon))
+      val response = Fake.response
 
       fooHasher.matches(passwordInfo, credentialsWithColon.password) returns true
       authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
       identityReader.apply(loginInfo) returns Future.successful(Some(user))
+      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns Future.successful(response)
 
-      provider.authenticate(request) must beEqualTo(
+      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+
+      there was one(authStateHandler).apply(authStateCaptor)
+
+      authStateCaptor.value must beEqualTo(
         Authenticated(user, credentialsWithColon, loginInfo)
-      ).awaitWithPatience
+      )
     }
 
     "re-hash password with new hasher if hasher is deprecated" in new Context {
       val passwordInfo = PasswordInfo("bar", "hashed(s3cr3t)")
       val request = Fake.request.withHeaders(BasicAuthorizationHeader(credentials))
+      val response = Fake.response
 
       fooHasher.hash(credentials.password) returns passwordInfo
       barHasher.matches(passwordInfo, credentials.password) returns true
       authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
       authInfoWriter.apply(loginInfo, passwordInfo) returns Future.successful(Done)
       identityReader.apply(loginInfo) returns Future.successful(Some(user))
+      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns Future.successful(response)
 
-      provider.authenticate(request) must beEqualTo(Authenticated(user, credentials, loginInfo)).awaitWithPatience
+      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+
+      there was one(authStateHandler).apply(authStateCaptor)
       there was one(authInfoWriter).apply(loginInfo, passwordInfo)
+
+      authStateCaptor.value must beEqualTo(Authenticated(user, credentials, loginInfo))
     }
 
     "re-hash password with new hasher if password info is deprecated" in new Context {
       val passwordInfo = PasswordInfo("foo", "hashed(s3cr3t)")
       val request = Fake.request.withHeaders(BasicAuthorizationHeader(credentials))
+      val response = Fake.response
 
       fooHasher.isDeprecated(passwordInfo) returns Some(true)
       fooHasher.hash(credentials.password) returns passwordInfo
@@ -141,9 +199,14 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
       authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
       authInfoWriter.apply(loginInfo, passwordInfo) returns Future.successful(Done)
       identityReader.apply(loginInfo) returns Future.successful(Some(user))
+      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns Future.successful(response)
 
-      provider.authenticate(request) must beEqualTo(Authenticated(user, credentials, loginInfo)).awaitWithPatience
+      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+
+      there was one(authStateHandler).apply(authStateCaptor)
       there was one(authInfoWriter).apply(loginInfo, passwordInfo)
+
+      authStateCaptor.value must beEqualTo(Authenticated(user, credentials, loginInfo))
     }
 
     "return the `MissingCredentials` state if Authorization method is not Basic and Base64 decoded header has ':'" in
@@ -151,8 +214,13 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
         val request = Fake.request.withHeaders(
           Header(Header.Name.Authorization, Base64.encode("NotBasic foo:bar"))
         )
+        val response = Fake.response
 
-        provider.authenticate(request) must beEqualTo(MissingCredentials()).awaitWithPatience
+        provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+
+        there was one(authStateHandler).apply(authStateCaptor)
+
+        authStateCaptor.value must beEqualTo(MissingCredentials())
       }
   }
 
@@ -187,9 +255,19 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
     val identityReader = mock[LoginInfo => Future[Option[User]]].smart
 
     /**
+     * The auth state handler.
+     */
+    val authStateHandler = mock[AuthState[User, BasicCredentials] => Future[Fake.Response]]
+
+    /**
+     * An argument captor for the auth state handler.
+     */
+    val authStateCaptor = capture[AuthState[User, BasicCredentials]]
+
+    /**
      * The provider to test.
      */
-    val provider = new BasicAuthProvider[SilhouetteRequest, User](
+    val provider = new BasicAuthProvider[SilhouetteRequest, SilhouetteResponse, User](
       authInfoReader, authInfoWriter, identityReader, passwordHasherRegistry
     )
   }

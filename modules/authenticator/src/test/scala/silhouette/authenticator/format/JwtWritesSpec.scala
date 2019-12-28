@@ -19,9 +19,9 @@ package silhouette.authenticator.format
 
 import java.time.Instant
 
+import cats.effect.SyncIO
 import io.circe.syntax._
 import io.circe.{ Json, JsonObject }
-import org.specs2.concurrent.ExecutionEnv
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
@@ -29,16 +29,13 @@ import silhouette.LoginInfo
 import silhouette.authenticator.Authenticator
 import silhouette.crypto.Base64
 import silhouette.jwt.{ Claims, Writes }
-import silhouette.specs2.WaitPatience
 
 import scala.util.Try
 
 /**
  * Test case for the [[JwtWrites]] class.
- *
- * @param ev The execution environment.
  */
-class JwtWritesSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
+class JwtWritesSpec extends Specification with Mockito {
 
   "The `write` method" should {
     "write a claims representation from the authenticator" in new Context {
@@ -46,7 +43,7 @@ class JwtWritesSpec(implicit ev: ExecutionEnv) extends Specification with Mockit
 
       val captor = capture[Claims]
 
-      jwtWrites.write(authenticator) must beEqualTo(jwt).awaitWithPatience
+      jwtWrites.write(authenticator).unsafeRunSync() must be equalTo jwt
       there was one(underlyingJwtWrites).write(captor)
 
       captor.value must be equalTo claims
@@ -114,6 +111,6 @@ class JwtWritesSpec(implicit ev: ExecutionEnv) extends Specification with Mockit
     /**
      * The JWT authenticator writes.
      */
-    val jwtWrites = JwtWrites(underlyingJwtWrites, claims.issuer, claims.audience, claims.notBefore)
+    val jwtWrites = JwtWrites[SyncIO](underlyingJwtWrites, claims.issuer, claims.audience, claims.notBefore)
   }
 }

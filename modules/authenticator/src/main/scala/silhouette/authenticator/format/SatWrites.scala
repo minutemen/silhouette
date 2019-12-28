@@ -17,9 +17,8 @@
  */
 package silhouette.authenticator.format
 
+import cats.effect.Sync
 import silhouette.authenticator.{ Authenticator, Writes }
-
-import scala.concurrent.Future
 
 /**
  * A reads which transforms an authenticator into a SAT (simple authentication token).
@@ -29,7 +28,7 @@ import scala.concurrent.Future
  * backing store. This writes doesn't store the authenticator directly. This should be done in a
  * [[silhouette.authenticator.TargetPipeline]] instead.
  */
-final case class SatWrites() extends Writes[String] {
+final case class SatWrites[F[_]: Sync]() extends Writes[F, String] {
 
   /**
    * Transforms an [[Authenticator]] into a simple authentication token.
@@ -37,5 +36,5 @@ final case class SatWrites() extends Writes[String] {
    * @param authenticator The authenticator to transform.
    * @return A simple authentication token on success, an error on failure.
    */
-  override def write(authenticator: Authenticator): Future[String] = Future.successful(authenticator.id)
+  override def write(authenticator: Authenticator): F[String] = Sync[F].pure(authenticator.id)
 }

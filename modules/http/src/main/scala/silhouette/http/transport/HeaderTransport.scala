@@ -160,7 +160,7 @@ final case class SmuggleBearerTokenIntoHeader[R](name: Header.Name = Header.Name
    * @return The request pipeline with the smuggled header.
    */
   override def write(in: (BearerToken, RequestPipeline[R])): RequestPipeline[R] =
-    BearerAuthSchemeFormat().mapW(value => value -> in._2) andThen SmuggleIntoHeader[R](name) write in._1
+    BearerAuthSchemeFormat().mapWrites(value => value -> in._2) andThen SmuggleIntoHeader[R](name) write in._1
 }
 
 /**
@@ -183,7 +183,7 @@ final case class SmuggleBasicCredentialsIntoHeader[R](name: Header.Name = Header
    * @return The request pipeline with the smuggled header.
    */
   override def write(in: (BasicCredentials, RequestPipeline[R])): RequestPipeline[R] =
-    BasicAuthSchemeFormat().mapW(value => value -> in._2) andThen SmuggleIntoHeader[R](name) write in._1
+    BasicAuthSchemeFormat().mapWrites(value => value -> in._2) andThen SmuggleIntoHeader[R](name) write in._1
 }
 
 /**
@@ -226,7 +226,7 @@ final case class EmbedBearerTokenIntoHeader[R](name: Header.Name = Header.Name.A
    * @return The response pipeline with the embedded header.
    */
   override def write(in: (BearerToken, ResponsePipeline[R])): ResponsePipeline[R] =
-    BearerAuthSchemeFormat().mapW(value => value -> in._2) andThen EmbedIntoHeader[R](name) write in._1
+    BearerAuthSchemeFormat().mapWrites(value => value -> in._2) andThen EmbedIntoHeader[R](name) write in._1
 }
 
 /**
@@ -249,5 +249,5 @@ final case class EmbedBasicCredentialsIntoHeader[R](name: Header.Name = Header.N
    * @return The response pipeline with the embedded header.
    */
   override def write(in: (BasicCredentials, ResponsePipeline[R])): ResponsePipeline[R] =
-    BasicAuthSchemeFormat().mapW(value => value -> in._2) andThen EmbedIntoHeader[R](name) write in._1
+    BasicAuthSchemeFormat().mapWrites(value => value -> in._2) andThen EmbedIntoHeader[R](name) write in._1
 }
