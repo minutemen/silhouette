@@ -22,4 +22,4 @@ set -o nounset -o errexit
 
 SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-${SCRIPTS_DIR}/sbt.sh clean scalariformFormat test:scalariformFormat
+"$SCRIPTS_DIR/sbt.sh" clean scalariformFormat test:scalariformFormat

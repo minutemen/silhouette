@@ -70,7 +70,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
           skipped("authorizationURI is not defined, so this step isn't needed for provider: " + c.provider.getClass)
         case Some(_) =>
           c.stateHandler.serialize(c.state) returns Some("value")
-          c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
+          c.stateHandler.unserialize(anyString)(any[Fake.RequestPipeline]()) returns Future.successful(c.state)
           c.stateHandler.state returns Future.successful(c.state)
           c.config.authorizationURI returns None
 
@@ -89,10 +89,10 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
           val headerValue = "header-value"
 
           c.stateHandler.serialize(c.state) returns Some(headerValue)
-          c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
+          c.stateHandler.unserialize(anyString)(any[Fake.RequestPipeline]()) returns Future.successful(c.state)
           c.stateHandler.state returns Future.successful(c.state)
           c.stateHandler.publish[SilhouetteRequest, SilhouetteResponse](any(), any())(any()) answers { (a, _) =>
-            val result = a.asInstanceOf[Array[Any]](0).asInstanceOf[Fake.Response]
+            val result = a.asInstanceOf[Array[Any]](0).asInstanceOf[Fake.ResponsePipeline]
             val state = a.asInstanceOf[Array[Any]](1).asInstanceOf[c.TestState]
 
             result.withHeaders(Header(headerName, c.stateHandler.serialize(state).getOrElse("")))
@@ -103,7 +103,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
             await(result).header(headerName) must beSome(
               Header(headerName, c.stateHandler.serialize(c.state).getOrElse(""))
             )
-            await(result).header(Header.Name.Location) must beSome.which { header =>
+            await(result).header(Header.Name.Location) must beSome.which { header: Header =>
               val urlParams = c.urlParams(header.values.head)
               val params = List(
                 Some(ClientID -> c.config.clientID),
@@ -183,10 +183,10 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
           skipped("authorizationURI is not defined, so this step isn't needed for provider: " + c.provider.getClass)
         case Some(_) =>
           c.stateHandler.serialize(c.state) returns None
-          c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
+          c.stateHandler.unserialize(anyString)(any[Fake.RequestPipeline]()) returns Future.successful(c.state)
           c.stateHandler.state returns Future.successful(c.state)
           c.stateHandler.publish[SilhouetteRequest, SilhouetteResponse](any(), any())(any()) answers { (a, _) =>
-            a.asInstanceOf[Array[Any]](0).asInstanceOf[Fake.Response]
+            a.asInstanceOf[Array[Any]](0).asInstanceOf[Fake.ResponsePipeline]
           }
 
           result(c.provider.authenticate()(Fake.request))(result =>
@@ -207,7 +207,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       )
 
       c.httpClient.execute(any[Request]()) returns Future.successful(httpResponse)
-      c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
+      c.stateHandler.unserialize(anyString)(any[Fake.RequestPipeline]()) returns Future.successful(c.state)
       c.stateHandler.state returns Future.successful(c.state)
 
       failed[UnexpectedResponseException](c.provider.authenticate()(request)) {
@@ -223,7 +223,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       val httpResponse = Response(Status.Unauthorized, Body.from("Unauthorized"))
 
       c.httpClient.execute(any[Request]()) returns Future.successful(httpResponse)
-      c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
+      c.stateHandler.unserialize(anyString)(any[Fake.RequestPipeline]()) returns Future.successful(c.state)
       c.stateHandler.state returns Future.successful(c.state)
 
       failed[UnexpectedResponseException](c.provider.authenticate()(request)) {
@@ -239,7 +239,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       val httpResponse = Response(Status.OK, Body.from(Json.obj()))
 
       c.httpClient.execute(any[Request]()) returns Future.successful(httpResponse)
-      c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
+      c.stateHandler.unserialize(anyString)(any[Fake.RequestPipeline]()) returns Future.successful(c.state)
       c.stateHandler.state returns Future.successful(c.state)
 
       failed[UnexpectedResponseException](c.provider.authenticate()(request)) {
@@ -262,7 +262,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
       val requestCaptor = capture[Request]
 
       c.httpClient.execute(any[Request]()) returns Future.successful(httpResponse)
-      c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
+      c.stateHandler.unserialize(anyString)(any[Fake.RequestPipeline]()) returns Future.successful(c.state)
       c.stateHandler.state returns Future.successful(c.state)
 
       authInfo(c.provider.authenticate()(request))(_ must be equalTo c.oAuth2Info)
@@ -277,12 +277,12 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
     val c = context
     "return stateful auth info" in {
       val code = "my.code"
-      implicit val request: Fake.Request = Fake.request.withQueryParams(Code -> code)
+      implicit val request: Fake.RequestPipeline = Fake.request.withQueryParams(Code -> code)
 
       val httpResponse = Response(Status.OK, Body.from(c.oAuth2InfoJson))
 
       c.httpClient.execute(any[Request]()) returns Future.successful(httpResponse)
-      c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
+      c.stateHandler.unserialize(anyString)(any[Fake.RequestPipeline]()) returns Future.successful(c.state)
       c.stateHandler.state returns Future.successful(c.state)
       c.stateHandler.withHandler(any[StateItemHandler]()) returns c.stateHandler
       c.state.items returns Set(c.userStateItem)
@@ -436,10 +436,10 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info, St
         c.config.redirectURI returns redirectUri
 
         c.stateHandler.serialize(c.state) returns Some("value")
-        c.stateHandler.unserialize(anyString)(any[Fake.Request]()) returns Future.successful(c.state)
+        c.stateHandler.unserialize(anyString)(any[Fake.RequestPipeline]()) returns Future.successful(c.state)
         c.stateHandler.state returns Future.successful(c.state)
         c.stateHandler.publish[SilhouetteRequest, SilhouetteResponse](any(), any())(any()) answers { (a, _) =>
-          a.asInstanceOf[Array[Any]](0).asInstanceOf[Fake.Response]
+          a.asInstanceOf[Array[Any]](0).asInstanceOf[Fake.ResponsePipeline]
         }
 
         redirectUri match {

@@ -21,8 +21,6 @@ import java.time.Clock
 
 import silhouette.authenticator.Authenticator
 
-import scala.concurrent.Future
-
 /**
  * A step that can be composed with other steps to build an authenticator pipeline.
  */
@@ -52,7 +50,7 @@ object ModifyStep {
 /**
  * Pipeline which transforms an authenticator into an async authenticator.
  */
-trait AsyncStep extends Step[Authenticator, Future[Authenticator]]
+trait AsyncStep[F[_]] extends Step[Authenticator, F[Authenticator]]
 
 /**
  * The companion object.
@@ -65,7 +63,7 @@ object AsyncStep {
    * @param f The function to convert into an [[AsyncStep]].
    * @return An [[AsyncStep]] instance.
    */
-  def apply(f: Authenticator => Future[Authenticator]): AsyncStep = {
+  def apply[F[_]](f: Authenticator => F[Authenticator]): AsyncStep[F] = {
     authenticator => f(authenticator)
   }
 }

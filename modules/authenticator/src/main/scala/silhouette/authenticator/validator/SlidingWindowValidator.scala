@@ -19,12 +19,12 @@ package silhouette.authenticator.validator
 
 import java.time.Clock
 
+import cats.effect.Sync
 import silhouette.authenticator.Validator._
 import silhouette.authenticator.validator.SlidingWindowValidator._
 import silhouette.authenticator.{ Authenticator, Validator }
 
 import scala.concurrent.duration._
-import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * A validator that checks if an [[Authenticator]] has timed out after a certain time if it hasn't been used.
@@ -38,20 +38,18 @@ import scala.concurrent.{ ExecutionContext, Future }
  *
  * @param idleTimeout The duration an [[Authenticator]] can be idle before it timed out.
  * @param clock       The clock implementation to validate against.
+ * @tparam F The type of the IO monad.
  */
-final case class SlidingWindowValidator(idleTimeout: FiniteDuration, clock: Clock) extends Validator {
+final case class SlidingWindowValidator[F[_]: Sync](idleTimeout: FiniteDuration, clock: Clock)
+  extends Validator[F] {
 
   /**
    * Checks if the [[Authenticator]] is valid.
    *
    * @param authenticator The [[Authenticator]] to validate.
-   * @param ec            The execution context to perform the async operations.
    * @return True if the [[Authenticator]] is valid, false otherwise.
    */
-  override def isValid(authenticator: Authenticator)(
-    implicit
-    ec: ExecutionContext
-  ): Future[Status] = Future.successful {
+  override def isValid(authenticator: Authenticator): F[Status] = Sync[F].pure {
     if (authenticator.touchedAt(clock).forall(_ <= idleTimeout)) {
       Valid
     } else {

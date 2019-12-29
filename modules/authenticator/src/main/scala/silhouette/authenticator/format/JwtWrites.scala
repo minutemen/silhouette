@@ -39,6 +39,7 @@ import silhouette.jwt
  * @param issuer    The JWT 'iss' claim.
  * @param audience  The JWT 'aud' claim.
  * @param notBefore The JWT 'nbf' claim.
+ * @tparam F The type of the IO monad.
  */
 final case class JwtWrites[F[_]: Sync](
   writes: jwt.Writes,

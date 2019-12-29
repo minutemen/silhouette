@@ -37,6 +37,7 @@ import scala.util.{ Failure, Success, Try }
  * this reads can be used in a stateless and a stateful manner.
  *
  * @param jwtReads The underlying JWT reads implementation.
+ * @tparam F The type of the IO monad.
  */
 final case class JwtReads[F[_]: Sync](jwtReads: jwt.Reads) extends Reads[F, String] {
 

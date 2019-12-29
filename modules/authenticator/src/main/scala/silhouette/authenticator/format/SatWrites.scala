@@ -27,6 +27,8 @@ import silhouette.authenticator.{ Authenticator, Writes }
  * it needs a mapping between this string and the authenticator related data, which is commonly handled through a
  * backing store. This writes doesn't store the authenticator directly. This should be done in a
  * [[silhouette.authenticator.TargetPipeline]] instead.
+ *
+ * @tparam F The type of the IO monad.
  */
 final case class SatWrites[F[_]: Sync]() extends Writes[F, String] {
 

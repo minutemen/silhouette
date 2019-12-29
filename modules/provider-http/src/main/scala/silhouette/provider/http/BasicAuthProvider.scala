@@ -17,6 +17,7 @@
  */
 package silhouette.provider.http
 
+import cats.effect.Sync
 import javax.inject.Inject
 import silhouette._
 import silhouette.http.transport.RetrieveBasicCredentialsFromHeader
@@ -25,8 +26,6 @@ import silhouette.password.PasswordHasherRegistry
 import silhouette.provider.RequestProvider
 import silhouette.provider.http.BasicAuthProvider._
 import silhouette.provider.password.PasswordProvider
-
-import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * A request provider implementation which supports HTTP basic authentication.
@@ -43,22 +42,17 @@ import scala.concurrent.{ ExecutionContext, Future }
  *                               [[LoginInfo]].
  * @param identityReader         The reader to retrieve the [[Identity]] for the [[LoginInfo]].
  * @param passwordHasherRegistry The password hashers used by the application.
- * @param ec                     The execution context to handle the asynchronous operations.
+ * @tparam F The type of the IO monad.
  * @tparam R The type of the request.
  * @tparam P The type of the response.
  * @tparam I The type of the identity.
  */
-class BasicAuthProvider[R, P, I <: Identity] @Inject() (
-  protected val authInfoReader: PasswordProvider#AuthInfoReader,
-  protected val authInfoWriter: PasswordProvider#AuthInfoWriter,
-  protected val identityReader: LoginInfo => Future[Option[I]],
+class BasicAuthProvider[F[_]: Sync, R, P, I <: Identity] @Inject() (
+  protected val authInfoReader: PasswordProvider[F]#AuthInfoReader,
+  protected val authInfoWriter: PasswordProvider[F]#AuthInfoWriter,
+  protected val identityReader: LoginInfo => F[Option[I]],
   protected val passwordHasherRegistry: PasswordHasherRegistry
-)(
-  implicit
-  val ec: ExecutionContext
-) extends RequestProvider[R, P, I]
-  with PasswordProvider
-  with ExecutionContextProvider {
+) extends PasswordProvider[F] with RequestProvider[F, R, P, I] {
 
   /**
    * The type of the credentials.
@@ -79,13 +73,13 @@ class BasicAuthProvider[R, P, I <: Identity] @Inject() (
    * @param handler A function that returns a [[ResponsePipeline]] for the given [[AuthState]].
    * @return The [[ResponsePipeline]].
    */
-  override def authenticate(request: RequestPipeline[R])(handler: AuthStateHandler): Future[ResponsePipeline[P]] = {
+  override def authenticate(request: RequestPipeline[R])(handler: AuthStateHandler): F[ResponsePipeline[P]] = {
     RetrieveBasicCredentialsFromHeader().read(request) match {
       case Some(credentials) =>
         val loginInfo = LoginInfo(id, credentials.username)
-        authenticate(loginInfo, credentials.password).flatMap {
+        Sync[F].flatMap(authenticate(loginInfo, credentials.password)) {
           case Successful =>
-            identityReader(loginInfo).flatMap {
+            Sync[F].flatMap(identityReader(loginInfo)) {
               case Some(identity) => handler(Authenticated(identity, credentials, loginInfo))
               case None           => handler(MissingIdentity(credentials, loginInfo))
             }

@@ -21,18 +21,17 @@ import com.typesafe.scalalogging.LazyLogging
 import silhouette._
 import silhouette.http.{ RequestPipeline, ResponsePipeline }
 
-import scala.concurrent.Future
-
 /**
  * A provider which can be hooked into a request.
  *
  * It scans the request for credentials and returns a [[silhouette.http.ResponsePipeline]] for an [[AuthState]].
  *
+ * @tparam F The type of the IO monad.
  * @tparam R The type of the request.
  * @tparam P The type of the response.
  * @tparam I The type of the identity.
  */
-trait RequestProvider[R, P, I <: Identity] extends Provider {
+trait RequestProvider[F[_], R, P, I <: Identity] extends Provider {
 
   /**
    * The type of the credentials.
@@ -42,7 +41,7 @@ trait RequestProvider[R, P, I <: Identity] extends Provider {
   /**
    * Handles an [[AuthState]] and returns a [[ResponsePipeline]].
    */
-  type AuthStateHandler = AuthState[I, C] => Future[ResponsePipeline[P]]
+  type AuthStateHandler = AuthState[I, C] => F[ResponsePipeline[P]]
 
   /**
    * Authenticates an identity based on credentials sent in a request.
@@ -51,19 +50,20 @@ trait RequestProvider[R, P, I <: Identity] extends Provider {
    * @param handler A function that returns a [[ResponsePipeline]] for the given [[AuthState]].
    * @return The [[ResponsePipeline]].
    */
-  def authenticate(request: RequestPipeline[R])(handler: AuthStateHandler): Future[ResponsePipeline[P]]
+  def authenticate(request: RequestPipeline[R])(handler: AuthStateHandler): F[ResponsePipeline[P]]
 }
 
 /**
  * An implementation of the [[RequestProvider]] interface which authenticates against a list of request providers.
  *
  * @param providers The list of request providers to try to authenticate against.
+ * @tparam F The type of the IO monad.
  * @tparam R The type of the request.
  * @tparam P The type of the response.
  * @tparam I The type of the identity.
  */
-case class RequestProviders[R, P, I <: Identity](providers: NonEmptyList[RequestProvider[R, P, I]])
-  extends RequestProvider[R, P, I] with LazyLogging {
+case class RequestProviders[F[_], R, P, I <: Identity](providers: NonEmptyList[RequestProvider[F, R, P, I]])
+  extends RequestProvider[F, R, P, I] with LazyLogging {
 
   /**
    * The type of the credentials.
@@ -83,8 +83,8 @@ case class RequestProviders[R, P, I <: Identity](providers: NonEmptyList[Request
    * @param handler A function that returns a [[ResponsePipeline]] for the given [[AuthState]].
    * @return The [[ResponsePipeline]].
    */
-  override def authenticate(request: RequestPipeline[R])(handler: AuthStateHandler): Future[ResponsePipeline[P]] = {
-    def auth(head: RequestProvider[R, P, I], tail: List[RequestProvider[R, P, I]]): Future[ResponsePipeline[P]] = {
+  override def authenticate(request: RequestPipeline[R])(handler: AuthStateHandler): F[ResponsePipeline[P]] = {
+    def auth(head: RequestProvider[F, R, P, I], tail: List[RequestProvider[F, R, P, I]]): F[ResponsePipeline[P]] = {
       head.authenticate(request) {
         case state: Authenticated[I, C] => handler(state)
         case state: Unauthenticated[I, C] =>

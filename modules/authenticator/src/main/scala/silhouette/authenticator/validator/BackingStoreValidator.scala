@@ -17,11 +17,10 @@
  */
 package silhouette.authenticator.validator
 
+import cats.effect.Sync
 import silhouette.authenticator.Validator._
 import silhouette.authenticator.validator.BackingStoreValidator._
 import silhouette.authenticator.{ Authenticator, Validator }
-
-import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * A validator that checks if an [[Authenticator]] is located in a backing store.
@@ -30,20 +29,17 @@ import scala.concurrent.{ ExecutionContext, Future }
  * otherwise it returns false. The validator can be used as a blacklist or whitelist validator.
  *
  * @param validator A validator to validate the [[Authenticator]] against a backing store.
+ * @tparam F The type of the IO monad.
  */
-final case class BackingStoreValidator(validator: Authenticator => Future[Boolean]) extends Validator {
+final case class BackingStoreValidator[F[_]: Sync](validator: Authenticator => F[Boolean]) extends Validator[F] {
 
   /**
    * Checks if the [[Authenticator]] is valid.
    *
    * @param authenticator The [[Authenticator]] to validate.
-   * @param ec            The execution context to perform the async operations.
    * @return True if the [[Authenticator]] is valid, false otherwise.
    */
-  override def isValid(authenticator: Authenticator)(
-    implicit
-    ec: ExecutionContext
-  ): Future[Status] = validator(authenticator).map {
+  override def isValid(authenticator: Authenticator): F[Status] = Sync[F].map(validator(authenticator)) {
     case true  => Valid
     case false => Invalid(Seq(Error))
   }

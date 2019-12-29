@@ -19,6 +19,7 @@ package silhouette.authenticator
 
 import java.time.{ Clock, Instant, ZoneId }
 
+import cats.effect.{ ContextShift, IO }
 import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
@@ -27,9 +28,7 @@ import silhouette.LoginInfo
 import silhouette.RichInstant._
 import silhouette.authenticator.Validator.{ Invalid, Valid }
 import silhouette.http.{ Fake, RequestPipeline, SilhouetteRequest }
-import silhouette.specs2.WaitPatience
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
 
 /**
@@ -37,7 +36,7 @@ import scala.concurrent.duration._
  *
  * @param ev The execution environment.
  */
-class AuthenticatorSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
+class AuthenticatorSpec(implicit ev: ExecutionEnv) extends Specification with Mockito {
 
   "The `expiresIn` method" should {
     "return the duration the authenticator expires in" in new Context {
@@ -128,35 +127,35 @@ class AuthenticatorSpec(implicit ev: ExecutionEnv) extends Specification with Mo
   "The `isValid` method" should {
     "return Invalid if at least one validator fails" in new Context {
       val errors = Seq("error1", "error2")
-      val validator1 = mock[Validator].smart
-      val validator2 = mock[Validator].smart
-      validator1.isValid(authenticator) returns Future.successful(Valid)
-      validator2.isValid(authenticator) returns Future.successful(Invalid(errors))
+      val validator1 = mock[Validator[IO]].smart
+      val validator2 = mock[Validator[IO]].smart
+      validator1.isValid(authenticator) returns IO.pure(Valid)
+      validator2.isValid(authenticator) returns IO.pure(Invalid(errors))
       val validators = Set(validator1, validator2)
 
-      authenticator.isValid(validators) must beEqualTo(Invalid(errors)).awaitWithPatience
+      authenticator.isValid[IO](validators).unsafeRunSync() must beEqualTo(Invalid(errors))
     }
 
     "return Valid if all validators are successful" in new Context {
-      val validator1 = mock[Validator].smart
-      val validator2 = mock[Validator].smart
-      validator1.isValid(authenticator) returns Future.successful(Valid)
-      validator2.isValid(authenticator) returns Future.successful(Valid)
+      val validator1 = mock[Validator[IO]].smart
+      val validator2 = mock[Validator[IO]].smart
+      validator1.isValid(authenticator) returns IO.pure(Valid)
+      validator2.isValid(authenticator) returns IO.pure(Valid)
       val validators = Set(validator1, validator2)
 
-      authenticator.isValid(validators) must beEqualTo(Valid).awaitWithPatience
+      authenticator.isValid[IO](validators).unsafeRunSync() must beEqualTo(Valid)
     }
 
     "combine all error messages from all validators" in new Context {
-      val validator1 = mock[Validator].smart
-      val validator2 = mock[Validator].smart
-      validator1.isValid(authenticator) returns Future.successful(Invalid(Seq("error1", "error2")))
-      validator2.isValid(authenticator) returns Future.successful(Invalid(Seq("error3", "error4")))
+      val validator1 = mock[Validator[IO]].smart
+      val validator2 = mock[Validator[IO]].smart
+      validator1.isValid(authenticator) returns IO.pure(Invalid(Seq("error1", "error2")))
+      validator2.isValid(authenticator) returns IO.pure(Invalid(Seq("error3", "error4")))
       val validators = Set(validator1, validator2)
 
-      authenticator.isValid(validators) must beEqualTo(
+      authenticator.isValid[IO](validators).unsafeRunSync() must beEqualTo(
         Invalid(Seq("error1", "error2", "error3", "error4"))
-      ).awaitWithPatience
+      )
     }
   }
 
@@ -164,6 +163,7 @@ class AuthenticatorSpec(implicit ev: ExecutionEnv) extends Specification with Mo
    * The context.
    */
   trait Context extends Scope {
+    implicit val contextShift: ContextShift[IO] = IO.contextShift(ev.executionContext)
 
     /**
      * The UTC time zone.

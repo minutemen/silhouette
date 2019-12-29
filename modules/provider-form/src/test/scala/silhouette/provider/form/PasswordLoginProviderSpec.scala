@@ -17,32 +17,27 @@
  */
 package silhouette.provider.form
 
-import org.specs2.concurrent.ExecutionEnv
+import cats.effect.SyncIO
 import silhouette.password.PasswordInfo
 import silhouette.provider.IdentityNotFoundException
 import silhouette.provider.password.PasswordProvider._
 import silhouette.provider.password.{ InvalidPasswordException, PasswordProviderSpec }
-import silhouette.specs2.WaitPatience
 import silhouette.{ ConfigurationException, Done, LoginInfo }
-
-import scala.concurrent.Future
 
 /**
  * Test case for the [[PasswordLoginProvider]] class.
- *
- * @param ev The execution environment.
  */
-class PasswordLoginProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderSpec with WaitPatience {
+class PasswordLoginProviderSpec extends PasswordProviderSpec {
 
   "The `authenticate` method" should {
     "throw IdentityNotFoundException if no auth info could be found for the given credentials" in new Context {
       val loginInfo = LoginInfo(provider.id, credentials.identifier)
 
-      authInfoReader.apply(loginInfo) returns Future.successful(None)
+      authInfoReader.apply(loginInfo) returns SyncIO.pure(None)
 
-      provider.authenticate(credentials) must throwA[IdentityNotFoundException].like {
+      provider.authenticate(credentials).unsafeRunSync() must throwA[IdentityNotFoundException].like {
         case e => e.getMessage must beEqualTo(PasswordInfoNotFound.format(provider.id, loginInfo))
-      }.awaitWithPatience
+      }
     }
 
     "throw InvalidPasswordException if password does not match" in new Context {
@@ -50,22 +45,22 @@ class PasswordLoginProviderSpec(implicit ev: ExecutionEnv) extends PasswordProvi
       val loginInfo = LoginInfo(provider.id, credentials.identifier)
 
       fooHasher.matches(passwordInfo, credentials.password) returns false
-      authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
+      authInfoReader.apply(loginInfo) returns SyncIO.pure(Some(passwordInfo))
 
-      provider.authenticate(credentials) must throwA[InvalidPasswordException].like {
+      provider.authenticate(credentials).unsafeRunSync() must throwA[InvalidPasswordException].like {
         case e => e.getMessage must beEqualTo(PasswordDoesNotMatch.format(provider.id))
-      }.awaitWithPatience
+      }
     }
 
     "throw ConfigurationException if unsupported hasher is stored" in new Context {
       val passwordInfo = PasswordInfo("unknown", "hashed(s3cr3t)")
       val loginInfo = LoginInfo(provider.id, credentials.identifier)
 
-      authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
+      authInfoReader.apply(loginInfo) returns SyncIO.pure(Some(passwordInfo))
 
-      provider.authenticate(credentials) must throwA[ConfigurationException].like {
+      provider.authenticate(credentials).unsafeRunSync() must throwA[ConfigurationException].like {
         case e => e.getMessage must beEqualTo(HasherIsNotRegistered.format(provider.id, "unknown", "foo, bar"))
-      }.awaitWithPatience
+      }
     }
 
     "return login info if passwords does match" in new Context {
@@ -73,9 +68,9 @@ class PasswordLoginProviderSpec(implicit ev: ExecutionEnv) extends PasswordProvi
       val loginInfo = LoginInfo(provider.id, credentials.identifier)
 
       fooHasher.matches(passwordInfo, credentials.password) returns true
-      authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
+      authInfoReader.apply(loginInfo) returns SyncIO.pure(Some(passwordInfo))
 
-      provider.authenticate(credentials) must beEqualTo(loginInfo).awaitWithPatience
+      provider.authenticate(credentials).unsafeRunSync() must beEqualTo(loginInfo)
     }
 
     "re-hash password with new hasher if hasher is deprecated" in new Context {
@@ -84,10 +79,10 @@ class PasswordLoginProviderSpec(implicit ev: ExecutionEnv) extends PasswordProvi
 
       fooHasher.hash(credentials.password) returns passwordInfo
       barHasher.matches(passwordInfo, credentials.password) returns true
-      authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
-      authInfoWriter.apply(loginInfo, passwordInfo) returns Future.successful(Done)
+      authInfoReader.apply(loginInfo) returns SyncIO.pure(Some(passwordInfo))
+      authInfoWriter.apply(loginInfo, passwordInfo) returns SyncIO.pure(Done)
 
-      provider.authenticate(credentials) must beEqualTo(loginInfo).awaitWithPatience
+      provider.authenticate(credentials).unsafeRunSync() must beEqualTo(loginInfo)
       there was one(authInfoWriter).apply(loginInfo, passwordInfo)
     }
 
@@ -98,10 +93,10 @@ class PasswordLoginProviderSpec(implicit ev: ExecutionEnv) extends PasswordProvi
       fooHasher.isDeprecated(passwordInfo) returns Some(true)
       fooHasher.hash(credentials.password) returns passwordInfo
       fooHasher.matches(passwordInfo, credentials.password) returns true
-      authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
-      authInfoWriter.apply(loginInfo, passwordInfo) returns Future.successful(Done)
+      authInfoReader.apply(loginInfo) returns SyncIO.pure(Some(passwordInfo))
+      authInfoWriter.apply(loginInfo, passwordInfo) returns SyncIO.pure(Done)
 
-      provider.authenticate(credentials) must beEqualTo(loginInfo).awaitWithPatience
+      provider.authenticate(credentials).unsafeRunSync() must beEqualTo(loginInfo)
       there was one(authInfoWriter).apply(loginInfo, passwordInfo)
     }
   }
@@ -119,6 +114,6 @@ class PasswordLoginProviderSpec(implicit ev: ExecutionEnv) extends PasswordProvi
     /**
      * The provider to test.
      */
-    lazy val provider = new PasswordLoginProvider(authInfoReader, authInfoWriter, passwordHasherRegistry)
+    lazy val provider = new PasswordLoginProvider[SyncIO](authInfoReader, authInfoWriter, passwordHasherRegistry)
   }
 }

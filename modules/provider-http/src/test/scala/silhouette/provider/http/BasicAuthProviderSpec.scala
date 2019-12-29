@@ -17,7 +17,7 @@
  */
 package silhouette.provider.http
 
-import org.specs2.concurrent.ExecutionEnv
+import cats.effect.SyncIO
 import org.specs2.mock.Mockito
 import silhouette._
 import silhouette.crypto.Base64
@@ -25,16 +25,11 @@ import silhouette.http._
 import silhouette.password.PasswordInfo
 import silhouette.provider.password.PasswordProvider._
 import silhouette.provider.password.PasswordProviderSpec
-import silhouette.specs2.WaitPatience
-
-import scala.concurrent.Future
 
 /**
  * Test case for the [[BasicAuthProvider]] class.
- *
- * @param ev The execution environment.
  */
-class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderSpec with Mockito with WaitPatience {
+class BasicAuthProviderSpec extends PasswordProviderSpec with Mockito {
 
   "The `authenticate` method" should {
     "return the `AuthFailure` state if a unsupported hasher was stored" in new Context {
@@ -42,10 +37,10 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
       val request = Fake.request.withHeaders(BasicAuthorizationHeader(credentials))
       val response = Fake.response
 
-      authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
-      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns Future.successful(response)
+      authInfoReader.apply(loginInfo) returns SyncIO.pure(Some(passwordInfo))
+      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns SyncIO.pure(response)
 
-      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+      provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
       there was one(authStateHandler).apply(authStateCaptor)
 
@@ -59,10 +54,10 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
       val request = Fake.request.withHeaders(BasicAuthorizationHeader(credentials))
       val response = Fake.response
 
-      authInfoReader.apply(loginInfo) returns Future.successful(None)
-      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns Future.successful(response)
+      authInfoReader.apply(loginInfo) returns SyncIO.pure(None)
+      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns SyncIO.pure(response)
 
-      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+      provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
       there was one(authStateHandler).apply(authStateCaptor)
 
@@ -77,10 +72,10 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
       val response = Fake.response
 
       fooHasher.matches(passwordInfo, credentials.password) returns false
-      authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
-      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns Future.successful(response)
+      authInfoReader.apply(loginInfo) returns SyncIO.pure(Some(passwordInfo))
+      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns SyncIO.pure(response)
 
-      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+      provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
       there was one(authStateHandler).apply(authStateCaptor)
 
@@ -92,9 +87,9 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
     "return the `MissingCredentials` state if provider isn't responsible" in new Context {
       val request = Fake.request
       val response = Fake.response
-      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns Future.successful(response)
+      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns SyncIO.pure(response)
 
-      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+      provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
       there was one(authStateHandler).apply(authStateCaptor)
 
@@ -105,9 +100,9 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
       val request = Fake.request.withHeaders(Header(Header.Name.Authorization, "wrong"))
       val response = Fake.response
 
-      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns Future.successful(response)
+      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns SyncIO.pure(response)
 
-      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+      provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
       there was one(authStateHandler).apply(authStateCaptor)
 
@@ -120,11 +115,11 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
       val response = Fake.response
 
       fooHasher.matches(passwordInfo, credentials.password) returns true
-      authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
-      identityReader.apply(loginInfo) returns Future.successful(None)
-      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns Future.successful(response)
+      authInfoReader.apply(loginInfo) returns SyncIO.pure(Some(passwordInfo))
+      identityReader.apply(loginInfo) returns SyncIO.pure(None)
+      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns SyncIO.pure(response)
 
-      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+      provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
       there was one(authStateHandler).apply(authStateCaptor)
 
@@ -137,11 +132,11 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
       val response = Fake.response
 
       fooHasher.matches(passwordInfo, credentials.password) returns true
-      authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
-      identityReader.apply(loginInfo) returns Future.successful(Some(user))
-      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns Future.successful(response)
+      authInfoReader.apply(loginInfo) returns SyncIO.pure(Some(passwordInfo))
+      identityReader.apply(loginInfo) returns SyncIO.pure(Some(user))
+      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns SyncIO.pure(response)
 
-      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+      provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
       there was one(authStateHandler).apply(authStateCaptor)
 
@@ -155,11 +150,11 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
       val response = Fake.response
 
       fooHasher.matches(passwordInfo, credentialsWithColon.password) returns true
-      authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
-      identityReader.apply(loginInfo) returns Future.successful(Some(user))
-      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns Future.successful(response)
+      authInfoReader.apply(loginInfo) returns SyncIO.pure(Some(passwordInfo))
+      identityReader.apply(loginInfo) returns SyncIO.pure(Some(user))
+      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns SyncIO.pure(response)
 
-      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+      provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
       there was one(authStateHandler).apply(authStateCaptor)
 
@@ -175,12 +170,12 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
 
       fooHasher.hash(credentials.password) returns passwordInfo
       barHasher.matches(passwordInfo, credentials.password) returns true
-      authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
-      authInfoWriter.apply(loginInfo, passwordInfo) returns Future.successful(Done)
-      identityReader.apply(loginInfo) returns Future.successful(Some(user))
-      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns Future.successful(response)
+      authInfoReader.apply(loginInfo) returns SyncIO.pure(Some(passwordInfo))
+      authInfoWriter.apply(loginInfo, passwordInfo) returns SyncIO.pure(Done)
+      identityReader.apply(loginInfo) returns SyncIO.pure(Some(user))
+      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns SyncIO.pure(response)
 
-      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+      provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
       there was one(authStateHandler).apply(authStateCaptor)
       there was one(authInfoWriter).apply(loginInfo, passwordInfo)
@@ -196,12 +191,12 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
       fooHasher.isDeprecated(passwordInfo) returns Some(true)
       fooHasher.hash(credentials.password) returns passwordInfo
       fooHasher.matches(passwordInfo, credentials.password) returns true
-      authInfoReader.apply(loginInfo) returns Future.successful(Some(passwordInfo))
-      authInfoWriter.apply(loginInfo, passwordInfo) returns Future.successful(Done)
-      identityReader.apply(loginInfo) returns Future.successful(Some(user))
-      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns Future.successful(response)
+      authInfoReader.apply(loginInfo) returns SyncIO.pure(Some(passwordInfo))
+      authInfoWriter.apply(loginInfo, passwordInfo) returns SyncIO.pure(Done)
+      identityReader.apply(loginInfo) returns SyncIO.pure(Some(user))
+      authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns SyncIO.pure(response)
 
-      provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+      provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
       there was one(authStateHandler).apply(authStateCaptor)
       there was one(authInfoWriter).apply(loginInfo, passwordInfo)
@@ -216,7 +211,9 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
         )
         val response = Fake.response
 
-        provider.authenticate(request)(authStateHandler) must beEqualTo(response).awaitWithPatience
+        authStateHandler.apply(any[AuthState[User, BasicCredentials]]()) returns SyncIO.pure(response)
+
+        provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
         there was one(authStateHandler).apply(authStateCaptor)
 
@@ -252,12 +249,12 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
     /**
      * The reader to retrieve the [[Identity]] for the [[LoginInfo]] from the persistence layer.
      */
-    val identityReader = mock[LoginInfo => Future[Option[User]]].smart
+    val identityReader = mock[LoginInfo => SyncIO[Option[User]]].smart
 
     /**
      * The auth state handler.
      */
-    val authStateHandler = mock[AuthState[User, BasicCredentials] => Future[Fake.Response]]
+    val authStateHandler = mock[AuthState[User, BasicCredentials] => SyncIO[Fake.ResponsePipeline]]
 
     /**
      * An argument captor for the auth state handler.
@@ -267,7 +264,7 @@ class BasicAuthProviderSpec(implicit ev: ExecutionEnv) extends PasswordProviderS
     /**
      * The provider to test.
      */
-    val provider = new BasicAuthProvider[SilhouetteRequest, SilhouetteResponse, User](
+    val provider = new BasicAuthProvider[SyncIO, SilhouetteRequest, SilhouetteResponse, User](
       authInfoReader, authInfoWriter, identityReader, passwordHasherRegistry
     )
   }

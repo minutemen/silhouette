@@ -17,6 +17,7 @@
  */
 package silhouette.provider.password
 
+import cats.effect.SyncIO
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
@@ -25,12 +26,14 @@ import silhouette.password.{ PasswordHasher, PasswordHasherRegistry, PasswordInf
 /**
  * Abstract test case for the [[silhouette.provider.password.PasswordProvider]] trait.
  */
+// TODO: Add tests
 trait PasswordProviderSpec extends Specification with Mockito {
 
   /**
    * The context.
    */
   trait BaseContext extends Scope {
+    type Provider = PasswordProvider[SyncIO]
 
     /**
      * The default password hasher.
@@ -45,12 +48,12 @@ trait PasswordProviderSpec extends Specification with Mockito {
     /**
      * A function that tries to find the [[PasswordInfo]] for the given [[silhouette.LoginInfo]].
      */
-    lazy val authInfoReader: PasswordProvider#AuthInfoReader = mock[PasswordProvider#AuthInfoReader].smart
+    lazy val authInfoReader: Provider#AuthInfoReader = mock[Provider#AuthInfoReader].smart
 
     /**
      * A function that writes the [[PasswordInfo]] for the given [[silhouette.LoginInfo]].
      */
-    lazy val authInfoWriter: PasswordProvider#AuthInfoWriter = mock[PasswordProvider#AuthInfoWriter].smart
+    lazy val authInfoWriter: Provider#AuthInfoWriter = mock[Provider#AuthInfoWriter].smart
 
     /**
      * The password hasher registry.

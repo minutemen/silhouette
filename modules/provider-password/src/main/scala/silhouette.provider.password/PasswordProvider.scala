@@ -17,12 +17,11 @@
  */
 package silhouette.provider.password
 
+import cats.effect.Sync
 import silhouette.password.{ PasswordHasherRegistry, PasswordInfo }
 import silhouette.provider.Provider
 import silhouette.provider.password.PasswordProvider._
-import silhouette.{ Done, ExecutionContextProvider, LoginInfo }
-
-import scala.concurrent.Future
+import silhouette.{ Done, LoginInfo }
 
 /**
  * Base provider that provides shared functionality to handle authentication based on passwords.
@@ -32,10 +31,12 @@ import scala.concurrent.Future
  * into plain text passwords, to hash them again with the new algorithm. So if a user successfully authenticates after
  * the application has changed the hashing algorithm, the provider hashes the entered password again with the new
  * algorithm and stores the auth info in the backing store.
+ *
+ * @tparam F The type of the IO monad.
  */
-trait PasswordProvider extends Provider with ExecutionContextProvider {
-  type AuthInfoReader = LoginInfo => Future[Option[PasswordInfo]]
-  type AuthInfoWriter = (LoginInfo, PasswordInfo) => Future[Done]
+abstract class PasswordProvider[F[_]: Sync] extends Provider {
+  type AuthInfoReader = LoginInfo => F[Option[PasswordInfo]]
+  type AuthInfoWriter = (LoginInfo, PasswordInfo) => F[Done]
 
   /**
    * The authentication state.
@@ -84,23 +85,23 @@ trait PasswordProvider extends Provider with ExecutionContextProvider {
    * @param password  The password to authenticate with.
    * @return The authentication state.
    */
-  def authenticate(loginInfo: LoginInfo, password: String): Future[State] = {
-    authInfoReader(loginInfo).flatMap {
+  def authenticate(loginInfo: LoginInfo, password: String): F[State] = {
+    Sync[F].flatMap(authInfoReader(loginInfo)) {
       case Some(passwordInfo) => passwordHasherRegistry.find(passwordInfo) match {
         case Some(hasher) if hasher.matches(passwordInfo, password) =>
           if ((passwordHasherRegistry isDeprecated hasher) || (hasher isDeprecated passwordInfo).contains(true)) {
-            authInfoWriter(loginInfo, passwordHasherRegistry.current.hash(password)).map { _ =>
+            Sync[F].map(authInfoWriter(loginInfo, passwordHasherRegistry.current.hash(password))) { _ =>
               Successful
             }
           } else {
-            Future.successful(Successful)
+            Sync[F].pure(Successful)
           }
-        case Some(_) => Future.successful(InvalidPassword(PasswordDoesNotMatch.format(id)))
-        case None => Future.successful(UnsupportedHasher(HasherIsNotRegistered.format(
+        case Some(_) => Sync[F].pure(InvalidPassword(PasswordDoesNotMatch.format(id)))
+        case None => Sync[F].pure(UnsupportedHasher(HasherIsNotRegistered.format(
           id, passwordInfo.hasher, passwordHasherRegistry.all.map(_.id).mkString(", ")
         )))
       }
-      case None => Future.successful(NotFound(PasswordInfoNotFound.format(id, loginInfo)))
+      case None => Sync[F].pure(NotFound(PasswordInfoNotFound.format(id, loginInfo)))
     }
   }
 }

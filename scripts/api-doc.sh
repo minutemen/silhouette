@@ -39,24 +39,24 @@ if [ "$TRAVIS_REPO_SLUG" == "minutemen/silhouette" ] &&
   ENCRYPTED_KEY=${!ENCRYPTED_KEY_VAR}
   ENCRYPTED_IV=${!ENCRYPTED_IV_VAR}
 
-  openssl aes-256-cbc -K ${ENCRYPTED_KEY} -iv ${ENCRYPTED_IV} -in ${ENCRYPTED_KEY_FILE} -out ${DECRYPTED_KEY_FILE} -d
-  chmod 600 ${DECRYPTED_KEY_FILE}
+  openssl aes-256-cbc -K "$ENCRYPTED_KEY" -iv "$ENCRYPTED_IV" -in "$ENCRYPTED_KEY_FILE" -out "$DECRYPTED_KEY_FILE" -d
+  chmod 600 "$DECRYPTED_KEY_FILE"
 
   printf "%s\n" \
     "Host github.com" \
     "    HostName github.com" \
-    "    IdentityFile ${DECRYPTED_KEY_FILE}" \
+    "    IdentityFile $DECRYPTED_KEY_FILE" \
     "    IdentitiesOnly yes" \
     >> ~/.ssh/config
 
-  rm -rf "$(dirname ${GH_PAGES_DIR})"
-  mkdir -p "$(dirname ${GH_PAGES_DIR})"
-  git clone --quiet --branch=gh-pages git@github.com:${TRAVIS_REPO_SLUG}.git "$GH_PAGES_DIR" > /dev/null
+  rm -rf "$(dirname "$GH_PAGES_DIR")"
+  mkdir -p "$(dirname "$GH_PAGES_DIR")"
+  git clone --quiet --branch=gh-pages "git@github.com:$TRAVIS_REPO_SLUG.git" "$GH_PAGES_DIR" > /dev/null
   git config --global user.email "travis@travis-ci.org"
   git config --global user.name "travis-ci"
   git config --global push.default simple
 
-  ${SCRIPTS_DIR}/sbt.sh ghpages-push-site
+  "$SCRIPTS_DIR/sbt.sh" ghpages-push-site
 
   echo ""
   echo "Finished API-Doc update process"

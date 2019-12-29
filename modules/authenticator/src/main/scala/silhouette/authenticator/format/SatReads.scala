@@ -29,6 +29,7 @@ import silhouette.authenticator.{ Authenticator, AuthenticatorException, Reads }
  * backing store.
  *
  * @param reader The reader to retrieve the [[Authenticator]] for the given token from persistence layer.
+ * @tparam F The type of the IO monad.
  */
 final case class SatReads[F[_]: Sync](reader: String => F[Option[Authenticator]]) extends Reads[F, String] {
 

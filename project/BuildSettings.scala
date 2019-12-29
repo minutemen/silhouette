@@ -24,29 +24,44 @@ import sbt._
 object BasicSettings extends AutoPlugin {
   override def trigger: PluginTrigger = allRequirements
 
+  val `scalacOptions2.12.x` = Seq(
+    "-Xlint:adapted-args",
+    "-Ywarn-inaccessible",
+    "-Ywarn-infer-any",
+    "-Xlint:nullary-override",
+    "-Xlint:nullary-unit",
+    "-Xmax-classfile-name", "254",
+    "-language:higherKinds",
+    "-Ypartial-unification"
+  )
+
+  val `scalacOptions2.13.x` = Seq(
+    "-Xlint:adapted-args",
+    "-Xlint:inaccessible",
+    "-Xlint:infer-any",
+    "-Xlint:nullary-override",
+    "-Xlint:nullary-unit"
+  )
+
+  val scalacOptionsCommon = Seq(
+    "-unchecked",
+    "-deprecation",
+    "-feature",
+    "-encoding", "utf8",
+    "-Xfatal-warnings",
+    "-Xlint"
+  )
+
   override def projectSettings: Seq[Setting[_]] = Seq(
     organization := "group.minutemen",
     resolvers ++= Dependencies.resolvers,
     scalaVersion := crossScalaVersions.value.head,
     crossScalaVersions := Seq("2.13.1", "2.12.10"),
-    scalacOptions ++= Seq(
-      "-deprecation", // Emit warning and location for usages of deprecated APIs.
-      "-feature", // Emit warning and location for usages of features that should be imported explicitly.
-      "-unchecked", // Enable additional warnings where generated code depends on assumptions.
-      "-Xfatal-warnings", // Fail the compilation if there are any warnings.
-      "-Xlint", // Enable recommended additional warnings.
-      "-Ywarn-dead-code", // Warn when dead code is identified.
-      "-Ywarn-numeric-widen" // Warn when numerics are widened.
-    ),
     scalacOptions ++= {
-      if (Util.priorTo213(scalaVersion.value)) {
-        Seq(
-          "-language:higherKinds",
-          "-Ypartial-unification",
-          "-Ywarn-adapted-args",    // Warn if an argument list is modified to match the receiver.
-          "-Ywarn-nullary-override" // Warn when non-nullary overrides nullary, e.g. def foo() over def foo.
-        )
-      } else { Nil }
+      scalacOptionsCommon ++ (scalaBinaryVersion.value match {
+        case "2.12" => `scalacOptions2.12.x`
+        case "2.13" => `scalacOptions2.13.x`
+      })
     },
     scalacOptions in Test ~= { options: Seq[String] =>
       options filterNot (_ == "-Ywarn-dead-code") // Allow dead code in tests (to support using mockito).
@@ -128,11 +143,6 @@ object Publish extends AutoPlugin {
           <name>Christian Kaps</name>
           <url>http://mohiva.com</url>
         </developer>
-        <developer>
-          <id>datalek</id>
-          <name>Alessandro Ferlin</name>
-          <url>https://github.com/datalek</url>
-        </developer>
       </developers>
   }
 
@@ -189,12 +199,3 @@ object Publish extends AutoPlugin {
   )
 }
 */
-
-
-object Util {
-  def priorTo213(scalaVersion: String): Boolean =
-    CrossVersion.partialVersion(scalaVersion) match {
-      case Some((2, minor)) if minor < 13 => true
-      case _                              => false
-    }
-}

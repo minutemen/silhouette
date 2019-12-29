@@ -24,8 +24,10 @@ import java.net.URI
  */
 package object http {
   protected[silhouette] object Fake {
-    type Request = RequestPipeline[SilhouetteRequest]
-    type Response = ResponsePipeline[SilhouetteResponse]
+    type Request = SilhouetteRequest
+    type Response = SilhouetteResponse
+    type RequestPipeline = http.RequestPipeline[Request]
+    type ResponsePipeline = http.ResponsePipeline[Response]
 
     def request(
       uri: URI = new URI("http://localhost/"),
@@ -33,15 +35,15 @@ package object http {
       headers: Seq[Header] = Seq(),
       cookies: Seq[Cookie] = Seq(),
       queryParams: Map[String, Seq[String]] = Map()
-    ): Request = SilhouetteRequestPipeline(SilhouetteRequest(
+    ): RequestPipeline = SilhouetteRequestPipeline(SilhouetteRequest(
       uri,
       method,
       headers,
       cookies,
       queryParams
     ))
-    def request: Request = request()
+    def request: RequestPipeline = request()
 
-    val response: Response = SilhouetteResponsePipeline(SilhouetteResponse(Status.OK))
+    val response: ResponsePipeline = SilhouetteResponsePipeline(SilhouetteResponse(Status.OK))
   }
 }

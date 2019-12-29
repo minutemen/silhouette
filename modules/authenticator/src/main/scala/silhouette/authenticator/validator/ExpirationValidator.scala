@@ -19,12 +19,12 @@ package silhouette.authenticator.validator
 
 import java.time.Clock
 
+import cats.effect.Sync
 import silhouette.authenticator.Validator._
 import silhouette.authenticator.validator.ExpirationValidator._
 import silhouette.authenticator.{ Authenticator, Validator }
 
 import scala.concurrent.duration._
-import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * A validator that checks if an [[Authenticator]] is expired.
@@ -32,20 +32,17 @@ import scala.concurrent.{ ExecutionContext, Future }
  * If the [[Authenticator.expires]] property isn't set, then this validator returns always true.
  *
  * @param clock The clock implementation to validate against.
+ * @tparam F The type of the IO monad.
  */
-final case class ExpirationValidator(clock: Clock) extends Validator {
+final case class ExpirationValidator[F[_]: Sync](clock: Clock) extends Validator[F] {
 
   /**
    * Checks if the [[Authenticator]] is valid.
    *
    * @param authenticator The [[Authenticator]] to validate.
-   * @param ec            The execution context to perform the async operations.
    * @return True if the [[Authenticator]] is valid, false otherwise.
    */
-  override def isValid(authenticator: Authenticator)(
-    implicit
-    ec: ExecutionContext
-  ): Future[Status] = Future.successful {
+  override def isValid(authenticator: Authenticator): F[Status] = Sync[F].pure {
     if (authenticator.expiresIn(clock).forall(_ >= 0.millis)) {
       Valid
     } else {

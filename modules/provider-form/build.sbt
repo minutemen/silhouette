@@ -15,28 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-logLevel := Level.Warn
+import Dependencies._
 
-addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.6.1")
+libraryDependencies ++= Seq(
+  Library.Cats.core,
+  Library.Cats.effect
+)
+//enablePlugins(Doc)
 
-addSbtPlugin("org.scoverage" % "sbt-coveralls" % "1.2.7")
-
-addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.8.2")
-
-addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "2.3")
-
-addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.1.2")
-
-addSbtPlugin("com.eed3si9n" % "sbt-unidoc" % "0.4.2")
-
-addSbtPlugin("com.typesafe.sbt" % "sbt-site" % "1.3.2")
-
-addSbtPlugin("com.typesafe.sbt" % "sbt-ghpages" % "0.6.2")
-
-addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.9")
-
-addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "1.0.0")
-
-addSbtPlugin("com.thoughtworks.sbt-api-mappings" % "sbt-api-mappings" % "latest.release")
-
-addSbtPlugin("com.dwijnand" % "sbt-travisci" % "1.2.0")

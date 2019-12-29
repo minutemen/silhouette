@@ -1,6 +1,4 @@
-sudo: false
 language: scala
-dist: trusty # https://travis-ci.community/t/error-installing-oraclejdk8-expected-feature-release-number-in-range-of-9-to-14-but-got-8/3766/7
 scala:
 - 2.12.10
 - 2.13.1
@@ -13,14 +11,20 @@ env:
   - ENCRYPTION_ID: db1a7d6b4703
   - secure: v+i6o4hmG1tzUw4ppP1UiDTvAiEWq/8/+FNwAL/zKtPSbIMmH5nIoQF3r5yeMyAyLua+1WVRy6UPPkY3z+QA2qAZ/7TJf+sOxypGSHshyZZnjSKe9kwJEnjZiML9qoEP+wGmcygGIF4b9LVS6Yh9D/dHTnFdrpIkcjgqpp3OFJ1gc+hZa7OOSMcRees9o8P1N9tUg/tCYZBYfhnAN4+3IEfCeEtjJpJp6zFVSKeRQO2uY/OZ39oD2jNK+xmVD+vIGtmqSJmdjiI3mzu/obMZbncycCNU7tNO9NfmhMREAI7NvfOEw1mzcUFxzu0UhV+vJWmp8XmVyrgLVnbxGKI+dD926nO9UtEMrDdRzLEwJDHSGv3hvWiBspMqLCbwUIz9ek2EHhluJCCa1emXiFOl7P7jez4myT/aP0GCfb7RuJcOHU25NU51DmTsk+GZvCadkn7JcxEkFLGy0280xw0Q79khYzt2vf0B9vEc2madTXQUQb4mizhYBEQJQTAmBt0W5XQ2aySwBkM8U5OpnAr5VVPvbG6bmFanDSLmh9QdwbPix9ZqflkVR9HWrWypFDbHoGgL7ljRF7MIqAxcRhyPsO5DrCoaAxd2SOrJnmkVrBydB+V64vU+XkHG3ZnJmnaOIHxsfG0ixkJA+PgjjZ/47gi50D+6/ACdUVMcPMkrGXo=
   - secure: OB7LP7KINJTLfDeZdaxnxTCAepQcSlqYbD9yBRCwZzmhmN0T/crNwzB889vzK4PG4PlprEuGIAPXzpiSl/GVFZjvufrhHaEiflP/B2Way7mjxTdg8bTgePs4Non3iQhEkzOBvQ5LEytT1LGnJqcR3Yj2xEuW7lQWPmCNHXk80RC1lq2PzqMOjAgtzDSeYDbQ48IpkE3KVzTd1+B5rBtdB9u0IYwK2S+Jbdd5hlX1UAe0Of+rGCREUGVn14hVVeKO+mD8gx7b254NFU95hIHGQJkCp97jTkuk+WIsuPrIpRoW2Cqq/lrZnlfe2CY5BRDQcZjVNJ+MCEd1mRiG2KHK9j1PSpzcQVMYXGwJx5UOHQvGUfXBDzym7e7MlntkjGbFsxiKbP5wgzhGe93uZ3H+owisljma6jnt8IMGkkVyGBqyBy+rVDWgtEtMMUbO40MFY2fefO/cdos+LRk9kJLsEVjz3VsKuhOF0hwvRtB7SlYaDy6sQ+OtcWB6UGLThblSLjjAp5a0yzJQU+5AWFVXQiW226MBtNe3kuA1VtZJ64HYTbFSQemI9tcbFGFtNapODFdO/x1f9xDrQT0LvrIgvhsbuGB7PogpSvtGN3pqaoYTzgTPxjAOLn5m5YBJV6pq6LM8396GyN2LF4Krw2txHXOSrkxZuq3vulXui7FYzxo=
+# caching scala stuff based on
+# https://www.scala-sbt.org/1.x/docs/Travis-CI-with-sbt.html
+before_cache:
+  # Tricks to avoid unnecessary cache updates
+  - rm -fv $HOME/.ivy2/.sbt.ivy.lock
+  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
+  - find $HOME/.sbt        -name "*.lock"               -print -delete
 cache:
   directories:
-  - "$HOME/.ivy2/cache"
-  - "$HOME/.sbt/boot/"
+    - $HOME/.cache/coursier
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt
 script:
 - scripts/ci-build.sh
-- find $HOME/.sbt -name "*.lock" -delete
-- find $HOME/.ivy2 -name "ivydata-*.properties" -delete
 after_success:
 - scripts/api-doc.sh
 - scripts/publish.sh

@@ -19,25 +19,21 @@ package silhouette.authenticator
 
 import silhouette.authenticator.Validator._
 
-import scala.concurrent.{ ExecutionContext, Future }
-
 /**
  * Adds the ability to validate an [[Authenticator]].
+ *
+ * @tparam F The type of the IO monad.
  */
-trait Validator {
+trait Validator[F[_]] {
 
   /**
    * Checks if the authenticator is valid.
    *
    * @param authenticator The authenticator to validate.
-   * @param ec            The execution context to perform the async operations.
    * @return [[silhouette.authenticator.Validator.Valid]] if the authenticator is valid,
    *        [[silhouette.authenticator.Validator.Invalid]] otherwise.
    */
-  def isValid(authenticator: Authenticator)(
-    implicit
-    ec: ExecutionContext
-  ): Future[Status]
+  def isValid(authenticator: Authenticator): F[Status]
 }
 
 /**
