@@ -111,11 +111,11 @@ final case class CookieTransport(config: CookieTransportConfig)
 }
 
 /**
- * A reads that tries to retrieve some payload, stored in a cookie, from the given request.
+ * A function that tries to retrieve some payload, stored in a cookie, from the given request.
  *
  * @param name The name of the cookie to retrieve to payload from.
  */
-final case class RetrieveFromCookie(name: String) extends RetrieveReads[String] {
+final case class RetrieveFromCookie(name: String) extends Retrieve[String] {
 
   /**
    * Reads payload from a cookie stored in the given request.
@@ -123,56 +123,56 @@ final case class RetrieveFromCookie(name: String) extends RetrieveReads[String] 
    * @param request The request.
    * @return The retrieved payload.
    */
-  override def read(request: Request): Option[String] = CookieTransport(CookieTransportConfig(name)).retrieve(request)
+  override def apply(request: Request): Option[String] = CookieTransport(CookieTransportConfig(name)).retrieve(request)
 }
 
 /**
- * A writes that smuggles a cookie with the given payload into the given request.
+ * A function that smuggles a cookie with the given payload into the given request.
  *
  * @param config The cookie transport config.
  * @tparam R The type of the request.
  */
-final case class SmuggleIntoCookie[R](config: CookieTransportConfig) extends SmuggleWrites[R, String] {
+final case class SmuggleIntoCookie[R](config: CookieTransportConfig) extends Smuggle[R, String] {
 
   /**
    * Merges some payload and a [[RequestPipeline]] into a [[RequestPipeline]] that contains a cookie with the
    * given payload as value.
    *
-   * @param in A tuple consisting of the payload to embed in a cookie and the [[RequestPipeline]] in which the cookie
-   *           should be embedded.
+   * @param payload         The payload to embed in a cookie.
+   * @param requestPipeline The [[RequestPipeline]] in which the cookie should be embedded.
    * @return The request pipeline with the smuggled cookie.
    */
-  override def write(in: (String, RequestPipeline[R])): RequestPipeline[R] =
-    CookieTransport(config).smuggle[R] _ tupled in
+  override def apply(payload: String, requestPipeline: RequestPipeline[R]): RequestPipeline[R] =
+    CookieTransport(config).smuggle(payload, requestPipeline)
 }
 
 /**
- * A writes that embeds a cookie with the given payload into the given response.
+ * A function that embeds a cookie with the given payload into the given response.
  *
  * @param config The cookie transport config.
  * @tparam R The type of the response.
  */
-final case class EmbedIntoCookie[R](config: CookieTransportConfig) extends EmbedWrites[R, String] {
+final case class EmbedIntoCookie[R](config: CookieTransportConfig) extends Embed[R, String] {
 
   /**
    * Merges some payload and a [[ResponsePipeline]] into a [[ResponsePipeline]] that contains a cookie with the
    * given payload as value.
    *
-   * @param in A tuple consisting of the payload to embed in a cookie and the [[ResponsePipeline]] in which the cookie
-   *           should be embedded.
+   * @param payload          The payload to embed in a cookie.
+   * @param responsePipeline The [[ResponsePipeline]] in which the cookie should be embedded.
    * @return The response pipeline with the embedded cookie.
    */
-  override def write(in: (String, ResponsePipeline[R])): ResponsePipeline[R] =
-    CookieTransport(config).embed[R] _ tupled in
+  override def apply(payload: String, responsePipeline: ResponsePipeline[R]): ResponsePipeline[R] =
+    CookieTransport(config).embed(payload, responsePipeline)
 }
 
 /**
- * A writes that embeds a discarding cookie into the given response.
+ * A function that embeds a discarding cookie into the given response.
  *
  * @param config The transport config.
  * @tparam R The type of the response.
  */
-final case class DiscardFromCookie[R](config: CookieTransportConfig) extends DiscardWrites[R] {
+final case class DiscardFromCookie[R](config: CookieTransportConfig) extends Discard[R] {
 
   /**
    * Takes a [[ResponsePipeline]] and embeds a discarding cookie into it.
@@ -180,6 +180,6 @@ final case class DiscardFromCookie[R](config: CookieTransportConfig) extends Dis
    * @param responsePipeline The response pipeline in which the discarding cookie should be embedded.
    * @return The response pipeline with the embedded discarding cookie.
    */
-  override def write(responsePipeline: ResponsePipeline[R]): ResponsePipeline[R] =
+  override def apply(responsePipeline: ResponsePipeline[R]): ResponsePipeline[R] =
     CookieTransport(config).discard(responsePipeline)
 }

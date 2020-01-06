@@ -74,7 +74,7 @@ class BasicAuthProvider[F[_]: Sync, R, P, I <: Identity] @Inject() (
    * @return The [[ResponsePipeline]].
    */
   override def authenticate(request: RequestPipeline[R])(handler: AuthStateHandler): F[ResponsePipeline[P]] = {
-    RetrieveBasicCredentialsFromHeader().read(request) match {
+    RetrieveBasicCredentialsFromHeader()(request) match {
       case Some(credentials) =>
         val loginInfo = LoginInfo(id, credentials.username)
         Sync[F].flatMap(authenticate(loginInfo, credentials.password)) {

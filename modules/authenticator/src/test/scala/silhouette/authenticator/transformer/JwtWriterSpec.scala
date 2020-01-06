@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.authenticator.format
+package silhouette.authenticator.transformer
 
 import java.time.Instant
 
@@ -28,23 +28,23 @@ import org.specs2.mutable.Specification
 import silhouette.LoginInfo
 import silhouette.authenticator.Authenticator
 import silhouette.crypto.Base64
-import silhouette.jwt.{ Claims, Writes }
+import silhouette.jwt.{ ClaimWriter, Claims }
 
 import scala.util.Try
 
 /**
- * Test case for the [[JwtWrites]] class.
+ * Test case for the [[JwtWriter]] class.
  */
-class JwtWritesSpec extends Specification with Mockito {
+class JwtWriterSpec extends Specification with Mockito {
 
   "The `write` method" should {
     "write a claims representation from the authenticator" in new Context {
-      underlyingJwtWrites.write(any[Claims]()) returns Try(jwt)
+      claimWriter(any[Claims]()) returns Try(jwt)
 
       val captor = capture[Claims]
 
-      jwtWrites.write(authenticator).unsafeRunSync() must be equalTo jwt
-      there was one(underlyingJwtWrites).write(captor)
+      jwtWriter(authenticator).unsafeRunSync() must be equalTo jwt
+      there was one(claimWriter).apply(captor)
 
       captor.value must be equalTo claims
     }
@@ -104,13 +104,13 @@ class JwtWritesSpec extends Specification with Mockito {
     )
 
     /**
-     * A mock of the underlying JWT writes.
+     * A mock of the underlying JWT claim writer.
      */
-    val underlyingJwtWrites = mock[Writes]
+    val claimWriter = mock[ClaimWriter]
 
     /**
-     * The JWT authenticator writes.
+     * The JWT authenticator writer.
      */
-    val jwtWrites = JwtWrites[SyncIO](underlyingJwtWrites, claims.issuer, claims.audience, claims.notBefore)
+    val jwtWriter = JwtWriter[SyncIO](claimWriter, claims.issuer, claims.audience, claims.notBefore)
   }
 }

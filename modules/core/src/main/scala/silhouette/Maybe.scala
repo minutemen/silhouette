@@ -56,80 +56,89 @@ object Maybe {
    * The type description of the type [[Maybe]].
    *
    * We use the monad transformer [[EitherT]] from the Cats library, because it allows us to easily compose [[Either]]
-   * and [[F : cats.Monad]] together without writing a lot of boilerplate.
+   * and `F` together without writing a lot of boilerplate.
    */
   type Maybe[F[_], A] = EitherT[F, Throwable, A]
 
   /**
-   * A [[Writes]] that transform a type `A` to [[Maybe]].
-   *
-   * @tparam A The source type.
-   * @tparam B The target type.
+   * A transformation function that transform a type `A` to [[Maybe]].
    */
-  trait MaybeWrites[F[_], A, B] extends Writes[A, Maybe[F, B]]
+  type MaybeWriter[F[_], A, B] = A => Maybe[F, B]
 
-  /**
-   * A low priority [[Writes]] that transform any type to [[Maybe]].
-   *
-   * @tparam A The type to convert.
-   * @return The [[Maybe]] representation for type `A`.
-   */
-  implicit def toMaybeWrites[F[_]: Monad, A]: MaybeWrites[F, A, A] = (value: A) =>
-    EitherT.pure[F, Throwable](value)
+  trait LowPriorityImplicits {
 
-  /**
-   * A [[Writes]] that transforms an [[Option]] to [[Maybe]].
-   *
-   * @tparam A The type to convert.
-   * @return The [[Maybe]] representation for the [[Option]] type.
-   */
-  implicit def optionToMaybeWrites[F[_]: Monad, A]: MaybeWrites[F, Option[A], A] = (value: Option[A]) =>
-    EitherT.fromEither[F](value.toRight(NonException()))
+    /**
+     * A low priority transformation function that transform any type to [[Maybe]].
+     *
+     * @tparam F The IO monad.
+     * @tparam A The type to convert.
+     * @return The [[Maybe]] representation for type `A`.
+     */
+    implicit def toMaybeWrites[F[_]: Monad, A]: MaybeWriter[F, A, A] = (value: A) =>
+      EitherT.pure[F, Throwable](value)
+  }
 
-  /**
-   * A [[Writes]] that transforms a [[scala.util.Try]] to [[Maybe]].
-   *
-   * @tparam A The type to convert.
-   * @return The [[Maybe]] representation for the [[scala.util.Try]] type.
-   */
-  implicit def tryToMaybeWrites[F[_]: Monad, A]: MaybeWrites[F, Try[A], A] = (value: Try[A]) =>
-    EitherT.fromEither[F](value.toEither)
+  object Implicits extends LowPriorityImplicits {
 
-  /**
-   * A [[Writes]] that transforms an `Either[Throwable, A]` to [[Maybe]].
-   *
-   * @tparam A The type to convert.
-   * @return The [[Maybe]] representation for the `Either[Throwable, A]` type.
-   */
-  implicit def eitherToMaybeWrites[F[_]: Monad, A]: MaybeWrites[F, Either[Throwable, A], A] =
-    (value: Either[Throwable, A]) => EitherT.fromEither[F](value)
+    /**
+     * A transformation function that transforms an [[Option]] to [[Maybe]].
+     *
+     * @tparam F The IO monad.
+     * @tparam A The type to convert.
+     * @return The [[Maybe]] representation for the [[Option]] type.
+     */
+    implicit def optionToMaybeWriter[F[_]: Monad, A]: MaybeWriter[F, Option[A], A] = (value: Option[A]) =>
+      EitherT.fromEither[F](value.toRight(NonException()))
 
-  /**
-   * A [[Writes]] that transforms a functional effect to [[Maybe]].
-   *
-   * @tparam A The type to convert.
-   * @return The [[Maybe]] representation for the `Either[Throwable, A]` type.
-   */
-  implicit def effectToMaybeWrites[F[_]: Monad, A, B](
-    implicit
-    writes: MaybeWrites[F, A, B]
-  ): MaybeWrites[F, F[A], B] = (value: F[A]) =>
-    for {
-      v <- EitherT.right(value)
-      r <- writes.write(v)
-    } yield r
+    /**
+     * A transformation function that transforms a [[scala.util.Try]] to [[Maybe]].
+     *
+     * @tparam F The IO monad.
+     * @tparam A The type to convert.
+     * @return The [[Maybe]] representation for the [[scala.util.Try]] type.
+     */
+    implicit def tryToMaybeWriter[F[_]: Monad, A]: MaybeWriter[F, Try[A], A] = (value: Try[A]) =>
+      EitherT.fromEither[F](value.toEither)
 
-  /**
-   * Converts a type with the help of a [[Writes]] into a [[Maybe]] type.
-   *
-   * @param value The value to convert.
-   * @param writes The [[Writes]] which converts the from `A` to [[Maybe]].
-   * @tparam A The source type.
-   * @tparam B The type of the success case [[Maybe]] handles.
-   * @return The [[Maybe]] representation of type `A`.
-   */
-  implicit def toMaybe[F[_]: Monad, A, B](value: A)(
-    implicit
-    writes: MaybeWrites[F, A, B]
-  ): Maybe[F, B] = writes.write(value)
+    /**
+     * A transformation function that transforms an `Either[Throwable, A]` to [[Maybe]].
+     *
+     * @tparam F The IO monad.
+     * @tparam A The type to convert.
+     * @return The [[Maybe]] representation for the `Either[Throwable, A]` type.
+     */
+    implicit def eitherToMaybeWriter[F[_]: Monad, A]: MaybeWriter[F, Either[Throwable, A], A] =
+      (value: Either[Throwable, A]) => EitherT.fromEither[F](value)
+
+    /**
+     * A transformation function that transforms a functional effect to [[Maybe]].
+     *
+     * @tparam F The IO monad.
+     * @tparam A The type to convert.
+     * @return The [[Maybe]] representation for the `Either[Throwable, A]` type.
+     */
+    implicit def effectToMaybeWriter[F[_]: Monad, A, B](
+      implicit
+      writer: MaybeWriter[F, A, B]
+    ): MaybeWriter[F, F[A], B] = (value: F[A]) =>
+      for {
+        r <- EitherT.right(value)
+        v <- writer(r)
+      } yield v
+
+    /**
+     * Converts a type with the help of a transformation function into a [[Maybe]] type.
+     *
+     * @param value  The value to convert.
+     * @param writer The transformation function that transforms from `A` to [[Maybe]].
+     * @tparam F The IO monad.
+     * @tparam A The source type.
+     * @tparam B The type of the success case [[Maybe]] handles.
+     * @return The [[Maybe]] representation of type `A`.
+     */
+    implicit def toMaybe[F[_]: Monad, A, B](value: A)(
+      implicit
+      writer: MaybeWriter[F, A, B]
+    ): Maybe[F, B] = writer(value)
+  }
 }

@@ -15,20 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.authenticator.format
+package silhouette.authenticator.transformer
 
 import cats.effect.Sync
 import io.circe.Json
 import io.circe.jawn.decode
-import silhouette.authenticator.format.JwtReads._
-import silhouette.authenticator.{ Authenticator, AuthenticatorException, Reads }
+import silhouette.LoginInfo
+import silhouette.authenticator.transformer.JwtReader._
+import silhouette.authenticator.{ Authenticator, AuthenticatorException, AuthenticatorReader }
 import silhouette.crypto.Base64
-import silhouette.{ LoginInfo, jwt }
+import silhouette.jwt.ClaimReader
 
 import scala.util.{ Failure, Success, Try }
 
 /**
- * A reads which transforms a JWT into an [[Authenticator]].
+ * A transformation function that transforms a JWT into an [[Authenticator]].
  *
  * Because of the fact that a JWT itself stores a complete serialized form of the authenticator, it's normally not
  * needed to use a backing store, because on subsequent requests the authenticator can be fully unserialized from the
@@ -36,10 +37,10 @@ import scala.util.{ Failure, Success, Try }
  * mapping between the JWT and a stored instance, it's possible to invalidate the authenticators server side. Therefore
  * this reads can be used in a stateless and a stateful manner.
  *
- * @param jwtReads The underlying JWT reads implementation.
+ * @param claimReader The JWT claim reader function.
  * @tparam F The type of the IO monad.
  */
-final case class JwtReads[F[_]: Sync](jwtReads: jwt.Reads) extends Reads[F, String] {
+final case class JwtReader[F[_]: Sync](claimReader: ClaimReader) extends AuthenticatorReader[F, String] {
 
   /**
    * Transforms a JWT into an [[Authenticator]].
@@ -47,8 +48,8 @@ final case class JwtReads[F[_]: Sync](jwtReads: jwt.Reads) extends Reads[F, Stri
    * @param jwt The JWT to transform.
    * @return An authenticator on success, an error on failure.
    */
-  override def read(jwt: String): F[Authenticator] = Sync[F].fromTry {
-    jwtReads.read(jwt).flatMap { claims =>
+  override def apply(jwt: String): F[Authenticator] = Sync[F].fromTry {
+    claimReader(jwt).flatMap { claims =>
       val custom = Json.fromJsonObject(claims.custom)
       val maybeID = claims.jwtID.map(Success.apply)
         .getOrElse(Failure(new AuthenticatorException(MissingClaimValue.format("jwtID"))))
@@ -92,7 +93,7 @@ final case class JwtReads[F[_]: Sync](jwtReads: jwt.Reads) extends Reads[F, Stri
 /**
  * The companion object.
  */
-object JwtReads {
+object JwtReader {
   val JsonParseError = "Cannot parse Json: %s"
   val UnexpectedJsonValue = "Unexpected Json value: %s; expected %s"
   val MissingClaimValue = "Cannot get value for claim `%s` from JWT"

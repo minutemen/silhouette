@@ -17,16 +17,15 @@
  */
 package silhouette.http.auth
 
-import silhouette.http.auth.BearerAuthSchemeFormat._
+import silhouette.TransformException
 import silhouette.http.{ AuthScheme, BearerToken }
-import silhouette.{ Reads, TransformException, Writes }
 
 import scala.util.{ Failure, Success, Try }
 
 /**
  * Handles the transformation of the "Bearer" `Authorization` header to a [[BearerToken]] and vice versa.
  */
-final case class BearerAuthSchemeFormat() extends Reads[String, Try[BearerToken]] with Writes[BearerToken, String] {
+case object BearerAuthSchemeReader extends (String => Try[BearerToken]) {
 
   /**
    * Transforms the "Bearer" `Authorization` header value into some token.
@@ -34,7 +33,7 @@ final case class BearerAuthSchemeFormat() extends Reads[String, Try[BearerToken]
    * @param value The "Bearer" `Authorization` header value.
    * @return Some token or a failure if the value could not be parsed.
    */
-  override def read(value: String): Try[BearerToken] = value match {
+  override def apply(value: String): Try[BearerToken] = value match {
     case AuthScheme.Bearer(token) =>
       Success(BearerToken(token))
     case _ =>
@@ -42,17 +41,21 @@ final case class BearerAuthSchemeFormat() extends Reads[String, Try[BearerToken]
   }
 
   /**
+   * The error messages.
+   */
+  val MissingBearerAuthIdentifier = "Header doesn't start with 'Bearer '"
+}
+
+/**
+ * Handles the transformation of the "Bearer" `Authorization` header to a [[BearerToken]] and vice versa.
+ */
+case object BearerAuthSchemeWriter extends (BearerToken => String) {
+
+  /**
    * Transforms a token into a "Bearer" `Authorization` header value.
    *
    * @param token The token to encode.
    * @return The "Bearer" `Authorization` header value.
    */
-  override def write(token: BearerToken): String = AuthScheme.Bearer(token.value)
-}
-
-/**
- * The companion object of the [[BearerAuthSchemeFormat]] class.
- */
-object BearerAuthSchemeFormat {
-  val MissingBearerAuthIdentifier = "Header doesn't start with 'Bearer '"
+  override def apply(token: BearerToken): String = AuthScheme.Bearer(token.value)
 }

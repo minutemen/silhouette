@@ -21,20 +21,20 @@ import java.time.Instant
 
 import io.circe.{ Json, JsonObject }
 import org.jose4j.jwt.JwtClaims
-import silhouette.jwt.jose4j.Jose4jReads._
-import silhouette.jwt.{ Claims, JwtException, Reads, ReservedClaims }
+import silhouette.jwt.jose4j.Jose4jClaimReader._
+import silhouette.jwt.{ ClaimReader, Claims, JwtException, ReservedClaims }
 
 import scala.jdk.CollectionConverters._
 import scala.util.{ Failure, Success, Try }
 
 /**
- * JWT reads based on the [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library.
- * clean
+ * JWT claim reader based on the [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library.
+ *
  * The library supports the JWS/JWE compact serializations with the complete suite of JOSE algorithms.
  *
  * @param consumer The JWT consumer.
  */
-final case class Jose4jReads(consumer: Jose4jConsumer) extends Reads {
+final case class Jose4jClaimReader(consumer: Jose4jConsumer) extends ClaimReader {
 
   /**
    * Transforms a JWT string into a JWT claims object.
@@ -42,7 +42,7 @@ final case class Jose4jReads(consumer: Jose4jConsumer) extends Reads {
    * @param str A JWT string.
    * @return The transformed JWT claims object or an error if the string couldn't be transformed.
    */
-  override def read(str: String): Try[Claims] = {
+  override def apply(str: String): Try[Claims] = {
     (for {
       jwtClaims <- consumer.consume(str)
       silhouetteClaims <- toSilhouette(jwtClaims)
@@ -121,7 +121,7 @@ final case class Jose4jReads(consumer: Jose4jConsumer) extends Reads {
 /**
  * The companion object.
  */
-object Jose4jReads {
+object Jose4jClaimReader {
 
   /**
    * The error messages.

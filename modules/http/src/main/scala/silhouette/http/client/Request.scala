@@ -86,11 +86,11 @@ protected[silhouette] case class Request(
    * @tparam T The type of the body.
    * @param body   The new body.
    * @param codec  The codec of the resulting body.
-   * @param writes The format which converts the given format into a body instance.
+   * @param writer The body writer that converts the given format into a body instance.
    * @return A request to provide a fluent interface.
    */
-  def withBody[T](body: T, codec: Codec = Body.DefaultCodec)(implicit writes: Codec => BodyWrites[T]): Request =
-    withBody(writes(codec).write(body))
+  def withBody[T](body: T, codec: Codec = Body.DefaultCodec)(implicit writer: Codec => BodyWriter[T]): Request =
+    withBody(writer(codec)(body))
 }
 
 /**

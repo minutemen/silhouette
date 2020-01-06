@@ -354,7 +354,7 @@ trait OAuth2Provider extends SocialStateProvider[OAuth2Config] with OAuth2Consta
    * @return The result of the handler function.
    */
   protected def withParsedJson[T](response: Response)(handler: Json => Future[T]): Future[T] = {
-    import BodyReads.circeJsonReads
+    import BodyReader.circeJsonReads
     response.body match {
       case None =>
         Future.failed(new UnexpectedResponseException(EmptyBodyError.format(id, response.status)))

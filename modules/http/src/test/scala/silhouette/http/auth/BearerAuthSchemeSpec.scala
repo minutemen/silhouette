@@ -18,42 +18,30 @@
 package silhouette.http.auth
 
 import org.specs2.mutable.Specification
-import org.specs2.specification.Scope
 import silhouette.TransformException
 import silhouette.http.BearerToken
-import silhouette.http.auth.BearerAuthSchemeFormat._
+import silhouette.http.auth.BearerAuthSchemeReader._
 
 /**
- * Test case for the [[BearerAuthSchemeFormat]] class.
+ * Test case for the [[BearerAuthSchemeReader]] and [[BearerAuthSchemeWriter]] objects.
  */
-class BearerAuthSchemeFormatSpec extends Specification {
+class BearerAuthSchemeSpec extends Specification {
 
   "The `read` method" should {
-    "return None if the header value doesn't start with 'Bearer'" in new Context {
-      format.read("test") must beFailedTry.like {
+    "return None if the header value doesn't start with 'Bearer'" in {
+      BearerAuthSchemeReader("test") must beFailedTry.like {
         case e: TransformException => e.getMessage must be equalTo MissingBearerAuthIdentifier
       }
     }
 
-    "return the header value" in new Context {
-      format.read(s"Bearer some.long.token") must beSuccessfulTry(BearerToken("some.long.token"))
+    "return the header value" in {
+      BearerAuthSchemeReader(s"Bearer some.long.token") must beSuccessfulTry(BearerToken("some.long.token"))
     }
   }
 
   "The `write` method" should {
-    "return a 'Bearer' auth header for the given credentials" in new Context {
-      format.write(BearerToken("some.long.token")) must be equalTo s"Bearer some.long.token"
+    "return a 'Bearer' auth header for the given credentials" in {
+      BearerAuthSchemeWriter(BearerToken("some.long.token")) must be equalTo s"Bearer some.long.token"
     }
-  }
-
-  /**
-   * The context.
-   */
-  trait Context extends Scope {
-
-    /**
-     * The format to test.
-     */
-    val format = new BearerAuthSchemeFormat()
   }
 }

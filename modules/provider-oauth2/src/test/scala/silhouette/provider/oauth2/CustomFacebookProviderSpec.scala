@@ -22,7 +22,7 @@ import java.nio.file.Paths
 import java.time.Clock
 
 import io.circe.Json
-import silhouette.http.BodyWrites._
+import silhouette.http.BodyWriter._
 import silhouette.http.Method.GET
 import silhouette.http._
 import silhouette.http.client.{ Request, Response }

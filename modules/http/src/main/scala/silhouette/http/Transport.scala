@@ -17,8 +17,6 @@
  */
 package silhouette.http
 
-import silhouette.{ Reads, Writes }
-
 /**
  * Marker trait for the transport config.
  */
@@ -35,6 +33,11 @@ trait Transport
  * The request transport handles payload which can be transported in a request.
  */
 trait RequestTransport extends Transport
+
+/**
+ * The response transport handles payload which can be transported in a response.
+ */
+trait ResponseTransport extends Transport
 
 /**
  * A request transport which can retrieve payload from a request.
@@ -70,11 +73,6 @@ trait SmuggleIntoRequest extends RequestTransport {
 }
 
 /**
- * The response transport handles payload which can be transported in a response.
- */
-trait ResponseTransport extends Transport
-
-/**
  * A response transport which can embed payload into a response.
  */
 trait EmbedIntoResponse extends ResponseTransport {
@@ -106,31 +104,31 @@ trait DiscardFromResponse extends ResponseTransport {
 }
 
 /**
- * A reads that tries to retrieve some payload from the request.
+ * A function that tries to retrieve some payload from the request.
  *
  * @tparam P The type of the payload.
  */
-trait RetrieveReads[P] extends Reads[Request, Option[P]]
+trait Retrieve[P] extends (Request => Option[P])
 
 /**
- * A writes that smuggles some payload into the request.
+ * A function that smuggles some payload into the request.
  *
  * @tparam R The type of the request.
  * @tparam P The type of the payload.
  */
-trait SmuggleWrites[R, P] extends Writes[(P, RequestPipeline[R]), RequestPipeline[R]]
+trait Smuggle[R, P] extends ((P, RequestPipeline[R]) => RequestPipeline[R])
 
 /**
- * A writes that embeds some payload into the response.
+ * A function that embeds some payload into the response.
  *
  * @tparam R The type of the response.
  * @tparam P The type of the payload.
  */
-trait EmbedWrites[R, P] extends Writes[(P, ResponsePipeline[R]), ResponsePipeline[R]]
+trait Embed[R, P] extends ((P, ResponsePipeline[R]) => ResponsePipeline[R])
 
 /**
- * A writes that discards some payload from the response.
+ * A function that discards some payload from the response.
  *
  * @tparam R The type of the response.
  */
-trait DiscardWrites[R] extends Writes[ResponsePipeline[R], ResponsePipeline[R]]
+trait Discard[R] extends (ResponsePipeline[R] => ResponsePipeline[R])

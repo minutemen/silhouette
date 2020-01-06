@@ -15,16 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.jwt
-
-import scala.util.Try
+package silhouette
 
 /**
- * Transforms a string into a [[Claims]] object.
+ * Authenticator related interfaces and implementations.
  */
-trait Reads extends silhouette.Reads[String, Try[Claims]]
+package object authenticator {
 
-/**
- * Transforms a [[Claims]] object into a string.
- */
-trait Writes extends silhouette.Writes[Claims, Try[String]]
+  /**
+   * Reads an authenticator from a source.
+   */
+  type AuthenticatorReader[F[_], S] = S => F[Authenticator]
+
+  /**
+   * Writes an authenticator to a target.
+   */
+  type AuthenticatorWriter[F[_], T] = Authenticator => F[T]
+}

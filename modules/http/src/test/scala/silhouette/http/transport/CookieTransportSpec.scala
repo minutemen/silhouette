@@ -44,7 +44,7 @@ class CookieTransportSpec extends Specification {
 
   "The `smuggle` method" should {
     "smuggle a cookie into the request" in new Context {
-      transport.smuggle("payload", requestPipeline).cookie("test") must beSome.like {
+      transport.smuggle("payload", requestPipeline).cookie("test") must beSome[Cookie].like {
         case cookie =>
           cookie.value must be equalTo "payload"
       }
@@ -53,7 +53,7 @@ class CookieTransportSpec extends Specification {
 
   "The `embed` method" should {
     "embed a cookie into the response" in new Context {
-      transport.embed("payload", responsePipeline).cookie("test") must beSome.like {
+      transport.embed("payload", responsePipeline).cookie("test") must beSome[Cookie].like {
         case cookie =>
           cookie.value must be equalTo "payload"
       }
@@ -62,7 +62,7 @@ class CookieTransportSpec extends Specification {
 
   "The `discard` method" should {
     "discard a cookie" in new Context {
-      transport.discard(responsePipeline).cookie("test") must beSome.like {
+      transport.discard(responsePipeline).cookie("test") must beSome[Cookie].like {
         case cookie =>
           cookie.value must be equalTo ""
           cookie.maxAge must beSome(-86400)
@@ -72,21 +72,20 @@ class CookieTransportSpec extends Specification {
 
   "The `RetrieveFromCookie` reads" should {
     "read some payload from a cookie stored in the request" in new Context {
-      RetrieveFromCookie("test").read(
+      RetrieveFromCookie("test")(
         requestPipeline.withCookies(Cookie("test", "payload"))
       ) must beSome("payload")
     }
 
     "return None if no cookie with the give name exists" in new Context {
-      RetrieveFromCookie("noz-existing").read(requestPipeline) must beNone
+      RetrieveFromCookie("noz-existing")(requestPipeline) must beNone
     }
   }
 
   "The `SmuggleIntoCookie` writes" should {
     "smuggle a cookie into the request" in new Context {
-      SmuggleIntoCookie(config)
-        .write(("payload", requestPipeline))
-        .cookie("test") must beSome.like {
+      SmuggleIntoCookie(config)("payload", requestPipeline)
+        .cookie("test") must beSome[Cookie].like {
           case cookie =>
             cookie.value must be equalTo "payload"
         }
@@ -95,9 +94,8 @@ class CookieTransportSpec extends Specification {
 
   "The `EmbedIntoCookie` writes" should {
     "embed a cookie into the response" in new Context {
-      EmbedIntoCookie(config)
-        .write(("payload", responsePipeline))
-        .cookie("test") must beSome.like {
+      EmbedIntoCookie(config)("payload", responsePipeline)
+        .cookie("test") must beSome[Cookie].like {
           case cookie =>
             cookie.value must be equalTo "payload"
         }
@@ -106,9 +104,8 @@ class CookieTransportSpec extends Specification {
 
   "The `DiscardFromCookie` writes" should {
     "discard a cookie" in new Context {
-      DiscardFromCookie(config)
-        .write(responsePipeline)
-        .cookie("test") must beSome.like {
+      DiscardFromCookie(config)(responsePipeline)
+        .cookie("test") must beSome[Cookie].like {
           case cookie =>
             cookie.value must be equalTo ""
             cookie.maxAge must beSome(-86400)

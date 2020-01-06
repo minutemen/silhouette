@@ -29,17 +29,17 @@ import org.jose4j.jwt.consumer.JwtConsumerBuilder
 import org.specs2.matcher.MatchResult
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import silhouette.jwt.jose4j.Jose4jReads._
-import silhouette.jwt.jose4j.Jose4jWrites._
+import silhouette.jwt.jose4j.Jose4jClaimReader._
+import silhouette.jwt.jose4j.Jose4jClaimWriter._
 import silhouette.jwt.{ Claims, JwtException, ReservedClaims }
 import silhouette.specs2.WithBouncyCastle
 
 import scala.util.Try
 
 /**
- * Test case for the [[Jose4jReads]] and [[Jose4jWrites]] classes.
+ * Test case for the [[Jose4jClaimReader]] and [[Jose4jClaimWriter]] classes.
  */
-class FormatSpec extends Specification with WithBouncyCastle {
+class TransformerSpec extends Specification with WithBouncyCastle {
 
   "The `transformer`" should {
     "transform a JWT with an `iss` claim" in new Context {
@@ -120,7 +120,7 @@ class FormatSpec extends Specification with WithBouncyCastle {
 
   "The `read` method" should {
     "throw a JwtException if an error occurred during decoding" in new Context {
-      reads.read("invalid.token") must beFailedTry.like {
+      reader("invalid.token") must beFailedTry.like {
         case e: JwtException => e.getMessage must be equalTo FraudulentJwtToken.format("invalid.token")
       }
     }
@@ -159,14 +159,14 @@ class FormatSpec extends Specification with WithBouncyCastle {
     }
 
     /**
-     * The reads to test.
+     * The reader to test.
      */
-    val reads = new Jose4jReads(consumer)
+    val reader = new Jose4jClaimReader(consumer)
 
     /**
-     * The writes to test.
+     * The writer to test.
      */
-    val writes = new Jose4jWrites(producer)
+    val writer = new Jose4jClaimWriter(producer)
 
     /**
      * Some custom claims.
@@ -202,9 +202,9 @@ class FormatSpec extends Specification with WithBouncyCastle {
      * @return A Specs2 match result.
      */
     protected def transform(claims: Claims): MatchResult[Any] = {
-      writes.write(claims) must beSuccessfulTry.like {
+      writer(claims) must beSuccessfulTry.like {
         case jwt =>
-          reads.read(jwt) must beSuccessfulTry.withValue(claims.copy(
+          reader(jwt) must beSuccessfulTry.withValue(claims.copy(
             expirationTime = claims.expirationTime.map(_.truncatedTo(ChronoUnit.SECONDS)),
             notBefore = claims.notBefore.map(_.truncatedTo(ChronoUnit.SECONDS)),
             issuedAt = claims.issuedAt.map(_.truncatedTo(ChronoUnit.SECONDS))
@@ -220,7 +220,7 @@ class FormatSpec extends Specification with WithBouncyCastle {
      */
     protected def reserved(claim: String): MatchResult[Any] = {
       val message = OverrideReservedClaim.format(claim, ReservedClaims.mkString(", "))
-      writes.write(Claims(custom = JsonObject(claim -> Json.fromString("test")))) must beFailedTry.like {
+      writer(Claims(custom = JsonObject(claim -> Json.fromString("test")))) must beFailedTry.like {
         case e: JwtException => e.getMessage must be equalTo message
       }
     }

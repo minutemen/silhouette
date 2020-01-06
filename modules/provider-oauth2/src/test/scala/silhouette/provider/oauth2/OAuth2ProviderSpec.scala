@@ -26,7 +26,7 @@ import org.specs2.matcher.ThrownExpectations
 import org.specs2.mock.Mockito
 import org.specs2.specification.Scope
 import silhouette.http.Body._
-import silhouette.http.BodyWrites._
+import silhouette.http.BodyWriter._
 import silhouette.http._
 import silhouette.http.client.{ Request, Response }
 import silhouette.provider.oauth2.OAuth2Provider._

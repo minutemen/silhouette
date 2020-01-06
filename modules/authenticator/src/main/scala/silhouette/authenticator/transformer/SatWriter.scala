@@ -15,42 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.authenticator.format
+package silhouette.authenticator.transformer
 
 import cats.effect.Sync
-import silhouette.authenticator.format.SatReads._
-import silhouette.authenticator.{ Authenticator, AuthenticatorException, Reads }
+import silhouette.authenticator.{ Authenticator, AuthenticatorWriter }
 
 /**
- * A reads which transforms a SAT (simple authentication token) into an authenticator.
+ * A transformation function that transforms an authenticator into a SAT (simple authentication token).
  *
  * A simple authentication token represents a string that cannot store authenticator related data in it. Instead
  * it needs a mapping between this string and the authenticator related data, which is commonly handled through a
- * backing store.
+ * backing store. This writes doesn't store the authenticator directly. This should be done in a
+ * [[silhouette.authenticator.TargetPipeline]] instead.
  *
- * @param reader The reader to retrieve the [[Authenticator]] for the given token from persistence layer.
  * @tparam F The type of the IO monad.
  */
-final case class SatReads[F[_]: Sync](reader: String => F[Option[Authenticator]]) extends Reads[F, String] {
+final case class SatWriter[F[_]: Sync]() extends AuthenticatorWriter[F, String] {
 
   /**
-   * Transforms a simple authentication token into an [[Authenticator]].
+   * Transforms an [[Authenticator]] into a simple authentication token.
    *
-   * @param token The simple authentication token to transform.
-   * @return An authenticator on success, an error on failure.
+   * @param authenticator The authenticator to transform.
+   * @return A simple authentication token on success, an error on failure.
    */
-  override def read(token: String): F[Authenticator] = Sync[F].flatMap(reader(token))(
-    _.fold[F[Authenticator]] {
-      Sync[F].raiseError(new AuthenticatorException(MissingAuthenticator.format(token)))
-    } {
-      Sync[F].pure
-    }
-  )
-}
-
-/**
- * The companion object.
- */
-object SatReads {
-  val MissingAuthenticator: String = "Cannot get authenticator for token `%s` from given reader"
+  override def apply(authenticator: Authenticator): F[String] = Sync[F].pure(authenticator.id)
 }

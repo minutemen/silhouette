@@ -19,7 +19,7 @@ package silhouette.provider.oauth2
 
 import java.nio.file.Paths
 
-import silhouette.http.BodyWrites._
+import silhouette.http.BodyWriter._
 import silhouette.http.Method.GET
 import silhouette.http.client.{ Request, Response }
 import silhouette.http.{ Body, Header, Status }

@@ -17,22 +17,11 @@
  */
 package silhouette
 
-/**
- * A simple non-empty list implementation.
- */
-case class NonEmptyList[+A](head: A, tail: List[A] = List()) {
-
-  /**
-   * Converts the non-empty list into a [[List]].
-   *
-   * @return A [[List]] representation of this non-empty list.
-   */
-  def toList: List[A] = head +: tail
-}
+import org.specs2.mutable.Specification
 
 /**
- * The companion object.
+ * Test case for the [[Maybe]] type and it's transformers.
  */
-object NonEmptyList {
-  def apply[A](head: A, tail: A*): NonEmptyList[A] = new NonEmptyList[A](head, tail.toList)
+class MaybeSpec extends Specification {
+
 }

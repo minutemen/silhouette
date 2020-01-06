@@ -19,8 +19,8 @@ package silhouette.jwt.jose4j
 
 import io.circe.{ Json, JsonNumber, JsonObject }
 import org.jose4j.jwt.{ JwtClaims, NumericDate }
-import silhouette.jwt.jose4j.Jose4jWrites._
-import silhouette.jwt.{ JwtException, Writes }
+import silhouette.jwt.jose4j.Jose4jClaimWriter._
+import silhouette.jwt.{ ClaimWriter, JwtException }
 
 import scala.jdk.CollectionConverters._
 import scala.util.{ Failure, Success, Try }
@@ -32,7 +32,7 @@ import scala.util.{ Failure, Success, Try }
  *
  * @param producer The JWT producer.
  */
-final case class Jose4jWrites(producer: Jose4jProducer) extends Writes {
+final case class Jose4jClaimWriter(producer: Jose4jProducer) extends ClaimWriter {
 
   /**
    * Transforms a JWT claims object into a JWT as string.
@@ -40,7 +40,7 @@ final case class Jose4jWrites(producer: Jose4jProducer) extends Writes {
    * @param jwt The JWT claims object to transform.
    * @return The JWT string representation or an error if the JWT claims object couldn't be transformed.
    */
-  override def write(jwt: silhouette.jwt.Claims): Try[String] = toJose4j(jwt).map(producer.produce)
+  override def apply(jwt: silhouette.jwt.Claims): Try[String] = toJose4j(jwt).map(producer.produce)
 
   /**
    * Converts the Silhouette claims instance to a jose4j claims instance.
@@ -95,7 +95,7 @@ final case class Jose4jWrites(producer: Jose4jProducer) extends Writes {
 /**
  * The companion object.
  */
-object Jose4jWrites {
+object Jose4jClaimWriter {
 
   /**
    * The error messages.

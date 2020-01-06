@@ -33,7 +33,7 @@ sealed trait Pipeline
  * An authenticator can be read from different sources. The most common case would be to read the authenticator
  * from the request. But it would also be possible to read the authenticator from an actor or any other source.
  * If the source holds a serialized representation of an authenticator, we must transform it into an authenticator
- * instance by applying an authenticator [[Reads]]. Then we could check the validity of the authenticator by applying
+ * instance by applying an [[AuthenticatorReader]]. Then we could check the validity of the authenticator by applying
  * one or multiple validators. As next we retrieve an [[Identity]] for our authenticator, either from a backing store
  * or any other service. At last we could apply some authorization rules to our identity. Any of these steps in our
  * pipeline can be represented by a [[AuthState]] that describes the result of each step.
@@ -51,27 +51,7 @@ case class AuthenticationPipeline[F[_]: Sync: Parallel, S, I <: Identity](
   pipeline: S => F[Option[Authenticator]],
   identityReader: LoginInfo => F[Option[I]],
   validators: Set[Validator[F]] = Set.empty[Validator[F]]
-) extends silhouette.Reads[S, F[AuthState[I, Authenticator]]] with Pipeline { self =>
-
-  /**
-   * Monkey patches a `F[Authenticator]` to add a `toState` method which allows to transforms an [[Authenticator]]
-   * into an [[AuthState]].
-   *
-   * @param value The instance to patch.
-   */
-  final implicit class AuthenticatorFuture(value: F[Authenticator]) {
-    def toState: F[AuthState[I, Authenticator]] = self.toState[Authenticator](value, self.toState)
-  }
-
-  /**
-   * Monkey patches a `Future[Option[Authenticator]]` to add a `toState` method which allows to transforms
-   * an optional [[Authenticator]] into an [[AuthState]].
-   *
-   * @param value The instance to patch.
-   */
-  final implicit class OptionalAuthenticatorF(value: F[Option[Authenticator]]) {
-    def toState: F[AuthState[I, Authenticator]] = self.toState[Option[Authenticator]](value, self.toState)
-  }
+) extends (S => F[AuthState[I, Authenticator]]) with Pipeline { self =>
 
   /**
    * Apply the pipeline.
@@ -79,22 +59,8 @@ case class AuthenticationPipeline[F[_]: Sync: Parallel, S, I <: Identity](
    * @param requestPipeline The request pipeline to retrieve the authenticator from.
    * @return An authentication state.
    */
-  override def read(requestPipeline: S): F[AuthState[I, Authenticator]] = pipeline(requestPipeline).toState
-
-  /**
-   * Transforms the given IO monad into an authentication state by applying another transformation on the result
-   * of the IO monad.
-   *
-   * @param io          The IO monad to apply the transformer to.
-   * @param transformer The transformer to apply to the IO monad value.
-   * @tparam T The type of the IO monad value.
-   * @return The [[AuthState]].
-   */
-  final protected def toState[T](
-    io: F[T],
-    transformer: T => F[AuthState[I, Authenticator]]
-  ): F[AuthState[I, Authenticator]] = {
-    Sync[F].recover(Sync[F].flatMap(io)(transformer)) { case e: Exception => AuthFailure(e) }
+  override def apply(requestPipeline: S): F[AuthState[I, Authenticator]] = {
+    Sync[F].recover(Sync[F].flatMap(pipeline(requestPipeline))(toState)) { case e: Exception => AuthFailure(e) }
   }
 
   /**
@@ -135,13 +101,14 @@ case class AuthenticationPipeline[F[_]: Sync: Parallel, S, I <: Identity](
  * @tparam T The type of the target.
  */
 final case class TargetPipeline[F[_], T](pipeline: Authenticator => T => F[T])
-  extends silhouette.Writes[(Authenticator, T), F[T]] {
+  extends ((Authenticator, T) => F[T]) {
 
   /**
    * Writes an [[Authenticator]] to a target.
    *
-   * @param in A tuple consisting of the [[Authenticator]] and the target into which it should be written.
+   * @param authenticator The [[Authenticator]] to write to the target.
+   * @param target The target to write to.
    * @return The target with the [[Authenticator]].
    */
-  override def write(in: (Authenticator, T)): F[T] = pipeline(in._1)(in._2)
+  override def apply(authenticator: Authenticator, target: T): F[T] = pipeline(authenticator)(target)
 }

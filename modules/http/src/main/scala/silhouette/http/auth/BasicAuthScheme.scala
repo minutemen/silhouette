@@ -17,18 +17,15 @@
  */
 package silhouette.http.auth
 
-import silhouette.http.auth.BasicAuthSchemeFormat._
+import silhouette.TransformException
 import silhouette.http.{ AuthScheme, BasicCredentials }
-import silhouette.{ Reads, TransformException, Writes }
 
 import scala.util.{ Failure, Success, Try }
 
 /**
- * Handles the transformation of the "Basic" `Authorization` header to [[BasicCredentials]] and vice versa.
+ * A transformation function that transforms a "Basic" `Authorization` header into a [[BasicCredentials]] instance.
  */
-final case class BasicAuthSchemeFormat()
-  extends Reads[String, Try[BasicCredentials]]
-  with Writes[BasicCredentials, String] {
+case object BasicAuthSchemeReader extends (String => Try[BasicCredentials]) {
 
   /**
    * Transforms the "Basic" `Authorization` header value into some [[BasicCredentials]].
@@ -36,7 +33,7 @@ final case class BasicAuthSchemeFormat()
    * @param value The "basic" `Authorization` header value.
    * @return Some [[BasicCredentials]] on success or a failure if the value could not be parsed.
    */
-  override def read(value: String): Try[BasicCredentials] = value match {
+  override def apply(value: String): Try[BasicCredentials] = value match {
     case AuthScheme.Basic(payload) => payload match {
       case BasicCredentials(credentials) =>
         Success(credentials)
@@ -48,20 +45,22 @@ final case class BasicAuthSchemeFormat()
   }
 
   /**
+   * The error messages.
+   */
+  val MissingBasicAuthIdentifier = "Header doesn't start with 'Basic '"
+  val InvalidBasicAuthHeader = "A 'Basic' auth header must consists of two parts divided by a colon"
+}
+
+/**
+ * A transformation function that transforms a [[BasicCredentials]] instance into a "Basic" `Authorization` header.
+ */
+case object BasicAuthSchemeWriter extends (BasicCredentials => String) {
+
+  /**
    * Transforms [[BasicCredentials]] into a "Basic" `Authorization` header value.
    *
    * @param credentials The credentials to encode.
    * @return The "Basic" `Authorization` header value.
    */
-  override def write(credentials: BasicCredentials): String = {
-    AuthScheme.Basic(BasicCredentials(credentials))
-  }
-}
-
-/**
- * The companion object of the [[BasicAuthSchemeFormat]] class.
- */
-object BasicAuthSchemeFormat {
-  val MissingBasicAuthIdentifier = "Header doesn't start with 'Basic '"
-  val InvalidBasicAuthHeader = "A 'Basic' auth header must consists of two parts divided by a colon"
+  override def apply(credentials: BasicCredentials): String = AuthScheme.Basic(BasicCredentials(credentials))
 }

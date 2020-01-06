@@ -47,11 +47,11 @@ final case class QueryStringTransport(name: String)
 }
 
 /**
- * A reads that tries to retrieve some payload, stored in a query param, from the given request.
+ * A function that tries to retrieve some payload, stored in a query param, from the given request.
  *
  * @param name The name of the query param in which the payload will be transported.
  */
-final case class RetrieveFromQueryString(name: String) extends RetrieveReads[String] {
+final case class RetrieveFromQueryString(name: String) extends Retrieve[String] {
 
   /**
    * Reads payload from a query string param stored in the given request.
@@ -59,25 +59,25 @@ final case class RetrieveFromQueryString(name: String) extends RetrieveReads[Str
    * @param request The request pipeline.
    * @return The retrieved payload.
    */
-  override def read(request: Request): Option[String] = QueryStringTransport(name).retrieve(request)
+  override def apply(request: Request): Option[String] = QueryStringTransport(name).retrieve(request)
 }
 
 /**
- * A writes that smuggles a query param with the given payload into the given request.
+ * A function that smuggles a query param with the given payload into the given request.
  *
  * @param name The name of the query param in which the payload will be transported.
  * @tparam R The type of the response.
  */
-final case class SmuggleIntoQueryString[R](name: String) extends SmuggleWrites[R, String] {
+final case class SmuggleIntoQueryString[R](name: String) extends Smuggle[R, String] {
 
   /**
    * Merges some payload and a [[RequestPipeline]] into a [[RequestPipeline]] that contains a query param with the
    * given payload as value.
    *
-   * @param in A tuple consisting of the payload to embed in a query param and the [[RequestPipeline]] in which the
-   *           query param should be embedded.
+   * @param payload         The payload to embed in a query param.
+   * @param requestPipeline The [[RequestPipeline]] in which the query param should be embedded.
    * @return The request pipeline.
    */
-  override def write(in: (String, RequestPipeline[R])): RequestPipeline[R] =
-    QueryStringTransport(name).smuggle[R] _ tupled in
+  override def apply(payload: String, requestPipeline: RequestPipeline[R]): RequestPipeline[R] =
+    QueryStringTransport(name).smuggle(payload, requestPipeline)
 }

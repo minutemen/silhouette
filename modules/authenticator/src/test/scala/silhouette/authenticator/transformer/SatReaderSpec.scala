@@ -15,23 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.authenticator.format
+package silhouette.authenticator.transformer
 
 import cats.effect.SyncIO
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import silhouette.LoginInfo
-import silhouette.authenticator.Authenticator
+import silhouette.authenticator.transformer.SatReader.MissingAuthenticator
+import silhouette.authenticator.{ Authenticator, AuthenticatorException }
 
 /**
- * Test case for the [[SatWrites]] class.
+ * Test case for the [[SatReader]] class.
  */
-class SatWritesSpec extends Specification with Mockito {
+class SatReaderSpec extends Specification with Mockito {
 
-  "The `write` method" should {
-    "return the authenticator ID as token" in new Context {
-      satWrites.write(authenticator).unsafeRunSync() must be equalTo "id"
+  "The `read` method" should {
+    "throw an `AuthenticatorException` if no authenticator couldn't be found for the given token" in new Context {
+      override val satReader = SatReader[SyncIO](_ => SyncIO.pure(None))
+
+      satReader("some.token").unsafeRunSync() must throwA[AuthenticatorException].like {
+        case e =>
+          e.getMessage must be equalTo MissingAuthenticator.format("some.token")
+      }
+    }
+
+    "return the found authenticator" in new Context {
+      satReader("some.token").unsafeRunSync() must be equalTo authenticator
     }
   }
 
@@ -46,8 +56,8 @@ class SatWritesSpec extends Specification with Mockito {
     val authenticator = Authenticator("id", LoginInfo("credentials", "john@doe.com"))
 
     /**
-     * The SAT authenticator writes.
+     * The SAT authenticator reader.
      */
-    val satWrites = SatWrites[SyncIO]()
+    val satReader = SatReader[SyncIO](_ => SyncIO.pure(Some(authenticator)))
   }
 }

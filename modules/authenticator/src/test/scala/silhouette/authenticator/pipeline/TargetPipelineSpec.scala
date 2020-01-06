@@ -22,7 +22,7 @@ import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import silhouette.LoginInfo
-import silhouette.authenticator.{ Authenticator, TargetPipeline, Writes }
+import silhouette.authenticator.{ Authenticator, AuthenticatorWriter, TargetPipeline }
 import silhouette.http.{ Fake, Header }
 
 /**
@@ -33,13 +33,13 @@ class TargetPipelineSpec extends Specification with Mockito {
   args(skipAll = true)
   "The `write` method" should {
     "write the authenticator with the `statefulWriter`" in new Context {
-      pipeline.write(authenticator -> responsePipeline).unsafeRunSync()
+      pipeline(authenticator, responsePipeline).unsafeRunSync()
 
       there was one(asyncStep).apply(authenticator)
     }
 
     "embed the authenticator into the response" in new Context {
-      pipeline.write(authenticator -> responsePipeline).unsafeRunSync() must
+      pipeline(authenticator, responsePipeline).unsafeRunSync() must
         beLike[Fake.ResponsePipeline] {
           case response =>
             response.header("test") must beSome(Header("test", authenticator.toString))
@@ -88,9 +88,9 @@ class TargetPipelineSpec extends Specification with Mockito {
     /**
      * A writes that transforms the [[Authenticator]] into a serialized form of the [[Authenticator]].
      */
-    val authenticatorWrites = {
-      val m = mock[Writes[SyncIO, String]]
-      m.write(authenticator) returns SyncIO.pure(authenticator.toString)
+    val authenticatorWriter = {
+      val m = mock[AuthenticatorWriter[SyncIO, String]]
+      m.apply(authenticator) returns SyncIO.pure(authenticator.toString)
       m
     }
 

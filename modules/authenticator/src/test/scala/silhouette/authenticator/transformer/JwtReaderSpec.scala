@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.authenticator.format
+package silhouette.authenticator.transformer
 
 import java.time.Instant
 
@@ -26,89 +26,89 @@ import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import silhouette.LoginInfo
-import silhouette.authenticator.format.JwtReads._
+import silhouette.authenticator.transformer.JwtReader._
 import silhouette.authenticator.{ Authenticator, AuthenticatorException }
 import silhouette.crypto.Base64
-import silhouette.jwt.{ Claims, Reads }
+import silhouette.jwt.{ ClaimReader, Claims }
 
 import scala.util.{ Failure, Try }
 
 /**
- * Test case for the [[JwtReads]] class.
+ * Test case for the [[JwtReader]] class.
  */
-class JwtReadsSpec extends Specification with Mockito {
+class JwtReaderSpec extends Specification with Mockito {
 
   "The `read` method" should {
     "return a failed future if the underlying reads returns a `Failure`" in new Context {
       val exception = new RuntimeException("test")
-      underlyingJwtReads.read(jwt) returns Failure(exception)
+      claimReader(jwt) returns Failure(exception)
 
-      jwtReads.read(jwt).unsafeRunSync() must throwA[RuntimeException].like {
+      jwtReader(jwt).unsafeRunSync() must throwA[RuntimeException].like {
         case e =>
           e must be equalTo exception
       }
     }
 
     "throw an `AuthenticatorException` if the `jwtID` isn't set in a claim" in new Context {
-      underlyingJwtReads.read(jwt) returns Try(claims.copy(jwtID = None))
+      claimReader(jwt) returns Try(claims.copy(jwtID = None))
 
-      jwtReads.read(jwt).unsafeRunSync() must throwA[AuthenticatorException].like {
+      jwtReader(jwt).unsafeRunSync() must throwA[AuthenticatorException].like {
         case e =>
           e.getMessage must be equalTo MissingClaimValue.format("jwtID")
       }
     }
 
     "throw an `AuthenticatorException` if the `subject` isn't set in a claim" in new Context {
-      underlyingJwtReads.read(jwt) returns Try(claims.copy(subject = None))
+      claimReader(jwt) returns Try(claims.copy(subject = None))
 
-      jwtReads.read(jwt).unsafeRunSync() must throwA[AuthenticatorException].like {
+      jwtReader(jwt).unsafeRunSync() must throwA[AuthenticatorException].like {
         case e =>
           e.getMessage must be equalTo MissingClaimValue.format("subject")
       }
     }
 
     "throw an `AuthenticatorException` if the `subject` claim cannot be parsed" in new Context {
-      underlyingJwtReads.read(jwt) returns Try(claims.copy(subject = Some(Base64.encode("invalid"))))
+      claimReader(jwt) returns Try(claims.copy(subject = Some(Base64.encode("invalid"))))
 
-      jwtReads.read(jwt).unsafeRunSync() must throwA[AuthenticatorException].like {
+      jwtReader(jwt).unsafeRunSync() must throwA[AuthenticatorException].like {
         case e =>
           e.getMessage must be equalTo JsonParseError.format("invalid")
       }
     }
 
     "return the tags as empty array if the `tags` in the custom claim JSON isn't an array" in new Context {
-      underlyingJwtReads.read(jwt) returns Try(claims.copy(custom = JsonObject(
+      claimReader(jwt) returns Try(claims.copy(custom = JsonObject(
         "tags" -> Json.fromString("some string")
       )))
 
-      jwtReads.read(jwt).unsafeRunSync() must beLike[Authenticator] {
+      jwtReader(jwt).unsafeRunSync() must beLike[Authenticator] {
         case value =>
           value.tags must be equalTo Seq()
       }
     }
 
     "return the `tags` as empty array if the values in the JSON `tags` array are not strings" in new Context {
-      underlyingJwtReads.read(jwt) returns Try(claims.copy(custom = JsonObject("tags" -> Json.arr(Json.fromInt(1)))))
+      claimReader(jwt) returns Try(claims.copy(custom = JsonObject("tags" -> Json.arr(Json.fromInt(1)))))
 
-      jwtReads.read(jwt).unsafeRunSync() must beLike[Authenticator] {
+      jwtReader(jwt).unsafeRunSync() must beLike[Authenticator] {
         case value =>
           value.tags must be equalTo Seq()
       }
     }
 
     "return the `fingerprint` as None if the `fingerprint` in the custom claim JSON isn't a string" in new Context {
-      underlyingJwtReads.read(jwt) returns Try(claims.copy(custom = JsonObject("fingerprint" -> Json.fromInt(1))))
+      claimReader(jwt) returns Try(claims.copy(custom = JsonObject("fingerprint" -> Json.fromInt(1))))
 
-      jwtReads.read(jwt).unsafeRunSync() must beLike[Authenticator] {
+      jwtReader(jwt).unsafeRunSync() must beLike[Authenticator] {
         case value =>
           value.fingerprint must beNone
       }
     }
 
     "create an authenticator representation from the JWT" in new Context {
-      underlyingJwtReads.read(jwt) returns Try(claims)
+      claimReader(jwt) returns Try(claims)
 
-      jwtReads.read(jwt).unsafeRunSync() must be equalTo authenticator
+      jwtReader(jwt).unsafeRunSync() must be equalTo authenticator
     }
   }
 
@@ -166,13 +166,13 @@ class JwtReadsSpec extends Specification with Mockito {
     )
 
     /**
-     * A mock of the underlying JWT reads.
+     * A mock of the underlying JWT claim reader.
      */
-    val underlyingJwtReads = mock[Reads]
+    val claimReader = mock[ClaimReader]
 
     /**
-     * The JWT authenticator reads.
+     * The JWT authenticator reader.
      */
-    val jwtReads = JwtReads[SyncIO](underlyingJwtReads)
+    val jwtReader = JwtReader[SyncIO](claimReader)
   }
 }

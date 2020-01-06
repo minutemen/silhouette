@@ -17,6 +17,7 @@
  */
 package silhouette.provider
 
+import cats.data.NonEmptyList
 import com.typesafe.scalalogging.LazyLogging
 import silhouette._
 import silhouette.http.{ RequestPipeline, ResponsePipeline }
