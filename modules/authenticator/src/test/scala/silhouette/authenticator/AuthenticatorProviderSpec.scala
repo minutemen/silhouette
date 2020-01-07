@@ -25,8 +25,9 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.{ AuthFailure, AuthState, Authenticated, Identity, InvalidCredentials, LoginInfo, MissingCredentials, MissingIdentity }
 import silhouette.authenticator.Validator.{ Invalid, Valid }
-//import silhouette.authenticator.pipeline.Dsl
-//import silhouette.http.transport.RetrieveFromCookie
+import silhouette.authenticator.pipeline.Dsl._
+import silhouette.authenticator.pipeline.Dsl.Implicits._
+import silhouette.http.transport.RetrieveFromCookie
 import silhouette.http.{ Cookie, Fake }
 
 /**
@@ -224,15 +225,12 @@ class AuthenticatorProviderSpec(ev: ExecutionEnv) extends Specification with Moc
      */
     val validator = mock[Validator[IO]].smart
 
-    //import silhouette.Maybe.Implicits._
-
     /**
      * The provider to test.
      */
     val provider = new AuthenticatorProvider[IO, Fake.Request, Fake.Response, User](
       AuthenticationPipeline[IO, Fake.RequestPipeline, User](
-        _ => IO.pure(Some(Authenticator("test", LoginInfo("", "")))),
-        //request => (Dsl.toReadsPipeline(RetrieveFromCookie("test")) >> authenticatorReads).read(request),
+        pipeline(__(RetrieveFromCookie("test")) >> authenticatorReader),
         identityReader, Set(validator)
       ),
       TargetPipeline(_ => _ => IO.pure(Fake.response))
