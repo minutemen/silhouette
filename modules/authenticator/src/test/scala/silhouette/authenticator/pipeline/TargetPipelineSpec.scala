@@ -25,7 +25,7 @@ import org.specs2.mutable.Specification
 import silhouette.LoginInfo
 import silhouette.authenticator.pipeline.Dsl._
 import silhouette.authenticator.{ Authenticator, AuthenticatorWriter, TargetPipeline }
-import silhouette.http.transport.EmbedIntoHeader
+import silhouette.http.transport.{ CookieTransportConfig, DiscardCookie, EmbedIntoHeader }
 import silhouette.http.{ Fake, Header }
 
 /**
@@ -35,13 +35,13 @@ class TargetPipelineSpec extends Specification with Mockito {
 
   "The `write` method" should {
     "write the authenticator with the `statefulWriter`" in new Context {
-      pipeline(authenticator, responsePipeline).unsafeRunSync()
+      embedPipeline(authenticator, responsePipeline).unsafeRunSync()
 
       there was one(ioStep).apply(authenticator)
     }
 
     "embed the authenticator into the response" in new Context {
-      pipeline(authenticator, responsePipeline).unsafeRunSync() must
+      embedPipeline(authenticator, responsePipeline).unsafeRunSync() must
         beLike[Fake.ResponsePipeline] {
           case response =>
             response.header("test") must beSome(Header("test", authenticator.toString))
@@ -97,10 +97,24 @@ class TargetPipelineSpec extends Specification with Mockito {
     }
 
     /**
-     * The pipeline to test.
+     * The embed pipeline to test.
      */
-    val pipeline = TargetPipeline[SyncIO, Fake.ResponsePipeline](target =>
-      |>(pureStep) >> pureStep >> ioStep >> authenticatorWriter >> EmbedIntoHeader("test")(target)
+    val embedPipeline = TargetPipeline[SyncIO, Fake.ResponsePipeline](target =>
+      ~pureStep >> pureStep >> ioStep >> pureStep >> authenticatorWriter >> EmbedIntoHeader("test")(target)
+    )
+
+    /**
+     * The discard pipeline to test.
+     */
+    val discardPipeline = TargetPipeline[SyncIO, Fake.ResponsePipeline](target =>
+      xx >> DiscardCookie(CookieTransportConfig("test"))(target)
+    )
+
+    /**
+     * The discard pipeline to test.
+     */
+    val discardPipeline1 = TargetPipeline[SyncIO, Fake.ResponsePipeline](target =>
+      ~ioStep xx DiscardCookie(CookieTransportConfig("test"))(target)
     )
   }
 }

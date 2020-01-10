@@ -226,12 +226,12 @@ class AuthenticatorProviderSpec extends Specification with Mockito {
      */
     val provider = new AuthenticatorProvider[SyncIO, Fake.Request, Fake.Response, User](
       AuthenticationPipeline[SyncIO, Fake.RequestPipeline, User](
-        |>(RetrieveFromCookie("test")) >> authenticatorReader,
+        ~RetrieveFromCookie("test") >> authenticatorReader,
         identityReader,
         Set(validator)
       ),
       TargetPipeline[SyncIO, Fake.ResponsePipeline](target =>
-        |>(authenticatorWriter) >> EmbedIntoCookie(CookieTransportConfig("test"))(target)
+        ~authenticatorWriter >> EmbedIntoCookie(CookieTransportConfig("test"))(target)
       )
     )
   }

@@ -162,7 +162,7 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
      * The pipeline to test.
      */
     val pipeline = AuthenticationPipeline[SyncIO, Fake.RequestPipeline, User](
-      |>(RetrieveFromCookie("test")) >> authenticatorReader,
+      ~RetrieveFromCookie("test") >> authenticatorReader,
       identityReader,
       Set(validator)
     )

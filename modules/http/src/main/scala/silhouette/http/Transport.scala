@@ -94,7 +94,7 @@ trait EmbedIntoResponse extends ResponseTransport {
 trait DiscardFromResponse extends ResponseTransport {
 
   /**
-   * Manipulates the response so that it removes payload stored on the client.
+   * Manipulates the response so that it removes payload from it.
    *
    * @param response The response pipeline to manipulate.
    * @tparam P The type of the response.
@@ -143,4 +143,10 @@ trait Embed[P, R] extends (P => ResponsePipeline[R]) {
  *
  * @tparam R The type of the response.
  */
-trait Discard[R] extends (ResponsePipeline[R] => ResponsePipeline[R])
+trait Discard[R] extends (Unit => ResponsePipeline[R]) {
+
+  /**
+   * The response pipeline from which the payload should be discarded.
+   */
+  protected val responsePipeline: ResponsePipeline[R]
+}

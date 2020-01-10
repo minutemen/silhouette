@@ -88,10 +88,8 @@ final case class CookieTransport(config: CookieTransportConfig)
    * @tparam R The type of the response.
    * @return The manipulated response pipeline.
    */
-  override def discard[R](response: ResponsePipeline[R]): ResponsePipeline[R] = {
-    val discardingCookie = cookie(value = "").copy(maxAge = Some(-86400))
-    response.withCookies(discardingCookie)
-  }
+  override def discard[R](response: ResponsePipeline[R]): ResponsePipeline[R] =
+    response.withCookies(cookie(value = "").copy(maxAge = Some(-86400)))
 
   /**
    * Creates a cookie based on the config and the given value.
@@ -172,19 +170,21 @@ final case class EmbedIntoCookie[R](config: CookieTransportConfig)(
 }
 
 /**
- * A function that embeds a discarding cookie into the given response.
+ * A function that discards a cookie on the client.
  *
- * @param config The transport config.
+ * @param config           The transport config.
+ * @param responsePipeline The response pipeline in which the discarding cookie should be embedded.
  * @tparam R The type of the response.
  */
-final case class DiscardFromCookie[R](config: CookieTransportConfig) extends Discard[R] {
+final case class DiscardCookie[R](config: CookieTransportConfig)(
+  protected val responsePipeline: ResponsePipeline[R]
+) extends Discard[R] {
 
   /**
-   * Takes a [[ResponsePipeline]] and embeds a discarding cookie into it.
+   * Embeds a discarding cookie into the [[ResponsePipeline]].
    *
-   * @param responsePipeline The response pipeline in which the discarding cookie should be embedded.
    * @return The response pipeline with the embedded discarding cookie.
    */
-  override def apply(responsePipeline: ResponsePipeline[R]): ResponsePipeline[R] =
+  override def apply(unit: Unit = ()): ResponsePipeline[R] =
     CookieTransport(config).discard(responsePipeline)
 }

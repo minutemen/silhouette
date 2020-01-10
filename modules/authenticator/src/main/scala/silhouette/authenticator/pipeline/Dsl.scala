@@ -26,6 +26,7 @@ import scala.util.Try
 /**
  * A simple DSL to model authenticator pipelines.
  */
+// TODO: Add doc examples
 object Dsl extends DslLowPriorityImplicits {
 
   /**
@@ -73,12 +74,42 @@ object Dsl extends DslLowPriorityImplicits {
      * @tparam A The type of the function parameter.
      * @tparam B The type the function returns.
      * @tparam C The type that will be stored in [[Maybe]].
-     * @return A [[KleisliM]] from a function `A` => `B`.
+     * @return A [[KleisliM]] for a function `A` => `B`.
      */
     def apply[F[_], A, B, C](f: A => B)(
       implicit
       writes: MaybeWriter[F, B, C]
     ): KleisliM[F, A, C] = Kleisli((a: A) => writes(f(a)))
+
+    /**
+     * Constructs a [[KleisliM]] from a function [[Any]] => [[Unit]].
+     *
+     * This can be used to discard a value in a pipeline and set it to [[Unit]].
+     *
+     * @tparam F The type of the IO monad.
+     * @return A [[KleisliM]] for a function [[Any]] => [[Unit]].
+     */
+    def discard[F[_]: Sync]: KleisliM[F, Any, Unit] = Kleisli((_: Any) => EitherT.pure[F, Throwable](()))
+  }
+
+  /**
+   * Monkey patches a function `A` => `B`.
+   *
+   * @param f      The function to patch.
+   * @param writes The writes that transforms the value of the function `A` => `B` into a [[KleisliM]].
+   * @tparam F The type of the IO monad.
+   * @tparam A The type of the function parameter.
+   * @tparam B The type the function returns.
+   * @tparam C The type that will be stored in [[Maybe]].
+   */
+  implicit class Function1Ops[F[_]: Sync, A, B, C](f: A => B)(implicit writes: MaybeWriter[F, B, C]) {
+
+    /**
+     * Start a pipeline by providing the unary operator `~` for a function `A` => `B`.
+     *
+     * @return A [[KleisliM]] for the function `A` => `B`.
+     */
+    def unary_~ : KleisliM[F, A, C] = KleisliM(f)
   }
 
   /**
@@ -92,9 +123,25 @@ object Dsl extends DslLowPriorityImplicits {
   implicit class KleisliMOps[F[_]: Sync, A, B](kleisliM: KleisliM[F, A, B]) {
 
     /**
+     * Composes two functions.
+     *
      * An alias for the [[Kleisli.andThen]] function that allows to pass a [[KleisliM]] instance.
+     *
+     * @param k The function to compose.
+     * @tparam C The type the function returns after the composition.
+     * @return A new [[KleisliM]] from `A` to `C`.
      */
     def >>[C](k: KleisliM[F, B, C]): KleisliM[F, A, C] = kleisliM.andThen(k)
+
+    /**
+     * A function that discards the function parameter [[B]] by changing it to [[Unit]] before composing it with
+     * the given [[KleisliM]].
+     *
+     * @param k The function to compose.
+     * @tparam C The type the function returns after the composition.
+     * @return A new [[KleisliM]] from `A` to `C`.
+     */
+    def xx[C](k: KleisliM[F, Unit, C]): KleisliM[F, A, C] = KleisliM.discard >> k
   }
 
   /**
@@ -144,7 +191,7 @@ object Dsl extends DslLowPriorityImplicits {
     } yield v
 
   /**
-   * Constructs a [[KleisliM]] from a function `A` => `B`.
+   * Provides an implicit conversion from a function `A` => `B` to [[KleisliM]] .
    *
    * @param f      The function to convert.
    * @param writes The writes that transforms the value of the function `A` => `B` into a [[KleisliM]].
@@ -160,20 +207,16 @@ object Dsl extends DslLowPriorityImplicits {
   ): Dsl.KleisliM[F, A, C] = Dsl.KleisliM(f)
 
   /**
-   * Constructs a [[KleisliM]] from a function `A` => `B`.
+   * An alias for the [[KleisliM.discard]] function.
    *
-   * @param f      The function to convert.
-   * @param writes The writes that transforms the value of the function `A` => `B` into a [[KleisliM]].
+   * Constructs a [[KleisliM]] from a function [[Any]] => [[Unit]].
+   *
+   * This can be used to discard a value in a pipeline and set it to [[Unit]].
+   *
    * @tparam F The type of the IO monad.
-   * @tparam A The type of the function parameter.
-   * @tparam B The type the function returns.
-   * @tparam C The type that will be stored in [[Maybe]].
-   * @return A [[KleisliM]] from a function `A` => `B`.
+   * @return A [[KleisliM]] for a function [[Any]] => [[Unit]].
    */
-  def |>[F[_], A, B, C](f: A => B)(
-    implicit
-    writes: MaybeWriter[F, B, C]
-  ): KleisliM[F, A, C] = KleisliM(f)
+  def xx[F[_]: Sync]: KleisliM[F, Any, Unit] = KleisliM.discard
 }
 
 /**
