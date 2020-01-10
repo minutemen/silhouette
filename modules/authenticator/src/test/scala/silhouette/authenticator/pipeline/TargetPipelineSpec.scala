@@ -18,24 +18,26 @@
 package silhouette.authenticator.pipeline
 
 import cats.effect.SyncIO
+import cats.effect.SyncIO._
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import silhouette.LoginInfo
+import silhouette.authenticator.pipeline.Dsl._
 import silhouette.authenticator.{ Authenticator, AuthenticatorWriter, TargetPipeline }
+import silhouette.http.transport.EmbedIntoHeader
 import silhouette.http.{ Fake, Header }
 
 /**
  * Test case for the [[TargetPipeline]] class.
  */
 class TargetPipelineSpec extends Specification with Mockito {
-  // TODO: Fix tests
-  args(skipAll = true)
+
   "The `write` method" should {
     "write the authenticator with the `statefulWriter`" in new Context {
       pipeline(authenticator, responsePipeline).unsafeRunSync()
 
-      there was one(asyncStep).apply(authenticator)
+      there was one(ioStep).apply(authenticator)
     }
 
     "embed the authenticator into the response" in new Context {
@@ -68,19 +70,19 @@ class TargetPipelineSpec extends Specification with Mockito {
     val responsePipeline = Fake.response
 
     /**
-     * An `AsyncStep` implementation.
+     * An `IO` step implementation.
      */
-    val asyncStep = {
-      val m = mock[AsyncStep[SyncIO]]
+    val ioStep: Step[Authenticator, SyncIO[Authenticator]] = {
+      val m = mock[Step[Authenticator, SyncIO[Authenticator]]]
       m.apply(authenticator) returns SyncIO.pure(authenticator)
       m
     }
 
     /**
-     * An `ModifyStep` implementation.
+     * An pure step implementation.
      */
-    val modifyStep = {
-      val m = mock[ModifyStep]
+    val pureStep: Step[Authenticator, Authenticator] = {
+      val m = mock[Step[Authenticator, Authenticator]]
       m.apply(authenticator) returns authenticator
       m
     }
@@ -88,7 +90,7 @@ class TargetPipelineSpec extends Specification with Mockito {
     /**
      * A writes that transforms the [[Authenticator]] into a serialized form of the [[Authenticator]].
      */
-    val authenticatorWriter = {
+    val authenticatorWriter: AuthenticatorWriter[SyncIO, String] = {
       val m = mock[AuthenticatorWriter[SyncIO, String]]
       m.apply(authenticator) returns SyncIO.pure(authenticator.toString)
       m
@@ -97,6 +99,8 @@ class TargetPipelineSpec extends Specification with Mockito {
     /**
      * The pipeline to test.
      */
-    val pipeline = TargetPipeline[SyncIO, Fake.ResponsePipeline](_ => _ => SyncIO.pure(Fake.response))
+    val pipeline = TargetPipeline[SyncIO, Fake.ResponsePipeline](target =>
+      |>(pureStep) >> pureStep >> ioStep >> authenticatorWriter >> EmbedIntoHeader("test")(target)
+    )
   }
 }

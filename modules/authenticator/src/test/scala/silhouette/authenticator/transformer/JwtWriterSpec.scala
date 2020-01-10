@@ -28,7 +28,7 @@ import org.specs2.mutable.Specification
 import silhouette.LoginInfo
 import silhouette.authenticator.Authenticator
 import silhouette.crypto.Base64
-import silhouette.jwt.{ ClaimWriter, Claims }
+import silhouette.jwt.{ JwtClaimWriter, Claims }
 
 import scala.util.Try
 
@@ -106,7 +106,7 @@ class JwtWriterSpec extends Specification with Mockito {
     /**
      * A mock of the underlying JWT claim writer.
      */
-    val claimWriter = mock[ClaimWriter]
+    val claimWriter = mock[JwtClaimWriter]
 
     /**
      * The JWT authenticator writer.

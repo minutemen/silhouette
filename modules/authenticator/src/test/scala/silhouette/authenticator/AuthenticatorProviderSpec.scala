@@ -17,34 +17,29 @@
  */
 package silhouette.authenticator
 
-import cats.effect.IO._
-import cats.effect.{ ContextShift, IO }
-import org.specs2.concurrent.ExecutionEnv
+import cats.data.Validated._
+import cats.data.{ NonEmptyList => NEL }
+import cats.effect.SyncIO
+import cats.effect.SyncIO._
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import silhouette.{ AuthFailure, AuthState, Authenticated, Identity, InvalidCredentials, LoginInfo, MissingCredentials, MissingIdentity }
-import silhouette.authenticator.Validator.{ Invalid, Valid }
 import silhouette.authenticator.pipeline.Dsl._
-import silhouette.authenticator.pipeline.Dsl.Implicits._
-import silhouette.http.transport.RetrieveFromCookie
+import silhouette.http.transport.{ CookieTransportConfig, EmbedIntoCookie, RetrieveFromCookie }
 import silhouette.http.{ Cookie, Fake }
+import silhouette.{ AuthFailure, AuthState, Authenticated, Identity, InvalidCredentials, LoginInfo, MissingCredentials, MissingIdentity }
 
 /**
  * Test case for the [[AuthenticatorProvider]] class.
- *
- * @param ev The execution environment.
  */
-class AuthenticatorProviderSpec(ev: ExecutionEnv) extends Specification with Mockito {
-  // TODO: Fix tests
-  args(skipAll = true)
+class AuthenticatorProviderSpec extends Specification with Mockito {
 
   "The `authenticate` method" should {
     "return the `MissingCredentials` state if no token was found in request" in new Context {
       val request = Fake.request
       val response = Fake.response
 
-      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns IO.pure(response)
+      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns SyncIO.pure(response)
 
       provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
@@ -58,8 +53,8 @@ class AuthenticatorProviderSpec(ev: ExecutionEnv) extends Specification with Moc
       val request = Fake.request.withCookies(Cookie("test", token))
       val response = Fake.response
 
-      authenticatorReader(token) returns IO.raiseError(exception)
-      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns IO.pure(response)
+      authenticatorReader(token) returns SyncIO.raiseError(exception)
+      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns SyncIO.pure(response)
 
       provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
@@ -74,11 +69,11 @@ class AuthenticatorProviderSpec(ev: ExecutionEnv) extends Specification with Moc
     "return the `InvalidCredentials` state if the authenticator is invalid" in new Context {
       val request = Fake.request.withCookies(Cookie("test", token))
       val response = Fake.response
-      val errors = Seq("Invalid authenticator")
+      val errors = NEL.of("Invalid authenticator")
 
-      authenticatorReader(token) returns IO.pure(authenticator)
-      validator.isValid(authenticator) returns IO.pure(Invalid(errors))
-      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns IO.pure(response)
+      authenticatorReader(token) returns SyncIO.pure(authenticator)
+      validator.isValid(authenticator) returns SyncIO.pure(invalidNel(errors.head))
+      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns SyncIO.pure(response)
 
       provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
@@ -92,9 +87,9 @@ class AuthenticatorProviderSpec(ev: ExecutionEnv) extends Specification with Moc
       val request = Fake.request.withCookies(Cookie("test", token))
       val response = Fake.response
 
-      authenticatorReader(token) returns IO.pure(authenticator)
-      validator.isValid(authenticator) returns IO.raiseError(exception)
-      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns IO.pure(response)
+      authenticatorReader(token) returns SyncIO.pure(authenticator)
+      validator.isValid(authenticator) returns SyncIO.raiseError(exception)
+      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns SyncIO.pure(response)
 
       provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
@@ -110,10 +105,10 @@ class AuthenticatorProviderSpec(ev: ExecutionEnv) extends Specification with Moc
       val request = Fake.request.withCookies(Cookie("test", token))
       val response = Fake.response
 
-      authenticatorReader(token) returns IO.pure(authenticator)
-      validator.isValid(authenticator) returns IO.pure(Valid)
-      identityReader.apply(loginInfo) returns IO.pure(None)
-      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns IO.pure(response)
+      authenticatorReader(token) returns SyncIO.pure(authenticator)
+      validator.isValid(authenticator) returns SyncIO.pure(validNel(()))
+      identityReader.apply(loginInfo) returns SyncIO.pure(None)
+      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns SyncIO.pure(response)
 
       provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
@@ -127,10 +122,10 @@ class AuthenticatorProviderSpec(ev: ExecutionEnv) extends Specification with Moc
       val request = Fake.request.withCookies(Cookie("test", token))
       val response = Fake.response
 
-      authenticatorReader(token) returns IO.pure(authenticator)
-      validator.isValid(authenticator) returns IO.pure(Valid)
-      identityReader.apply(loginInfo) returns IO.raiseError(exception)
-      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns IO.pure(response)
+      authenticatorReader(token) returns SyncIO.pure(authenticator)
+      validator.isValid(authenticator) returns SyncIO.pure(validNel(()))
+      identityReader.apply(loginInfo) returns SyncIO.raiseError(exception)
+      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns SyncIO.pure(response)
 
       provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
@@ -146,12 +141,14 @@ class AuthenticatorProviderSpec(ev: ExecutionEnv) extends Specification with Moc
       val request = Fake.request.withCookies(Cookie("test", token))
       val response = Fake.response
 
-      authenticatorReader(token) returns IO.pure(authenticator)
-      validator.isValid(authenticator) returns IO.pure(Valid)
-      identityReader.apply(loginInfo) returns IO.pure(Some(user))
-      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns IO.pure(response)
+      authenticatorReader(token) returns SyncIO.pure(authenticator)
+      validator.isValid(authenticator) returns SyncIO.pure(validNel(()))
+      identityReader.apply(loginInfo) returns SyncIO.pure(Some(user))
+      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns SyncIO.pure(response)
 
-      provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
+      provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(
+        EmbedIntoCookie(CookieTransportConfig("test"))(response)(authenticator.toString)
+      )
 
       there was one(authStateHandler).apply(authStateCaptor)
 
@@ -163,7 +160,6 @@ class AuthenticatorProviderSpec(ev: ExecutionEnv) extends Specification with Moc
    * The context.
    */
   trait Context extends Scope {
-    implicit val contextShift: ContextShift[IO] = IO.contextShift(ev.executionContext)
 
     /**
      * A test user.
@@ -193,21 +189,21 @@ class AuthenticatorProviderSpec(ev: ExecutionEnv) extends Specification with Moc
     /**
      * A reader function that transforms a string into an authenticator.
      */
-    val authenticatorReader: AuthenticatorReader[IO, String] = mock[AuthenticatorReader[IO, String]]
+    val authenticatorReader: AuthenticatorReader[SyncIO, String] = mock[AuthenticatorReader[SyncIO, String]]
 
     /**
      * A writer function that transforms the [[Authenticator]] into a serialized form of the [[Authenticator]].
      */
     val authenticatorWriter = {
-      val m = mock[AuthenticatorWriter[IO, String]]
-      m.apply(authenticator) returns IO.pure(authenticator.toString)
+      val m = mock[AuthenticatorWriter[SyncIO, String]]
+      m.apply(authenticator) returns SyncIO.pure(authenticator.toString)
       m
     }
 
     /**
      * The auth state handler.
      */
-    val authStateHandler = mock[AuthState[User, Authenticator] => IO[Fake.ResponsePipeline]]
+    val authStateHandler = mock[AuthState[User, Authenticator] => SyncIO[Fake.ResponsePipeline]]
 
     /**
      * An argument captor for the auth state handler.
@@ -218,22 +214,25 @@ class AuthenticatorProviderSpec(ev: ExecutionEnv) extends Specification with Moc
      * The reader to retrieve the [[Identity]] for the [[LoginInfo]] stored in the
      * [[silhouette.authenticator.Authenticator]] from the persistence layer.
      */
-    val identityReader = mock[LoginInfo => IO[Option[User]]].smart
+    val identityReader = mock[LoginInfo => SyncIO[Option[User]]].smart
 
     /**
      * A [[Validator]] to apply to the [[silhouette.authenticator.Authenticator]].
      */
-    val validator = mock[Validator[IO]].smart
+    val validator = mock[Validator[SyncIO]].smart
 
     /**
      * The provider to test.
      */
-    val provider = new AuthenticatorProvider[IO, Fake.Request, Fake.Response, User](
-      AuthenticationPipeline[IO, Fake.RequestPipeline, User](
-        pipeline(__(RetrieveFromCookie("test")) >> authenticatorReader),
-        identityReader, Set(validator)
+    val provider = new AuthenticatorProvider[SyncIO, Fake.Request, Fake.Response, User](
+      AuthenticationPipeline[SyncIO, Fake.RequestPipeline, User](
+        |>(RetrieveFromCookie("test")) >> authenticatorReader,
+        identityReader,
+        Set(validator)
       ),
-      TargetPipeline(_ => _ => IO.pure(Fake.response))
+      TargetPipeline[SyncIO, Fake.ResponsePipeline](target =>
+        |>(authenticatorWriter) >> EmbedIntoCookie(CookieTransportConfig("test"))(target)
+      )
     )
   }
 }

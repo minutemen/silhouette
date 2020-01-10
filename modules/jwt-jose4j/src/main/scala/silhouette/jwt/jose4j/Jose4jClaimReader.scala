@@ -22,7 +22,7 @@ import java.time.Instant
 import io.circe.{ Json, JsonObject }
 import org.jose4j.jwt.JwtClaims
 import silhouette.jwt.jose4j.Jose4jClaimReader._
-import silhouette.jwt.{ ClaimReader, Claims, JwtException, ReservedClaims }
+import silhouette.jwt.{ JwtClaimReader, Claims, JwtException, ReservedClaims }
 
 import scala.jdk.CollectionConverters._
 import scala.util.{ Failure, Success, Try }
@@ -34,7 +34,7 @@ import scala.util.{ Failure, Success, Try }
  *
  * @param consumer The JWT consumer.
  */
-final case class Jose4jClaimReader(consumer: Jose4jConsumer) extends ClaimReader {
+final case class Jose4jClaimReader(consumer: Jose4jConsumer) extends JwtClaimReader {
 
   /**
    * Transforms a JWT string into a JWT claims object.

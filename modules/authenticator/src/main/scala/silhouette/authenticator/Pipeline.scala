@@ -17,15 +17,10 @@
  */
 package silhouette.authenticator
 
-import cats.Parallel
+import cats.data.Validated.{ Invalid, Valid }
 import cats.effect.Sync
 import silhouette._
-import silhouette.authenticator.Validator.{ Invalid, Valid }
-
-/**
- * An authenticator pipeline represents a composition of multiple single steps in the authentication process.
- */
-sealed trait Pipeline
+import silhouette.authenticator.pipeline.Dsl.{ KleisliM, Maybe }
 
 /**
  * Pipeline to authenticate an identity by transforming a source into an [[AuthState]].
@@ -47,50 +42,36 @@ sealed trait Pipeline
  * @tparam S The type of the source.
  * @tparam I The type of the identity.
  */
-case class AuthenticationPipeline[F[_]: Sync: Parallel, S, I <: Identity](
-  pipeline: S => F[Option[Authenticator]],
+final case class AuthenticationPipeline[F[_]: Sync, S, I <: Identity](
+  pipeline: KleisliM[F, S, Authenticator],
   identityReader: LoginInfo => F[Option[I]],
   validators: Set[Validator[F]] = Set.empty[Validator[F]]
-) extends (S => F[AuthState[I, Authenticator]]) with Pipeline { self =>
+) extends (S => F[AuthState[I, Authenticator]]) {
 
   /**
    * Apply the pipeline.
    *
-   * @param requestPipeline The request pipeline to retrieve the authenticator from.
+   * @param source The source to retrieve the authenticator from.
    * @return An authentication state.
    */
-  override def apply(requestPipeline: S): F[AuthState[I, Authenticator]] = {
-    Sync[F].recover(Sync[F].flatMap(pipeline(requestPipeline))(toState)) { case e: Exception => AuthFailure(e) }
-  }
-
-  /**
-   * Transforms the given optional [[Authenticator]] into an [[AuthState]].
-   *
-   * @param maybeAuthenticator Maybe some authenticator or None if the authenticator couldn't be found.
-   * @return The [[AuthState]].
-   */
-  final protected def toState(maybeAuthenticator: Option[Authenticator]): F[AuthState[I, Authenticator]] = {
-    maybeAuthenticator match {
-      case Some(authenticator) => toState(authenticator)
-      case None                => Sync[F].pure(MissingCredentials())
-    }
-  }
-
-  /**
-   * Transforms the given [[Authenticator]] into an [[AuthState]].
-   *
-   * @param authenticator The authenticator.
-   * @return The [[AuthState]].
-   */
-  final protected def toState(authenticator: Authenticator): F[AuthState[I, Authenticator]] = {
-    Sync[F].flatMap(authenticator.isValid(validators)) {
-      case Invalid(errors) => Sync[F].pure(InvalidCredentials(authenticator, errors))
-      case Valid => Sync[F].map(identityReader(authenticator.loginInfo)) {
-        case Some(identity) => Authenticated[I, Authenticator](identity, authenticator, authenticator.loginInfo)
-        case None           => MissingIdentity(authenticator, authenticator.loginInfo)
+  override def apply(source: S): F[AuthState[I, Authenticator]] =
+    Sync[F].recover[AuthState[I, Authenticator]] {
+      Sync[F].flatMap(pipeline.run(source).value) {
+        case Left(Maybe.NonError) => Sync[F].pure(MissingCredentials())
+        case Left(error)          => Sync[F].pure(AuthFailure(error))
+        case Right(authenticator) => Sync[F].flatMap(authenticator.isValid(validators)) {
+          case Invalid(errors) =>
+            Sync[F].pure(InvalidCredentials(authenticator, errors))
+          case Valid(_) =>
+            Sync[F].map(identityReader(authenticator.loginInfo)) {
+              case Some(identity) =>
+                Authenticated[I, Authenticator](identity, authenticator, authenticator.loginInfo)
+              case None =>
+                MissingIdentity(authenticator, authenticator.loginInfo)
+            }
+        }
       }
-    }
-  }
+    } { case e: Exception => AuthFailure(e) }
 }
 
 /**
@@ -100,7 +81,7 @@ case class AuthenticationPipeline[F[_]: Sync: Parallel, S, I <: Identity](
  * @tparam F The type of the IO monad.
  * @tparam T The type of the target.
  */
-final case class TargetPipeline[F[_], T](pipeline: Authenticator => T => F[T])
+final case class TargetPipeline[F[_]: Sync, T](pipeline: T => KleisliM[F, Authenticator, T])
   extends ((Authenticator, T) => F[T]) {
 
   /**
@@ -110,5 +91,9 @@ final case class TargetPipeline[F[_], T](pipeline: Authenticator => T => F[T])
    * @param target The target to write to.
    * @return The target with the [[Authenticator]].
    */
-  override def apply(authenticator: Authenticator, target: T): F[T] = pipeline(authenticator)(target)
+  override def apply(authenticator: Authenticator, target: T): F[T] =
+    Sync[F].flatMap(pipeline(target).run(authenticator).value) {
+      case Left(error)   => Sync[F].raiseError(error)
+      case Right(target) => Sync[F].pure(target)
+    }
 }

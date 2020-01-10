@@ -25,7 +25,7 @@ import io.circe.{ Json, JsonObject }
 import silhouette.authenticator.{ Authenticator, AuthenticatorWriter }
 import silhouette.crypto.Base64
 import silhouette.jwt
-import silhouette.jwt.ClaimWriter
+import silhouette.jwt.JwtClaimWriter
 
 /**
  * A transformation function that transforms an [[Authenticator]] into a JWT.
@@ -43,7 +43,7 @@ import silhouette.jwt.ClaimWriter
  * @tparam F The type of the IO monad.
  */
 final case class JwtWriter[F[_]: Sync](
-  claimWriter: ClaimWriter,
+  claimWriter: JwtClaimWriter,
   issuer: Option[String] = None,
   audience: Option[List[String]] = None,
   notBefore: Option[Instant] = None

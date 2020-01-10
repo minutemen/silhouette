@@ -32,10 +32,10 @@ package object jwt {
   /**
    * Reads claims from a JWT string.
    */
-  type ClaimReader = String => Try[Claims]
+  type JwtClaimReader = String => Try[Claims]
 
   /**
    * Writes claims to a JWT string.
    */
-  type ClaimWriter = Claims => Try[String]
+  type JwtClaimWriter = Claims => Try[String]
 }

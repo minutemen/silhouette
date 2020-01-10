@@ -116,15 +116,27 @@ trait Retrieve[P] extends (Request => Option[P])
  * @tparam R The type of the request.
  * @tparam P The type of the payload.
  */
-trait Smuggle[R, P] extends ((P, RequestPipeline[R]) => RequestPipeline[R])
+trait Smuggle[P, R] extends (P => RequestPipeline[R]) {
+
+  /**
+   * The request pipeline into which the payload should be smuggled.
+   */
+  protected val requestPipeline: RequestPipeline[R]
+}
 
 /**
  * A function that embeds some payload into the response.
  *
- * @tparam R The type of the response.
  * @tparam P The type of the payload.
+ * @tparam R The type of the response.
  */
-trait Embed[R, P] extends ((P, ResponsePipeline[R]) => ResponsePipeline[R])
+trait Embed[P, R] extends (P => ResponsePipeline[R]) {
+
+  /**
+   * The response pipeline into which the payload should be embedded.
+   */
+  protected val responsePipeline: ResponsePipeline[R]
+}
 
 /**
  * A function that discards some payload from the response.

@@ -24,49 +24,7 @@ import silhouette.authenticator.Authenticator
 /**
  * A step that can be composed with other steps to build an authenticator pipeline.
  */
-sealed trait Step[A, B] extends (A => B)
-
-/**
- * Pipeline which modifies an authenticator.
- */
-trait ModifyStep extends Step[Authenticator, Authenticator]
-
-/**
- * The companion object.
- */
-object ModifyStep {
-
-  /**
-   * Converts a function that accepts an [[Authenticator]] and returns an [[Authenticator]] into a [[ModifyStep]].
-   *
-   * @param f The function to convert into a [[ModifyStep]].
-   * @return A [[ModifyStep]] instance.
-   */
-  def apply(f: Authenticator => Authenticator): ModifyStep = {
-    authenticator => f(authenticator)
-  }
-}
-
-/**
- * Pipeline which transforms an authenticator into an async authenticator.
- */
-trait AsyncStep[F[_]] extends Step[Authenticator, F[Authenticator]]
-
-/**
- * The companion object.
- */
-object AsyncStep {
-
-  /**
-   * Converts a function that accepts an [[Authenticator]] and returns an async [[Authenticator]] into an [[AsyncStep]].
-   *
-   * @param f The function to convert into an [[AsyncStep]].
-   * @return An [[AsyncStep]] instance.
-   */
-  def apply[F[_]](f: Authenticator => F[Authenticator]): AsyncStep[F] = {
-    authenticator => f(authenticator)
-  }
-}
+trait Step[A, B] extends (A => B)
 
 /**
  * Step which touches an authenticator.
@@ -80,7 +38,7 @@ object AsyncStep {
  *
  * @param clock The clock instance.
  */
-final case class TouchStep(clock: Clock) extends ModifyStep {
+final case class TouchStep(clock: Clock) extends Step[Authenticator, Authenticator] {
 
   /**
    * Apply the pipeline.

@@ -19,7 +19,6 @@ package silhouette.authenticator
 
 import java.time.{ Clock, Instant }
 
-import cats.Parallel
 import cats.effect.Sync
 import io.circe.Json
 import silhouette.RichInstant._
@@ -151,16 +150,10 @@ final case class Authenticator(
    * @tparam F The type of the IO monad.
    * @return True if the authenticator is valid, false otherwise.
    */
-  def isValid[F[_]: Sync: Parallel](validators: Set[Validator[F]]): F[Status] = {
+  def isValid[F[_]: Sync](validators: Set[Validator[F]]): F[Status] = {
     import cats.instances.list._
-    import cats.syntax.parallel._
-    Sync[F].map(validators.map(_.isValid(this)).toList.parSequence)(
-      _
-        .collect { case Invalid(errors) => errors }
-        .flatten match {
-          case Nil    => Valid
-          case errors => Invalid(errors)
-        }
-    )
+    import cats.syntax.foldable._
+    import cats.syntax.traverse._
+    Sync[F].map(validators.map(_.isValid(this)).toList.sequence)(_.sequence_)
   }
 }

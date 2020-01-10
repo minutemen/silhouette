@@ -102,40 +102,40 @@ class HeaderTransportSpec extends Specification {
 
   "The `SmuggleIntoHeader` writes" should {
     "smuggle a header into the request" in new Context {
-      SmuggleIntoHeader("test")("payload", requestPipeline).header("test") must beSome(Header("test", "payload"))
+      SmuggleIntoHeader("test")(requestPipeline)("payload").header("test") must beSome(Header("test", "payload"))
     }
   }
 
   "The `SmuggleBearerTokenIntoHeader` writes" should {
     "smuggle a bearer token header into the request" in new Context {
-      SmuggleBearerTokenIntoHeader()(BearerToken("token"), requestPipeline)
+      SmuggleBearerTokenIntoHeader()(requestPipeline)(BearerToken("token"))
         .header(Header.Name.Authorization) must beSome(BearerAuthorizationHeader(BearerToken("token")))
     }
   }
 
   "The `SmuggleBasicCredentialsIntoHeader` writes" should {
     "smuggle a basic auth header into the request" in new Context {
-      SmuggleBasicCredentialsIntoHeader()(BasicCredentials("user", "pass"), requestPipeline)
+      SmuggleBasicCredentialsIntoHeader()(requestPipeline)(BasicCredentials("user", "pass"))
         .header(Header.Name.Authorization) must beSome(BasicAuthorizationHeader(BasicCredentials("user", "pass")))
     }
   }
 
   "The `EmbedIntoHeader` writes" should {
     "embed a header into the request" in new Context {
-      EmbedIntoHeader("test")("payload", responsePipeline).header("test") must beSome(Header("test", "payload"))
+      EmbedIntoHeader("test")(responsePipeline)("payload").header("test") must beSome(Header("test", "payload"))
     }
   }
 
   "The `SmuggleBearerTokenIntoHeader` writes" should {
     "embed a bearer token header into the request" in new Context {
-      EmbedBearerTokenIntoHeader()(BearerToken("token"), responsePipeline)
+      EmbedBearerTokenIntoHeader()(responsePipeline)(BearerToken("token"))
         .header(Header.Name.Authorization) must beSome(BearerAuthorizationHeader(BearerToken("token")))
     }
   }
 
   "The `EmbedBasicCredentialsIntoHeader` writes" should {
     "embed a basic auth header into the request" in new Context {
-      EmbedBasicCredentialsIntoHeader()(BasicCredentials("user", "pass"), responsePipeline)
+      EmbedBasicCredentialsIntoHeader()(responsePipeline)(BasicCredentials("user", "pass"))
         .header(Header.Name.Authorization) must beSome(BasicAuthorizationHeader(BasicCredentials("user", "pass")))
     }
   }

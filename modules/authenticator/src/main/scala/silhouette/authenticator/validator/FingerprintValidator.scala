@@ -17,6 +17,7 @@
  */
 package silhouette.authenticator.validator
 
+import cats.data.Validated._
 import cats.effect.Sync
 import silhouette.authenticator.Validator._
 import silhouette.authenticator.validator.FingerprintValidator._
@@ -36,13 +37,13 @@ final case class FingerprintValidator[F[_]: Sync](fingerprint: String) extends V
    * Checks if the [[Authenticator]] is valid.
    *
    * @param authenticator The [[Authenticator]] to validate.
-   * @return True if the [[Authenticator]] is valid, false otherwise.
+   * @return [[cats.data.Validated.Valid]] if the authenticator is valid, [[cats.data.Validated.Invalid]] otherwise.
    */
   override def isValid(authenticator: Authenticator): F[Status] = Sync[F].pure {
     if (authenticator.fingerprint.forall(_ == fingerprint)) {
-      Valid
+      validNel(())
     } else {
-      Invalid(Seq(Error.format(fingerprint, authenticator.fingerprint.getOrElse(""))))
+      invalidNel(Error.format(fingerprint, authenticator.fingerprint.getOrElse("")))
     }
   }
 }

@@ -17,6 +17,8 @@
  */
 package silhouette
 
+import cats.data.NonEmptyList
+
 /**
  * Represents the authentication state.
  *
@@ -47,7 +49,7 @@ sealed trait Unauthenticated[I <: Identity, +C <: Credentials] extends AuthState
  * @tparam I The type of the identity.
  * @tparam C The type of the credentials.
  */
-final case class AuthFailure[I <: Identity, +C <: Credentials](cause: Exception) extends Unauthenticated[I, C]
+final case class AuthFailure[I <: Identity, +C <: Credentials](cause: Throwable) extends Unauthenticated[I, C]
 
 /**
  * Represents a state where no credentials were found.
@@ -65,7 +67,7 @@ final case class MissingCredentials[I <: Identity, +C <: Credentials]() extends 
  * @tparam I The type of the identity.
  * @tparam C The type of the credentials.
  */
-final case class InvalidCredentials[I <: Identity, +C <: Credentials](credentials: C, errors: Seq[String])
+final case class InvalidCredentials[I <: Identity, +C <: Credentials](credentials: C, errors: NonEmptyList[String])
   extends Unauthenticated[I, C]
 
 /**

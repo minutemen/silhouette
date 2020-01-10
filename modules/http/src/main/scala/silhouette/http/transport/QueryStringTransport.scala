@@ -65,19 +65,21 @@ final case class RetrieveFromQueryString(name: String) extends Retrieve[String] 
 /**
  * A function that smuggles a query param with the given payload into the given request.
  *
- * @param name The name of the query param in which the payload will be transported.
+ * @param name            The name of the query param in which the payload will be transported.
+ * @param requestPipeline The [[RequestPipeline]] in which the query param should be embedded.
  * @tparam R The type of the response.
  */
-final case class SmuggleIntoQueryString[R](name: String) extends Smuggle[R, String] {
+final case class SmuggleIntoQueryString[R](name: String)(
+  protected val requestPipeline: RequestPipeline[R]
+) extends Smuggle[String, R] {
 
   /**
    * Merges some payload and a [[RequestPipeline]] into a [[RequestPipeline]] that contains a query param with the
    * given payload as value.
    *
-   * @param payload         The payload to embed in a query param.
-   * @param requestPipeline The [[RequestPipeline]] in which the query param should be embedded.
+   * @param payload The payload to embed in a query param.
    * @return The request pipeline.
    */
-  override def apply(payload: String, requestPipeline: RequestPipeline[R]): RequestPipeline[R] =
+  override def apply(payload: String): RequestPipeline[R] =
     QueryStringTransport(name).smuggle(payload, requestPipeline)
 }

@@ -19,24 +19,22 @@ package silhouette.authenticator
 
 import java.time.{ Clock, Instant, ZoneId }
 
-import cats.effect.{ ContextShift, IO }
-import org.specs2.concurrent.ExecutionEnv
+import cats.data.NonEmptyList
+import cats.data.Validated._
+import cats.effect.SyncIO
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.LoginInfo
 import silhouette.RichInstant._
-import silhouette.authenticator.Validator.{ Invalid, Valid }
 import silhouette.http.{ Fake, RequestPipeline, SilhouetteRequest }
 
 import scala.concurrent.duration._
 
 /**
  * Test case for the [[Authenticator]] class.
- *
- * @param ev The execution environment.
  */
-class AuthenticatorSpec(implicit ev: ExecutionEnv) extends Specification with Mockito {
+class AuthenticatorSpec extends Specification with Mockito {
 
   "The `expiresIn` method" should {
     "return the duration the authenticator expires in" in new Context {
@@ -126,35 +124,34 @@ class AuthenticatorSpec(implicit ev: ExecutionEnv) extends Specification with Mo
 
   "The `isValid` method" should {
     "return Invalid if at least one validator fails" in new Context {
-      val errors = Seq("error1", "error2")
-      val validator1 = mock[Validator[IO]].smart
-      val validator2 = mock[Validator[IO]].smart
-      validator1.isValid(authenticator) returns IO.pure(Valid)
-      validator2.isValid(authenticator) returns IO.pure(Invalid(errors))
+      val validator1 = mock[Validator[SyncIO]].smart
+      val validator2 = mock[Validator[SyncIO]].smart
+      validator1.isValid(authenticator) returns SyncIO.pure(validNel(()))
+      validator2.isValid(authenticator) returns SyncIO.pure(invalidNel("error1"))
       val validators = Set(validator1, validator2)
 
-      authenticator.isValid[IO](validators).unsafeRunSync() must beEqualTo(Invalid(errors))
+      authenticator.isValid[SyncIO](validators).unsafeRunSync() must beEqualTo(invalidNel("error1"))
     }
 
     "return Valid if all validators are successful" in new Context {
-      val validator1 = mock[Validator[IO]].smart
-      val validator2 = mock[Validator[IO]].smart
-      validator1.isValid(authenticator) returns IO.pure(Valid)
-      validator2.isValid(authenticator) returns IO.pure(Valid)
+      val validator1 = mock[Validator[SyncIO]].smart
+      val validator2 = mock[Validator[SyncIO]].smart
+      validator1.isValid(authenticator) returns SyncIO.pure(validNel(()))
+      validator2.isValid(authenticator) returns SyncIO.pure(validNel(()))
       val validators = Set(validator1, validator2)
 
-      authenticator.isValid[IO](validators).unsafeRunSync() must beEqualTo(Valid)
+      authenticator.isValid[SyncIO](validators).unsafeRunSync() must beEqualTo(validNel(()))
     }
 
     "combine all error messages from all validators" in new Context {
-      val validator1 = mock[Validator[IO]].smart
-      val validator2 = mock[Validator[IO]].smart
-      validator1.isValid(authenticator) returns IO.pure(Invalid(Seq("error1", "error2")))
-      validator2.isValid(authenticator) returns IO.pure(Invalid(Seq("error3", "error4")))
+      val validator1 = mock[Validator[SyncIO]].smart
+      val validator2 = mock[Validator[SyncIO]].smart
+      validator1.isValid(authenticator) returns SyncIO.pure(invalidNel("error1"))
+      validator2.isValid(authenticator) returns SyncIO.pure(invalidNel("error2"))
       val validators = Set(validator1, validator2)
 
-      authenticator.isValid[IO](validators).unsafeRunSync() must beEqualTo(
-        Invalid(Seq("error1", "error2", "error3", "error4"))
+      authenticator.isValid[SyncIO](validators).unsafeRunSync() must beEqualTo(
+        Invalid(NonEmptyList.of("error1", "error2"))
       )
     }
   }
@@ -163,7 +160,6 @@ class AuthenticatorSpec(implicit ev: ExecutionEnv) extends Specification with Mo
    * The context.
    */
   trait Context extends Scope {
-    implicit val contextShift: ContextShift[IO] = IO.contextShift(ev.executionContext)
 
     /**
      * The UTC time zone.

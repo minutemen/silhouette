@@ -29,7 +29,7 @@ import silhouette.LoginInfo
 import silhouette.authenticator.transformer.JwtReader._
 import silhouette.authenticator.{ Authenticator, AuthenticatorException }
 import silhouette.crypto.Base64
-import silhouette.jwt.{ ClaimReader, Claims }
+import silhouette.jwt.{ JwtClaimReader, Claims }
 
 import scala.util.{ Failure, Try }
 
@@ -168,7 +168,7 @@ class JwtReaderSpec extends Specification with Mockito {
     /**
      * A mock of the underlying JWT claim reader.
      */
-    val claimReader = mock[ClaimReader]
+    val claimReader = mock[JwtClaimReader]
 
     /**
      * The JWT authenticator reader.

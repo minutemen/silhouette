@@ -17,6 +17,7 @@
  */
 package silhouette.authenticator.validator
 
+import cats.data.Validated._
 import cats.effect.Sync
 import silhouette.authenticator.Validator._
 import silhouette.authenticator.validator.BackingStoreValidator._
@@ -37,11 +38,11 @@ final case class BackingStoreValidator[F[_]: Sync](validator: Authenticator => F
    * Checks if the [[Authenticator]] is valid.
    *
    * @param authenticator The [[Authenticator]] to validate.
-   * @return True if the [[Authenticator]] is valid, false otherwise.
+   * @return [[cats.data.Validated.Valid]] if the authenticator is valid, [[cats.data.Validated.Invalid]] otherwise.
    */
   override def isValid(authenticator: Authenticator): F[Status] = Sync[F].map(validator(authenticator)) {
-    case true  => Valid
-    case false => Invalid(Seq(Error))
+    case true  => validNel(())
+    case false => invalidNel(Error)
   }
 }
 

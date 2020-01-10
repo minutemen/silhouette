@@ -24,7 +24,7 @@ import silhouette.LoginInfo
 import silhouette.authenticator.transformer.JwtReader._
 import silhouette.authenticator.{ Authenticator, AuthenticatorException, AuthenticatorReader }
 import silhouette.crypto.Base64
-import silhouette.jwt.ClaimReader
+import silhouette.jwt.JwtClaimReader
 
 import scala.util.{ Failure, Success, Try }
 
@@ -40,7 +40,7 @@ import scala.util.{ Failure, Success, Try }
  * @param claimReader The JWT claim reader function.
  * @tparam F The type of the IO monad.
  */
-final case class JwtReader[F[_]: Sync](claimReader: ClaimReader) extends AuthenticatorReader[F, String] {
+final case class JwtReader[F[_]: Sync](claimReader: JwtClaimReader) extends AuthenticatorReader[F, String] {
 
   /**
    * Transforms a JWT into an [[Authenticator]].

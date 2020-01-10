@@ -19,6 +19,7 @@ package silhouette.authenticator.validator
 
 import java.time.Clock
 
+import cats.data.Validated._
 import cats.effect.Sync
 import silhouette.authenticator.Validator._
 import silhouette.authenticator.validator.SlidingWindowValidator._
@@ -47,13 +48,13 @@ final case class SlidingWindowValidator[F[_]: Sync](idleTimeout: FiniteDuration,
    * Checks if the [[Authenticator]] is valid.
    *
    * @param authenticator The [[Authenticator]] to validate.
-   * @return True if the [[Authenticator]] is valid, false otherwise.
+   * @return [[cats.data.Validated.Valid]] if the authenticator is valid, [[cats.data.Validated.Invalid]] otherwise.
    */
   override def isValid(authenticator: Authenticator): F[Status] = Sync[F].pure {
     if (authenticator.touchedAt(clock).forall(_ <= idleTimeout)) {
-      Valid
+      validNel(())
     } else {
-      Invalid(Seq(Error.format(authenticator.touchedAt(clock).getOrElse(0.millis) - idleTimeout)))
+      invalidNel(Error.format(authenticator.touchedAt(clock).getOrElse(0.millis) - idleTimeout))
     }
   }
 }

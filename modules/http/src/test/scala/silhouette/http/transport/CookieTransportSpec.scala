@@ -84,7 +84,7 @@ class CookieTransportSpec extends Specification {
 
   "The `SmuggleIntoCookie` writes" should {
     "smuggle a cookie into the request" in new Context {
-      SmuggleIntoCookie(config)("payload", requestPipeline)
+      SmuggleIntoCookie(config)(requestPipeline)("payload")
         .cookie("test") must beSome[Cookie].like {
           case cookie =>
             cookie.value must be equalTo "payload"
@@ -94,7 +94,7 @@ class CookieTransportSpec extends Specification {
 
   "The `EmbedIntoCookie` writes" should {
     "embed a cookie into the response" in new Context {
-      EmbedIntoCookie(config)("payload", responsePipeline)
+      EmbedIntoCookie(config)(responsePipeline)("payload")
         .cookie("test") must beSome[Cookie].like {
           case cookie =>
             cookie.value must be equalTo "payload"

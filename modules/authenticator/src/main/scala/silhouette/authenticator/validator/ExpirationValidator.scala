@@ -19,6 +19,7 @@ package silhouette.authenticator.validator
 
 import java.time.Clock
 
+import cats.data.Validated._
 import cats.effect.Sync
 import silhouette.authenticator.Validator._
 import silhouette.authenticator.validator.ExpirationValidator._
@@ -40,13 +41,13 @@ final case class ExpirationValidator[F[_]: Sync](clock: Clock) extends Validator
    * Checks if the [[Authenticator]] is valid.
    *
    * @param authenticator The [[Authenticator]] to validate.
-   * @return True if the [[Authenticator]] is valid, false otherwise.
+   * @return [[cats.data.Validated.Valid]] if the authenticator is valid, [[cats.data.Validated.Invalid]] otherwise.
    */
   override def isValid(authenticator: Authenticator): F[Status] = Sync[F].pure {
     if (authenticator.expiresIn(clock).forall(_ >= 0.millis)) {
-      Valid
+      validNel(())
     } else {
-      Invalid(Seq(Error.format(authenticator.expiresIn(clock).map(_.neg()).getOrElse(0.millis))))
+      invalidNel(Error.format(authenticator.expiresIn(clock).map(_.neg()).getOrElse(0.millis)))
     }
   }
 }

@@ -17,6 +17,7 @@
  */
 package silhouette.provider.http
 
+import cats.data.{ NonEmptyList => NEL }
 import cats.effect.Sync
 import javax.inject.Inject
 import silhouette._
@@ -83,9 +84,9 @@ class BasicAuthProvider[F[_]: Sync, R, P, I <: Identity] @Inject() (
               case Some(identity) => handler(Authenticated(identity, credentials, loginInfo))
               case None           => handler(MissingIdentity(credentials, loginInfo))
             }
-          case InvalidPassword(error)   => handler(InvalidCredentials(credentials, Seq(error)))
+          case InvalidPassword(error)   => handler(InvalidCredentials(credentials, NEL.of(error)))
           case UnsupportedHasher(error) => handler(AuthFailure(new ConfigurationException(error)))
-          case NotFound(error)          => handler(InvalidCredentials(credentials, Seq(error)))
+          case NotFound(error)          => handler(InvalidCredentials(credentials, NEL.of(error)))
         }
       case None => handler(MissingCredentials())
     }

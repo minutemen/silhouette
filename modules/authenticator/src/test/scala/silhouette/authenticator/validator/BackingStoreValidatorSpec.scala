@@ -17,13 +17,13 @@
  */
 package silhouette.authenticator.validator
 
+import cats.data.Validated._
 import cats.effect.SyncIO
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.LoginInfo
 import silhouette.authenticator.Authenticator
-import silhouette.authenticator.Validator.{ Invalid, Valid }
 import silhouette.authenticator.validator.BackingStoreValidator._
 
 /**
@@ -35,13 +35,13 @@ class BackingStoreValidatorSpec extends Specification with Mockito {
     "return Valid if the authenticator is valid" in new Context {
       BackingStoreValidator[SyncIO](_ => SyncIO.pure(true))
         .isValid(authenticator)
-        .unsafeRunSync() must beEqualTo(Valid)
+        .unsafeRunSync() must beEqualTo(validNel(()))
     }
 
     "return Invalid if the authenticator is invalid" in new Context {
       BackingStoreValidator[SyncIO](_ => SyncIO.pure(false))
         .isValid(authenticator)
-        .unsafeRunSync() must beEqualTo(Invalid(Seq(Error)))
+        .unsafeRunSync() must beEqualTo(invalidNel(Error))
     }
   }
 

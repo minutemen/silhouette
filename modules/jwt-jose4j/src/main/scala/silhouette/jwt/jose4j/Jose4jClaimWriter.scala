@@ -20,7 +20,7 @@ package silhouette.jwt.jose4j
 import io.circe.{ Json, JsonNumber, JsonObject }
 import org.jose4j.jwt.{ JwtClaims, NumericDate }
 import silhouette.jwt.jose4j.Jose4jClaimWriter._
-import silhouette.jwt.{ ClaimWriter, JwtException }
+import silhouette.jwt.{ JwtClaimWriter, JwtException }
 
 import scala.jdk.CollectionConverters._
 import scala.util.{ Failure, Success, Try }
@@ -32,7 +32,7 @@ import scala.util.{ Failure, Success, Try }
  *
  * @param producer The JWT producer.
  */
-final case class Jose4jClaimWriter(producer: Jose4jProducer) extends ClaimWriter {
+final case class Jose4jClaimWriter(producer: Jose4jProducer) extends JwtClaimWriter {
 
   /**
    * Transforms a JWT claims object into a JWT as string.

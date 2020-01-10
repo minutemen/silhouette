@@ -17,6 +17,7 @@
  */
 package silhouette.provider.http
 
+import cats.data.{ NonEmptyList => NEL }
 import cats.effect.SyncIO
 import org.specs2.mock.Mockito
 import silhouette._
@@ -62,7 +63,7 @@ class BasicAuthProviderSpec extends PasswordProviderSpec with Mockito {
       there was one(authStateHandler).apply(authStateCaptor)
 
       authStateCaptor.value must beEqualTo(
-        InvalidCredentials(credentials, Seq(PasswordInfoNotFound.format(provider.id, loginInfo)))
+        InvalidCredentials(credentials, NEL.of(PasswordInfoNotFound.format(provider.id, loginInfo)))
       )
     }
 
@@ -80,7 +81,7 @@ class BasicAuthProviderSpec extends PasswordProviderSpec with Mockito {
       there was one(authStateHandler).apply(authStateCaptor)
 
       authStateCaptor.value must beEqualTo(
-        InvalidCredentials(credentials, Seq(PasswordDoesNotMatch.format(provider.id)))
+        InvalidCredentials(credentials, NEL.of(PasswordDoesNotMatch.format(provider.id)))
       )
     }
 

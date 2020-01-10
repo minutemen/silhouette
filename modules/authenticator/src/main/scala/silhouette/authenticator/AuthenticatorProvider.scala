@@ -17,7 +17,6 @@
  */
 package silhouette.authenticator
 
-import cats.Parallel
 import cats.effect.Sync
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
@@ -36,7 +35,7 @@ import silhouette.provider.RequestProvider
  * @tparam P The type of the response.
  * @tparam I The type of the identity.
  */
-class AuthenticatorProvider[F[_]: Sync: Parallel, R, P, I <: Identity] @Inject() (
+class AuthenticatorProvider[F[_]: Sync, R, P, I <: Identity] @Inject() (
   authenticationPipeline: AuthenticationPipeline[F, RequestPipeline[R], I],
   targetPipeline: TargetPipeline[F, ResponsePipeline[P]]
 ) extends RequestProvider[F, R, P, I] with LazyLogging {
