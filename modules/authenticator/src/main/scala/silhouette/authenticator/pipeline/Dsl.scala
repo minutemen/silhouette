@@ -19,6 +19,9 @@ package silhouette.authenticator.pipeline
 
 import cats.data.{ EitherT, Kleisli }
 import cats.effect.Sync
+import silhouette.authenticator.Authenticator
+import silhouette.authenticator.pipeline.Dsl.NoneError
+import silhouette.{ AuthState, Identity, MissingCredentials }
 
 import scala.language.implicitConversions
 import scala.util.Try
@@ -49,16 +52,11 @@ object Dsl extends DslLowPriorityImplicits {
   type KleisliM[F[_], A, B] = Kleisli[({ type L[T] = Maybe[F, T] })#L, A, B]
 
   /**
-   * The companion object for [[Maybe]].
+   * Option handles a missing case with [[None]] which cannot be easily translated into a throwable. Therefore this
+   * [[Throwable]] represents the [[None]] case for the [[Maybe]] type which acts as an error that can directly be
+   * translated to an auth state.
    */
-  object Maybe {
-
-    /**
-     * Option handles a missing case with [[None]] and not really an error case. This [[Throwable]] represents the
-     * [[None]] case for the [[Maybe]] type.
-     */
-    case object NonError extends Throwable()
-  }
+  final case class NoneError[I <: Identity](state: AuthState[I, Authenticator]) extends Throwable()
 
   /**
    * The companion object for [[KleisliM]].
@@ -147,12 +145,21 @@ object Dsl extends DslLowPriorityImplicits {
   /**
    * A transformation function that transforms an [[Option]] to [[Maybe]].
    *
+   * In case of [[None]], the function uses the implicit [[NoneError]], which can be translated directly to
+   * an [[AuthState]]. There is automatically a low-priority implicit in scope, which translates to the
+   * [[MissingCredentials]] state. This can be overridden by defining a custom implicit.
+   *
+   * @param noneError The error which should be used in the none case.
    * @tparam F The IO monad.
    * @tparam A The type to convert.
+   * @tparam I The type of the identity.
    * @return The [[Maybe]] representation for the [[Option]] type.
    */
-  implicit def optionToMaybeWriter[F[_]: Sync, A]: MaybeWriter[F, Option[A], A] = (value: Option[A]) =>
-    EitherT.fromEither[F](value.toRight(Maybe.NonError))
+  implicit def optionToMaybeWriter[F[_]: Sync, A, I <: Identity](
+    implicit
+    noneError: => NoneError[I]
+  ): MaybeWriter[F, Option[A], A] = (value: Option[A]) =>
+    EitherT.fromEither[F](value.toRight(noneError))
 
   /**
    * A transformation function that transforms a [[scala.util.Try]] to [[Maybe]].
@@ -233,4 +240,14 @@ trait DslLowPriorityImplicits {
    */
   implicit def toMaybeWrites[F[_]: Sync, A]: Dsl.MaybeWriter[F, A, A] = (value: A) =>
     EitherT.pure[F, Throwable](value)
+
+  /**
+   * A low priority transformation that returns a [[NoneError]] that can be translated to a [[MissingCredentials]]
+   * state.
+   *
+   * @tparam I The type of the identity.
+   * @return A [[NoneError]] that can be translated to a [[MissingCredentials]] state.
+   */
+  implicit def noneToMissingCredentials[I <: Identity]: Dsl.NoneError[I] =
+    NoneError(MissingCredentials())
 }

@@ -62,7 +62,7 @@ class AuthenticatorProvider[F[_]: Sync, R, P, I <: Identity] @Inject() (
   override def authenticate(request: RequestPipeline[R])(handler: AuthStateHandler): F[ResponsePipeline[P]] = {
     Sync[F].flatMap(authenticationPipeline(request)) {
       case authState @ Authenticated(_, authenticator, _) =>
-        Sync[F].flatMap(handler(authState))(response => targetPipeline(authenticator, response))
+        Sync[F].flatMap(handler(authState))(targetPipeline(authenticator, _))
       case authState =>
         handler(authState)
     }

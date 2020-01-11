@@ -24,22 +24,29 @@ import cats.effect.SyncIO._
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
+import silhouette._
 import silhouette.authenticator._
 import silhouette.authenticator.pipeline.Dsl._
 import silhouette.http.transport.RetrieveFromCookie
 import silhouette.http.{ Cookie, Fake }
-import silhouette.{ AuthFailure, AuthState, Authenticated, Identity, InvalidCredentials, LoginInfo, MissingCredentials, MissingIdentity }
 
 /**
  * Test case for the [[AuthenticationPipeline]] class.
  */
 class AuthenticationPipelineSpec extends Specification with Mockito {
 
-  "The `read` method" should {
+  "The pipeline" should {
     "return the `MissingCredentials` state if no token was found in request" in new Context {
       val request = Fake.request
 
       pipeline(request).unsafeRunSync() must beEqualTo(MissingCredentials())
+    }
+
+    "return a custom state if no token was found in request and if a custom NoneError was defined" in new Context {
+      val request = Fake.request
+      override implicit val noneError: NoneError[User] = NoneError(AuthFailure(new RuntimeException("test")))
+
+      pipeline(request).unsafeRunSync() must beEqualTo(noneError.state)
     }
 
     "return the `AuthFailure` state if the token couldn't be transformed into an authenticator" in new Context {
@@ -121,6 +128,11 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
      * A test user.
      */
     case class User(loginInfo: LoginInfo) extends Identity
+
+    /**
+     * A non error that can be overridden by a test.
+     */
+    implicit val noneError: NoneError[User] = noneToMissingCredentials
 
     /**
      * Some authentication token.

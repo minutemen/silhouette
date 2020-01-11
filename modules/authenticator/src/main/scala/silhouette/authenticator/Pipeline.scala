@@ -20,7 +20,7 @@ package silhouette.authenticator
 import cats.data.Validated.{ Invalid, Valid }
 import cats.effect.Sync
 import silhouette._
-import silhouette.authenticator.pipeline.Dsl.{ KleisliM, Maybe }
+import silhouette.authenticator.pipeline.Dsl.{ KleisliM, NoneError }
 
 /**
  * Pipeline to authenticate an identity by transforming a source into an [[AuthState]].
@@ -33,7 +33,7 @@ import silhouette.authenticator.pipeline.Dsl.{ KleisliM, Maybe }
  * or any other service. At last we could apply some authorization rules to our identity. Any of these steps in our
  * pipeline can be represented by a [[AuthState]] that describes the result of each step.
  *
- * @param pipeline       The pipeline which transforms the source into an authenticator.
+ * @param pipeline       The pipeline which transforms the source to an authenticator.
  * @param identityReader The reader to retrieve the [[Identity]] for the [[LoginInfo]] stored in the
  *                       [[silhouette.authenticator.Authenticator]] from the persistence layer.
  * @param validators     The list of validators to apply to the [[silhouette.authenticator.Authenticator]].
@@ -57,19 +57,20 @@ final case class AuthenticationPipeline[F[_]: Sync, S, I <: Identity](
   override def apply(source: S): F[AuthState[I, Authenticator]] =
     Sync[F].recover[AuthState[I, Authenticator]] {
       Sync[F].flatMap(pipeline.run(source).value) {
-        case Left(Maybe.NonError) => Sync[F].pure(MissingCredentials())
-        case Left(error)          => Sync[F].pure(AuthFailure(error))
-        case Right(authenticator) => Sync[F].flatMap(authenticator.isValid(validators)) {
-          case Invalid(errors) =>
-            Sync[F].pure(InvalidCredentials(authenticator, errors))
-          case Valid(_) =>
-            Sync[F].map(identityReader(authenticator.loginInfo)) {
-              case Some(identity) =>
-                Authenticated[I, Authenticator](identity, authenticator, authenticator.loginInfo)
-              case None =>
-                MissingIdentity(authenticator, authenticator.loginInfo)
-            }
-        }
+        case Left(e: NoneError[I]) => Sync[F].pure(e.state)
+        case Left(e)               => Sync[F].pure(AuthFailure(e))
+        case Right(authenticator) =>
+          Sync[F].flatMap(authenticator.isValid(validators)) {
+            case Invalid(errors) =>
+              Sync[F].pure(InvalidCredentials(authenticator, errors))
+            case Valid(_) =>
+              Sync[F].map(identityReader(authenticator.loginInfo)) {
+                case Some(identity) =>
+                  Authenticated(identity, authenticator, authenticator.loginInfo)
+                case None =>
+                  MissingIdentity[I, Authenticator](authenticator, authenticator.loginInfo)
+              }
+          }
       }
     } { case e: Exception => AuthFailure(e) }
 }

@@ -33,7 +33,7 @@ import silhouette.http.{ Fake, Header }
  */
 class TargetPipelineSpec extends Specification with Mockito {
 
-  "The `write` method" should {
+  "The pipeline" should {
     "write the authenticator with the `statefulWriter`" in new Context {
       embedPipeline(authenticator, responsePipeline).unsafeRunSync()
 
