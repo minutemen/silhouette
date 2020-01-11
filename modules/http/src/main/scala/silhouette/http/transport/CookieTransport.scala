@@ -172,19 +172,17 @@ final case class EmbedIntoCookie[R](config: CookieTransportConfig)(
 /**
  * A function that discards a cookie on the client.
  *
- * @param config           The transport config.
- * @param responsePipeline The response pipeline in which the discarding cookie should be embedded.
+ * @param config The transport config.
  * @tparam R The type of the response.
  */
-final case class DiscardCookie[R](config: CookieTransportConfig)(
-  protected val responsePipeline: ResponsePipeline[R]
-) extends Discard[R] {
+final case class DiscardCookie[R](config: CookieTransportConfig) extends Discard[R] {
 
   /**
-   * Embeds a discarding cookie into the [[ResponsePipeline]].
+   * Embeds a discard cookie into the [[ResponsePipeline]].
    *
-   * @return The response pipeline with the embedded discarding cookie.
+   * @param responsePipeline The response pipeline in which the discard cookie should be embedded.
+   * @return The response pipeline with the embedded discard cookie.
    */
-  override def apply(unit: Unit = ()): ResponsePipeline[R] =
+  override def apply(responsePipeline: ResponsePipeline[R]): ResponsePipeline[R] =
     CookieTransport(config).discard(responsePipeline)
 }

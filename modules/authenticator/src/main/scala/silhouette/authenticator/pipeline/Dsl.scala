@@ -64,7 +64,7 @@ object Dsl extends DslLowPriorityImplicits {
   object KleisliM {
 
     /**
-     * Constructs a [[KleisliM]] from a function `A` => `B`.
+     * Lifts a function `A` => `B` with the help of a [[MaybeWriter]] into a [[KleisliM]].
      *
      * @param f      The function to convert.
      * @param writes The writes that transforms the value of the function `A` => `B` into a [[KleisliM]].
@@ -74,20 +74,20 @@ object Dsl extends DslLowPriorityImplicits {
      * @tparam C The type that will be stored in [[Maybe]].
      * @return A [[KleisliM]] for a function `A` => `B`.
      */
-    def apply[F[_], A, B, C](f: A => B)(
+    def lift[F[_], A, B, C](f: A => B)(
       implicit
       writes: MaybeWriter[F, B, C]
     ): KleisliM[F, A, C] = Kleisli((a: A) => writes(f(a)))
 
     /**
-     * Constructs a [[KleisliM]] from a function [[Any]] => [[Unit]].
+     * Lifts a new value into a [[KleisliM]].
      *
-     * This can be used to discard a value in a pipeline and set it to [[Unit]].
+     * The resulting [[KleisliM]] discards the incoming value and uses the lifted value as return value.
      *
      * @tparam F The type of the IO monad.
-     * @return A [[KleisliM]] for a function [[Any]] => [[Unit]].
+     * @return A [[KleisliM]] for a value [[Any]] => `A`.
      */
-    def discard[F[_]: Sync]: KleisliM[F, Any, Unit] = Kleisli((_: Any) => EitherT.pure[F, Throwable](()))
+    def liftV[F[_]: Sync, A](a: A): KleisliM[F, Any, A] = Kleisli((_: Any) => EitherT.pure[F, Throwable](a))
   }
 
   /**
@@ -103,11 +103,22 @@ object Dsl extends DslLowPriorityImplicits {
   implicit class Function1Ops[F[_]: Sync, A, B, C](f: A => B)(implicit writes: MaybeWriter[F, B, C]) {
 
     /**
-     * Start a pipeline by providing the unary operator `~` for a function `A` => `B`.
+     * Lifts a function `A` => `B` into a [[KleisliM]].
      *
+     * {{{
+     * import silhouette.http.transport.RetrieveFromCookie
+     * import silhouette.authenticator.transformer.SatReader
+     *
+     * ~RetrieveFromCookie("authenticator") >> SatReader(...)
+     * }}}
+     *
+     * @param writes The writes that transforms the value of the function `A` => `B` into a [[KleisliM]].
      * @return A [[KleisliM]] for the function `A` => `B`.
      */
-    def unary_~ : KleisliM[F, A, C] = KleisliM(f)
+    def unary_~(
+      implicit
+      writes: MaybeWriter[F, B, C]
+    ): KleisliM[F, A, C] = KleisliM.lift(f)
   }
 
   /**
@@ -130,16 +141,6 @@ object Dsl extends DslLowPriorityImplicits {
      * @return A new [[KleisliM]] from `A` to `C`.
      */
     def >>[C](k: KleisliM[F, B, C]): KleisliM[F, A, C] = kleisliM.andThen(k)
-
-    /**
-     * A function that discards the function parameter [[B]] by changing it to [[Unit]] before composing it with
-     * the given [[KleisliM]].
-     *
-     * @param k The function to compose.
-     * @tparam C The type the function returns after the composition.
-     * @return A new [[KleisliM]] from `A` to `C`.
-     */
-    def xx[C](k: KleisliM[F, Unit, C]): KleisliM[F, A, C] = KleisliM.discard >> k
   }
 
   /**
@@ -211,19 +212,15 @@ object Dsl extends DslLowPriorityImplicits {
   implicit def toKleisliM[F[_], A, B, C](f: A => B)(
     implicit
     writes: Dsl.MaybeWriter[F, B, C]
-  ): Dsl.KleisliM[F, A, C] = Dsl.KleisliM(f)
+  ): Dsl.KleisliM[F, A, C] = Dsl.KleisliM.lift(f)
 
   /**
-   * An alias for the [[KleisliM.discard]] function.
-   *
-   * Constructs a [[KleisliM]] from a function [[Any]] => [[Unit]].
-   *
-   * This can be used to discard a value in a pipeline and set it to [[Unit]].
+   * An alias for the [[KleisliM.liftV]] function.
    *
    * @tparam F The type of the IO monad.
-   * @return A [[KleisliM]] for a function [[Any]] => [[Unit]].
+   * @return A [[KleisliM]] for a function `A` => [[Unit]].
    */
-  def xx[F[_]: Sync]: KleisliM[F, Any, Unit] = KleisliM.discard
+  def xx[F[_]: Sync, C](a: C): KleisliM[F, Any, C] = KleisliM.liftV(a)
 }
 
 /**

@@ -143,10 +143,4 @@ trait Embed[P, R] extends (P => ResponsePipeline[R]) {
  *
  * @tparam R The type of the response.
  */
-trait Discard[R] extends (Unit => ResponsePipeline[R]) {
-
-  /**
-   * The response pipeline from which the payload should be discarded.
-   */
-  protected val responsePipeline: ResponsePipeline[R]
-}
+trait Discard[R] extends (ResponsePipeline[R] => ResponsePipeline[R])

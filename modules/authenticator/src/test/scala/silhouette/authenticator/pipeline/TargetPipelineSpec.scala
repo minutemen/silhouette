@@ -107,14 +107,14 @@ class TargetPipelineSpec extends Specification with Mockito {
      * The discard pipeline to test.
      */
     val discardPipeline = TargetPipeline[SyncIO, Fake.ResponsePipeline](target =>
-      xx >> DiscardCookie(CookieTransportConfig("test"))(target)
+      xx(target) >> DiscardCookie[Fake.Response](CookieTransportConfig("test"))
     )
 
     /**
      * The discard pipeline to test.
      */
     val discardPipeline1 = TargetPipeline[SyncIO, Fake.ResponsePipeline](target =>
-      ~ioStep xx DiscardCookie(CookieTransportConfig("test"))(target)
+      ~ioStep >> xx(target) >> DiscardCookie[Fake.Response](CookieTransportConfig("test"))
     )
   }
 }

@@ -104,7 +104,7 @@ class CookieTransportSpec extends Specification {
 
   "The `DiscardCookie` writes" should {
     "discard a cookie" in new Context {
-      DiscardCookie(config)(responsePipeline)()
+      DiscardCookie(config)(responsePipeline)
         .cookie("test") must beSome[Cookie].like {
           case cookie =>
             cookie.value must be equalTo ""
