@@ -40,7 +40,7 @@ trait RequestProvider[F[_], R, P, I <: Identity] extends Provider {
   type C <: Credentials
 
   /**
-   * Handles an [[AuthState]] and returns a [[ResponsePipeline]].
+   * Handles an [[AuthState]] and returns a [[http.ResponsePipeline]].
    */
   type AuthStateHandler = AuthState[I, C] => F[ResponsePipeline[P]]
 
@@ -48,8 +48,8 @@ trait RequestProvider[F[_], R, P, I <: Identity] extends Provider {
    * Authenticates an identity based on credentials sent in a request.
    *
    * @param request The request pipeline.
-   * @param handler A function that returns a [[ResponsePipeline]] for the given [[AuthState]].
-   * @return The [[ResponsePipeline]].
+   * @param handler A function that returns a [[http.ResponsePipeline]] for the given [[AuthState]].
+   * @return The [[http.ResponsePipeline]].
    */
   def authenticate(request: RequestPipeline[R])(handler: AuthStateHandler): F[ResponsePipeline[P]]
 }
@@ -81,8 +81,8 @@ case class RequestProviders[F[_], R, P, I <: Identity](providers: NonEmptyList[R
    * the handlers is able to authenticate the request, then it calls the handler with the [[Unauthenticated]] state.
    *
    * @param request The request pipeline.
-   * @param handler A function that returns a [[ResponsePipeline]] for the given [[AuthState]].
-   * @return The [[ResponsePipeline]].
+   * @param handler A function that returns a [[http.ResponsePipeline]] for the given [[AuthState]].
+   * @return The [[http.ResponsePipeline]].
    */
   override def authenticate(request: RequestPipeline[R])(handler: AuthStateHandler): F[ResponsePipeline[P]] = {
     def auth(head: RequestProvider[F, R, P, I], tail: List[RequestProvider[F, R, P, I]]): F[ResponsePipeline[P]] = {

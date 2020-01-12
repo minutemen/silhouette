@@ -26,7 +26,7 @@ import silhouette.LoginInfo
 import silhouette.authenticator.pipeline.Dsl._
 import silhouette.authenticator.{ Authenticator, AuthenticatorWriter, TargetPipeline }
 import silhouette.http.transport.{ CookieTransportConfig, DiscardCookie, EmbedIntoHeader }
-import silhouette.http.{ Fake, Header }
+import silhouette.http.{ Cookie, Fake, Header }
 
 /**
  * Test case for the [[TargetPipeline]] class.
@@ -45,6 +45,21 @@ class TargetPipelineSpec extends Specification with Mockito {
         beLike[Fake.ResponsePipeline] {
           case response =>
             response.header("test") must beSome(Header("test", authenticator.toString))
+        }
+    }
+
+    "discard a cookie from the response" in new Context {
+      discardPipeline(authenticator, responsePipeline).unsafeRunSync() must
+        beLike[Fake.ResponsePipeline] {
+          case response =>
+            response.cookie("test") must beSome(Cookie(
+              name = "test",
+              value = "",
+              maxAge = Some(-86400),
+              path = Some("/"),
+              secure = true,
+              httpOnly = true
+            ))
         }
     }
   }
@@ -100,20 +115,13 @@ class TargetPipelineSpec extends Specification with Mockito {
      * The embed pipeline to test.
      */
     val embedPipeline = TargetPipeline[SyncIO, Fake.ResponsePipeline](target =>
-      ~pureStep >> pureStep >> ioStep >> pureStep >> authenticatorWriter >> EmbedIntoHeader("test")(target)
+      ~pureStep >> ioStep >> authenticatorWriter >> EmbedIntoHeader("test")(target)
     )
 
     /**
      * The discard pipeline to test.
      */
     val discardPipeline = TargetPipeline[SyncIO, Fake.ResponsePipeline](target =>
-      xx(target) >> DiscardCookie[Fake.Response](CookieTransportConfig("test"))
-    )
-
-    /**
-     * The discard pipeline to test.
-     */
-    val discardPipeline1 = TargetPipeline[SyncIO, Fake.ResponsePipeline](target =>
       ~ioStep >> xx(target) >> DiscardCookie[Fake.Response](CookieTransportConfig("test"))
     )
   }

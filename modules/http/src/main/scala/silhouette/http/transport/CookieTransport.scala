@@ -29,6 +29,7 @@ import scala.concurrent.duration.FiniteDuration
  * @param domain   The cookie domain.
  * @param secure   Whether this cookie is secured, sent only for HTTPS requests.
  * @param httpOnly Whether this cookie is HTTP only, i.e. not accessible from client-side JavaScript code.
+ * @param sameSite Whether this cookie forces the SameSite policy to prevent CSRF attacks.
  * @param maxAge   The duration a cookie expires. `None` for a transient cookie.
  */
 final case class CookieTransportConfig(
@@ -37,6 +38,7 @@ final case class CookieTransportConfig(
   domain: Option[String] = None,
   secure: Boolean = true,
   httpOnly: Boolean = true,
+  sameSite: Option[Cookie.SameSite] = None,
   maxAge: Option[FiniteDuration] = None
 ) extends TransportConfig
 
@@ -104,7 +106,8 @@ final case class CookieTransport(config: CookieTransportConfig)
     domain = config.domain,
     path = Some(config.path),
     secure = config.secure,
-    httpOnly = config.httpOnly
+    httpOnly = config.httpOnly,
+    sameSite = config.sameSite
   )
 }
 

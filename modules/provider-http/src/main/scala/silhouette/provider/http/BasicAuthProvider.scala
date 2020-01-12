@@ -71,8 +71,8 @@ class BasicAuthProvider[F[_]: Sync, R, P, I <: Identity] @Inject() (
    * Authenticates an identity based on credentials sent in a request.
    *
    * @param request The request pipeline.
-   * @param handler A function that returns a [[ResponsePipeline]] for the given [[AuthState]].
-   * @return The [[ResponsePipeline]].
+   * @param handler A function that returns a [[http.ResponsePipeline]] for the given [[AuthState]].
+   * @return The [[http.ResponsePipeline]].
    */
   override def authenticate(request: RequestPipeline[R])(handler: AuthStateHandler): F[ResponsePipeline[P]] = {
     RetrieveBasicCredentialsFromHeader()(request) match {

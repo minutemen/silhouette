@@ -29,13 +29,12 @@ import scala.util.Try
 /**
  * A simple DSL to model authenticator pipelines.
  */
-// TODO: Add doc examples
 object Dsl extends DslLowPriorityImplicits {
 
   /**
    * Maybe is an IO monad that represents a success and an error case. It's represented by the monad transformer
-   * [[EitherT]] from Cats, because it allows us to easily compose [[Either]] and `F[_]` together without writing
-   * a lot of boilerplate and it makes it easy to compose it with [[Kleisli]].
+   * [[cats.data.EitherT]] from Cats, because it allows us to easily compose [[scala.util.Either]] and `F[_]` together
+   * without writing a lot of boilerplate and it makes it easy to compose it with [[cats.data.Kleisli]].
    */
   type Maybe[F[_], A] = EitherT[F, Throwable, A]
 
@@ -52,9 +51,9 @@ object Dsl extends DslLowPriorityImplicits {
   type KleisliM[F[_], A, B] = Kleisli[({ type L[T] = Maybe[F, T] })#L, A, B]
 
   /**
-   * Option handles a missing case with [[None]] which cannot be easily translated into a throwable. Therefore this
-   * [[Throwable]] represents the [[None]] case for the [[Maybe]] type which acts as an error that can directly be
-   * translated to an auth state.
+   * Option handles a missing case with [[scala.None]] which cannot be easily translated into a throwable. Therefore
+   * this [[scala.Throwable]] represents the [[scala.None]] case for the [[Maybe]] type which acts as an error that
+   * can directly be translated to an auth state.
    */
   final case class NoneError[I <: Identity](state: AuthState[I, Authenticator]) extends Throwable()
 
@@ -65,6 +64,14 @@ object Dsl extends DslLowPriorityImplicits {
 
     /**
      * Lifts a function `A` => `B` with the help of a [[MaybeWriter]] into a [[KleisliM]].
+     *
+     * {{{
+     * import silhouette.http.transport.RetrieveFromCookie
+     * import silhouette.authenticator.pipeline.Dsl._
+     * import silhouette.authenticator.transformer.SatReader
+     *
+     * KleisliM.lift(RetrieveFromCookie("test")) >> SatReader(...)
+     * }}}
      *
      * @param f      The function to convert.
      * @param writes The writes that transforms the value of the function `A` => `B` into a [[KleisliM]].
@@ -82,10 +89,17 @@ object Dsl extends DslLowPriorityImplicits {
     /**
      * Lifts a new value into a [[KleisliM]].
      *
+     * {{{
+     * import silhouette.http.transport.{ DiscardCookie, CookieTransportConfig }
+     * import silhouette.authenticator.pipeline.Dsl._
+     *
+     * KleisliM.liftV(target) >> DiscardCookie[Fake.Response](CookieTransportConfig("test"))
+     * }}}
+     *
      * The resulting [[KleisliM]] discards the incoming value and uses the lifted value as return value.
      *
      * @tparam F The type of the IO monad.
-     * @return A [[KleisliM]] for a value [[Any]] => `A`.
+     * @return A [[KleisliM]] for a value [[scala.Any]] => `A`.
      */
     def liftV[F[_]: Sync, A](a: A): KleisliM[F, Any, A] = Kleisli((_: Any) => EitherT.pure[F, Throwable](a))
   }
@@ -107,6 +121,7 @@ object Dsl extends DslLowPriorityImplicits {
      *
      * {{{
      * import silhouette.http.transport.RetrieveFromCookie
+     * import silhouette.authenticator.pipeline.Dsl._
      * import silhouette.authenticator.transformer.SatReader
      *
      * ~RetrieveFromCookie("authenticator") >> SatReader(...)
@@ -134,7 +149,15 @@ object Dsl extends DslLowPriorityImplicits {
     /**
      * Composes two functions.
      *
-     * An alias for the [[Kleisli.andThen]] function that allows to pass a [[KleisliM]] instance.
+     * An alias for the `cats.data.Kleisli.andThen` function that allows to pass a [[KleisliM]] instance.
+     *
+     * {{{
+     * import silhouette.http.transport.RetrieveFromCookie
+     * import silhouette.authenticator.pipeline.Dsl._
+     * import silhouette.authenticator.transformer.SatReader
+     *
+     * ~RetrieveFromCookie("authenticator") >> SatReader(...)
+     * }}}
      *
      * @param k The function to compose.
      * @tparam C The type the function returns after the composition.
@@ -144,9 +167,9 @@ object Dsl extends DslLowPriorityImplicits {
   }
 
   /**
-   * A transformation function that transforms an [[Option]] to [[Maybe]].
+   * A transformation function that transforms an [[scala.Option]] to [[Maybe]].
    *
-   * In case of [[None]], the function uses the implicit [[NoneError]], which can be translated directly to
+   * In case of [[scala.None]], the function uses the implicit [[NoneError]], which can be translated directly to
    * an [[AuthState]]. There is automatically a low-priority implicit in scope, which translates to the
    * [[MissingCredentials]] state. This can be overridden by defining a custom implicit.
    *
@@ -154,7 +177,7 @@ object Dsl extends DslLowPriorityImplicits {
    * @tparam F The IO monad.
    * @tparam A The type to convert.
    * @tparam I The type of the identity.
-   * @return The [[Maybe]] representation for the [[Option]] type.
+   * @return The [[Maybe]] representation for the [[scala.Option]] type.
    */
   implicit def optionToMaybeWriter[F[_]: Sync, A, I <: Identity](
     implicit
@@ -217,8 +240,15 @@ object Dsl extends DslLowPriorityImplicits {
   /**
    * An alias for the [[KleisliM.liftV]] function.
    *
+   * {{{
+   * import silhouette.http.transport.{ DiscardCookie, CookieTransportConfig }
+   * import silhouette.authenticator.pipeline.Dsl._
+   *
+   * xx(target) >> DiscardCookie[Fake.Response](CookieTransportConfig("test"))
+   * }}}
+   *
    * @tparam F The type of the IO monad.
-   * @return A [[KleisliM]] for a function `A` => [[Unit]].
+   * @return A [[KleisliM]] for a value [[scala.Any]] => `A`.
    */
   def xx[F[_]: Sync, C](a: C): KleisliM[F, Any, C] = KleisliM.liftV(a)
 }
@@ -239,11 +269,11 @@ trait DslLowPriorityImplicits {
     EitherT.pure[F, Throwable](value)
 
   /**
-   * A low priority transformation that returns a [[NoneError]] that can be translated to a [[MissingCredentials]]
+   * A low priority transformation that returns a [[Dsl.NoneError]] that can be translated to a [[MissingCredentials]]
    * state.
    *
    * @tparam I The type of the identity.
-   * @return A [[NoneError]] that can be translated to a [[MissingCredentials]] state.
+   * @return A [[Dsl.NoneError]] that can be translated to a [[MissingCredentials]] state.
    */
   implicit def noneToMissingCredentials[I <: Identity]: Dsl.NoneError[I] =
     NoneError(MissingCredentials())

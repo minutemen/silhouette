@@ -29,7 +29,7 @@ import silhouette.provider.RequestProvider
  * A request provider implementation that supports authentication with an [[Authenticator]].
  *
  * @param authenticationPipeline The authentication pipeline which transforms a request into an [[AuthState]].
- * @param targetPipeline         The target pipeline which writes an [[Authenticator]] to the [[ResponsePipeline]].
+ * @param targetPipeline         The target pipeline which writes an [[Authenticator]] to the [[http.ResponsePipeline]].
  * @tparam F The type of the IO monad.
  * @tparam R The type of the request.
  * @tparam P The type of the response.
@@ -56,8 +56,8 @@ class AuthenticatorProvider[F[_]: Sync, R, P, I <: Identity] @Inject() (
    * Authenticates an identity based on an [[Authenticator]] sent in a request.
    *
    * @param request The request pipeline.
-   * @param handler A function that returns a [[ResponsePipeline]] for the given [[AuthState]].
-   * @return The [[ResponsePipeline]].
+   * @param handler A function that returns a [[http.ResponsePipeline]] for the given [[AuthState]].
+   * @return The [[http.ResponsePipeline]].
    */
   override def authenticate(request: RequestPipeline[R])(handler: AuthStateHandler): F[ResponsePipeline[P]] = {
     Sync[F].flatMap(authenticationPipeline(request)) {
