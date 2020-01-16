@@ -149,14 +149,14 @@ class DslSpec(implicit ev: ExecutionEnv) extends Specification {
     "Use the default AuthState in case of a NoneError" in {
       val f: String => Option[String] = (_: String) => None
 
-      KleisliM.lift(f).run("test").value.unsafeRunSync() must beLeft(noneToMissingCredentials)
+      KleisliM.lift(f).run("test").value.unsafeRunSync() must beLeft(noneToMissingCredentials())
     }
 
     "Allow to override the NoneError with a user defined AuthState" in {
       case class User() extends Identity
       val authState = AuthFailure[User, Authenticator](new RuntimeException("test"))
       val f: String => Option[String] = (_: String) => None
-      implicit val noneError = NoneError[User](authState)
+      implicit val noneError = () => NoneError[User](authState)
 
       KleisliM.lift(f).run("test").value.unsafeRunSync() must beLeft(NoneError[User](authState))
     }

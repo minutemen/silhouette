@@ -182,9 +182,9 @@ object Dsl extends DslLowPriorityImplicits {
    */
   implicit def optionToMaybeWriter[F[_]: Sync, A, I <: Identity](
     implicit
-    noneError: => NoneError[I]
+    noneError: () => NoneError[I]
   ): MaybeWriter[F, Option[A], A] = (value: Option[A]) =>
-    EitherT.fromEither[F](value.toRight(noneError))
+    EitherT.fromEither[F](value.toRight(noneError()))
 
   /**
    * A transformation function that transforms a [[scala.util.Try]] to [[Maybe]].
@@ -292,6 +292,6 @@ trait DslLowPriorityImplicits {
    * @tparam I The type of the identity.
    * @return A [[Dsl.NoneError]] that can be translated to a [[MissingCredentials]] state.
    */
-  implicit def noneToMissingCredentials[I <: Identity]: Dsl.NoneError[I] =
-    NoneError(MissingCredentials())
+  implicit def noneToMissingCredentials[I <: Identity]: () => Dsl.NoneError[I] =
+    () => NoneError(MissingCredentials())
 }

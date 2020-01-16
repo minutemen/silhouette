@@ -44,9 +44,10 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
 
     "return a custom state if no token was found in request and if a custom NoneError was defined" in new Context {
       val request = Fake.request
-      override implicit val noneError: NoneError[User] = NoneError(AuthFailure(new RuntimeException("test")))
+      override implicit val noneError: () => NoneError[User] =
+        () => NoneError(AuthFailure(new RuntimeException("test")))
 
-      pipeline(request).unsafeRunSync() must beEqualTo(noneError.state)
+      pipeline(request).unsafeRunSync() must beEqualTo(noneError().state)
     }
 
     "return the `AuthFailure` state if the token couldn't be transformed into an authenticator" in new Context {
@@ -132,7 +133,7 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
     /**
      * A non error that can be overridden by a test.
      */
-    implicit val noneError: NoneError[User] = noneToMissingCredentials
+    implicit val noneError: () => NoneError[User] = noneToMissingCredentials
 
     /**
      * Some authentication token.
