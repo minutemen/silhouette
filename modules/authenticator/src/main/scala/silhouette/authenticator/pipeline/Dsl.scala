@@ -18,11 +18,12 @@
 package silhouette.authenticator.pipeline
 
 import cats.data.{ EitherT, Kleisli }
-import cats.effect.Sync
+import cats.effect.{ ContextShift, IO, Sync }
 import silhouette.authenticator.Authenticator
 import silhouette.authenticator.pipeline.Dsl.NoneError
 import silhouette.{ AuthState, Identity, MissingCredentials }
 
+import scala.concurrent.Future
 import scala.language.implicitConversions
 import scala.util.Try
 
@@ -204,6 +205,22 @@ object Dsl extends DslLowPriorityImplicits {
    */
   implicit def eitherToMaybeWriter[F[_]: Sync, A]: MaybeWriter[F, Either[Throwable, A], A] =
     (value: Either[Throwable, A]) => EitherT.fromEither[F](value)
+
+  /**
+   * A transformation function that transforms a [[scala.concurrent.Future]] effect to [[Dsl.Maybe]].
+   *
+   * @tparam A The type to convert.
+   * @return The [[Dsl.Maybe]] representation for the `Either[Throwable, A]` type.
+   */
+  implicit def futureToMaybeWriter[A, B](
+    implicit
+    writer: Dsl.MaybeWriter[IO, A, B],
+    contextShift: ContextShift[IO]
+  ): Dsl.MaybeWriter[IO, Future[A], B] = (value: Future[A]) =>
+    for {
+      r <- EitherT.right(IO.fromFuture(IO(value)))
+      v <- writer(r)
+    } yield v
 
   /**
    * A transformation function that transforms a functional effect to [[Dsl.Maybe]].
