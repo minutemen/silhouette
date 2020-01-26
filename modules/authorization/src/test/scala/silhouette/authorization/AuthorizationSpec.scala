@@ -17,65 +17,62 @@
  */
 package silhouette.authorization
 
-import org.specs2.concurrent.ExecutionEnv
+import cats.effect.SyncIO._
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.authorization.Authorization._
-import silhouette.specs2.WaitPatience
 import silhouette.{ Identity, LoginInfo }
 
 /**
  * Test case for the [[Authorization]] class.
- *
- * @param ev The execution environment.
  */
-class AuthorizationSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
+class AuthorizationSpec extends Specification with Mockito {
 
   "The `Authorized` authorization" should {
     "return true" in new Context {
-      Authorized.isAuthorized(user, TestContext()) must beEqualTo(true).awaitWithPatience
+      Authorized().isAuthorized(user, TestContext()).unsafeRunSync() must beEqualTo(true)
     }
   }
 
   "The `Unauthorized` authorization" should {
     "return true" in new Context {
-      Unauthorized.isAuthorized(user, TestContext()) must beEqualTo(false).awaitWithPatience
+      Unauthorized().isAuthorized(user, TestContext()).unsafeRunSync() must beEqualTo(false)
     }
   }
 
   "The `RichAuthorization` class" should {
     "allow to negate an authorization" in new Context {
-      (!Authorized).isAuthorized(user, TestContext()) must beEqualTo(false).awaitWithPatience
-      (!Unauthorized).isAuthorized(user, TestContext()) must beEqualTo(true).awaitWithPatience
+      !Authorized().isAuthorized(user, TestContext()).unsafeRunSync() must beEqualTo(false)
+      !Unauthorized().isAuthorized(user, TestContext()).unsafeRunSync() must beEqualTo(true)
     }
 
     "allow to perform a logical AND operation" in new Context {
-      (Authorized && Unauthorized).isAuthorized(user, TestContext()) must
-        beEqualTo(false).awaitWithPatience
+      (Authorized() && Unauthorized()).isAuthorized(user, TestContext()).unsafeRunSync() must
+        beEqualTo(false)
 
-      (Authorized && Authorized).isAuthorized(user, TestContext()) must
-        beEqualTo(true).awaitWithPatience
+      (Authorized() && Authorized()).isAuthorized(user, TestContext()).unsafeRunSync() must
+        beEqualTo(true)
 
-      (Unauthorized && Unauthorized).isAuthorized(user, TestContext()) must
-        beEqualTo(false).awaitWithPatience
+      (Unauthorized() && Unauthorized()).isAuthorized(user, TestContext()).unsafeRunSync() must
+        beEqualTo(false)
 
-      (Unauthorized && Authorized).isAuthorized(user, TestContext()) must
-        beEqualTo(false).awaitWithPatience
+      (Unauthorized() && Authorized()).isAuthorized(user, TestContext()).unsafeRunSync() must
+        beEqualTo(false)
     }
 
     "allow to perform a logical OR operation" in new Context {
-      (Authorized || Unauthorized).isAuthorized(user, TestContext()) must
-        beEqualTo(true).awaitWithPatience
+      (Authorized() || Unauthorized()).isAuthorized(user, TestContext()).unsafeRunSync() must
+        beEqualTo(true)
 
-      (Authorized || Authorized).isAuthorized(user, TestContext()) must
-        beEqualTo(true).awaitWithPatience
+      (Authorized() || Authorized()).isAuthorized(user, TestContext()).unsafeRunSync() must
+        beEqualTo(true)
 
-      (Unauthorized || Unauthorized).isAuthorized(user, TestContext()) must
-        beEqualTo(false).awaitWithPatience
+      (Unauthorized() || Unauthorized()).isAuthorized(user, TestContext()).unsafeRunSync() must
+        beEqualTo(false)
 
-      (Unauthorized || Authorized).isAuthorized(user, TestContext()) must
-        beEqualTo(true).awaitWithPatience
+      (Unauthorized() || Authorized()).isAuthorized(user, TestContext()).unsafeRunSync() must
+        beEqualTo(true)
     }
   }
 

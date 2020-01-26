@@ -15,20 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.util
+import Dependencies._
 
-import java.net.URI
-
-/**
- * Service to retrieve avatar URIs from an avatar service such as Gravatar.
- */
-trait AvatarService[F[_]] {
-
-  /**
-   * Retrieves the URI for an identifier.
-   *
-   * @param id The identifier for the avatar.
-   * @return Maybe an avatar URI or None if no URL could be found for the given identifier.
-   */
-  def retrieveURI(id: String): F[Option[URI]]
-}
+libraryDependencies ++= Seq(
+  Library.Cats.effect
+)
+//enablePlugins(Doc)

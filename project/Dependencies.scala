@@ -23,6 +23,7 @@ object Dependencies {
     val specs2 = "4.6.0"
     val circe = "0.12.3"
     val cats = "2.0.0"
+    val sttp = "2.0.0-RC6"
   }
 
   val resolvers = Seq()
@@ -43,6 +44,11 @@ object Dependencies {
     object Cats {
       val core = "org.typelevel" %% "cats-core" % Version.cats
       val effect = "org.typelevel" %% "cats-effect" % Version.cats
+    }
+
+    object Sttp {
+      val core = "com.softwaremill.sttp.client" %% "core" % Version.sttp
+      val circe = "com.softwaremill.sttp.client" %% "circe" % Version.sttp
     }
 
     val jbcrypt = "org.mindrot" % "jbcrypt" % "0.3m"

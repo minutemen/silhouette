@@ -47,7 +47,7 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
       override implicit val noneError: () => NoneError[User] =
         () => NoneError(AuthFailure(new RuntimeException("test")))
 
-      pipeline(request).unsafeRunSync() must beEqualTo(noneError().state)
+      pipeline(request).unsafeRunSync().toString must beEqualTo(noneError().state.toString)
     }
 
     "return the `AuthFailure` state if the token couldn't be transformed into an authenticator" in new Context {
@@ -174,7 +174,7 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
     /**
      * The pipeline to test.
      */
-    val pipeline = AuthenticationPipeline[SyncIO, Fake.RequestPipeline, User](
+    lazy val pipeline = AuthenticationPipeline[SyncIO, Fake.RequestPipeline, User](
       ~RetrieveFromCookie("test") >> authenticatorReader,
       identityReader,
       Set(validator)

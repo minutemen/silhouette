@@ -22,12 +22,10 @@ import silhouette.LoginInfo
 import silhouette.provider.Provider
 import silhouette.provider.form.EmailLoginProvider._
 
-import scala.concurrent.Future
-
 /**
  * A provider for authenticating with an email address.
  */
-class EmailLoginProvider @Inject() () extends Provider {
+class EmailLoginProvider[F[_]] @Inject() () extends Provider {
 
   /**
    * Gets the provider ID.
@@ -42,7 +40,7 @@ class EmailLoginProvider @Inject() () extends Provider {
    * @param email The email to authenticate with.
    * @return The login info if the authentication was successful, otherwise a failure.
    */
-  def authenticate(email: String): Future[LoginInfo] = ???
+  def authenticate(email: String): F[LoginInfo] = ???
 }
 
 /**
