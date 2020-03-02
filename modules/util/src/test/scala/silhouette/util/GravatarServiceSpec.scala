@@ -94,7 +94,7 @@ class GravatarServiceSpec extends Specification with Mockito {
     /**
      * The Gravatar service implementation.
      */
-    lazy val service = new GravatarService(config)
+    lazy val service = GravatarService(config)
 
     /**
      * The email for which the Avatar should be retrieved.

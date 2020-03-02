@@ -20,18 +20,17 @@ package silhouette.provider.oauth2
 import java.net.URI
 import java.time.Clock
 
+import cats.effect.Async
+import cats.implicits._
 import io.circe.Json
-import silhouette.http.Method.GET
 import silhouette.http._
-import silhouette.http.client.Request
 import silhouette.provider.UnexpectedResponseException
 import silhouette.provider.oauth2.Auth0Provider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
-import silhouette.provider.social.state.StateHandler
 import silhouette.{ ConfigURI, LoginInfo }
-
-import scala.concurrent.{ ExecutionContext, Future }
+import sttp.client.circe.asJson
+import sttp.client.{ SttpBackend, basicRequest }
 
 /**
  * Base Auth0 OAuth2 Provider.
@@ -52,8 +51,10 @@ import scala.concurrent.{ ExecutionContext, Future }
  *   auth0.scope="openid name email picture"
  *
  * See http://auth0.com for more information on the Auth0 Auth 2.0 Provider and Service.
+ *
+ * @tparam F The type of the IO monad.
  */
-trait BaseAuth0Provider extends OAuth2Provider {
+trait BaseAuth0Provider[F[_]] extends OAuth2Provider[F] {
 
   /**
    * The provider ID.
@@ -66,34 +67,32 @@ trait BaseAuth0Provider extends OAuth2Provider {
    * @param authInfo The auth info received from the provider.
    * @return On success the build social profile, otherwise a failure.
    */
-  override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
-    val uri = config.apiURI.getOrElse[ConfigURI](DefaultApiURI)
-    val request = Request(GET, uri).withHeaders(Header(Header.Name.Authorization, s"Bearer ${authInfo.accessToken}"))
-
-    httpClient.execute(request).flatMap { response =>
-      withParsedJson(response) { json =>
-        response.status match {
-          case Status.OK =>
+  override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
+    basicRequest.get(config.apiURI.getOrElse[ConfigURI](DefaultApiURI))
+      .header(BearerAuthorizationHeader(authInfo.accessToken))
+      .response(asJson[Json])
+      .send().flatMap { response =>
+        response.body match {
+          case Left(error) =>
+            F.raiseError(new UnexpectedResponseException(UnexpectedResponse.format(id, error.body, response.code)))
+          case Right(json) =>
             profileParser.parse(json, authInfo)
-          case status =>
-            Future.failed(new UnexpectedResponseException(UnexpectedResponse.format(id, json, status)))
         }
       }
-    }
   }
 
   /**
    * Gets the access token.
    *
-   * @param code    The access code.
    * @param request The current request.
+   * @param code    The access code.
    * @tparam R The type of the request.
    * @return The info containing the access token.
    */
-  override protected def getAccessToken[R](code: String)(implicit request: RequestPipeline[R]): Future[OAuth2Info] = {
+  override protected def getAccessToken[R](request: RequestPipeline[R], code: String): F[OAuth2Info] = {
     request.queryParam("token_type").headOption match {
-      case Some("bearer") => Future(OAuth2Info(code))
-      case _              => super.getAccessToken(code)
+      case Some("bearer") => F.pure(OAuth2Info(code))
+      case _              => super.getAccessToken(request, code)
     }
   }
 }
@@ -101,10 +100,9 @@ trait BaseAuth0Provider extends OAuth2Provider {
 /**
  * The profile parser for the common social profile.
  *
- * @param ec The execution context.
+ * @tparam F The type of the IO monad.
  */
-class Auth0ProfileParser(implicit val ec: ExecutionContext)
-  extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
+class Auth0ProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, CommonSocialProfile, OAuth2Info] {
 
   /**
    * Parses the social profile.
@@ -113,8 +111,8 @@ class Auth0ProfileParser(implicit val ec: ExecutionContext)
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = {
-    Future.fromTry(json.hcursor.downField("user_id").as[String].getOrError(json, "user_id", ID)).map { id =>
+  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] = {
+    Async[F].fromTry(json.hcursor.downField("user_id").as[String].getOrError(json, "user_id", ID)).map { id =>
       CommonSocialProfile(
         loginInfo = LoginInfo(ID, id),
         fullName = json.hcursor.downField("name").as[String].toOption,
@@ -128,26 +126,25 @@ class Auth0ProfileParser(implicit val ec: ExecutionContext)
 /**
  * The Auth0 OAuth2 Provider.
  *
- * @param httpClient   The HTTP client implementation.
- * @param stateHandler The state provider implementation.
- * @param clock        The current clock instance.
- * @param config       The provider config.
- * @param ec           The execution context.
+ * @param clock       The current clock instance.
+ * @param config      The provider config.
+ * @param sttpBackend The STTP backend.
+ * @param F           The IO monad type class.
+ * @tparam F The type of the IO monad.
  */
-class Auth0Provider(
-  protected val httpClient: HttpClient,
-  protected val stateHandler: StateHandler,
+class Auth0Provider[F[_]](
   protected val clock: Clock,
   val config: OAuth2Config
 )(
   implicit
-  override implicit val ec: ExecutionContext
-) extends BaseAuth0Provider with CommonProfileBuilder {
+  protected val sttpBackend: SttpBackend[F, Nothing, Nothing],
+  protected val F: Async[F]
+) extends BaseAuth0Provider[F] with CommonProfileBuilder[F] {
 
   /**
    * The type of this class.
    */
-  override type Self = Auth0Provider
+  override type Self = Auth0Provider[F]
 
   /**
    * The profile parser implementation.
@@ -160,8 +157,7 @@ class Auth0Provider(
    * @param f A function which gets the config passed and returns different config.
    * @return An instance of the provider initialized with new config.
    */
-  override def withConfig(f: OAuth2Config => OAuth2Config): Self =
-    new Auth0Provider(httpClient, stateHandler, clock, f(config))
+  override def withConfig(f: OAuth2Config => OAuth2Config): Self = new Auth0Provider(clock, f(config))
 }
 
 /**

@@ -18,7 +18,7 @@
 package silhouette.provider.http
 
 import cats.data.{ NonEmptyList => NEL }
-import cats.effect.Sync
+import cats.effect.Async
 import javax.inject.Inject
 import silhouette._
 import silhouette.http.transport.RetrieveBasicCredentialsFromHeader
@@ -48,7 +48,7 @@ import silhouette.provider.password.PasswordProvider
  * @tparam P The type of the response.
  * @tparam I The type of the identity.
  */
-class BasicAuthProvider[F[_]: Sync, R, P, I <: Identity] @Inject() (
+class BasicAuthProvider[F[_]: Async, R, P, I <: Identity] @Inject() (
   protected val authInfoReader: PasswordProvider[F]#AuthInfoReader,
   protected val authInfoWriter: PasswordProvider[F]#AuthInfoWriter,
   protected val identityReader: LoginInfo => F[Option[I]],
@@ -78,9 +78,9 @@ class BasicAuthProvider[F[_]: Sync, R, P, I <: Identity] @Inject() (
     RetrieveBasicCredentialsFromHeader()(request) match {
       case Some(credentials) =>
         val loginInfo = LoginInfo(id, credentials.username)
-        Sync[F].flatMap(authenticate(loginInfo, credentials.password)) {
+        Async[F].flatMap(authenticate(loginInfo, credentials.password)) {
           case Successful =>
-            Sync[F].flatMap(identityReader(loginInfo)) {
+            Async[F].flatMap(identityReader(loginInfo)) {
               case Some(identity) => handler(Authenticated(identity, credentials, loginInfo))
               case None           => handler(MissingIdentity(credentials, loginInfo))
             }

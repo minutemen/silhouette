@@ -21,6 +21,7 @@ import java.net.{ URI, URLEncoder }
 
 import silhouette.crypto.Hash
 import silhouette.crypto.Hash._
+import sttp.model.{ Header, HeaderNames }
 
 /**
  * Represents a request that offers access to the framework specific request implementation.
@@ -57,7 +58,7 @@ trait Request {
    * @param name The name of the header for which the header should be returned.
    * @return Some header for the given name, None if no header for the given name could be found.
    */
-  def header(name: Header.Name): Option[Header] = headers.find(_.name == name)
+  def header(name: String): Option[Header] = headers.find(_.name == name)
 
   /**
    * Gets the header value for the given name.
@@ -65,7 +66,7 @@ trait Request {
    * @param name The name of the header for which the header value should be returned.
    * @return Some header value for the given name, None if no header for the given name could be found.
    */
-  def headerValue(name: Header.Name): Option[String] = header(name).map(_.value)
+  def headerValue(name: String): Option[String] = header(name).map(_.value)
 
   /**
    * Gets the list of cookies.
@@ -130,9 +131,9 @@ trait Request {
    */
   def fingerprint(): String = {
     Hash.sha1(new StringBuilder()
-      .append(headerValue(Header.Name.`User-Agent`).getOrElse("")).append(":")
-      .append(headerValue(Header.Name.`Accept-Language`).getOrElse("")).append(":")
-      .append(headerValue(Header.Name.`Accept-Charset`).getOrElse(""))
+      .append(headerValue(HeaderNames.UserAgent).getOrElse("")).append(":")
+      .append(headerValue(HeaderNames.AcceptLanguage).getOrElse("")).append(":")
+      .append(headerValue(HeaderNames.AcceptCharset).getOrElse(""))
       .toString()
     )
   }

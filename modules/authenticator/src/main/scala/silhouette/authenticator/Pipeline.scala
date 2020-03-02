@@ -18,7 +18,7 @@
 package silhouette.authenticator
 
 import cats.data.Validated.{ Invalid, Valid }
-import cats.effect.Sync
+import cats.effect.Async
 import silhouette._
 import silhouette.authenticator.pipeline.Dsl.{ KleisliM, NoneError }
 
@@ -42,7 +42,7 @@ import silhouette.authenticator.pipeline.Dsl.{ KleisliM, NoneError }
  * @tparam S The type of the source.
  * @tparam I The type of the identity.
  */
-final case class AuthenticationPipeline[F[_]: Sync, S, I <: Identity](
+final case class AuthenticationPipeline[F[_]: Async, S, I <: Identity](
   pipeline: KleisliM[F, S, Authenticator],
   identityReader: LoginInfo => F[Option[I]],
   validators: Set[Validator[F]] = Set.empty[Validator[F]]
@@ -55,16 +55,16 @@ final case class AuthenticationPipeline[F[_]: Sync, S, I <: Identity](
    * @return An authentication state.
    */
   override def apply(source: S): F[AuthState[I, Authenticator]] =
-    Sync[F].recover[AuthState[I, Authenticator]] {
-      Sync[F].flatMap(pipeline.run(source).value) {
-        case Left(e: NoneError[I]) => Sync[F].pure(e.state)
-        case Left(e)               => Sync[F].pure(AuthFailure(e))
+    Async[F].recover[AuthState[I, Authenticator]] {
+      Async[F].flatMap(pipeline.run(source).value) {
+        case Left(e: NoneError[I]) => Async[F].pure(e.state)
+        case Left(e)               => Async[F].pure(AuthFailure(e))
         case Right(authenticator) =>
-          Sync[F].flatMap(authenticator.isValid(validators)) {
+          Async[F].flatMap(authenticator.isValid(validators)) {
             case Invalid(errors) =>
-              Sync[F].pure(InvalidCredentials(authenticator, errors))
+              Async[F].pure(InvalidCredentials(authenticator, errors))
             case Valid(_) =>
-              Sync[F].map(identityReader(authenticator.loginInfo)) {
+              Async[F].map(identityReader(authenticator.loginInfo)) {
                 case Some(identity) =>
                   Authenticated(identity, authenticator, authenticator.loginInfo)
                 case None =>
@@ -82,7 +82,7 @@ final case class AuthenticationPipeline[F[_]: Sync, S, I <: Identity](
  * @tparam F The type of the IO monad.
  * @tparam T The type of the target.
  */
-final case class TargetPipeline[F[_]: Sync, T](pipeline: T => KleisliM[F, Authenticator, T])
+final case class TargetPipeline[F[_]: Async, T](pipeline: T => KleisliM[F, Authenticator, T])
   extends ((Authenticator, T) => F[T]) {
 
   /**
@@ -93,8 +93,8 @@ final case class TargetPipeline[F[_]: Sync, T](pipeline: T => KleisliM[F, Authen
    * @return The target with the [[Authenticator]].
    */
   override def apply(authenticator: Authenticator, target: T): F[T] =
-    Sync[F].flatMap(pipeline(target).run(authenticator).value) {
-      case Left(error)   => Sync[F].raiseError(error)
-      case Right(target) => Sync[F].pure(target)
+    Async[F].flatMap(pipeline(target).run(authenticator).value) {
+      case Left(error)   => Async[F].raiseError(error)
+      case Right(target) => Async[F].pure(target)
     }
 }

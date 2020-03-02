@@ -17,7 +17,7 @@
  */
 package silhouette.authenticator.transformer
 
-import cats.effect.Sync
+import cats.effect.Async
 import io.circe.Json
 import io.circe.jawn.decode
 import silhouette.LoginInfo
@@ -25,8 +25,6 @@ import silhouette.authenticator.transformer.JwtReader._
 import silhouette.authenticator.{ Authenticator, AuthenticatorException, AuthenticatorReader }
 import silhouette.crypto.Base64
 import silhouette.jwt.JwtClaimReader
-
-import scala.util.{ Failure, Success, Try }
 
 /**
  * A transformation function that transforms a JWT into an [[Authenticator]].
@@ -40,7 +38,7 @@ import scala.util.{ Failure, Success, Try }
  * @param claimReader The JWT claim reader function.
  * @tparam F The type of the IO monad.
  */
-final case class JwtReader[F[_]: Sync](claimReader: JwtClaimReader) extends AuthenticatorReader[F, String] {
+final case class JwtReader[F[_]: Async](claimReader: JwtClaimReader) extends AuthenticatorReader[F, String] {
 
   /**
    * Transforms a JWT into an [[Authenticator]].
@@ -48,13 +46,13 @@ final case class JwtReader[F[_]: Sync](claimReader: JwtClaimReader) extends Auth
    * @param jwt The JWT to transform.
    * @return An authenticator on success, an error on failure.
    */
-  override def apply(jwt: String): F[Authenticator] = Sync[F].fromTry {
+  override def apply(jwt: String): F[Authenticator] = Async[F].fromEither {
     claimReader(jwt).flatMap { claims =>
       val custom = Json.fromJsonObject(claims.custom)
-      val maybeID = claims.jwtID.map(Success.apply)
-        .getOrElse(Failure(new AuthenticatorException(MissingClaimValue.format("jwtID"))))
-      val maybeSubject = claims.subject.map(Success.apply)
-        .getOrElse(Failure(new AuthenticatorException(MissingClaimValue.format("subject"))))
+      val maybeID = claims.jwtID.map(Right.apply)
+        .getOrElse(Left(new AuthenticatorException(MissingClaimValue.format("jwtID"))))
+      val maybeSubject = claims.subject.map(Right.apply)
+        .getOrElse(Left(new AuthenticatorException(MissingClaimValue.format("subject"))))
 
       for {
         id <- maybeID
@@ -78,14 +76,11 @@ final case class JwtReader[F[_]: Sync](claimReader: JwtClaimReader) extends Auth
    * Builds the login info from Json.
    *
    * @param str The string representation of the login info.
-   * @return The login info on success, otherwise a failure.
+   * @return The login info on the right or an error on the left.
    */
-  private def buildLoginInfo(str: String): Try[LoginInfo] = {
-    decode[LoginInfo](str) match {
-      case Left(error) =>
-        Failure(new AuthenticatorException(JsonParseError.format(str), Some(error.getCause)))
-      case Right(loginInfo) =>
-        Success(loginInfo)
+  private def buildLoginInfo(str: String): Either[Throwable, LoginInfo] = {
+    decode[LoginInfo](str).left.map {
+      error => new AuthenticatorException(JsonParseError.format(str), Some(error.getCause))
     }
   }
 }

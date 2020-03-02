@@ -223,9 +223,9 @@ class SimpleSpec extends Specification with Mockito with WithBouncyCastle {
      * @return A Specs2 match result.
      */
     protected def transform(claims: Claims): MatchResult[Any] = {
-      claimWriter(claims) must beSuccessfulTry.like {
+      claimWriter.apply(claims) must beRight[String].like {
         case jwt =>
-          claimReader(jwt) must beSuccessfulTry.withValue(claims)
+          claimReader.apply(jwt) must beRight(claims)
       }
     }
 
@@ -237,9 +237,9 @@ class SimpleSpec extends Specification with Mockito with WithBouncyCastle {
      * @return A Specs2 match result.
      */
     protected def fraudulent(claims: Claims): MatchResult[Any] = {
-      claimWriter(claims) must beSuccessfulTry.like {
+      claimWriter.apply(claims) must beRight[String].like {
         case jwt =>
-          claimReader(jwt) must beFailedTry.like {
+          claimReader.apply(jwt) must beLeft[Throwable].like {
             case e: JwtException => e.getMessage must startWith(FraudulentJwtToken.format(""))
           }
       }

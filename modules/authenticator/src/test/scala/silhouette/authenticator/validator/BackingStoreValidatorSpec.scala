@@ -18,7 +18,7 @@
 package silhouette.authenticator.validator
 
 import cats.data.Validated._
-import cats.effect.SyncIO
+import cats.effect.IO
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
@@ -33,13 +33,13 @@ class BackingStoreValidatorSpec extends Specification with Mockito {
 
   "The `isValid` method" should {
     "return Valid if the authenticator is valid" in new Context {
-      BackingStoreValidator[SyncIO](_ => SyncIO.pure(true))
+      BackingStoreValidator[IO](_ => IO.pure(true))
         .isValid(authenticator)
         .unsafeRunSync() must beEqualTo(validNel(()))
     }
 
     "return Invalid if the authenticator is invalid" in new Context {
-      BackingStoreValidator[SyncIO](_ => SyncIO.pure(false))
+      BackingStoreValidator[IO](_ => IO.pure(false))
         .isValid(authenticator)
         .unsafeRunSync() must beEqualTo(invalidNel(Error))
     }

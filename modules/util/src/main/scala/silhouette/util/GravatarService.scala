@@ -27,14 +27,13 @@ import silhouette.ConfigURI
 import silhouette.crypto.Hash._
 import silhouette.util.GravatarService._
 import sttp.client._
-import sttp.model.Uri
 
 /**
  * Retrieves avatar URIs from the Gravatar service.
  *
  * @param settings The Gravatar service settings.
  */
-class GravatarService[F[_]: Monad] @Inject() (settings: GravatarServiceConfig = GravatarServiceConfig())(
+final case class GravatarService[F[_]: Monad] @Inject() (settings: GravatarServiceConfig = GravatarServiceConfig())(
   implicit
   val sttpBackend: SttpBackend[F, Nothing, Nothing]
 ) extends AvatarService[F] with LazyLogging {
@@ -50,7 +49,7 @@ class GravatarService[F[_]: Monad] @Inject() (settings: GravatarServiceConfig = 
       case Some(hash) =>
         val encodedParams = settings.params.map { p => encode(p._1, "UTF-8") + "=" + encode(p._2, "UTF-8") }
         val url = (if (settings.secure) SecureURI else InsecureURI).format(hash, encodedParams.mkString("?", "&", ""))
-        Monad[F].map(basicRequest.get(Uri(url.toURI)).send()) { response =>
+        Monad[F].map(basicRequest.get(url).send()) { response =>
           response.body match {
             case Left(error) =>
               logger.info(s"Gravatar API returns status `${response.code}` with error: $error")

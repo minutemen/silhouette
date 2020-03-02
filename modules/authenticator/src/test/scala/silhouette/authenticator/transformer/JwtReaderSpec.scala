@@ -19,7 +19,7 @@ package silhouette.authenticator.transformer
 
 import java.time.Instant
 
-import cats.effect.SyncIO
+import cats.effect.IO
 import io.circe.syntax._
 import io.circe.{ Json, JsonObject }
 import org.specs2.matcher.Scope
@@ -29,9 +29,7 @@ import silhouette.LoginInfo
 import silhouette.authenticator.transformer.JwtReader._
 import silhouette.authenticator.{ Authenticator, AuthenticatorException }
 import silhouette.crypto.Base64
-import silhouette.jwt.{ JwtClaimReader, Claims }
-
-import scala.util.{ Failure, Try }
+import silhouette.jwt.{ Claims, JwtClaimReader }
 
 /**
  * Test case for the [[JwtReader]] class.
@@ -41,7 +39,7 @@ class JwtReaderSpec extends Specification with Mockito {
   "The `read` method" should {
     "return a failed future if the underlying reads returns a `Failure`" in new Context {
       val exception = new RuntimeException("test")
-      claimReader(jwt) returns Failure(exception)
+      claimReader(jwt) returns Left(exception)
 
       jwtReader(jwt).unsafeRunSync() must throwA[RuntimeException].like {
         case e =>
@@ -50,7 +48,7 @@ class JwtReaderSpec extends Specification with Mockito {
     }
 
     "throw an `AuthenticatorException` if the `jwtID` isn't set in a claim" in new Context {
-      claimReader(jwt) returns Try(claims.copy(jwtID = None))
+      claimReader(jwt) returns Right(claims.copy(jwtID = None))
 
       jwtReader(jwt).unsafeRunSync() must throwA[AuthenticatorException].like {
         case e =>
@@ -59,7 +57,7 @@ class JwtReaderSpec extends Specification with Mockito {
     }
 
     "throw an `AuthenticatorException` if the `subject` isn't set in a claim" in new Context {
-      claimReader(jwt) returns Try(claims.copy(subject = None))
+      claimReader(jwt) returns Right(claims.copy(subject = None))
 
       jwtReader(jwt).unsafeRunSync() must throwA[AuthenticatorException].like {
         case e =>
@@ -68,7 +66,7 @@ class JwtReaderSpec extends Specification with Mockito {
     }
 
     "throw an `AuthenticatorException` if the `subject` claim cannot be parsed" in new Context {
-      claimReader(jwt) returns Try(claims.copy(subject = Some(Base64.encode("invalid"))))
+      claimReader(jwt) returns Right(claims.copy(subject = Some(Base64.encode("invalid"))))
 
       jwtReader(jwt).unsafeRunSync() must throwA[AuthenticatorException].like {
         case e =>
@@ -77,7 +75,7 @@ class JwtReaderSpec extends Specification with Mockito {
     }
 
     "return the tags as empty array if the `tags` in the custom claim JSON isn't an array" in new Context {
-      claimReader(jwt) returns Try(claims.copy(custom = JsonObject(
+      claimReader(jwt) returns Right(claims.copy(custom = JsonObject(
         "tags" -> Json.fromString("some string")
       )))
 
@@ -88,7 +86,7 @@ class JwtReaderSpec extends Specification with Mockito {
     }
 
     "return the `tags` as empty array if the values in the JSON `tags` array are not strings" in new Context {
-      claimReader(jwt) returns Try(claims.copy(custom = JsonObject("tags" -> Json.arr(Json.fromInt(1)))))
+      claimReader(jwt) returns Right(claims.copy(custom = JsonObject("tags" -> Json.arr(Json.fromInt(1)))))
 
       jwtReader(jwt).unsafeRunSync() must beLike[Authenticator] {
         case value =>
@@ -97,7 +95,7 @@ class JwtReaderSpec extends Specification with Mockito {
     }
 
     "return the `fingerprint` as None if the `fingerprint` in the custom claim JSON isn't a string" in new Context {
-      claimReader(jwt) returns Try(claims.copy(custom = JsonObject("fingerprint" -> Json.fromInt(1))))
+      claimReader(jwt) returns Right(claims.copy(custom = JsonObject("fingerprint" -> Json.fromInt(1))))
 
       jwtReader(jwt).unsafeRunSync() must beLike[Authenticator] {
         case value =>
@@ -106,7 +104,7 @@ class JwtReaderSpec extends Specification with Mockito {
     }
 
     "create an authenticator representation from the JWT" in new Context {
-      claimReader(jwt) returns Try(claims)
+      claimReader(jwt) returns Right(claims)
 
       jwtReader(jwt).unsafeRunSync() must be equalTo authenticator
     }
@@ -173,6 +171,6 @@ class JwtReaderSpec extends Specification with Mockito {
     /**
      * The JWT authenticator reader.
      */
-    val jwtReader = JwtReader[SyncIO](claimReader)
+    val jwtReader = JwtReader[IO](claimReader)
   }
 }

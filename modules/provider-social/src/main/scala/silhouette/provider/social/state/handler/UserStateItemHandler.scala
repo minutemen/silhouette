@@ -17,15 +17,12 @@
  */
 package silhouette.provider.social.state.handler
 
+import cats.effect.Async
 import io.circe.syntax._
 import io.circe.{ Decoder, Encoder, HCursor, Json }
-import silhouette.http.RequestPipeline
-import silhouette.provider.social.state.StateItem.ItemStructure
-import silhouette.provider.social.state.handler.UserStateItemHandler._
+import silhouette.http.{ RequestPipeline, ResponseWriter }
+import silhouette.provider.social.state.handler.CsrfStateItemHandler.ID
 import silhouette.provider.social.state.{ StateItem, StateItemHandler }
-
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.reflect.ClassTag
 
 /**
  * A default user state item where state is of type Map[String, String].
@@ -49,83 +46,53 @@ object UserStateItem {
 /**
  * Handles user defined state.
  *
- * @param item     The user state item.
- * @param decoder  The JSON decoder.
- * @param encoder  The JSON encoder.
- * @param classTag The class tag for the user state item.
- * @tparam S The type of the user state.
+ * @param item    The user state item.
+ * @param decoder The JSON decoder.
+ * @param encoder The JSON encoder.
+ * @tparam I The type of the user state item.
  */
-class UserStateItemHandler[S <: StateItem](item: S)(
+class UserStateItemHandler[F[_]: Async, I <: StateItem](item: I)(
   implicit
-  decoder: Decoder[S],
-  encoder: Encoder[S],
-  classTag: ClassTag[S]
-) extends StateItemHandler {
+  decoder: Decoder[I],
+  encoder: Encoder[I]
+) extends StateItemHandler[F, I] {
 
   /**
-   * The item the handler can handle.
+   * Gets the ID of the handler.
+   *
+   * @return The ID of the handler.
    */
-  override type Item = S
+  override def id: String = ID
 
   /**
-   * Gets the state item the handler can handle.
+   * Returns the [[io.circe.Json]] representation of the state item and a function that can embed item specific
+   * state into a response.
    *
-   * @param ec The execution context to handle the asynchronous operations.
-   * @return The state params the handler can handle.
+   * A state item handler is able to embed some item specific state into the response. In the unserialize method
+   * it can then be extracted from the request. So this method returns also a function, that can write this state
+   * to a response.
+   *
+   * @tparam R The type of the response.
+   * @return Either an error or the item serialized as [[io.circe.Json]] and a function, that is able to embed item
+   *         specific state into a response pipeline.
    */
-  override def item(implicit ec: ExecutionContext): Future[Item] = Future.successful(item)
-
-  /**
-   * Indicates if a handler can handle the given `SocialStateItem`.
-   *
-   * This method should check if the [[serialize]] method of this handler can serialize the given
-   * unserialized state item.
-   *
-   * @param item The item to check for.
-   * @return `Some[Item]` casted state item if the handler can handle the given state item, `None` otherwise.
-   */
-  override def canHandle(item: StateItem): Option[Item] = item match {
-    case i: Item => Some(i)
-    case _       => None
-  }
-
-  /**
-   * Indicates if a handler can handle the given unserialized state item.
-   *
-   * This method should check if the [[unserialize]] method of this handler can unserialize the given
-   * serialized state item.
-   *
-   * @param item    The item to check for.
-   * @param request The request instance to get additional data to validate against.
-   * @tparam R The type of the request.
-   * @return True if the handler can handle the given state item, false otherwise.
-   */
-  override def canHandle[R](item: ItemStructure)(implicit request: RequestPipeline[R]): Boolean = item.id == ID
-
-  /**
-   * Returns a serialized value of the state item.
-   *
-   * @param item The state item to serialize.
-   * @return The serialized state item.
-   */
-  override def serialize(item: Item): ItemStructure = ItemStructure(ID, item.asJson)
+  override def serialize[R]: F[(Json, ResponseWriter[R])] =
+    Async[F].pure(item.asJson -> identity)
 
   /**
    * Unserializes the state item.
    *
-   * @param item    The state item to unserialize.
-   * @param request The request instance to get additional data to validate against.
-   * @param ec      The execution context to handle the asynchronous operations.
+   * A state item handler is able to embed some item specific state into the response. In this method it can then be
+   * extracted from the request.Therefore the request is also passed in addition to the serialized [[io.circe.Json]]
+   * instance.
+   *
    * @tparam R The type of the request.
-   * @return The unserialized state item.
+   * @param json    The serialized state item as [[io.circe.Json]].
+   * @param request The request instance to get additional data to validate against.
+   * @return Either an error or the unserialized state item.
    */
-  override def unserialize[R](item: ItemStructure)(
-    implicit
-    request: RequestPipeline[R],
-    ec: ExecutionContext
-  ): Future[Item] = {
-    Future.fromTry(item.data.as[S].toTry)
-  }
+  override def unserialize[R](json: Json, request: RequestPipeline[R]): F[I] =
+    Async[F].fromEither(json.as[I])
 }
 
 /**

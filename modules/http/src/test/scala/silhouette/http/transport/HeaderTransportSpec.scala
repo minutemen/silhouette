@@ -20,6 +20,7 @@ package silhouette.http.transport
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.http._
+import sttp.model.{ Header, HeaderNames }
 
 /**
  * Test case for the [[HeaderTransport]] class.
@@ -34,7 +35,8 @@ class HeaderTransportSpec extends Specification {
 
   "The `retrieve` method" should {
     "return some payload from the header with the given name" in new Context {
-      transport.retrieve(requestPipeline.withHeaders(Header("test", "payload"))) must beSome("payload")
+      transport.retrieve(requestPipeline.withHeaders(Header.notValidated("test", "payload"))) must
+        beSome("payload")
     }
 
     "return None if no header with the give name exists" in new Context {
@@ -44,19 +46,23 @@ class HeaderTransportSpec extends Specification {
 
   "The `smuggle` method" should {
     "smuggle a header into the request" in new Context {
-      transport.smuggle("payload", requestPipeline).header("test") must beSome(Header("test", "payload"))
+      transport.smuggle("payload", requestPipeline).header("test") must
+        beSome(Header.notValidated("test", "payload"))
     }
   }
 
   "The `embed` method" should {
     "embed a header into the response" in new Context {
-      transport.embed("payload", responsePipeline).header("test") must beSome(Header("test", "payload"))
+      transport.embed("payload", responsePipeline).header("test") must
+        beSome(Header.notValidated("test", "payload"))
     }
   }
 
   "The `RetrieveFromHeader` reads" should {
     "return some payload from the header with the given name" in new Context {
-      RetrieveFromHeader("test")(requestPipeline.withHeaders(Header("test", "payload"))) must beSome("payload")
+      RetrieveFromHeader("test")(
+        requestPipeline.withHeaders(Header.notValidated("test", "payload"))
+      ) must beSome("payload")
     }
 
     "return None if no header with the give name exists" in new Context {
@@ -77,7 +83,7 @@ class HeaderTransportSpec extends Specification {
 
     "return None if the header couldn't be extracted successfully" in new Context {
       RetrieveBearerTokenFromHeader()(
-        requestPipeline.withHeaders(Header(Header.Name.Authorization, "wrong token"))
+        requestPipeline.withHeaders(Header.authorization("", "wrong token"))
       ) must beNone
     }
   }
@@ -95,48 +101,50 @@ class HeaderTransportSpec extends Specification {
 
     "return None if the header couldn't be extracted successfully" in new Context {
       RetrieveBasicCredentialsFromHeader()(
-        requestPipeline.withHeaders(Header(Header.Name.Authorization, "wrong: credentials"))
+        requestPipeline.withHeaders(Header.authorization("wrong", "credentials"))
       ) must beNone
     }
   }
 
   "The `SmuggleIntoHeader` writes" should {
     "smuggle a header into the request" in new Context {
-      SmuggleIntoHeader("test")(requestPipeline)("payload").header("test") must beSome(Header("test", "payload"))
+      SmuggleIntoHeader("test")(requestPipeline)("payload").header("test") must
+        beSome(Header.notValidated("test", "payload"))
     }
   }
 
   "The `SmuggleBearerTokenIntoHeader` writes" should {
     "smuggle a bearer token header into the request" in new Context {
       SmuggleBearerTokenIntoHeader()(requestPipeline)(BearerToken("token"))
-        .header(Header.Name.Authorization) must beSome(BearerAuthorizationHeader(BearerToken("token")))
+        .header(HeaderNames.Authorization) must beSome(BearerAuthorizationHeader(BearerToken("token")))
     }
   }
 
   "The `SmuggleBasicCredentialsIntoHeader` writes" should {
     "smuggle a basic auth header into the request" in new Context {
       SmuggleBasicCredentialsIntoHeader()(requestPipeline)(BasicCredentials("user", "pass"))
-        .header(Header.Name.Authorization) must beSome(BasicAuthorizationHeader(BasicCredentials("user", "pass")))
+        .header(HeaderNames.Authorization) must beSome(BasicAuthorizationHeader(BasicCredentials("user", "pass")))
     }
   }
 
   "The `EmbedIntoHeader` writes" should {
     "embed a header into the request" in new Context {
-      EmbedIntoHeader("test")(responsePipeline)("payload").header("test") must beSome(Header("test", "payload"))
+      EmbedIntoHeader("test")(responsePipeline)("payload").header("test") must
+        beSome(Header.notValidated("test", "payload"))
     }
   }
 
   "The `SmuggleBearerTokenIntoHeader` writes" should {
     "embed a bearer token header into the request" in new Context {
       EmbedBearerTokenIntoHeader()(responsePipeline)(BearerToken("token"))
-        .header(Header.Name.Authorization) must beSome(BearerAuthorizationHeader(BearerToken("token")))
+        .header(HeaderNames.Authorization) must beSome(BearerAuthorizationHeader(BearerToken("token")))
     }
   }
 
   "The `EmbedBasicCredentialsIntoHeader` writes" should {
     "embed a basic auth header into the request" in new Context {
       EmbedBasicCredentialsIntoHeader()(responsePipeline)(BasicCredentials("user", "pass"))
-        .header(Header.Name.Authorization) must beSome(BasicAuthorizationHeader(BasicCredentials("user", "pass")))
+        .header(HeaderNames.Authorization) must beSome(BasicAuthorizationHeader(BasicCredentials("user", "pass")))
     }
   }
 

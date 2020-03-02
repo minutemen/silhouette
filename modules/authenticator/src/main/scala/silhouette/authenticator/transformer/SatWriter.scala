@@ -17,7 +17,7 @@
  */
 package silhouette.authenticator.transformer
 
-import cats.effect.Sync
+import cats.effect.Async
 import silhouette.authenticator.{ Authenticator, AuthenticatorWriter }
 
 /**
@@ -30,7 +30,7 @@ import silhouette.authenticator.{ Authenticator, AuthenticatorWriter }
  *
  * @tparam F The type of the IO monad.
  */
-final case class SatWriter[F[_]: Sync]() extends AuthenticatorWriter[F, String] {
+final case class SatWriter[F[_]: Async]() extends AuthenticatorWriter[F, String] {
 
   /**
    * Transforms an [[Authenticator]] into a simple authentication token.
@@ -38,5 +38,5 @@ final case class SatWriter[F[_]: Sync]() extends AuthenticatorWriter[F, String] 
    * @param authenticator The authenticator to transform.
    * @return A simple authentication token on success, an error on failure.
    */
-  override def apply(authenticator: Authenticator): F[String] = Sync[F].pure(authenticator.id)
+  override def apply(authenticator: Authenticator): F[String] = Async[F].pure(authenticator.id)
 }

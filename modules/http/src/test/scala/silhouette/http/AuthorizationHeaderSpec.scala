@@ -18,58 +18,41 @@
 package silhouette.http
 
 import org.specs2.mutable.Specification
+import sttp.model.Header
 
 /**
- * Test case for the [[Header]] class.
+ * Test case for the [[silhouette.http.AuthorizationHeader]] class.
  */
-class HeaderSpec extends Specification {
-
-  "The `value` method" should {
-    "concatenate the header values with a comma" in {
-      Header(Header.Name.Status, "value1", "value2").value must be equalTo "value1,value2"
-    }
-  }
-
-  "The implicit `toString` method" should {
-    "transform a `Header.Name` instance to a string" in {
-      Header.Name.Status must be equalTo "Status"
-    }
-  }
-
-  "The implicit `fromString` method" should {
-    "transform a string into a `Header.Name` instance" in {
-      "Status" must be equalTo Header.Name.Status
-    }
-  }
+class AuthorizationHeaderSpec extends Specification {
 
   "The `BasicAuthorizationHeader` object" should {
     "create a 'Basic' `Authorization` header from a value" in {
-      BasicAuthorizationHeader("some.value") must be equalTo Header(Header.Name.Authorization, "Basic some.value")
+      BasicAuthorizationHeader("some.value") must be equalTo Header.authorization("Basic", "some.value")
     }
 
     "create a 'Basic' `Authorization` header from `BasicCredentials`" in {
       val credentials = BasicCredentials("user", "pass")
 
       BasicAuthorizationHeader(credentials) must be equalTo
-        Header(Header.Name.Authorization, s"Basic ${BasicCredentials(credentials)}")
+        Header.authorization("Basic", BasicCredentials(credentials))
     }
 
     "extract `BasicCredentials` from an 'Basic' `Authorization` header" in {
       val credentials = BasicCredentials("user", "pass")
-      val header = Header(Header.Name.Authorization, s"Basic ${BasicCredentials(credentials)}")
+      val header = Header.authorization("Basic", BasicCredentials(credentials))
 
       BasicAuthorizationHeader.unapply(header) must beSome(credentials)
     }
 
     "not extract `BasicCredentials` for an unexpected auth scheme" in {
       val credentials = BasicCredentials("user", "pass")
-      val header = Header(Header.Name.Authorization, s"Unexpected ${BasicCredentials(credentials)}")
+      val header = Header.authorization("Unexpected", BasicCredentials(credentials))
 
       BasicAuthorizationHeader.unapply(header) must beNone
     }
 
     "not extract `BasicCredentials` for invalid encoded credentials" in {
-      val header = Header(Header.Name.Authorization, s"Basic user:pass")
+      val header = Header.authorization("Basic", "user:pass")
 
       BasicAuthorizationHeader.unapply(header) must beNone
     }
@@ -77,26 +60,26 @@ class HeaderSpec extends Specification {
 
   "The `BearerAuthorizationHeader` object" should {
     "create a 'Bearer' `Authorization` header from a value" in {
-      BearerAuthorizationHeader("some.value") must be equalTo Header(Header.Name.Authorization, "Bearer some.value")
+      BearerAuthorizationHeader("some.value") must be equalTo Header.authorization("Bearer", "some.value")
     }
 
     "create a 'Bearer' `Authorization` header from a `BearerToken`" in {
       val token = BearerToken("some.token")
 
       BearerAuthorizationHeader(token) must be equalTo
-        Header(Header.Name.Authorization, s"Bearer ${token.value}")
+        Header.authorization("Bearer", token.value)
     }
 
     "extract a `BearerToken` from an 'Bearer' `Authorization` header" in {
       val token = BearerToken("some.token")
-      val header = Header(Header.Name.Authorization, s"Bearer ${token.value}")
+      val header = Header.authorization("Bearer", token.value)
 
       BearerAuthorizationHeader.unapply(header) must beSome(token)
     }
 
     "not extract a `BearerToken` for an unexpected auth scheme" in {
       val token = BearerToken("some.token")
-      val header = Header(Header.Name.Authorization, s"Unexpected ${token.value}")
+      val header = Header.authorization("Unexpected", token.value)
 
       BearerAuthorizationHeader.unapply(header) must beNone
     }

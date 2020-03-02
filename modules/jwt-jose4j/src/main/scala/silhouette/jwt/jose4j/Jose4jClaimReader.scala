@@ -22,10 +22,9 @@ import java.time.Instant
 import io.circe.{ Json, JsonObject }
 import org.jose4j.jwt.JwtClaims
 import silhouette.jwt.jose4j.Jose4jClaimReader._
-import silhouette.jwt.{ JwtClaimReader, Claims, JwtException, ReservedClaims }
+import silhouette.jwt.{ Claims, JwtClaimReader, JwtException, ReservedClaims }
 
 import scala.jdk.CollectionConverters._
-import scala.util.{ Failure, Success, Try }
 
 /**
  * JWT claim reader based on the [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library.
@@ -40,17 +39,16 @@ final case class Jose4jClaimReader(consumer: Jose4jConsumer) extends JwtClaimRea
    * Transforms a JWT string into a JWT claims object.
    *
    * @param str A JWT string.
-   * @return The transformed JWT claims object or an error if the string couldn't be transformed.
+   * @return The transformed JWT claims object on the or an error if the string couldn't be transformed.
    */
-  override def apply(str: String): Try[Claims] = {
+  override def apply(str: String): Either[Throwable, Claims] = {
     (for {
       jwtClaims <- consumer.consume(str)
       silhouetteClaims <- toSilhouette(jwtClaims)
     } yield {
       silhouetteClaims
-    }).recoverWith {
-      case e =>
-        Failure(new JwtException(FraudulentJwtToken.format(str), Some(e)))
+    }).left.map { e =>
+      new JwtException(FraudulentJwtToken.format(str), Some(e))
     }
   }
 
@@ -58,11 +56,11 @@ final case class Jose4jClaimReader(consumer: Jose4jConsumer) extends JwtClaimRea
    * Converts the jose4j claims instance to a Silhouette claims instance.
    *
    * @param claims The jose4j claims instance.
-   * @return The Silhouette claims instance on success, a failure on error.
+   * @return The Silhouette claims instance on the right or an error on the left.
    */
-  private def toSilhouette(claims: JwtClaims): Try[Claims] = {
+  private def toSilhouette(claims: JwtClaims): Either[Throwable, Claims] = {
     val maybeCustom = claims.getClaimsMap(ReservedClaims.asJava).asScala match {
-      case l if l.isEmpty => Success(JsonObject.empty)
+      case l if l.isEmpty => Right(JsonObject.empty)
       case l              => transformCustomClaims(l.asJava)
     }
 
@@ -90,31 +88,37 @@ final case class Jose4jClaimReader(consumer: Jose4jConsumer) extends JwtClaimRea
    * Transforms recursively the custom claims.
    *
    * @param claims The custom claims to Transforms.
-   * @return A Json object representing the custom claims on success, otherwise a failure.
+   * @return A Json object representing the custom claims on the right or an error on the left.
    */
-  private def transformCustomClaims(claims: java.util.Map[String, Object]): Try[JsonObject] = {
+  private def transformCustomClaims(claims: java.util.Map[String, Object]): Either[Throwable, JsonObject] = {
+    import cats.instances.either._
+    import cats.instances.list._
+    import cats.syntax.traverse._
     def fromNumber(number: Number): Json = number match {
       case v: java.lang.Integer => Json.fromInt(v)
       case v: java.lang.Long    => Json.fromLong(v)
       case v: java.lang.Float   => Json.fromFloatOrNull(v)
       case v: java.lang.Double  => Json.fromDoubleOrNull(v)
     }
-    def fromMap(map: java.util.Map[_, _]): Try[Json] = {
-      transformCustomClaims(map.asInstanceOf[java.util.Map[String, Object]]).map(Json.fromJsonObject)
+    def fromList(list: java.util.List[_]): Either[Throwable, Json] = {
+      list.asScala.toList.map(value => toJson(value)).sequence.map(Json.arr)
     }
-    def toJson(value: Any): Try[Json] = Option(value) match {
-      case None                          => Success(Json.Null)
-      case Some(v: java.lang.String)     => Success(Json.fromString(v))
-      case Some(v: java.math.BigInteger) => Success(Json.fromBigInt(v))
-      case Some(v: java.math.BigDecimal) => Success(Json.fromBigDecimal(v))
-      case Some(v: java.lang.Number)     => Success(fromNumber(v))
-      case Some(v: java.lang.Boolean)    => Success(Json.fromBoolean(v))
-      case Some(v: java.util.List[_])    => Try(Json.arr(v.asScala.toVector.map(value => toJson(value).get): _*))
-      case Some(v: java.util.Map[_, _])  => fromMap(v)
-      case Some(v)                       => Failure(new JwtException(UnexpectedJsonValue.format(v)))
+    def fromMap(map: java.util.Map[_, _]): Either[Throwable, JsonObject] = {
+      transformCustomClaims(map.asInstanceOf[java.util.Map[String, Object]])
+    }
+    def toJson(value: Any): Either[Throwable, Json] = Option(value) match {
+      case None                          => Right(Json.Null)
+      case Some(v: java.lang.String)     => Right(Json.fromString(v))
+      case Some(v: java.math.BigInteger) => Right(Json.fromBigInt(v))
+      case Some(v: java.math.BigDecimal) => Right(Json.fromBigDecimal(v))
+      case Some(v: java.lang.Number)     => Right(fromNumber(v))
+      case Some(v: java.lang.Boolean)    => Right(Json.fromBoolean(v))
+      case Some(v: java.util.List[_])    => fromList(v)
+      case Some(v: java.util.Map[_, _])  => fromMap(v).map(Json.fromJsonObject)
+      case Some(v)                       => Left(new JwtException(UnexpectedJsonValue.format(v)))
     }
 
-    Try(JsonObject.fromIterable(claims.asScala.toMap.map { case (name, value) => name -> toJson(value).get }))
+    fromMap(claims)
   }
 }
 

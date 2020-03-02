@@ -20,26 +20,26 @@ package silhouette.provider.oauth2
 import java.net.URI
 import java.time.Clock
 
+import cats.effect.Async
+import cats.implicits._
 import io.circe.Json
-import silhouette.http.Method.GET
-import silhouette.http.client.Request
-import silhouette.http.{ HttpClient, Status }
 import silhouette.provider.UnexpectedResponseException
 import silhouette.provider.oauth2.InstagramProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
-import silhouette.provider.social.state.StateHandler
 import silhouette.{ ConfigURI, LoginInfo }
-
-import scala.concurrent.{ ExecutionContext, Future }
+import sttp.client.circe.asJson
+import sttp.client.{ SttpBackend, basicRequest }
 
 /**
  * Base Instagram OAuth2 Provider.
  *
  * @see http://instagram.com/developer/authentication/
  * @see http://instagram.com/developer/endpoints/
+ *
+ * @tparam F The type of the IO monad.
  */
-trait BaseInstagramProvider extends OAuth2Provider {
+trait BaseInstagramProvider[F[_]] extends OAuth2Provider[F] {
 
   /**
    * The provider ID.
@@ -52,27 +52,27 @@ trait BaseInstagramProvider extends OAuth2Provider {
    * @param authInfo The auth info received from the provider.
    * @return On success the build social profile, otherwise a failure.
    */
-  override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
+  override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
     val uri = config.apiURI.getOrElse(DefaultApiURI).format(authInfo.accessToken)
-
-    httpClient.execute(Request(GET, uri)).flatMap { response =>
-      withParsedJson(response) { json =>
-        response.status match {
-          case Status.OK =>
+    basicRequest.get(uri)
+      .response(asJson[Json])
+      .send().flatMap { response =>
+        response.body match {
+          case Left(error) =>
+            F.raiseError(new UnexpectedResponseException(UnexpectedResponse.format(id, error.body, response.code)))
+          case Right(json) =>
             profileParser.parse(json, authInfo)
-          case status =>
-            Future.failed(new UnexpectedResponseException(UnexpectedResponse.format(id, json, status)))
         }
       }
-    }
   }
 }
 
 /**
  * The profile parser for the common social profile.
+ *
+ * @tparam F The type of the IO monad.
  */
-class InstagramProfileParser(implicit val ec: ExecutionContext)
-  extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
+class InstagramProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, CommonSocialProfile, OAuth2Info] {
 
   /**
    * Parses the social profile.
@@ -81,10 +81,10 @@ class InstagramProfileParser(implicit val ec: ExecutionContext)
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = {
+  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] = {
     json.hcursor.downField("data").focus.map(_.hcursor) match {
       case Some(data) =>
-        Future.fromTry(data.downField("id").as[String].getOrError(data.value, "id", ID)).map { id =>
+        Async[F].fromTry(data.downField("id").as[String].getOrError(data.value, "id", ID)).map { id =>
           CommonSocialProfile(
             loginInfo = LoginInfo(ID, id),
             fullName = data.downField("full_name").as[String].toOption,
@@ -92,7 +92,7 @@ class InstagramProfileParser(implicit val ec: ExecutionContext)
           )
         }
       case None =>
-        Future.failed(new UnexpectedResponseException(JsonPathError.format(ID, "data", json)))
+        Async[F].raiseError(new UnexpectedResponseException(JsonPathError.format(ID, "data", json)))
     }
   }
 }
@@ -100,26 +100,25 @@ class InstagramProfileParser(implicit val ec: ExecutionContext)
 /**
  * The Instagram OAuth2 Provider.
  *
- * @param httpClient   The HTTP client implementation.
- * @param stateHandler The state provider implementation.
- * @param clock        The current clock instance.
- * @param config       The provider config.
- * @param ec           The execution context.
+ * @param clock       The current clock instance.
+ * @param config      The provider config.
+ * @param sttpBackend The STTP backend.
+ * @param F           The IO monad type class.
+ * @tparam F The type of the IO monad.
  */
-class InstagramProvider(
-  protected val httpClient: HttpClient,
-  protected val stateHandler: StateHandler,
+class InstagramProvider[F[_]](
   protected val clock: Clock,
   val config: OAuth2Config
 )(
   implicit
-  override implicit val ec: ExecutionContext
-) extends BaseInstagramProvider with CommonProfileBuilder {
+  protected val sttpBackend: SttpBackend[F, Nothing, Nothing],
+  protected val F: Async[F]
+) extends BaseInstagramProvider[F] with CommonProfileBuilder[F] {
 
   /**
    * The type of this class.
    */
-  override type Self = InstagramProvider
+  override type Self = InstagramProvider[F]
 
   /**
    * The profile parser implementation.
@@ -132,8 +131,7 @@ class InstagramProvider(
    * @param f A function which gets the config passed and returns different config.
    * @return An instance of the provider initialized with new config.
    */
-  override def withConfig(f: OAuth2Config => OAuth2Config): Self =
-    new InstagramProvider(httpClient, stateHandler, clock, f(config))
+  override def withConfig(f: OAuth2Config => OAuth2Config): Self = new InstagramProvider[F](clock, f(config))
 }
 
 /**

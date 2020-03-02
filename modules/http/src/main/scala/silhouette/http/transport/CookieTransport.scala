@@ -131,45 +131,39 @@ final case class RetrieveFromCookie(name: String) extends Retrieve[String] {
 /**
  * A function that smuggles a cookie with the given payload into the given request.
  *
- * @param config          The cookie transport config.
- * @param requestPipeline The [[RequestPipeline]] in which the cookie should be embedded.
+ * @param config The cookie transport config.
  * @tparam R The type of the request.
  */
-final case class SmuggleIntoCookie[R](config: CookieTransportConfig)(
-  protected val requestPipeline: RequestPipeline[R])
-  extends Smuggle[String, R] {
+final case class SmuggleIntoCookie[R](config: CookieTransportConfig) extends Smuggle[String, R] {
 
   /**
    * Merges some payload and a [[RequestPipeline]] into a [[RequestPipeline]] that contains a cookie with the
    * given payload as value.
    *
-   * @param payload The payload to embed in a cookie.
-   * @return The request pipeline with the smuggled cookie.
+   * @param requestPipeline The [[RequestPipeline]] in which the cookie should be embedded.
+   * @return A function that gets the payload and which returns the request pipeline with the smuggled cookie.
    */
-  override def apply(payload: String): RequestPipeline[R] =
-    CookieTransport(config).smuggle(payload, requestPipeline)
+  override def apply(requestPipeline: RequestPipeline[R]): String => RequestPipeline[R] =
+    (payload: String) => CookieTransport(config).smuggle(payload, requestPipeline)
 }
 
 /**
  * A function that embeds a cookie with the given payload into the given response.
  *
- * @param config           The cookie transport config.
- * @param responsePipeline The [[ResponsePipeline]] in which the cookie should be embedded.
+ * @param config The cookie transport config.
  * @tparam R The type of the response.
  */
-final case class EmbedIntoCookie[R](config: CookieTransportConfig)(
-  protected val responsePipeline: ResponsePipeline[R]
-) extends Embed[String, R] {
+final case class EmbedIntoCookie[R](config: CookieTransportConfig) extends Embed[String, R] {
 
   /**
    * Merges some payload and a [[ResponsePipeline]] into a [[ResponsePipeline]] that contains a cookie with the
    * given payload as value.
    *
-   * @param payload The payload to embed in a cookie.
-   * @return The response pipeline with the embedded cookie.
+   * @param responsePipeline The [[ResponsePipeline]] in which the cookie should be embedded.
+   * @return A function that gets the payload and which returns the response pipeline with the embedded cookie.
    */
-  def apply(payload: String): ResponsePipeline[R] =
-    CookieTransport(config).embed(payload, responsePipeline)
+  override def apply(responsePipeline: ResponsePipeline[R]): String => ResponsePipeline[R] =
+    (payload: String) => CookieTransport(config).embed(payload, responsePipeline)
 }
 
 /**

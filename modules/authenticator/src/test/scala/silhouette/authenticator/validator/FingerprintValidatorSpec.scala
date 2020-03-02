@@ -18,7 +18,7 @@
 package silhouette.authenticator.validator
 
 import cats.data.Validated._
-import cats.effect.SyncIO
+import cats.effect.IO
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
@@ -33,17 +33,17 @@ class FingerprintValidatorSpec extends Specification with Mockito {
 
   "The `isValid` method" should {
     "return always Valid if no fingerprint is stored in the authenticator" in new Context {
-      FingerprintValidator[SyncIO]("test")
+      FingerprintValidator[IO]("test")
         .isValid(authenticator).unsafeRunSync() must beEqualTo(validNel(()))
     }
 
     "return Valid if fingerprint stored in the authenticator matches the given fingerprint" in new Context {
-      FingerprintValidator[SyncIO]("test")
+      FingerprintValidator[IO]("test")
         .isValid(authenticator.copy(fingerprint = Some("test"))).unsafeRunSync() must beEqualTo(validNel(()))
     }
 
     "return Invalid if fingerprint stored in the authenticator doesn't match the given fingerprint" in new Context {
-      FingerprintValidator[SyncIO]("invalid")
+      FingerprintValidator[IO]("invalid")
         .isValid(authenticator.copy(fingerprint = Some("test"))).unsafeRunSync() must beEqualTo(invalidNel(
           Error.format("invalid", "test")
         ))

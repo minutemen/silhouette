@@ -17,8 +17,6 @@
  */
 package silhouette
 
-import scala.util.Try
-
 /**
  * JWT related interfaces and implementations.
  */
@@ -28,14 +26,4 @@ package object jwt {
    * The reserved claims.
    */
   val ReservedClaims: Set[String] = Set("iss", "sub", "aud", "exp", "nbf", "iat", "jti")
-
-  /**
-   * Reads claims from a JWT string.
-   */
-  type JwtClaimReader = String => Try[Claims]
-
-  /**
-   * Writes claims to a JWT string.
-   */
-  type JwtClaimWriter = Claims => Try[String]
 }

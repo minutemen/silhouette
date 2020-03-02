@@ -18,7 +18,7 @@
 package silhouette.authenticator.validator
 
 import cats.data.Validated._
-import cats.effect.Sync
+import cats.effect.Async
 import silhouette.authenticator.Validator._
 import silhouette.authenticator.validator.FingerprintValidator._
 import silhouette.authenticator.{ Authenticator, Validator }
@@ -31,7 +31,7 @@ import silhouette.authenticator.{ Authenticator, Validator }
  * @param fingerprint The fingerprint to check against.
  * @tparam F The type of the IO monad.
  */
-final case class FingerprintValidator[F[_]: Sync](fingerprint: String) extends Validator[F] {
+final case class FingerprintValidator[F[_]: Async](fingerprint: String) extends Validator[F] {
 
   /**
    * Checks if the [[Authenticator]] is valid.
@@ -39,7 +39,7 @@ final case class FingerprintValidator[F[_]: Sync](fingerprint: String) extends V
    * @param authenticator The [[Authenticator]] to validate.
    * @return [[cats.data.Validated.Valid]] if the authenticator is valid, [[cats.data.Validated.Invalid]] otherwise.
    */
-  override def isValid(authenticator: Authenticator): F[Status] = Sync[F].pure {
+  override def isValid(authenticator: Authenticator): F[Status] = Async[F].pure {
     if (authenticator.fingerprint.forall(_ == fingerprint)) {
       validNel(())
     } else {

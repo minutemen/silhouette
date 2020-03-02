@@ -19,29 +19,28 @@ package silhouette.crypto
 
 import java.security.SecureRandom
 
+import cats.effect.Async
 import org.apache.commons.codec.binary.Hex
-
-import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * A generator which uses [[java.security.SecureRandom]] to generate cryptographically strong IDs.
  *
  * @param idSizeInBytes The size of the ID length in bytes.
- * @param ec            The execution context to handle the asynchronous operations.
  */
-class SecureRandomID(idSizeInBytes: Int = 128)(implicit ec: ExecutionContext) extends SecureAsyncID[String] {
+class SecureRandomID[F[_]: Async](idSizeInBytes: Int = 128) extends SecureID[F, String] {
 
   /**
    * Gets a new secure ID using [[java.security.SecureRandom]].
    *
    * Based on the chosen algorithm, the initial seeding may use /dev/random and it may block as entropy is
-   * being gathered. Therefore we return a future to handle the seeding in an async way.
+   * being gathered. Therefore we return a [[cats.effect.Async]] to handle the seeding in an async way.
    *
    * @return The generated ID.
    */
-  override def get: Future[String] = {
+  override def get: F[String] = {
+    import cats.syntax.functor._
     val randomValue = new Array[Byte](idSizeInBytes)
-    Future(SecureRandomID.random.nextBytes(randomValue)).map { _ =>
+    Async[F].delay(SecureRandomID.random.nextBytes(randomValue)).map { _ =>
       Hex.encodeHexString(randomValue)
     }
   }

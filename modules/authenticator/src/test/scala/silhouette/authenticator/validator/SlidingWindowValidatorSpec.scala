@@ -20,7 +20,7 @@ package silhouette.authenticator.validator
 import java.time.{ Clock, Instant, ZoneId }
 
 import cats.data.Validated._
-import cats.effect.SyncIO
+import cats.effect.IO
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
@@ -37,22 +37,22 @@ class SlidingWindowValidatorSpec extends Specification with Mockito {
 
   "The `isValid` method" should {
     "return always Valid if the `touched` property isn't set" in new Context {
-      SlidingWindowValidator[SyncIO](1.minute, clock)
+      SlidingWindowValidator[IO](1.minute, clock)
         .isValid(authenticator).unsafeRunSync() must beEqualTo(validNel(()))
     }
 
     "return Valid if the authenticator is not timed out" in new Context {
-      SlidingWindowValidator[SyncIO](1.minute, Clock.fixed(instant, UTC))
+      SlidingWindowValidator[IO](1.minute, Clock.fixed(instant, UTC))
         .isValid(authenticator.touch(clock)).unsafeRunSync() must beEqualTo(validNel(()))
     }
 
     "return Valid if the authenticator was idle for exactly one minute" in new Context {
-      SlidingWindowValidator[SyncIO](1.minute, Clock.fixed(instant.plusSeconds(60), UTC))
+      SlidingWindowValidator[IO](1.minute, Clock.fixed(instant.plusSeconds(60), UTC))
         .isValid(authenticator.touch(clock)).unsafeRunSync() must beEqualTo(validNel(()))
     }
 
     "return Invalid if the authenticator was idle for exactly one minute and 1 second " in new Context {
-      SlidingWindowValidator[SyncIO](1.minute, Clock.fixed(instant.plusSeconds(61), UTC))
+      SlidingWindowValidator[IO](1.minute, Clock.fixed(instant.plusSeconds(61), UTC))
         .isValid(authenticator.touch(clock)).unsafeRunSync() must beEqualTo(invalidNel(
           Error.format(1000.millis)
         ))

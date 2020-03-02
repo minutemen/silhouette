@@ -39,9 +39,9 @@ trait Jose4jConsumer {
    * Consumes a JWT and returns [[org.jose4j.jwt.JwtClaims]].
    *
    * @param jwt The JWT token to consume.
-   * @return The [[org.jose4j.jwt.JwtClaims]] extracted from the JWT token on success, otherwise an failure.
+   * @return An error on the left or the [[org.jose4j.jwt.JwtClaims]] extracted from the JWT token on right.
    */
-  def consume(jwt: String): Try[JwtClaims]
+  def consume(jwt: String): Either[Throwable, JwtClaims]
 }
 
 /**
@@ -74,9 +74,9 @@ final case class SimpleJose4jConsumer(
    * Consumes a JWT and returns [[org.jose4j.jwt.JwtClaims]].
    *
    * @param jwt The JWT token to consume.
-   * @return The [[org.jose4j.jwt.JwtClaims]] extracted from the JWT token on success, otherwise an failure.
+   * @return An error on the left or the [[org.jose4j.jwt.JwtClaims]] extracted from the JWT token on right.
    */
-  override def consume(jwt: String): Try[JwtClaims] = {
+  override def consume(jwt: String): Either[Throwable, JwtClaims] = {
     Try(new JwtConsumerBuilder())
       .map(jwsBuilder)
       .map(requireSubjectBuilder)
@@ -87,6 +87,7 @@ final case class SimpleJose4jConsumer(
       .map(expectedIssuerBuilder)
       .map(expectedAudienceBuilder)
       .map(_.build().processToClaims(jwt))
+      .toEither
   }
 
   /**

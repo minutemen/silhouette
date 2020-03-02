@@ -17,7 +17,7 @@
  */
 package silhouette.authenticator.transformer
 
-import cats.effect.SyncIO
+import cats.effect.IO
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
@@ -48,6 +48,6 @@ class SatWriterSpec extends Specification with Mockito {
     /**
      * The SAT authenticator writer.
      */
-    val satWriter = SatWriter[SyncIO]()
+    val satWriter = SatWriter[IO]()
   }
 }

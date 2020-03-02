@@ -18,7 +18,7 @@
 package silhouette.authenticator.pipeline
 
 import cats.data.{ EitherT, Kleisli }
-import cats.effect.{ ContextShift, IO, Sync }
+import cats.effect.{ Async, ContextShift, IO }
 import silhouette.authenticator.Authenticator
 import silhouette.authenticator.pipeline.Dsl.NoneError
 import silhouette.{ AuthState, Identity, MissingCredentials }
@@ -102,7 +102,7 @@ object Dsl extends DslLowPriorityImplicits {
      * @tparam F The type of the IO monad.
      * @return A [[KleisliM]] for a value [[scala.Any]] => `A`.
      */
-    def liftV[F[_]: Sync, A](a: A): KleisliM[F, Any, A] = Kleisli((_: Any) => EitherT.pure[F, Throwable](a))
+    def liftV[F[_]: Async, A](a: A): KleisliM[F, Any, A] = Kleisli((_: Any) => EitherT.pure[F, Throwable](a))
   }
 
   /**
@@ -115,7 +115,7 @@ object Dsl extends DslLowPriorityImplicits {
    * @tparam B The type the function returns.
    * @tparam C The type that will be stored in [[Maybe]].
    */
-  implicit class Function1Ops[F[_]: Sync, A, B, C](f: A => B)(implicit writes: MaybeWriter[F, B, C]) {
+  implicit class Function1Ops[F[_]: Async, A, B, C](f: A => B)(implicit writes: MaybeWriter[F, B, C]) {
 
     /**
      * Lifts a function `A` => `B` into a [[KleisliM]].
@@ -145,7 +145,7 @@ object Dsl extends DslLowPriorityImplicits {
    * @tparam A The type of the function parameter.
    * @tparam B The type the function returns.
    */
-  implicit class KleisliMOps[F[_]: Sync, A, B](kleisliM: KleisliM[F, A, B]) {
+  implicit class KleisliMOps[F[_]: Async, A, B](kleisliM: KleisliM[F, A, B]) {
 
     /**
      * Composes two functions.
@@ -180,7 +180,7 @@ object Dsl extends DslLowPriorityImplicits {
    * @tparam I The type of the identity.
    * @return The [[Maybe]] representation for the [[scala.Option]] type.
    */
-  implicit def optionToMaybeWriter[F[_]: Sync, A, I <: Identity](
+  implicit def optionToMaybeWriter[F[_]: Async, A, I <: Identity](
     implicit
     noneError: () => NoneError[I]
   ): MaybeWriter[F, Option[A], A] = (value: Option[A]) =>
@@ -193,7 +193,7 @@ object Dsl extends DslLowPriorityImplicits {
    * @tparam A The type to convert.
    * @return The [[Maybe]] representation for the [[scala.util.Try]] type.
    */
-  implicit def tryToMaybeWriter[F[_]: Sync, A]: MaybeWriter[F, Try[A], A] = (value: Try[A]) =>
+  implicit def tryToMaybeWriter[F[_]: Async, A]: MaybeWriter[F, Try[A], A] = (value: Try[A]) =>
     EitherT.fromEither[F](value.toEither)
 
   /**
@@ -203,7 +203,7 @@ object Dsl extends DslLowPriorityImplicits {
    * @tparam A The type to convert.
    * @return The [[Maybe]] representation for the `Either[Throwable, A]` type.
    */
-  implicit def eitherToMaybeWriter[F[_]: Sync, A]: MaybeWriter[F, Either[Throwable, A], A] =
+  implicit def eitherToMaybeWriter[F[_]: Async, A]: MaybeWriter[F, Either[Throwable, A], A] =
     (value: Either[Throwable, A]) => EitherT.fromEither[F](value)
 
   /**
@@ -229,7 +229,7 @@ object Dsl extends DslLowPriorityImplicits {
    * @tparam A The type to convert.
    * @return The [[Dsl.Maybe]] representation for the `Either[Throwable, A]` type.
    */
-  implicit def effectToMaybeWriter[F[_]: Sync, A, B](
+  implicit def effectToMaybeWriter[F[_]: Async, A, B](
     implicit
     writer: Dsl.MaybeWriter[F, A, B]
   ): Dsl.MaybeWriter[F, F[A], B] = (value: F[A]) =>
@@ -267,7 +267,7 @@ object Dsl extends DslLowPriorityImplicits {
    * @tparam F The type of the IO monad.
    * @return A [[KleisliM]] for a value [[scala.Any]] => `A`.
    */
-  def xx[F[_]: Sync, C](a: C): KleisliM[F, Any, C] = KleisliM.liftV(a)
+  def xx[F[_]: Async, C](a: C): KleisliM[F, Any, C] = KleisliM.liftV(a)
 }
 
 /**
@@ -282,7 +282,7 @@ trait DslLowPriorityImplicits {
    * @tparam A The type to convert.
    * @return The [[Dsl.Maybe]] representation for type `A`.
    */
-  implicit def toMaybeWrites[F[_]: Sync, A]: Dsl.MaybeWriter[F, A, A] = (value: A) =>
+  implicit def toMaybeWrites[F[_]: Async, A]: Dsl.MaybeWriter[F, A, A] = (value: A) =>
     EitherT.pure[F, Throwable](value)
 
   /**

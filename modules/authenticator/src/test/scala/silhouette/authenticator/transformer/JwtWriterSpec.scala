@@ -19,7 +19,7 @@ package silhouette.authenticator.transformer
 
 import java.time.Instant
 
-import cats.effect.SyncIO
+import cats.effect.IO
 import io.circe.syntax._
 import io.circe.{ Json, JsonObject }
 import org.specs2.matcher.Scope
@@ -28,9 +28,7 @@ import org.specs2.mutable.Specification
 import silhouette.LoginInfo
 import silhouette.authenticator.Authenticator
 import silhouette.crypto.Base64
-import silhouette.jwt.{ JwtClaimWriter, Claims }
-
-import scala.util.Try
+import silhouette.jwt.{ Claims, JwtClaimWriter }
 
 /**
  * Test case for the [[JwtWriter]] class.
@@ -39,7 +37,7 @@ class JwtWriterSpec extends Specification with Mockito {
 
   "The `write` method" should {
     "write a claims representation from the authenticator" in new Context {
-      claimWriter(any[Claims]()) returns Try(jwt)
+      claimWriter(any[Claims]()) returns Right(jwt)
 
       val captor = capture[Claims]
 
@@ -111,6 +109,6 @@ class JwtWriterSpec extends Specification with Mockito {
     /**
      * The JWT authenticator writer.
      */
-    val jwtWriter = JwtWriter[SyncIO](claimWriter, claims.issuer, claims.audience, claims.notBefore)
+    val jwtWriter = JwtWriter[IO](claimWriter, claims.issuer, claims.audience, claims.notBefore)
   }
 }

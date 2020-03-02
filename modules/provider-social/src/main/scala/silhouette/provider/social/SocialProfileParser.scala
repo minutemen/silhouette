@@ -19,19 +19,18 @@ package silhouette.provider.social
 
 import silhouette.AuthInfo
 
-import scala.concurrent.Future
-
 /**
  * Parses a social profile.
  *
  * A parser transforms the content returned from the provider into a social profile instance. Parsers can
  * be reused by other parsers to avoid duplicating code.
  *
+ * @tparam F The type of the IO monad.
  * @tparam C The content type to parse a profile from.
  * @tparam P The type of the profile to parse to.
  * @tparam A The type of the auth info.
  */
-trait SocialProfileParser[C, P <: SocialProfile, A <: AuthInfo] {
+trait SocialProfileParser[F[_], C, P <: SocialProfile, A <: AuthInfo] {
 
   /**
    * Parses the social profile.
@@ -40,5 +39,5 @@ trait SocialProfileParser[C, P <: SocialProfile, A <: AuthInfo] {
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from given result.
    */
-  def parse(content: C, authInfo: A): Future[P]
+  def parse(content: C, authInfo: A): F[P]
 }

@@ -21,7 +21,7 @@ import scala.collection.compat.immutable.ArraySeq
 import scala.language.implicitConversions
 
 /**
- * Represents a HTTP status code.
+ * Represents a HTTP status.
  *
  * @param code         HTTP status code.
  * @param reasonPhrase A textual representation of the status code.

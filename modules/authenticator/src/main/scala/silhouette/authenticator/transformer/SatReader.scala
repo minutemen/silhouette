@@ -17,7 +17,7 @@
  */
 package silhouette.authenticator.transformer
 
-import cats.effect.Sync
+import cats.effect.Async
 import silhouette.authenticator.transformer.SatReader._
 import silhouette.authenticator.{ Authenticator, AuthenticatorException, AuthenticatorReader }
 
@@ -31,7 +31,7 @@ import silhouette.authenticator.{ Authenticator, AuthenticatorException, Authent
  * @param reader The reader to retrieve the [[Authenticator]] for the given token from persistence layer.
  * @tparam F The type of the IO monad.
  */
-final case class SatReader[F[_]: Sync](reader: String => F[Option[Authenticator]])
+final case class SatReader[F[_]: Async](reader: String => F[Option[Authenticator]])
   extends AuthenticatorReader[F, String] {
 
   /**
@@ -40,11 +40,11 @@ final case class SatReader[F[_]: Sync](reader: String => F[Option[Authenticator]
    * @param token The simple authentication token to transform.
    * @return An authenticator on success, an error on failure.
    */
-  override def apply(token: String): F[Authenticator] = Sync[F].flatMap(reader(token))(
+  override def apply(token: String): F[Authenticator] = Async[F].flatMap(reader(token))(
     _.fold[F[Authenticator]] {
-      Sync[F].raiseError(new AuthenticatorException(MissingAuthenticator.format(token)))
+      Async[F].raiseError(new AuthenticatorException(MissingAuthenticator.format(token)))
     } {
-      Sync[F].pure
+      Async[F].pure
     }
   )
 }

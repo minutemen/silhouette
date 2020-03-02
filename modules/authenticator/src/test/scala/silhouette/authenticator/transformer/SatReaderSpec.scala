@@ -17,7 +17,7 @@
  */
 package silhouette.authenticator.transformer
 
-import cats.effect.SyncIO
+import cats.effect.IO
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
@@ -32,7 +32,7 @@ class SatReaderSpec extends Specification with Mockito {
 
   "The `read` method" should {
     "throw an `AuthenticatorException` if no authenticator couldn't be found for the given token" in new Context {
-      override val satReader = SatReader[SyncIO](_ => SyncIO.pure(None))
+      override val satReader = SatReader[IO](_ => IO.pure(None))
 
       satReader("some.token").unsafeRunSync() must throwA[AuthenticatorException].like {
         case e =>
@@ -58,6 +58,6 @@ class SatReaderSpec extends Specification with Mockito {
     /**
      * The SAT authenticator reader.
      */
-    val satReader = SatReader[SyncIO](_ => SyncIO.pure(Some(authenticator)))
+    val satReader = SatReader[IO](_ => IO.pure(Some(authenticator)))
   }
 }

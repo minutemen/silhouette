@@ -17,7 +17,7 @@
  */
 package silhouette.authorization
 
-import cats.effect.Sync
+import cats.effect.Async
 import cats.implicits._
 import silhouette.Identity
 
@@ -45,7 +45,7 @@ trait Authorization[F[_], I <: Identity, C] {
  *
  * @tparam F The type of the IO monad.
  */
-case class Authorized[F[_]: Sync]() extends Authorization[F, Identity, Any] {
+case class Authorized[F[_]: Async]() extends Authorization[F, Identity, Any] {
 
   /**
    * Checks whether the user is authorized or not.
@@ -55,7 +55,7 @@ case class Authorized[F[_]: Sync]() extends Authorization[F, Identity, Any] {
    * @return True if the user is authorized, false otherwise.
    */
   override def isAuthorized(identity: Identity, context: Any): F[Boolean] =
-    Sync[F].pure(true)
+    Async[F].pure(true)
 }
 
 /**
@@ -63,7 +63,7 @@ case class Authorized[F[_]: Sync]() extends Authorization[F, Identity, Any] {
  *
  * @tparam F The type of the IO monad.
  */
-case class Unauthorized[F[_]: Sync]() extends Authorization[F, Identity, Any] {
+case class Unauthorized[F[_]: Async]() extends Authorization[F, Identity, Any] {
 
   /**
    * Checks whether the user is authorized or not.
@@ -73,7 +73,7 @@ case class Unauthorized[F[_]: Sync]() extends Authorization[F, Identity, Any] {
    * @return True if the user is authorized, false otherwise.
    */
   override def isAuthorized(identity: Identity, context: Any): F[Boolean] =
-    Sync[F].pure(false)
+    Async[F].pure(false)
 }
 
 /**
@@ -89,7 +89,7 @@ object Authorization {
    * @tparam I The type of the identity.
    * @tparam C The type of the context.
    */
-  implicit final class RichAuthorization[F[_]: Sync, I <: Identity, C](self: Authorization[F, I, C]) {
+  implicit final class RichAuthorization[F[_]: Async, I <: Identity, C](self: Authorization[F, I, C]) {
 
     /**
      * Performs a logical negation on an `Authorization` result.
@@ -97,7 +97,7 @@ object Authorization {
      * @return An `Authorization` which performs a logical negation on an `Authorization` result.
      */
     def unary_! : Authorization[F, I, C] = (identity: I, context: C) => {
-      Sync[F].map(self.isAuthorized(identity, context))(x => !x)
+      Async[F].map(self.isAuthorized(identity, context))(x => !x)
     }
 
     /**

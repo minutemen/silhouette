@@ -17,98 +17,49 @@
  */
 package silhouette.provider.social.state
 
-import silhouette.http.{ RequestPipeline, ResponsePipeline }
-import silhouette.provider.social.state.StateItem.ItemStructure
-
-import scala.concurrent.{ ExecutionContext, Future }
+import io.circe.Json
+import silhouette.http.{ RequestPipeline, ResponseWriter }
 
 /**
  * Handles state for different purposes.
+ *
+ * @tparam F The type of the IO monad.
+ * @tparam I The type of the state item.
  */
-trait StateItemHandler {
+trait StateItemHandler[F[_], I <: StateItem] {
 
   /**
-   * The item the handler can handle.
+   * Gets the ID of the handler.
+   *
+   * @return The ID of the handler.
    */
-  type Item <: StateItem
+  def id: String
 
   /**
-   * Gets the state item the handler can handle.
+   * Returns the [[io.circe.Json]] representation of the state item and a function that can embed item specific
+   * state into a response.
    *
-   * @param ec The execution context to handle the asynchronous operations.
-   * @return The state params the handler can handle.
+   * A state item handler is able to embed some item specific state into the response. In the unserialize method
+   * it can then be extracted from the request. So this method returns also a function, that can write this state
+   * to a response.
+   *
+   * @tparam R The type of the response.
+   * @return Either an error or the item serialized as [[io.circe.Json]] and a function, that is able to embed item
+   *         specific state into a response pipeline.
    */
-  def item(implicit ec: ExecutionContext): Future[Item]
-
-  /**
-   * Indicates if a handler can handle the given [[StateItem]].
-   *
-   * This method should check if the [[serialize]] method of this handler can serialize the given
-   * unserialized state item.
-   *
-   * @param item The item to check for.
-   * @return `Some[Item]` casted state item if the handler can handle the given state item, `None` otherwise.
-   */
-  def canHandle(item: StateItem): Option[Item]
-
-  /**
-   * Indicates if a handler can handle the given unserialized state item.
-   *
-   * This method should check if the [[unserialize]] method of this handler can unserialize the given
-   * serialized state item.
-   *
-   * @param item    The item to check for.
-   * @param request The request instance to get additional data to validate against.
-   * @tparam R The type of the request.
-   * @return True if the handler can handle the given state item, false otherwise.
-   */
-  def canHandle[R](item: ItemStructure)(implicit request: RequestPipeline[R]): Boolean
-
-  /**
-   * Returns a serialized value of the state item.
-   *
-   * @param item The state item to serialize.
-   * @return The serialized state item.
-   */
-  def serialize(item: Item): ItemStructure
+  def serialize[R]: F[(Json, ResponseWriter[R])]
 
   /**
    * Unserializes the state item.
    *
-   * @param item    The state item to unserialize.
-   * @param request The request instance to get additional data to validate against.
-   * @param ec      The execution context to handle the asynchronous operations.
-   * @tparam R The type of the request.
-   * @return The unserialized state item.
-   */
-  def unserialize[R](item: ItemStructure)(
-    implicit
-    request: RequestPipeline[R],
-    ec: ExecutionContext
-  ): Future[Item]
-}
-
-/**
- * A state item handler which can publish its internal state to the client.
- *
- * Some state item handlers, like the CSRF state handler, needs the ability to publish state to a cookie.
- * So if you have such a state item handler, then mixin this trait, to publish the state item to the client.
- */
-trait PublishableStateItemHandler {
-  self: StateItemHandler =>
-
-  /**
-   * Publishes the state to the client.
+   * A state item handler is able to embed some item specific state into the response. In this method it can then be
+   * extracted from the request.Therefore the request is also passed in addition to the serialized [[io.circe.Json]]
+   * instance.
    *
-   * @param item     The item to publish.
-   * @param response The response to send to the client.
-   * @param request  The current request.
    * @tparam R The type of the request.
-   * @tparam P The type of the response.
-   * @return The response to send to the client.
+   * @param json    The serialized state item as [[io.circe.Json]].
+   * @param request The request instance to get additional data to validate against.
+   * @return Either an error or the unserialized state item.
    */
-  def publish[R, P](item: Item, response: ResponsePipeline[P])(
-    implicit
-    request: RequestPipeline[R]
-  ): ResponsePipeline[P]
+  def unserialize[R](json: Json, request: RequestPipeline[R]): F[I]
 }

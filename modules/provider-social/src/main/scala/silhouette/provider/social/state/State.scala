@@ -17,11 +17,14 @@
  */
 package silhouette.provider.social.state
 
+import cats.data.NonEmptyMap
+
 /**
  * Represents the state a social provider can handle.
  *
- * The state consists of a `Set` containing different state items.
+ * The state consists of a [[cats.data.NonEmptyMap]] containing different state items indexed by the ID of the related
+ * [[StateItemHandler]].
  *
- * @param items The list of social state items.
+ * @param items The social state items.
  */
-case class State(items: Set[StateItem])
+case class State(items: NonEmptyMap[String, StateItem])

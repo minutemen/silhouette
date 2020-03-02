@@ -17,7 +17,7 @@
  */
 package silhouette.provider.password
 
-import cats.effect.Sync
+import cats.effect.Async
 import silhouette.password.{ PasswordHasherRegistry, PasswordInfo }
 import silhouette.provider.Provider
 import silhouette.provider.password.PasswordProvider._
@@ -34,7 +34,7 @@ import silhouette.{ Done, LoginInfo }
  *
  * @tparam F The type of the IO monad.
  */
-abstract class PasswordProvider[F[_]: Sync] extends Provider {
+abstract class PasswordProvider[F[_]: Async] extends Provider {
   type AuthInfoReader = LoginInfo => F[Option[PasswordInfo]]
   type AuthInfoWriter = (LoginInfo, PasswordInfo) => F[Done]
 
@@ -86,22 +86,22 @@ abstract class PasswordProvider[F[_]: Sync] extends Provider {
    * @return The authentication state.
    */
   def authenticate(loginInfo: LoginInfo, password: String): F[State] = {
-    Sync[F].flatMap(authInfoReader(loginInfo)) {
+    Async[F].flatMap(authInfoReader(loginInfo)) {
       case Some(passwordInfo) => passwordHasherRegistry.find(passwordInfo) match {
         case Some(hasher) if hasher.matches(passwordInfo, password) =>
           if ((passwordHasherRegistry isDeprecated hasher) || (hasher isDeprecated passwordInfo).contains(true)) {
-            Sync[F].map(authInfoWriter(loginInfo, passwordHasherRegistry.current.hash(password))) { _ =>
+            Async[F].map(authInfoWriter(loginInfo, passwordHasherRegistry.current.hash(password))) { _ =>
               Successful
             }
           } else {
-            Sync[F].pure(Successful)
+            Async[F].pure(Successful)
           }
-        case Some(_) => Sync[F].pure(InvalidPassword(PasswordDoesNotMatch.format(id)))
-        case None => Sync[F].pure(UnsupportedHasher(HasherIsNotRegistered.format(
+        case Some(_) => Async[F].pure(InvalidPassword(PasswordDoesNotMatch.format(id)))
+        case None => Async[F].pure(UnsupportedHasher(HasherIsNotRegistered.format(
           id, passwordInfo.hasher, passwordHasherRegistry.all.map(_.id).mkString(", ")
         )))
       }
-      case None => Sync[F].pure(NotFound(PasswordInfoNotFound.format(id, loginInfo)))
+      case None => Async[F].pure(NotFound(PasswordInfoNotFound.format(id, loginInfo)))
     }
   }
 }

@@ -120,7 +120,7 @@ class TransformerSpec extends Specification with WithBouncyCastle {
 
   "The `read` method" should {
     "throw a JwtException if an error occurred during decoding" in new Context {
-      reader("invalid.token") must beFailedTry.like {
+      reader.apply("invalid.token") must beLeft[Throwable].like {
         case e: JwtException => e.getMessage must be equalTo FraudulentJwtToken.format("invalid.token")
       }
     }
@@ -135,12 +135,14 @@ class TransformerSpec extends Specification with WithBouncyCastle {
      * A simple producer for testing.
      */
     val producer = new Jose4jProducer {
-      override def produce(claims: JwtClaims): String = {
-        val jws = new JsonWebSignature()
-        jws.setAlgorithmConstraints(AlgorithmConstraints.NO_CONSTRAINTS)
-        jws.setPayload(claims.toJson)
-        jws.setAlgorithmHeaderValue(NONE)
-        jws.getCompactSerialization
+      override def produce(claims: JwtClaims): Either[Throwable, String] = {
+        Try {
+          val jws = new JsonWebSignature()
+          jws.setAlgorithmConstraints(AlgorithmConstraints.NO_CONSTRAINTS)
+          jws.setPayload(claims.toJson)
+          jws.setAlgorithmHeaderValue(NONE)
+          jws.getCompactSerialization
+        }.toEither
       }
     }
 
@@ -148,13 +150,13 @@ class TransformerSpec extends Specification with WithBouncyCastle {
      * A simple consumer for testing.
      */
     val consumer = new Jose4jConsumer {
-      override def consume(jwt: String): Try[JwtClaims] = {
+      override def consume(jwt: String): Either[Throwable, JwtClaims] = {
         Try(new JwtConsumerBuilder())
           .map(builder => builder.setJwsAlgorithmConstraints(AlgorithmConstraints.NO_CONSTRAINTS))
           .map(builder => builder.setDisableRequireSignature())
           .map(builder => builder.setSkipAllValidators())
           .map(builder => builder.setSkipAllDefaultValidators())
-          .map(_.build().processToClaims(jwt))
+          .map(_.build().processToClaims(jwt)).toEither
       }
     }
 
@@ -202,9 +204,9 @@ class TransformerSpec extends Specification with WithBouncyCastle {
      * @return A Specs2 match result.
      */
     protected def transform(claims: Claims): MatchResult[Any] = {
-      writer(claims) must beSuccessfulTry.like {
+      writer.apply(claims) must beRight[String].like {
         case jwt =>
-          reader(jwt) must beSuccessfulTry.withValue(claims.copy(
+          reader.apply(jwt) must beRight(claims.copy(
             expirationTime = claims.expirationTime.map(_.truncatedTo(ChronoUnit.SECONDS)),
             notBefore = claims.notBefore.map(_.truncatedTo(ChronoUnit.SECONDS)),
             issuedAt = claims.issuedAt.map(_.truncatedTo(ChronoUnit.SECONDS))
@@ -220,7 +222,7 @@ class TransformerSpec extends Specification with WithBouncyCastle {
      */
     protected def reserved(claim: String): MatchResult[Any] = {
       val message = OverrideReservedClaim.format(claim, ReservedClaims.mkString(", "))
-      writer(Claims(custom = JsonObject(claim -> Json.fromString("test")))) must beFailedTry.like {
+      writer.apply(Claims(custom = JsonObject(claim -> Json.fromString("test")))) must beLeft[Throwable].like {
         case e: JwtException => e.getMessage must be equalTo message
       }
     }

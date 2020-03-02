@@ -18,7 +18,7 @@
 package silhouette.authenticator.validator
 
 import cats.data.Validated._
-import cats.effect.Sync
+import cats.effect.Async
 import silhouette.authenticator.Validator._
 import silhouette.authenticator.validator.BackingStoreValidator._
 import silhouette.authenticator.{ Authenticator, Validator }
@@ -32,7 +32,7 @@ import silhouette.authenticator.{ Authenticator, Validator }
  * @param validator A validator to validate the [[Authenticator]] against a backing store.
  * @tparam F The type of the IO monad.
  */
-final case class BackingStoreValidator[F[_]: Sync](validator: Authenticator => F[Boolean]) extends Validator[F] {
+final case class BackingStoreValidator[F[_]: Async](validator: Authenticator => F[Boolean]) extends Validator[F] {
 
   /**
    * Checks if the [[Authenticator]] is valid.
@@ -40,7 +40,7 @@ final case class BackingStoreValidator[F[_]: Sync](validator: Authenticator => F
    * @param authenticator The [[Authenticator]] to validate.
    * @return [[cats.data.Validated.Valid]] if the authenticator is valid, [[cats.data.Validated.Invalid]] otherwise.
    */
-  override def isValid(authenticator: Authenticator): F[Status] = Sync[F].map(validator(authenticator)) {
+  override def isValid(authenticator: Authenticator): F[Status] = Async[F].map(validator(authenticator)) {
     case true  => validNel(())
     case false => invalidNel(Error)
   }

@@ -17,7 +17,7 @@
  */
 package silhouette.authenticator
 
-import cats.effect.Sync
+import cats.effect.{ Async, Sync }
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
 import silhouette._
@@ -35,7 +35,7 @@ import silhouette.provider.RequestProvider
  * @tparam P The type of the response.
  * @tparam I The type of the identity.
  */
-class AuthenticatorProvider[F[_]: Sync, R, P, I <: Identity] @Inject() (
+class AuthenticatorProvider[F[_]: Async, R, P, I <: Identity] @Inject() (
   authenticationPipeline: AuthenticationPipeline[F, RequestPipeline[R], I],
   targetPipeline: TargetPipeline[F, ResponsePipeline[P]]
 ) extends RequestProvider[F, R, P, I] with LazyLogging {
@@ -60,7 +60,7 @@ class AuthenticatorProvider[F[_]: Sync, R, P, I <: Identity] @Inject() (
    * @return The [[http.ResponsePipeline]].
    */
   override def authenticate(request: RequestPipeline[R])(handler: AuthStateHandler): F[ResponsePipeline[P]] = {
-    Sync[F].flatMap(authenticationPipeline(request)) {
+    Async[F].flatMap(authenticationPipeline(request)) {
       case authState @ Authenticated(_, authenticator, _) =>
         Sync[F].flatMap(handler(authState))(targetPipeline(authenticator, _))
       case authState =>

@@ -24,7 +24,7 @@ import scala.reflect.{ ClassTag, classTag }
  *
  * @param providers The list of social providers.
  */
-case class SocialProviderRegistry(providers: Seq[SocialProvider[_]]) {
+case class SocialProviderRegistry[F[_]](providers: Seq[SocialProvider[F, _]]) {
 
   /**
    * Gets a specific provider by its type.
@@ -32,7 +32,7 @@ case class SocialProviderRegistry(providers: Seq[SocialProvider[_]]) {
    * @tparam T The type of the provider.
    * @return Some specific provider type or None if no provider for the given type could be found.
    */
-  def get[T <: SocialProvider[_]: ClassTag]: Option[T] = {
+  def get[T <: SocialProvider[F, _]: ClassTag]: Option[T] = {
     providers.find(p => classTag[T].runtimeClass.isInstance(p)).map(_.asInstanceOf[T])
   }
 
@@ -42,7 +42,7 @@ case class SocialProviderRegistry(providers: Seq[SocialProvider[_]]) {
    * @param id The ID of the provider to return.
    * @return Some social provider or None if no provider for the given ID could be found.
    */
-  def get[T <: SocialProvider[_]: ClassTag](id: String): Option[T] = getSeq[T].find(_.id == id)
+  def get[T <: SocialProvider[F, _]: ClassTag](id: String): Option[T] = getSeq[T].find(_.id == id)
 
   /**
    * Gets a list of providers that match a certain type.
@@ -50,7 +50,7 @@ case class SocialProviderRegistry(providers: Seq[SocialProvider[_]]) {
    * @tparam T The type of the provider.
    * @return A list of providers that match a certain type.
    */
-  def getSeq[T <: SocialProvider[_]: ClassTag]: Seq[T] = {
+  def getSeq[T <: SocialProvider[F, _]: ClassTag]: Seq[T] = {
     providers.filter(p => classTag[T].runtimeClass.isInstance(p)).map(_.asInstanceOf[T])
   }
 }

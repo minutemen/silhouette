@@ -19,13 +19,12 @@ package silhouette.authenticator.transformer
 
 import java.time.Instant
 
-import cats.effect.Sync
+import cats.effect.Async
 import io.circe.syntax._
 import io.circe.{ Json, JsonObject }
 import silhouette.authenticator.{ Authenticator, AuthenticatorWriter }
 import silhouette.crypto.Base64
-import silhouette.jwt
-import silhouette.jwt.JwtClaimWriter
+import silhouette.jwt.{ Claims, JwtClaimWriter }
 
 /**
  * A transformation function that transforms an [[Authenticator]] into a JWT.
@@ -42,7 +41,7 @@ import silhouette.jwt.JwtClaimWriter
  * @param notBefore   The JWT 'nbf' claim.
  * @tparam F The type of the IO monad.
  */
-final case class JwtWriter[F[_]: Sync](
+final case class JwtWriter[F[_]: Async](
   claimWriter: JwtClaimWriter,
   issuer: Option[String] = None,
   audience: Option[List[String]] = None,
@@ -56,8 +55,8 @@ final case class JwtWriter[F[_]: Sync](
    * @return A JWT on success, an error on failure.
    */
   override def apply(authenticator: Authenticator): F[String] = {
-    Sync[F].fromTry {
-      claimWriter(jwt.Claims(
+    Async[F].fromEither {
+      claimWriter(Claims(
         issuer = issuer,
         subject = Some(Base64.encode(authenticator.loginInfo.asJson.toString())),
         audience = audience,

@@ -24,8 +24,9 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.crypto.Hash
 import silhouette.crypto.Hash._
-import silhouette.http.BodyWriter._
 import silhouette.http.Body._
+import silhouette.http.BodyWriter._
+import sttp.model.{ Header, HeaderNames }
 
 import scala.xml.{ Node, XML }
 
@@ -42,7 +43,7 @@ class SilhouetteRequestPipelineSpec extends Specification {
 
   "The `header` method" should {
     "return the list of header values" in new Context {
-      requestPipeline.header("TEST1") must beSome(Header("TEST1", "value1", "value2"))
+      requestPipeline.header("TEST1") must beSome(Header.notValidated("TEST1", "value1, value2"))
     }
 
     "return an empty list if no header with the given name was found" in new Context {
@@ -52,43 +53,54 @@ class SilhouetteRequestPipelineSpec extends Specification {
 
   "The `withHeaders` method" should {
     "append a new header" in new Context {
-      requestPipeline.withHeaders(Header("TEST3", "value1")).headers must be equalTo Seq(
-        Header("TEST1", "value1", "value2"),
-        Header("TEST2", "value1"),
-        Header("TEST3", "value1")
+      requestPipeline.withHeaders(Header.notValidated("TEST3", "value1")).headers must be equalTo Seq(
+        Header.notValidated("TEST1", "value1, value2"),
+        Header.notValidated("TEST2", "value1"),
+        Header.notValidated("TEST3", "value1")
       )
     }
 
     "append multiple headers" in new Context {
-      requestPipeline.withHeaders(Header("TEST3", "value1"), Header("TEST4", "value1")).headers must be equalTo Seq(
-        Header("TEST1", "value1", "value2"),
-        Header("TEST2", "value1"),
-        Header("TEST3", "value1"),
-        Header("TEST4", "value1")
-      )
+      requestPipeline.withHeaders(
+        Header.notValidated("TEST3", "value1"),
+        Header.notValidated("TEST4", "value1")
+      ).headers must be equalTo Seq(
+          Header.notValidated("TEST1", "value1, value2"),
+          Header.notValidated("TEST2", "value1"),
+          Header.notValidated("TEST3", "value1"),
+          Header.notValidated("TEST4", "value1")
+        )
     }
 
     "append multiple headers with the same name" in new Context {
-      requestPipeline.withHeaders(Header("TEST3", "value1"), Header("TEST3", "value2", "value3")).headers must
-        be equalTo Seq(
-          Header("TEST1", "value1", "value2"),
-          Header("TEST2", "value1"),
-          Header("TEST3", "value1", "value2", "value3")
+      requestPipeline.withHeaders(
+        Header.notValidated("TEST3", "value1"),
+        Header.notValidated("TEST3", "value2, value3")
+      ).headers must be equalTo Seq(
+          Header.notValidated("TEST1", "value1, value2"),
+          Header.notValidated("TEST2", "value1"),
+          Header.notValidated("TEST3", "value1, value2, value3")
         )
     }
 
     "override an existing header" in new Context {
-      requestPipeline.withHeaders(Header("TEST2", "value2"), Header("TEST2", "value3")).headers must be equalTo Seq(
-        Header("TEST1", "value1", "value2"),
-        Header("TEST2", "value2", "value3")
-      )
+      requestPipeline.withHeaders(
+        Header.notValidated("TEST2", "value2"),
+        Header.notValidated("TEST2", "value3")
+      ).headers must be equalTo Seq(
+          Header.notValidated("TEST1", "value1, value2"),
+          Header.notValidated("TEST2", "value2, value3")
+        )
     }
 
     "override multiple existing headers" in new Context {
-      requestPipeline.withHeaders(Header("TEST1", "value3"), Header("TEST2", "value2")).headers must be equalTo Seq(
-        Header("TEST1", "value3"),
-        Header("TEST2", "value2")
-      )
+      requestPipeline.withHeaders(
+        Header.notValidated("TEST1", "value3"),
+        Header.notValidated("TEST2", "value2")
+      ).headers must be equalTo Seq(
+          Header.notValidated("TEST1", "value3"),
+          Header.notValidated("TEST2", "value2")
+        )
     }
   }
 
@@ -210,19 +222,19 @@ class SilhouetteRequestPipelineSpec extends Specification {
   "The default `fingerprint` method" should {
     "return fingerprint including the `User-Agent` header" in new Context {
       val userAgent = "test-user-agent"
-      requestPipeline.withHeaders(Header("User-Agent", userAgent)).fingerprint() must
+      requestPipeline.withHeaders(Header.notValidated("User-Agent", userAgent)).fingerprint() must
         be equalTo Hash.sha1(userAgent + "::")
     }
 
     "return fingerprint including the `Accept-Language` header" in new Context {
       val acceptLanguage = "test-accept-language"
-      requestPipeline.withHeaders(Header("Accept-Language", acceptLanguage)).fingerprint() must
+      requestPipeline.withHeaders(Header.notValidated("Accept-Language", acceptLanguage)).fingerprint() must
         be equalTo Hash.sha1(":" + acceptLanguage + ":")
     }
 
     "return fingerprint including the `Accept-Charset` header" in new Context {
       val acceptCharset = "test-accept-charset"
-      requestPipeline.withHeaders(Header("Accept-Charset", acceptCharset)).fingerprint() must
+      requestPipeline.withHeaders(Header.notValidated("Accept-Charset", acceptCharset)).fingerprint() must
         be equalTo Hash.sha1("::" + acceptCharset)
     }
 
@@ -231,9 +243,9 @@ class SilhouetteRequestPipelineSpec extends Specification {
       val acceptLanguage = "test-accept-language"
       val acceptCharset = "test-accept-charset"
       requestPipeline.withHeaders(
-        Header("User-Agent", userAgent),
-        Header("Accept-Language", acceptLanguage),
-        Header("Accept-Charset", acceptCharset)
+        Header.notValidated("User-Agent", userAgent),
+        Header.notValidated("Accept-Language", acceptLanguage),
+        Header.notValidated("Accept-Charset", acceptCharset)
       ).fingerprint() must be equalTo Hash.sha1(
           userAgent + ":" + acceptLanguage + ":" + acceptCharset
         )
@@ -246,15 +258,15 @@ class SilhouetteRequestPipelineSpec extends Specification {
       val acceptLanguage = "test-accept-language"
       val acceptCharset = "test-accept-charset"
       requestPipeline.withHeaders(
-        Header(Header.Name.`User-Agent`, userAgent),
-        Header(Header.Name.`Accept-Language`, acceptLanguage),
-        Header(Header.Name.`Accept-Charset`, acceptCharset),
-        Header(Header.Name.`Accept-Encoding`, "gzip", "deflate")
+        Header.notValidated(HeaderNames.UserAgent, userAgent),
+        Header.notValidated(HeaderNames.AcceptLanguage, acceptLanguage),
+        Header.notValidated(HeaderNames.AcceptCharset, acceptCharset),
+        Header.notValidated(HeaderNames.AcceptEncoding, "gzip, deflate")
       ).fingerprint(request => Hash.sha1(new StringBuilder()
-          .append(request.headerValue(Header.Name.`User-Agent`).getOrElse("")).append(":")
-          .append(request.headerValue(Header.Name.`Accept-Language`).getOrElse("")).append(":")
-          .append(request.headerValue(Header.Name.`Accept-Charset`).getOrElse("")).append(":")
-          .append(request.headerValue(Header.Name.`Accept-Encoding`).getOrElse(""))
+          .append(request.headerValue(HeaderNames.UserAgent).getOrElse("")).append(":")
+          .append(request.headerValue(HeaderNames.AcceptLanguage).getOrElse("")).append(":")
+          .append(request.headerValue(HeaderNames.AcceptCharset).getOrElse("")).append(":")
+          .append(request.headerValue(HeaderNames.AcceptEncoding).getOrElse(""))
           .toString()
         )) must be equalTo Hash.sha1(
           userAgent + ":" + acceptLanguage + ":" + acceptCharset + ":gzip,deflate"
@@ -413,8 +425,8 @@ class SilhouetteRequestPipelineSpec extends Specification {
       uri = new URI("http://localhost"),
       method = Method.POST,
       headers = Seq(
-        Header("TEST1", "value1", "value2"),
-        Header("TEST2", "value1")
+        Header.notValidated("TEST1", "value1, value2"),
+        Header.notValidated("TEST2", "value1")
       ),
       cookies = Seq(
         Cookie("test1", "value1"),

@@ -88,25 +88,25 @@ class DslSpec(implicit ev: ExecutionEnv) extends Specification {
       KleisliM.lift(f).run("test").value.unsafeRunSync() must beRight("test")
     }
 
-    "lift a function that returns a SyncIO[String] into a KleisliM" in {
+    "lift a function that returns a IO[String] into a KleisliM" in {
       val f: String => IO[String] = (v: String) => IO.pure(v)
 
       KleisliM.lift(f).run("test").value.unsafeRunSync() must beRight("test")
     }
 
-    "lift a function that returns a SyncIO[Option[String]] into a KleisliM" in {
+    "lift a function that returns a IO[Option[String]] into a KleisliM" in {
       val f: String => IO[Option[String]] = (v: String) => IO.pure(Some(v))
 
       KleisliM.lift(f).run("test").value.unsafeRunSync() must beRight("test")
     }
 
-    "lift a function that returns a SyncIO[Either[Throwable, String]] into a KleisliM" in {
+    "lift a function that returns a IO[Either[Throwable, String]] into a KleisliM" in {
       val f: String => IO[Either[Throwable, String]] = (v: String) => IO.pure(Right(v))
 
       KleisliM.lift(f).run("test").value.unsafeRunSync() must beRight("test")
     }
 
-    "lift a function that returns a SyncIO[Try[String]] into a KleisliM" in {
+    "lift a function that returns a IO[Try[String]] into a KleisliM" in {
       val f: String => IO[Try[String]] = (v: String) => IO.pure(Success(v))
 
       KleisliM.lift(f).run("test").value.unsafeRunSync() must beRight("test")

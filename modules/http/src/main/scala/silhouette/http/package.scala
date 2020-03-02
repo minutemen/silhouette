@@ -19,10 +19,22 @@ package silhouette
 
 import java.net.URI
 
+import sttp.model.Header
+
 /**
  * HTTP related interfaces and implementations.
  */
 package object http {
+
+  /**
+   * A function that gets a response and returns a response. Can be used as type for functions that writes to
+   * a response.
+   */
+  type ResponseWriter[R] = ResponsePipeline[R] => ResponsePipeline[R]
+
+  /**
+   * The fake request and response definitions. Useful for testing.
+   */
   protected[silhouette] object Fake {
     type Request = SilhouetteRequest
     type Response = SilhouetteResponse

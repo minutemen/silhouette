@@ -19,8 +19,8 @@ package silhouette.authenticator
 
 import cats.data.Validated._
 import cats.data.{ NonEmptyList => NEL }
-import cats.effect.SyncIO
-import cats.effect.SyncIO._
+import cats.effect.IO
+import cats.effect.IO._
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
@@ -39,7 +39,7 @@ class AuthenticatorProviderSpec extends Specification with Mockito {
       val request = Fake.request
       val response = Fake.response
 
-      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns SyncIO.pure(response)
+      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns IO.pure(response)
 
       provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
@@ -53,8 +53,8 @@ class AuthenticatorProviderSpec extends Specification with Mockito {
       val request = Fake.request.withCookies(Cookie("test", token))
       val response = Fake.response
 
-      authenticatorReader(token) returns SyncIO.raiseError(exception)
-      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns SyncIO.pure(response)
+      authenticatorReader(token) returns IO.raiseError(exception)
+      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns IO.pure(response)
 
       provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
@@ -71,9 +71,9 @@ class AuthenticatorProviderSpec extends Specification with Mockito {
       val response = Fake.response
       val errors = NEL.of("Invalid authenticator")
 
-      authenticatorReader(token) returns SyncIO.pure(authenticator)
-      validator.isValid(authenticator) returns SyncIO.pure(invalidNel(errors.head))
-      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns SyncIO.pure(response)
+      authenticatorReader(token) returns IO.pure(authenticator)
+      validator.isValid(authenticator) returns IO.pure(invalidNel(errors.head))
+      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns IO.pure(response)
 
       provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
@@ -87,9 +87,9 @@ class AuthenticatorProviderSpec extends Specification with Mockito {
       val request = Fake.request.withCookies(Cookie("test", token))
       val response = Fake.response
 
-      authenticatorReader(token) returns SyncIO.pure(authenticator)
-      validator.isValid(authenticator) returns SyncIO.raiseError(exception)
-      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns SyncIO.pure(response)
+      authenticatorReader(token) returns IO.pure(authenticator)
+      validator.isValid(authenticator) returns IO.raiseError(exception)
+      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns IO.pure(response)
 
       provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
@@ -105,10 +105,10 @@ class AuthenticatorProviderSpec extends Specification with Mockito {
       val request = Fake.request.withCookies(Cookie("test", token))
       val response = Fake.response
 
-      authenticatorReader(token) returns SyncIO.pure(authenticator)
-      validator.isValid(authenticator) returns SyncIO.pure(validNel(()))
-      identityReader.apply(loginInfo) returns SyncIO.pure(None)
-      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns SyncIO.pure(response)
+      authenticatorReader(token) returns IO.pure(authenticator)
+      validator.isValid(authenticator) returns IO.pure(validNel(()))
+      identityReader.apply(loginInfo) returns IO.pure(None)
+      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns IO.pure(response)
 
       provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
@@ -122,10 +122,10 @@ class AuthenticatorProviderSpec extends Specification with Mockito {
       val request = Fake.request.withCookies(Cookie("test", token))
       val response = Fake.response
 
-      authenticatorReader(token) returns SyncIO.pure(authenticator)
-      validator.isValid(authenticator) returns SyncIO.pure(validNel(()))
-      identityReader.apply(loginInfo) returns SyncIO.raiseError(exception)
-      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns SyncIO.pure(response)
+      authenticatorReader(token) returns IO.pure(authenticator)
+      validator.isValid(authenticator) returns IO.pure(validNel(()))
+      identityReader.apply(loginInfo) returns IO.raiseError(exception)
+      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns IO.pure(response)
 
       provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(response)
 
@@ -141,10 +141,10 @@ class AuthenticatorProviderSpec extends Specification with Mockito {
       val request = Fake.request.withCookies(Cookie("test", token))
       val response = Fake.response
 
-      authenticatorReader(token) returns SyncIO.pure(authenticator)
-      validator.isValid(authenticator) returns SyncIO.pure(validNel(()))
-      identityReader.apply(loginInfo) returns SyncIO.pure(Some(user))
-      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns SyncIO.pure(response)
+      authenticatorReader(token) returns IO.pure(authenticator)
+      validator.isValid(authenticator) returns IO.pure(validNel(()))
+      identityReader.apply(loginInfo) returns IO.pure(Some(user))
+      authStateHandler.apply(any[AuthState[User, Authenticator]]()) returns IO.pure(response)
 
       provider.authenticate(request)(authStateHandler).unsafeRunSync() must beEqualTo(
         EmbedIntoCookie(CookieTransportConfig("test"))(response)(authenticator.toString)
@@ -189,21 +189,21 @@ class AuthenticatorProviderSpec extends Specification with Mockito {
     /**
      * A reader function that transforms a string into an authenticator.
      */
-    val authenticatorReader: AuthenticatorReader[SyncIO, String] = mock[AuthenticatorReader[SyncIO, String]]
+    val authenticatorReader: AuthenticatorReader[IO, String] = mock[AuthenticatorReader[IO, String]]
 
     /**
      * A writer function that transforms the [[Authenticator]] into a serialized form of the [[Authenticator]].
      */
     val authenticatorWriter = {
-      val m = mock[AuthenticatorWriter[SyncIO, String]]
-      m.apply(authenticator) returns SyncIO.pure(authenticator.toString)
+      val m = mock[AuthenticatorWriter[IO, String]]
+      m.apply(authenticator) returns IO.pure(authenticator.toString)
       m
     }
 
     /**
      * The auth state handler.
      */
-    val authStateHandler = mock[AuthState[User, Authenticator] => SyncIO[Fake.ResponsePipeline]]
+    val authStateHandler = mock[AuthState[User, Authenticator] => IO[Fake.ResponsePipeline]]
 
     /**
      * An argument captor for the auth state handler.
@@ -214,23 +214,23 @@ class AuthenticatorProviderSpec extends Specification with Mockito {
      * The reader to retrieve the [[Identity]] for the [[LoginInfo]] stored in the
      * [[silhouette.authenticator.Authenticator]] from the persistence layer.
      */
-    val identityReader = mock[LoginInfo => SyncIO[Option[User]]].smart
+    val identityReader = mock[LoginInfo => IO[Option[User]]].smart
 
     /**
      * A [[Validator]] to apply to the [[silhouette.authenticator.Authenticator]].
      */
-    val validator = mock[Validator[SyncIO]].smart
+    val validator = mock[Validator[IO]].smart
 
     /**
      * The provider to test.
      */
-    val provider = new AuthenticatorProvider[SyncIO, Fake.Request, Fake.Response, User](
-      AuthenticationPipeline[SyncIO, Fake.RequestPipeline, User](
+    val provider = new AuthenticatorProvider[IO, Fake.Request, Fake.Response, User](
+      AuthenticationPipeline[IO, Fake.RequestPipeline, User](
         ~RetrieveFromCookie("test") >> authenticatorReader,
         identityReader,
         Set(validator)
       ),
-      TargetPipeline[SyncIO, Fake.ResponsePipeline](target =>
+      TargetPipeline[IO, Fake.ResponsePipeline](target =>
         ~authenticatorWriter >> EmbedIntoCookie(CookieTransportConfig("test"))(target)
       )
     )

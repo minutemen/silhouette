@@ -17,20 +17,22 @@
  */
 package silhouette.provider.social.state.handler
 
+import java.time.Clock
+
+import cats.effect.Async
+import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.syntax._
 import io.circe.{ Decoder, Encoder, HCursor, Json }
 import javax.inject.Inject
-import silhouette.crypto.{ SecureAsyncID, Signer }
-import silhouette.http.{ Cookie, RequestPipeline, ResponsePipeline }
+import silhouette.RichInstant._
+import silhouette.crypto.SecureID
+import silhouette.http.transport.{ CookieTransportConfig, EmbedIntoCookie, RetrieveFromCookie }
+import silhouette.http.{ RequestPipeline, ResponsePipeline, ResponseWriter }
+import silhouette.jwt.{ Claims, JwtClaimReader, JwtClaimWriter }
 import silhouette.provider.social.SocialStateException
-import silhouette.provider.social.state.StateItem.ItemStructure
 import silhouette.provider.social.state.handler.CsrfStateItemHandler._
-import silhouette.provider.social.state.{ PublishableStateItemHandler, StateItem, StateItemHandler }
-
-import scala.concurrent.duration._
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.util.{ Failure, Success, Try }
+import silhouette.provider.social.state.{ StateItem, StateItemHandler }
 
 /**
  * The item the handler can handle.
@@ -60,128 +62,84 @@ object CsrfStateItem {
  * provider redirects back to the application both tokens will be compared. If both tokens are the same than the
  * application can trust the redirect source.
  *
- * @param config   The state config.
- * @param secureID A secure ID implementation, used to create the state value.
- * @param signer   The signer implementation.
+ * @param secureID     A secure ID implementation, used to create the state value.
+ * @param cookieConfig The cookie config.
+ * @param claimReader  The JWT claim reader function.
+ * @param claimWriter  The JWT claim writer function.
+ * @param clock        The current clock.
+ * @tparam F The type of the IO monad.
  */
-class CsrfStateItemHandler @Inject() (
-  config: CsrfStateConfig,
-  secureID: SecureAsyncID[String],
-  signer: Signer
-) extends StateItemHandler with LazyLogging
-  with PublishableStateItemHandler {
+class CsrfStateItemHandler[F[_]: Async] @Inject() (
+  secureID: SecureID[F, String],
+  cookieConfig: CookieTransportConfig,
+  claimReader: JwtClaimReader,
+  claimWriter: JwtClaimWriter,
+  clock: Clock
+) extends StateItemHandler[F, CsrfStateItem] with LazyLogging {
 
   /**
-   * The item the handler can handle.
+   * Gets the ID of the handler.
+   *
+   * @return The ID of the handler.
    */
-  override type Item = CsrfStateItem
+  override def id: String = ID
 
   /**
-   * Gets the state item the handler can handle.
+   * Returns the [[io.circe.Json]] representation of the state item and a function that can embed item specific
+   * state into a response.
    *
-   * @param ec The execution context to handle the asynchronous operations.
-   * @return The state params the handler can handle.
+   * A state item handler is able to embed some item specific state into the response. In the unserialize method
+   * it can then be extracted from the request. So this method returns also a function, that can write this state
+   * to a response.
+   *
+   * @tparam R The type of the response.
+   * @return Either an error or the item serialized as [[io.circe.Json]] and a function, that is able to embed item
+   *         specific state into a response pipeline.
    */
-  override def item(implicit ec: ExecutionContext): Future[Item] = secureID.get.map(CsrfStateItem.apply)
-
-  /**
-   * Indicates if a handler can handle the given [[StateItem]].
-   *
-   * This method should check if the [[serialize]] method of this handler can serialize the given
-   * unserialized state item.
-   *
-   * @param item The item to check for.
-   * @return `Some[Item]` casted state item if the handler can handle the given state item, `None` otherwise.
-   */
-  override def canHandle(item: StateItem): Option[Item] = item match {
-    case i: Item => Some(i)
-    case _       => None
-  }
-
-  /**
-   * Indicates if a handler can handle the given unserialized state item.
-   *
-   * This method should check if the [[unserialize]] method of this handler can unserialize the given
-   * serialized state item.
-   *
-   * @param item    The item to check for.
-   * @param request The request instance to get additional data to validate against.
-   * @tparam R The type of the request.
-   * @return True if the handler can handle the given state item, false otherwise.
-   */
-  override def canHandle[R](item: ItemStructure)(implicit request: RequestPipeline[R]): Boolean = {
-    item.id == ID && {
-      clientState match {
-        case Success(i) => item.data.as[Item].exists(_ == i)
-        case Failure(e) =>
-          logger.warn(e.getMessage, e)
-          false
-      }
+  override def serialize[R]: F[(Json, ResponseWriter[R])] = {
+    for {
+      id <- secureID.get
+      json <- Async[F].pure(CsrfStateItem(id).asJson)
+      jwt <- Async[F].fromEither(claimWriter(Claims(
+        issuer = Some(cookieConfig.name),
+        subject = Some(ID),
+        audience = cookieConfig.domain.map(d => List(d)),
+        expirationTime = cookieConfig.maxAge.map(maxAge => clock.instant() + maxAge),
+        notBefore = Some(clock.instant()),
+        issuedAt = Some(clock.instant()),
+        jwtID = Some(id)
+      )))
+    } yield {
+      (json, (responsePipeline: ResponsePipeline[R]) => EmbedIntoCookie(cookieConfig)(responsePipeline)(jwt))
     }
   }
 
   /**
-   * Returns a serialized value of the state item.
-   *
-   * @param item The state item to serialize.
-   * @return The serialized state item.
-   */
-  override def serialize(item: Item): ItemStructure = ItemStructure(ID, item.asJson)
-
-  /**
    * Unserializes the state item.
    *
-   * @param item    The state item to unserialize.
+   * A state item handler is able to embed some item specific state into the response. In this method it can then be
+   * extracted from the request.Therefore the request is also passed in addition to the serialized [[io.circe.Json]]
+   * instance.
+   *
+   * @tparam R The type of the request.
+   * @param json    The serialized state item as [[io.circe.Json]].
    * @param request The request instance to get additional data to validate against.
-   * @param ec      The execution context to handle the asynchronous operations.
-   * @tparam R The type of the request.
-   * @return The unserialized state item.
+   * @return Either an error or the unserialized state item.
    */
-  override def unserialize[R](item: ItemStructure)(
-    implicit
-    request: RequestPipeline[R],
-    ec: ExecutionContext
-  ): Future[Item] = {
-    Future.fromTry(item.data.as[Item].toTry)
-  }
-
-  /**
-   * Publishes the CSRF token to the client.
-   *
-   * @param item     The item to publish.
-   * @param response The response to send to the client.
-   * @param request  The current request.
-   * @tparam R The type of the request.
-   * @tparam P The type of the response.
-   * @return The result to send to the client.
-   */
-  override def publish[R, P](item: Item, response: ResponsePipeline[P])(
-    implicit
-    request: RequestPipeline[R]
-  ): ResponsePipeline[P] = {
-    response.withCookies(Cookie(
-      name = config.cookieName,
-      value = signer.sign(item.token),
-      maxAge = Some(config.expirationTime.toSeconds.toInt),
-      path = config.cookiePath,
-      domain = config.cookieDomain,
-      secure = config.secureCookie,
-      httpOnly = config.httpOnlyCookie,
-      sameSite = config.sameSite
-    ))
-  }
-
-  /**
-   * Gets the CSRF token from the cookie.
-   *
-   * @param request The request header.
-   * @tparam R The type of the request.
-   * @return The CSRF token on success, otherwise a failure.
-   */
-  private def clientState[R](implicit request: RequestPipeline[R]): Try[Item] = {
-    request.cookie(config.cookieName) match {
-      case Some(cookie) => signer.extract(cookie.value).map(token => CsrfStateItem(token))
-      case None         => Failure(new SocialStateException(ClientStateDoesNotExists.format(config.cookieName)))
+  override def unserialize[R](json: Json, request: RequestPipeline[R]): F[CsrfStateItem] = {
+    (for {
+      jwt <- Async[F].fromOption(
+        RetrieveFromCookie(cookieConfig.name)(request),
+        new SocialStateException(ClientStateDoesNotExists.format(cookieConfig.name))
+      )
+      clientClaims <- Async[F].fromEither(claimReader(jwt))
+      clientState <- Async[F].pure(CsrfStateItem(clientClaims.jwtID.getOrElse("")))
+      providerState <- Async[F].fromEither(json.as[CsrfStateItem].asInstanceOf[Either[Throwable, CsrfStateItem]])
+    } yield {
+      clientState -> providerState
+    }).flatMap {
+      case (clientState, providerState) if clientState == providerState => Async[F].pure(providerState)
+      case _ => Async[F].raiseError(new SocialStateException(ClientStateDoesNotMatch))
     }
   }
 }
@@ -200,26 +158,5 @@ object CsrfStateItemHandler {
    * The error messages.
    */
   val ClientStateDoesNotExists = "State cookie doesn't exists for name: %s"
+  val ClientStateDoesNotMatch = "Potential CSRF attack detected! The client state doesn't match the provider state"
 }
-
-/**
- * The config for the Csrf State.
- *
- * @param cookieName     The cookie name.
- * @param cookiePath     The cookie path.
- * @param cookieDomain   The cookie domain.
- * @param secureCookie   Whether this cookie is secured, sent only for HTTPS requests.
- * @param httpOnlyCookie Whether this cookie is HTTP only, i.e. not accessible from client-side JavaScript code.
- * @param sameSite       Whether this cookie forces the SameSite policy to prevent CSRF attacks.
- * @param expirationTime State expiration. Defaults to 5 minutes which provides sufficient time to log in, but
- *                       not too much. This is a balance between convenience and security.
- */
-case class CsrfStateConfig(
-  cookieName: String = "CsrfState",
-  cookiePath: Option[String] = Some("/"),
-  cookieDomain: Option[String] = None,
-  secureCookie: Boolean = true,
-  httpOnlyCookie: Boolean = true,
-  sameSite: Option[Cookie.SameSite] = Some(Cookie.SameSite.Lax),
-  expirationTime: FiniteDuration = 5 minutes
-)

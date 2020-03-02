@@ -17,7 +17,7 @@
  */
 package silhouette.authorization
 
-import cats.effect.SyncIO._
+import cats.effect.IO._
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope

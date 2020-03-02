@@ -17,7 +17,7 @@
  */
 package silhouette.provider.form
 
-import cats.effect.Sync
+import cats.effect.Async
 import javax.inject.Inject
 import silhouette.password.PasswordHasherRegistry
 import silhouette.provider.IdentityNotFoundException
@@ -49,7 +49,7 @@ case class PasswordCredentials(identifier: String, password: String) extends Cre
  * @param passwordHasherRegistry The password hashers used by the application.
  * @tparam F The type of the IO monad.
  */
-class PasswordLoginProvider[F[_]: Sync] @Inject() (
+class PasswordLoginProvider[F[_]: Async] @Inject() (
   protected val authInfoReader: PasswordProvider[F]#AuthInfoReader,
   protected val authInfoWriter: PasswordProvider[F]#AuthInfoWriter,
   protected val passwordHasherRegistry: PasswordHasherRegistry
@@ -69,12 +69,12 @@ class PasswordLoginProvider[F[_]: Sync] @Inject() (
    * @return The login info if the authentication was successful, otherwise a failure.
    */
   def authenticate(credentials: PasswordCredentials): F[LoginInfo] = {
-    Sync[F].flatMap(loginInfo(credentials)) { loginInfo =>
-      Sync[F].flatMap(authenticate(loginInfo, credentials.password)) {
-        case Successful               => Sync[F].pure(loginInfo)
-        case InvalidPassword(error)   => Sync[F].raiseError(new InvalidPasswordException(error))
-        case UnsupportedHasher(error) => Sync[F].raiseError(new ConfigurationException(error))
-        case NotFound(error)          => Sync[F].raiseError(new IdentityNotFoundException(error))
+    Async[F].flatMap(loginInfo(credentials)) { loginInfo =>
+      Async[F].flatMap(authenticate(loginInfo, credentials.password)) {
+        case Successful               => Async[F].pure(loginInfo)
+        case InvalidPassword(error)   => Async[F].raiseError(new InvalidPasswordException(error))
+        case UnsupportedHasher(error) => Async[F].raiseError(new ConfigurationException(error))
+        case NotFound(error)          => Async[F].raiseError(new IdentityNotFoundException(error))
       }
     }
   }
@@ -94,7 +94,7 @@ class PasswordLoginProvider[F[_]: Sync] @Inject() (
    * @return The login info created from the credentials.
    */
   def loginInfo(credentials: PasswordCredentials): F[LoginInfo] =
-    Sync[F].pure(LoginInfo(id, credentials.identifier))
+    Async[F].pure(LoginInfo(id, credentials.identifier))
 }
 
 /**

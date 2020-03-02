@@ -20,6 +20,7 @@ package silhouette.http
 import java.net.URI
 
 import silhouette.RichSeq._
+import sttp.model.Header
 
 /**
  * The Silhouette request implementation.
@@ -114,11 +115,11 @@ final protected[silhouette] case class SilhouetteRequestPipeline(
    */
   override def withHeaders(headers: Header*): SilhouetteRequestPipeline = {
     val groupedHeaders = headers.groupByPreserveOrder(_.name).map {
-      case (key, h) => Header(key, h.flatMap(_.values): _*)
+      case (key, h) => Header.notValidated(key, h.mkString(", "))
     }
     val newHeaders = groupedHeaders.foldLeft(request.headers) {
       case (acc, header) =>
-        acc.indexWhere(_.name == header.name) match {
+        acc.indexWhere(_.is(header.name)) match {
           case -1 => acc :+ header
           case i  => acc.patch(i, Seq(header), 1)
         }

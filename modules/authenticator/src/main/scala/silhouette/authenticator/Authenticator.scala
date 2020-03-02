@@ -19,7 +19,7 @@ package silhouette.authenticator
 
 import java.time.{ Clock, Instant }
 
-import cats.effect.Sync
+import cats.effect.Async
 import io.circe.Json
 import silhouette.RichInstant._
 import silhouette.authenticator.Validator._
@@ -150,10 +150,10 @@ final case class Authenticator(
    * @tparam F The type of the IO monad.
    * @return True if the authenticator is valid, false otherwise.
    */
-  def isValid[F[_]: Sync](validators: Set[Validator[F]]): F[Status] = {
+  def isValid[F[_]: Async](validators: Set[Validator[F]]): F[Status] = {
     import cats.instances.list._
     import cats.syntax.foldable._
     import cats.syntax.traverse._
-    Sync[F].map(validators.map(_.isValid(this)).toList.sequence)(_.sequence_)
+    Async[F].map(validators.map(_.isValid(this)).toList.sequence)(_.sequence_)
   }
 }

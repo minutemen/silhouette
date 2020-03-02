@@ -15,14 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Dependencies._
+package silhouette.jwt
 
-libraryDependencies ++= Seq(
-  Library.Circe.core,
-  Library.Circe.parser,
-  Library.Sttp.core,
-  Library.scalaLogging,
-  Library.collectionCombat,
-  Library.scalaXml
-)
-//enablePlugins(Doc)
+/**
+ * Reads claims from a JWT string.
+ */
+trait JwtClaimReader extends (String => Either[Throwable, Claims])

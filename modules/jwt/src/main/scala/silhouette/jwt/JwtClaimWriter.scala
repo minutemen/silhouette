@@ -15,26 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.http
-
-import silhouette.http.client.Response
-
-import scala.concurrent.Future
+package silhouette.jwt
 
 /**
- * An HTTP client that takes an [[Request]] and produces a [[Response]].
- *
- * The concrete implementation of this client must be implemented by the framework specific Silhouette binding.
- * The client is no full-blown HTTP client implementation. It implements only the parts which Silhouette depends on,
- * and it is only meant for internal usage.
+ * Writes claims to a JWT string.
  */
-private[silhouette] trait HttpClient {
-
-  /**
-   * Execute the request and produce a response.
-   *
-   * @param request The request to execute.
-   * @return The resulting response.
-   */
-  def execute(request: client.Request): Future[Response]
-}
+trait JwtClaimWriter extends (Claims => Either[Throwable, String])

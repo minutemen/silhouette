@@ -19,6 +19,8 @@ package silhouette
 
 import java.net.URI
 
+import sttp.model.Uri
+
 import scala.language.implicitConversions
 
 /**
@@ -67,4 +69,12 @@ object ConfigURI {
    * @return A [[java.net.URI]] instance.
    */
   implicit def toURI(uri: ConfigURI): URI = uri.toURI
+
+  /**
+   * Converts a [[ConfigURI]] to a [[sttp.model.Uri]].
+   *
+   * @param uri The URI to convert.
+   * @return A [[sttp.model.Uri]] instance.
+   */
+  implicit def toSttpUri(uri: ConfigURI): Uri = Uri(uri.toURI)
 }

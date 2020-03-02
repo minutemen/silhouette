@@ -15,9 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.http
+import Dependencies._
 
-/**
- * Provides the HTTP client implementation.
- */
-package object client
+libraryDependencies ++= Seq(
+  Library.Circe.core,
+  Library.Sttp.core,
+  Library.Sttp.circe,
+  Library.Cats.core,
+  Library.Cats.effect
+)
+//enablePlugins(Doc)

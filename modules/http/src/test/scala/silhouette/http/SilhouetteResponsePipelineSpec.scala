@@ -19,6 +19,7 @@ package silhouette.http
 
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
+import sttp.model.Header
 
 /**
  * Test case for the [[SilhouetteResponsePipeline]] class.
@@ -33,7 +34,7 @@ class SilhouetteResponsePipelineSpec extends Specification {
 
   "The `header` method" should {
     "return the list of header values" in new Context {
-      responsePipeline.header("TEST1") must beSome(Header("TEST1", "value1", "value2"))
+      responsePipeline.header("TEST1") must beSome(Header.notValidated("TEST1", "value1, value2"))
     }
 
     "return an empty list if no header with the given name was found" in new Context {
@@ -43,43 +44,55 @@ class SilhouetteResponsePipelineSpec extends Specification {
 
   "The `withHeaders` method" should {
     "append a new header" in new Context {
-      responsePipeline.withHeaders(Header("TEST3", "value1")).headers must be equalTo Seq(
-        Header("TEST1", "value1", "value2"),
-        Header("TEST2", "value1"),
-        Header("TEST3", "value1")
+      responsePipeline.withHeaders(Header.notValidated("TEST3", "value1")).headers must be equalTo Seq(
+        Header.notValidated("TEST1", "value1, value2"),
+        Header.notValidated("TEST2", "value1"),
+        Header.notValidated("TEST3", "value1")
       )
     }
 
     "append multiple headers" in new Context {
-      responsePipeline.withHeaders(Header("TEST3", "value1"), Header("TEST4", "value1")).headers must be equalTo Seq(
-        Header("TEST1", "value1", "value2"),
-        Header("TEST2", "value1"),
-        Header("TEST3", "value1"),
-        Header("TEST4", "value1")
-      )
+      responsePipeline.withHeaders(
+        Header.notValidated("TEST3", "value1"),
+        Header.notValidated("TEST4", "value1")
+      ).headers must be equalTo Seq(
+          Header.notValidated("TEST1", "value1, value2"),
+          Header.notValidated("TEST2", "value1"),
+          Header.notValidated("TEST3", "value1"),
+          Header.notValidated("TEST4", "value1")
+        )
     }
 
     "append multiple headers with the same name" in new Context {
-      responsePipeline.withHeaders(Header("TEST3", "value1"), Header("TEST3", "value2", "value3")).headers must
+      responsePipeline.withHeaders(
+        Header.notValidated("TEST3", "value1"),
+        Header.notValidated("TEST3", "value2, value3")
+      ).headers must
         be equalTo Seq(
-          Header("TEST1", "value1", "value2"),
-          Header("TEST2", "value1"),
-          Header("TEST3", "value1", "value2", "value3")
+          Header.notValidated("TEST1", "value1, value2"),
+          Header.notValidated("TEST2", "value1"),
+          Header.notValidated("TEST3", "value1, value2, value3")
         )
     }
 
     "override an existing header" in new Context {
-      responsePipeline.withHeaders(Header("TEST2", "value2"), Header("TEST2", "value3")).headers must be equalTo Seq(
-        Header("TEST1", "value1", "value2"),
-        Header("TEST2", "value2", "value3")
-      )
+      responsePipeline.withHeaders(
+        Header.notValidated("TEST2", "value2"),
+        Header.notValidated("TEST2", "value3")
+      ).headers must be equalTo Seq(
+          Header.notValidated("TEST1", "value1, value2"),
+          Header.notValidated("TEST2", "value2, value3")
+        )
     }
 
     "override multiple existing headers" in new Context {
-      responsePipeline.withHeaders(Header("TEST1", "value3"), Header("TEST2", "value2")).headers must be equalTo Seq(
-        Header("TEST1", "value3"),
-        Header("TEST2", "value2")
-      )
+      responsePipeline.withHeaders(
+        Header.notValidated("TEST1", "value3"),
+        Header.notValidated("TEST2", "value2")
+      ).headers must be equalTo Seq(
+          Header.notValidated("TEST1", "value3"),
+          Header.notValidated("TEST2", "value2")
+        )
     }
   }
 
@@ -140,8 +153,8 @@ class SilhouetteResponsePipelineSpec extends Specification {
     val response = SilhouetteResponse(
       status = Status.OK,
       headers = Seq(
-        Header("TEST1", "value1", "value2"),
-        Header("TEST2", "value1")
+        Header.notValidated("TEST1", "value1, value2"),
+        Header.notValidated("TEST2", "value1")
       ),
       cookies = Seq(
         Cookie("test1", "value1"),

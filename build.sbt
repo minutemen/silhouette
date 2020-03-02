@@ -32,13 +32,6 @@ lazy val `silhouette-crypto` = (project in file("modules/crypto"))
     `silhouette-specs2` % Test
   )
 
-lazy val `silhouette-crypto-jca` = (project in file("modules/crypto-jca"))
-  .dependsOn(
-    `silhouette-core`,
-    `silhouette-crypto`,
-    `silhouette-specs2` % Test
-  )
-
 lazy val `silhouette-http` = (project in file("modules/http"))
   .dependsOn(
     `silhouette-core`,
@@ -122,6 +115,7 @@ lazy val `silhouette-provider-http` = (project in file("modules/provider-http"))
 lazy val `silhouette-provider-social` = (project in file("modules/provider-social"))
   .dependsOn(
     `silhouette-provider`,
+    `silhouette-jwt`,
     `silhouette-crypto`,
     `silhouette-specs2` % Test
   )
@@ -154,7 +148,6 @@ lazy val silhouette = (project in file("."))
     `silhouette-specs2`,
     `silhouette-core`,
     `silhouette-crypto`,
-    `silhouette-crypto-jca`,
     `silhouette-http`,
     `silhouette-jwt`,
     `silhouette-jwt-jose4j`,

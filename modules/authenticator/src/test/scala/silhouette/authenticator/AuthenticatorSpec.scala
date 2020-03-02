@@ -21,7 +21,7 @@ import java.time.{ Clock, Instant, ZoneId }
 
 import cats.data.NonEmptyList
 import cats.data.Validated._
-import cats.effect.SyncIO
+import cats.effect.IO
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
@@ -124,33 +124,33 @@ class AuthenticatorSpec extends Specification with Mockito {
 
   "The `isValid` method" should {
     "return Invalid if at least one validator fails" in new Context {
-      val validator1 = mock[Validator[SyncIO]].smart
-      val validator2 = mock[Validator[SyncIO]].smart
-      validator1.isValid(authenticator) returns SyncIO.pure(validNel(()))
-      validator2.isValid(authenticator) returns SyncIO.pure(invalidNel("error1"))
+      val validator1 = mock[Validator[IO]].smart
+      val validator2 = mock[Validator[IO]].smart
+      validator1.isValid(authenticator) returns IO.pure(validNel(()))
+      validator2.isValid(authenticator) returns IO.pure(invalidNel("error1"))
       val validators = Set(validator1, validator2)
 
-      authenticator.isValid[SyncIO](validators).unsafeRunSync() must beEqualTo(invalidNel("error1"))
+      authenticator.isValid[IO](validators).unsafeRunSync() must beEqualTo(invalidNel("error1"))
     }
 
     "return Valid if all validators are successful" in new Context {
-      val validator1 = mock[Validator[SyncIO]].smart
-      val validator2 = mock[Validator[SyncIO]].smart
-      validator1.isValid(authenticator) returns SyncIO.pure(validNel(()))
-      validator2.isValid(authenticator) returns SyncIO.pure(validNel(()))
+      val validator1 = mock[Validator[IO]].smart
+      val validator2 = mock[Validator[IO]].smart
+      validator1.isValid(authenticator) returns IO.pure(validNel(()))
+      validator2.isValid(authenticator) returns IO.pure(validNel(()))
       val validators = Set(validator1, validator2)
 
-      authenticator.isValid[SyncIO](validators).unsafeRunSync() must beEqualTo(validNel(()))
+      authenticator.isValid[IO](validators).unsafeRunSync() must beEqualTo(validNel(()))
     }
 
     "combine all error messages from all validators" in new Context {
-      val validator1 = mock[Validator[SyncIO]].smart
-      val validator2 = mock[Validator[SyncIO]].smart
-      validator1.isValid(authenticator) returns SyncIO.pure(invalidNel("error1"))
-      validator2.isValid(authenticator) returns SyncIO.pure(invalidNel("error2"))
+      val validator1 = mock[Validator[IO]].smart
+      val validator2 = mock[Validator[IO]].smart
+      validator1.isValid(authenticator) returns IO.pure(invalidNel("error1"))
+      validator2.isValid(authenticator) returns IO.pure(invalidNel("error2"))
       val validators = Set(validator1, validator2)
 
-      authenticator.isValid[SyncIO](validators).unsafeRunSync() must beEqualTo(
+      authenticator.isValid[IO](validators).unsafeRunSync() must beEqualTo(
         Invalid(NonEmptyList.of("error1", "error2"))
       )
     }

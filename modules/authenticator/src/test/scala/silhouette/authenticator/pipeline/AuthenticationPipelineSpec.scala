@@ -19,8 +19,8 @@ package silhouette.authenticator.pipeline
 
 import cats.data.Validated._
 import cats.data.{ NonEmptyList => NEL }
-import cats.effect.SyncIO
-import cats.effect.SyncIO._
+import cats.effect.IO
+import cats.effect.IO._
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
@@ -54,7 +54,7 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
       val exception = new AuthenticatorException("Parse error")
       val request = Fake.request.withCookies(Cookie("test", token))
 
-      authenticatorReader(token) returns SyncIO.raiseError(exception)
+      authenticatorReader(token) returns IO.raiseError(exception)
 
       pipeline(request).unsafeRunSync() must beLike[AuthState[User, Authenticator]] {
         case AuthFailure(e) =>
@@ -66,8 +66,8 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
       val request = Fake.request.withCookies(Cookie("test", token))
       val errors = NEL.of("Invalid authenticator")
 
-      authenticatorReader(token) returns SyncIO.pure(authenticator)
-      validator.isValid(authenticator) returns SyncIO.pure(invalidNel(errors.head))
+      authenticatorReader(token) returns IO.pure(authenticator)
+      validator.isValid(authenticator) returns IO.pure(invalidNel(errors.head))
 
       pipeline(request).unsafeRunSync() must beEqualTo(InvalidCredentials(authenticator, errors))
     }
@@ -76,8 +76,8 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
       val exception = new AuthenticatorException("Validation error")
       val request = Fake.request.withCookies(Cookie("test", token))
 
-      authenticatorReader(token) returns SyncIO.pure(authenticator)
-      validator.isValid(authenticator) returns SyncIO.raiseError(exception)
+      authenticatorReader(token) returns IO.pure(authenticator)
+      validator.isValid(authenticator) returns IO.raiseError(exception)
 
       pipeline(request).unsafeRunSync() must beLike[AuthState[User, Authenticator]] {
         case AuthFailure(e) =>
@@ -88,9 +88,9 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
     "return the `MissingIdentity` state if the identity couldn't be found for the login info" in new Context {
       val request = Fake.request.withCookies(Cookie("test", token))
 
-      authenticatorReader(token) returns SyncIO.pure(authenticator)
-      validator.isValid(authenticator) returns SyncIO.pure(validNel(()))
-      identityReader.apply(loginInfo) returns SyncIO.pure(None)
+      authenticatorReader(token) returns IO.pure(authenticator)
+      validator.isValid(authenticator) returns IO.pure(validNel(()))
+      identityReader.apply(loginInfo) returns IO.pure(None)
 
       pipeline(request).unsafeRunSync() must beEqualTo(MissingIdentity(authenticator, loginInfo))
     }
@@ -99,9 +99,9 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
       val exception = new AuthenticatorException("Retrieval error")
       val request = Fake.request.withCookies(Cookie("test", token))
 
-      authenticatorReader(token) returns SyncIO.pure(authenticator)
-      validator.isValid(authenticator) returns SyncIO.pure(validNel(()))
-      identityReader.apply(loginInfo) returns SyncIO.raiseError(exception)
+      authenticatorReader(token) returns IO.pure(authenticator)
+      validator.isValid(authenticator) returns IO.pure(validNel(()))
+      identityReader.apply(loginInfo) returns IO.raiseError(exception)
 
       pipeline(request).unsafeRunSync() must beLike[AuthState[User, Authenticator]] {
         case AuthFailure(e) =>
@@ -112,9 +112,9 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
     "return the `Authenticated` state if the authentication process was successful" in new Context {
       val request = Fake.request.withCookies(Cookie("test", token))
 
-      authenticatorReader(token) returns SyncIO.pure(authenticator)
-      validator.isValid(authenticator) returns SyncIO.pure(validNel(()))
-      identityReader.apply(loginInfo) returns SyncIO.pure(Some(user))
+      authenticatorReader(token) returns IO.pure(authenticator)
+      validator.isValid(authenticator) returns IO.pure(validNel(()))
+      identityReader.apply(loginInfo) returns IO.pure(Some(user))
 
       pipeline(request).unsafeRunSync() must beEqualTo(Authenticated(user, authenticator, loginInfo))
     }
@@ -158,23 +158,23 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
     /**
      * A reader function that transforms a string into an authenticator.
      */
-    val authenticatorReader = mock[AuthenticatorReader[SyncIO, String]]
+    val authenticatorReader = mock[AuthenticatorReader[IO, String]]
 
     /**
      * The reader to retrieve the [[Identity]] for the [[LoginInfo]] stored in the
      * [[silhouette.authenticator.Authenticator]] from the persistence layer.
      */
-    val identityReader = mock[LoginInfo => SyncIO[Option[User]]].smart
+    val identityReader = mock[LoginInfo => IO[Option[User]]].smart
 
     /**
      * A [[Validator]] to apply to the [[silhouette.authenticator.Authenticator]].
      */
-    val validator = mock[Validator[SyncIO]].smart
+    val validator = mock[Validator[IO]].smart
 
     /**
      * The pipeline to test.
      */
-    lazy val pipeline = AuthenticationPipeline[SyncIO, Fake.RequestPipeline, User](
+    lazy val pipeline = AuthenticationPipeline[IO, Fake.RequestPipeline, User](
       ~RetrieveFromCookie("test") >> authenticatorReader,
       identityReader,
       Set(validator)

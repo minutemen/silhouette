@@ -19,6 +19,8 @@ package silhouette.http
 
 import java.net.URI
 
+import sttp.model.Header
+
 /**
  * Allows to modify a framework specific request implementation.
  *
@@ -69,7 +71,7 @@ trait RequestPipeline[+R] extends Request with RequestExtractor[R] {
    * If a request holds the following headers, then this method must implement the following behaviour:
    * {{{
    *   Seq(
-   *     Header("TEST1", Seq("value1", "value2")),
+   *     Header("TEST1", "value1, value2"),
    *     Header("TEST2", "value1")
    *   )
    * }}}
@@ -79,9 +81,9 @@ trait RequestPipeline[+R] extends Request with RequestExtractor[R] {
    *   withHeaders(Header("TEST3", "value1"))
    *
    *   Seq(
-   *     Header("TEST1" -> Seq("value1", "value2")),
-   *     Header("TEST2" -> Seq("value1")),
-   *     Header("TEST3" -> Seq("value1"))
+   *     Header("TEST1" -> "value1, value2"),
+   *     Header("TEST2" -> "value1"),
+   *     Header("TEST3" -> "value1")
    *   )
    * }}}
    *
@@ -90,18 +92,18 @@ trait RequestPipeline[+R] extends Request with RequestExtractor[R] {
    *   withHeaders(Header("TEST1", "value3"))
    *
    *   Seq(
-   *     Header("TEST1", Seq("value3")),
-   *     Header("TEST2", Seq("value1"))
+   *     Header("TEST1", "value3"),
+   *     Header("TEST2", "value1")
    *   )
    * }}}
    *
    * Compose headers with the same name:
    * {{{
-   *   withHeaders(Header("TEST1", "value3"), Header("TEST1", Seq("value4", "value5")))
+   *   withHeaders(Header("TEST1", "value3"), Header("TEST1", "value4, value5"))
    *
    *   Set(
-   *     Header("TEST1", Seq("value3", "value4", "value5")),
-   *     Header("TEST2", Seq("value1"))
+   *     Header("TEST1", "value3, value4, value5"),
+   *     Header("TEST2", "value1")
    *   )
    * }}}
    *

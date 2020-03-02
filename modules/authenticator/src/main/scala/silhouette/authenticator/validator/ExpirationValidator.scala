@@ -20,7 +20,7 @@ package silhouette.authenticator.validator
 import java.time.Clock
 
 import cats.data.Validated._
-import cats.effect.Sync
+import cats.effect.Async
 import silhouette.authenticator.Validator._
 import silhouette.authenticator.validator.ExpirationValidator._
 import silhouette.authenticator.{ Authenticator, Validator }
@@ -35,7 +35,7 @@ import scala.concurrent.duration._
  * @param clock The clock implementation to validate against.
  * @tparam F The type of the IO monad.
  */
-final case class ExpirationValidator[F[_]: Sync](clock: Clock) extends Validator[F] {
+final case class ExpirationValidator[F[_]: Async](clock: Clock) extends Validator[F] {
 
   /**
    * Checks if the [[Authenticator]] is valid.
@@ -43,7 +43,7 @@ final case class ExpirationValidator[F[_]: Sync](clock: Clock) extends Validator
    * @param authenticator The [[Authenticator]] to validate.
    * @return [[cats.data.Validated.Valid]] if the authenticator is valid, [[cats.data.Validated.Invalid]] otherwise.
    */
-  override def isValid(authenticator: Authenticator): F[Status] = Sync[F].pure {
+  override def isValid(authenticator: Authenticator): F[Status] = Async[F].pure {
     if (authenticator.expiresIn(clock).forall(_ >= 0.millis)) {
       validNel(())
     } else {

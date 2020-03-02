@@ -20,18 +20,17 @@ package silhouette.provider.oauth2
 import java.net.URI
 import java.time.Clock
 
+import cats.effect.Async
+import cats.implicits._
 import io.circe.Json
-import silhouette.http.Method.GET
 import silhouette.http._
-import silhouette.http.client.Request
 import silhouette.provider.UnexpectedResponseException
 import silhouette.provider.oauth2.FoursquareProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
-import silhouette.provider.social.state.StateHandler
 import silhouette.{ ConfigURI, LoginInfo }
-
-import scala.concurrent.{ ExecutionContext, Future }
+import sttp.client.circe.asJson
+import sttp.client.{ SttpBackend, basicRequest }
 
 /**
  * Base Foursquare OAuth2 provider.
@@ -39,8 +38,10 @@ import scala.concurrent.{ ExecutionContext, Future }
  * @see https://developer.foursquare.com/overview/auth
  * @see https://developer.foursquare.com/overview/responses
  * @see https://developer.foursquare.com/docs/explore
+ *
+ * @tparam F The type of the IO monad.
  */
-trait BaseFoursquareProvider extends OAuth2Provider {
+trait BaseFoursquareProvider[F[_]] extends OAuth2Provider[F] {
 
   /**
    * The provider ID.
@@ -53,25 +54,25 @@ trait BaseFoursquareProvider extends OAuth2Provider {
    * @param authInfo The auth info received from the provider.
    * @return On success the build social profile, otherwise a failure.
    */
-  override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
+  override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
     val version = config.customProperties.getOrElse(ApiVersion, DefaultApiVersion)
     val uri = config.apiURI.getOrElse[ConfigURI](DefaultApiURI).format(authInfo.accessToken, version)
-
-    httpClient.execute(Request(GET, uri)).flatMap { response =>
-      withParsedJson(response) { json =>
-        response.status match {
-          case Status.OK =>
+    basicRequest.get(uri)
+      .header(BearerAuthorizationHeader(authInfo.accessToken))
+      .response(asJson[Json])
+      .send().flatMap { response =>
+        response.body match {
+          case Left(error) =>
+            F.raiseError(new UnexpectedResponseException(UnexpectedResponse.format(id, error.body, response.code)))
+          case Right(json) =>
             val errorType = json.hcursor.downField("meta").downField("errorType").as[String].toOption
             if (errorType.contains("deprecated")) {
               logger.info("This implementation may be deprecated! Please contact the Silhouette team for a fix!")
             }
 
             profileParser.parse(json, authInfo)
-          case status =>
-            Future.failed(new UnexpectedResponseException(UnexpectedResponse.format(id, json, status)))
         }
       }
-    }
   }
 }
 
@@ -79,10 +80,10 @@ trait BaseFoursquareProvider extends OAuth2Provider {
  * The profile parser for the common social profile.
  *
  * @param config The provider config.
- * @param ec     The execution context.
+ * @tparam F The type of the IO monad.
  */
-class FoursquareProfileParser(config: OAuth2Config)(implicit val ec: ExecutionContext)
-  extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
+class FoursquareProfileParser[F[_]: Async](config: OAuth2Config)
+  extends SocialProfileParser[F, Json, CommonSocialProfile, OAuth2Info] {
 
   /**
    * Parses the social profile.
@@ -91,10 +92,10 @@ class FoursquareProfileParser(config: OAuth2Config)(implicit val ec: ExecutionCo
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = {
+  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] = {
     json.hcursor.downField("response").downField("user").focus.map(_.hcursor) match {
       case Some(user) =>
-        Future.fromTry(user.downField("id").as[String].getOrError(user.value, "id", ID)).map { id =>
+        Async[F].fromTry(user.downField("id").as[String].getOrError(user.value, "id", ID)).map { id =>
           val avatarURLPart1 = user.downField("photo").downField("prefix").as[String].toOption
           val avatarURLPart2 = user.downField("photo").downField("suffix").as[String].toOption
           val resolution = config.customProperties.getOrElse(AvatarResolution, DefaultAvatarResolution)
@@ -108,7 +109,7 @@ class FoursquareProfileParser(config: OAuth2Config)(implicit val ec: ExecutionCo
               yield new URI(prefix + resolution + postfix)
           )
         }
-      case None => Future.failed(new UnexpectedResponseException(JsonPathError.format(ID, "response.user", json)))
+      case None => Async[F].raiseError(new UnexpectedResponseException(JsonPathError.format(ID, "response.user", json)))
     }
   }
 }
@@ -116,26 +117,25 @@ class FoursquareProfileParser(config: OAuth2Config)(implicit val ec: ExecutionCo
 /**
  * The Foursquare OAuth2 Provider.
  *
- * @param httpClient   The HTTP client implementation.
- * @param stateHandler The state provider implementation.
- * @param clock        The current clock instance.
- * @param config       The provider config.
- * @param ec           The execution context.
+ * @param clock       The current clock instance.
+ * @param config      The provider config.
+ * @param sttpBackend The STTP backend.
+ * @param F           The IO monad type class.
+ * @tparam F The type of the IO monad.
  */
-class FoursquareProvider(
-  protected val httpClient: HttpClient,
-  protected val stateHandler: StateHandler,
+class FoursquareProvider[F[_]](
   protected val clock: Clock,
   val config: OAuth2Config
 )(
   implicit
-  override implicit val ec: ExecutionContext
-) extends BaseFoursquareProvider with CommonProfileBuilder {
+  protected val sttpBackend: SttpBackend[F, Nothing, Nothing],
+  protected val F: Async[F]
+) extends BaseFoursquareProvider[F] with CommonProfileBuilder[F] {
 
   /**
    * The type of this class.
    */
-  override type Self = FoursquareProvider
+  override type Self = FoursquareProvider[F]
 
   /**
    * The profile parser implementation.
@@ -148,8 +148,7 @@ class FoursquareProvider(
    * @param f A function which gets the config passed and returns different config.
    * @return An instance of the provider initialized with new config.
    */
-  override def withConfig(f: OAuth2Config => OAuth2Config): Self =
-    new FoursquareProvider(httpClient, stateHandler, clock, f(config))
+  override def withConfig(f: OAuth2Config => OAuth2Config): Self = new FoursquareProvider(clock, f(config))
 }
 
 /**

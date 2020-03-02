@@ -17,8 +17,6 @@
  */
 package silhouette.crypto
 
-import scala.util.Try
-
 /**
  * Specifies a strategy how data can be signed.
  */
@@ -36,7 +34,7 @@ trait Signer {
    * Extracts a message that was signed by [[Signer.sign]].
    *
    * @param message The signed message to extract.
-   * @return The verified raw data, or an error if the message isn't valid.
+   * @return The verified raw data on the right, or an error if the message isn't valid on the left.
    */
-  def extract(message: String): Try[String]
+  def extract(message: String): Either[Throwable, String]
 }

@@ -17,7 +17,7 @@
  */
 package silhouette.provider.password
 
-import cats.effect.SyncIO
+import cats.effect.IO
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
@@ -33,7 +33,7 @@ trait PasswordProviderSpec extends Specification with Mockito {
    * The context.
    */
   trait BaseContext extends Scope {
-    type Provider = PasswordProvider[SyncIO]
+    type Provider = PasswordProvider[IO]
 
     /**
      * The default password hasher.

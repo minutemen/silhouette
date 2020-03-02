@@ -23,7 +23,6 @@ import silhouette.jwt.jose4j.Jose4jClaimWriter._
 import silhouette.jwt.{ JwtClaimWriter, JwtException }
 
 import scala.jdk.CollectionConverters._
-import scala.util.{ Failure, Success, Try }
 
 /**
  * JWT transformer based on the [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library.
@@ -40,15 +39,22 @@ final case class Jose4jClaimWriter(producer: Jose4jProducer) extends JwtClaimWri
    * @param jwt The JWT claims object to transform.
    * @return The JWT string representation or an error if the JWT claims object couldn't be transformed.
    */
-  override def apply(jwt: silhouette.jwt.Claims): Try[String] = toJose4j(jwt).map(producer.produce)
+  override def apply(jwt: silhouette.jwt.Claims): Either[Throwable, String] = {
+    for {
+      claims <- toJose4j(jwt)
+      jwt <- producer.produce(claims)
+    } yield {
+      jwt
+    }
+  }
 
   /**
    * Converts the Silhouette claims instance to a jose4j claims instance.
    *
    * @param claims The Silhouette claims instance.
-   * @return The jose4j claims instance on success, otherwise a failure.
+   * @return The jose4j claims instance on the right or an error on the left.
    */
-  private def toJose4j(claims: silhouette.jwt.Claims): Try[JwtClaims] = {
+  private def toJose4j(claims: silhouette.jwt.Claims): Either[Throwable, JwtClaims] = {
     val result = new JwtClaims()
     claims.issuer.foreach(result.setIssuer)
     claims.subject.foreach(result.setSubject)
@@ -65,10 +71,10 @@ final case class Jose4jClaimWriter(producer: Jose4jProducer) extends JwtClaimWri
 
     reservedClaims.headOption match {
       case Some((key, _)) =>
-        Failure(new JwtException(OverrideReservedClaim.format(key, silhouette.jwt.ReservedClaims.mkString(", "))))
+        Left(new JwtException(OverrideReservedClaim.format(key, silhouette.jwt.ReservedClaims.mkString(", "))))
       case None =>
         customClaims.foreach { case (k, v) => result.setClaim(k, v) }
-        Success(result)
+        Right(result)
     }
   }
 
