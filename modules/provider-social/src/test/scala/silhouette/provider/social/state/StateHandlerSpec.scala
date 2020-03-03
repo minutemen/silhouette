@@ -15,26 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.crypto
+package silhouette.provider.social.state
+
+import org.specs2.mock.Mockito
+import org.specs2.mutable.Specification
+import org.specs2.specification.Scope
 
 /**
- * Specifies a strategy how data can be signed.
+ * Test case for the [[StateHandler]] class.
  */
-trait Signer {
+class StateHandlerSpec extends Specification with Mockito {
 
   /**
-   * Signs the given data using the given secret key.
-   *
-   * @param data The data to sign.
-   * @return A message authentication code.
+   * The context.
    */
-  def sign(data: String): String
+  trait Context extends Scope {
 
-  /**
-   * Extracts a message that was signed by [[Signer.sign]].
-   *
-   * @param message The signed message to extract.
-   * @return The verified raw data on the right, or an error if the message isn't valid on the left.
-   */
-  def extract(message: String): Either[Throwable, String]
+  }
 }

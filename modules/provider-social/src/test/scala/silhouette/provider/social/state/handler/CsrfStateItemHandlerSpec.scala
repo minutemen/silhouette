@@ -17,96 +17,32 @@
  */
 package silhouette.provider.social.state.handler
 
-import io.circe.syntax._
-import org.specs2.concurrent.ExecutionEnv
+import java.time.Clock
+
+import cats.effect.IO
 import org.specs2.matcher.JsonMatchers
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import silhouette.crypto.{ SecureAsyncID, Signer }
+import silhouette.crypto.SecureID
 import silhouette.http._
-import silhouette.provider.social.state.StateItem
-import silhouette.provider.social.state.StateItem.ItemStructure
-import silhouette.provider.social.state.handler.CsrfStateItemHandler._
-import silhouette.specs2.WaitPatience
-
-import scala.concurrent.Future
-import scala.util.Success
+import silhouette.http.transport.CookieTransportConfig
+import silhouette.jwt.{ JwtClaimReader, JwtClaimWriter }
 
 /**
  * Test case for the [[CsrfStateItemHandler]] class.
- *
- * @param ev The execution environment.
  */
-class CsrfStateItemHandlerSpec(implicit ev: ExecutionEnv)
-  extends Specification
-  with Mockito
-  with JsonMatchers
-  with WaitPatience {
-
-  "The `item` method" should {
-    "return the CSRF state item" in new Context {
-      csrfStateItemHandler.item must beEqualTo(csrfStateItem).awaitWithPatience
-    }
-  }
-
-  "The `canHandle` method" should {
-    "return the same item if it can handle the given item" in new Context {
-      csrfStateItemHandler.canHandle(csrfStateItem) must beSome(csrfStateItem)
-    }
-
-    "should return `None` if it can't handle the given item" in new Context {
-      val nonCsrfState = mock[StateItem].smart
-
-      csrfStateItemHandler.canHandle(nonCsrfState) must beNone
-    }
-  }
-
-  "The `canHandle` method" should {
-    "return false if the give item is for another handler" in new Context {
-      val nonCsrfItemStructure = mock[ItemStructure].smart
-      nonCsrfItemStructure.id returns "non-csrf-item"
-
-      implicit val request: RequestPipeline[SilhouetteRequest] = Fake.request
-
-      csrfStateItemHandler.canHandle(nonCsrfItemStructure) must beFalse
-    }
-
-    "return false if client state doesn't match the item state" in new Context {
-      implicit val request: RequestPipeline[SilhouetteRequest] = Fake.request
-        .withCookies(cookie("invalid-token"))
-
-      csrfStateItemHandler.canHandle(csrfItemStructure) must beFalse
-    }
-
-    "return true if it can handle the given `ItemStructure`" in new Context {
-      implicit val request: RequestPipeline[SilhouetteRequest] = Fake.request
-        .withCookies(cookie(csrfStateItem.token))
-
-      csrfStateItemHandler.canHandle(csrfItemStructure) must beTrue
-    }
-  }
+class CsrfStateItemHandlerSpec extends Specification with Mockito with JsonMatchers {
 
   "The `serialize` method" should {
     "return a serialized value of the state item" in new Context {
-      csrfStateItemHandler.serialize(csrfStateItem).asString must be equalTo csrfItemStructure.asString
+
     }
   }
 
   "The `unserialize` method" should {
     "unserialize the state item" in new Context {
-      implicit val request: RequestPipeline[SilhouetteRequest] = Fake.request
 
-      csrfStateItemHandler.unserialize(csrfItemStructure) must beEqualTo(csrfStateItem).awaitWithPatience
-    }
-  }
-
-  "The `publish` method" should {
-    "publish the state item to the client" in new Context {
-      implicit val request: RequestPipeline[SilhouetteRequest] = Fake.request
-      val result = csrfStateItemHandler.publish(csrfStateItem, Fake.response)
-
-      result.cookie(config.cookieName) must beSome(cookie(csrfToken))
     }
   }
 
@@ -124,27 +60,30 @@ class CsrfStateItemHandlerSpec(implicit ev: ExecutionEnv)
      * The secure ID implementation.
      */
     val secureID = {
-      val m = mock[SecureAsyncID[String]].smart
-      m.get returns Future.successful(csrfToken)
+      val m = mock[SecureID[IO, String]].smart
+      m.get returns IO.pure(csrfToken)
       m
     }
 
     /**
-     * The config.
+     * The cookie transport config.
      */
-    val config = CsrfStateConfig()
+    val cookieTransportConfig = CookieTransportConfig("test")
 
     /**
-     * The signer implementation.
-     *
-     * The signer returns the same value as passed to the methods. This is enough for testing.
+     * The JWT claim reader.
      */
-    val signer = {
-      val c = mock[Signer].smart
-      c.sign(anyString) answers { p: Any => p.asInstanceOf[String] }
-      c.extract(anyString) answers { p: Any => Success(p.asInstanceOf[String]) }
-      c
-    }
+    val claimReader = mock[JwtClaimReader]
+
+    /**
+     * The JWT claim writer.
+     */
+    val claimWriter = mock[JwtClaimWriter]
+
+    /**
+     * The clock instance.
+     */
+    val clock = mock[Clock]
 
     /**
      * A CSRF state item.
@@ -152,14 +91,15 @@ class CsrfStateItemHandlerSpec(implicit ev: ExecutionEnv)
     val csrfStateItem = CsrfStateItem(csrfToken)
 
     /**
-     * The serialized type of the CSRF state item.
-     */
-    val csrfItemStructure = ItemStructure(ID, csrfStateItem.asJson)
-
-    /**
      * An instance of the CSRF state item handler.
      */
-    val csrfStateItemHandler = new CsrfStateItemHandler(config, secureID, signer)
+    val csrfStateItemHandler = new CsrfStateItemHandler(
+      secureID,
+      cookieTransportConfig,
+      claimReader,
+      claimWriter,
+      clock
+    )
 
     /**
      * A helper method to create a cookie.
@@ -168,14 +108,14 @@ class CsrfStateItemHandlerSpec(implicit ev: ExecutionEnv)
      * @return A cookie instance with the given value.
      */
     def cookie(value: String): Cookie = Cookie(
-      name = config.cookieName,
-      value = signer.sign(value),
-      maxAge = Some(config.expirationTime.toSeconds.toInt),
-      path = config.cookiePath,
-      domain = config.cookieDomain,
-      secure = config.secureCookie,
-      httpOnly = config.httpOnlyCookie,
-      sameSite = config.sameSite
+      name = cookieTransportConfig.name,
+      value = value,
+      maxAge = cookieTransportConfig.maxAge.map(_.toSeconds.toInt),
+      path = Some(cookieTransportConfig.path),
+      domain = cookieTransportConfig.domain,
+      secure = cookieTransportConfig.secure,
+      httpOnly = cookieTransportConfig.httpOnly,
+      sameSite = cookieTransportConfig.sameSite
     )
   }
 }

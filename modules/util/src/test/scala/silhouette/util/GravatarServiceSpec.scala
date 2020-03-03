@@ -45,7 +45,7 @@ class GravatarServiceSpec extends Specification with Mockito {
       override implicit val sttpBackend: SttpBackendStub[Identity, Nothing] =
         SttpBackendStub.synchronous.whenAnyRequest.thenRespondOk()
 
-      service.retrieveURI(email) should beSome(SecureURI.format(hash, "?d=404").toURI)
+      service.retrieveURI(email) should beSome(SecureURI.format(hash, "?d=404").toJavaURI)
     }
 
     "return insecure Avatar URI" in new Context {
@@ -53,7 +53,7 @@ class GravatarServiceSpec extends Specification with Mockito {
       override implicit val sttpBackend: SttpBackendStub[Identity, Nothing] =
         SttpBackendStub.synchronous.whenAnyRequest.thenRespondOk()
 
-      service.retrieveURI(email) should beSome(InsecureURI.format(hash, "?d=404").toURI)
+      service.retrieveURI(email) should beSome(InsecureURI.format(hash, "?d=404").toJavaURI)
     }
 
     "return an URI with additional parameters" in new Context {
@@ -62,7 +62,7 @@ class GravatarServiceSpec extends Specification with Mockito {
         SttpBackendStub.synchronous.whenAnyRequest.thenRespondOk()
 
       service.retrieveURI(email) should beSome(
-        SecureURI.format(hash, "?d=http%3A%2F%2Fexample.com%2Fimages%2Favatar.jpg&s=400").toURI
+        SecureURI.format(hash, "?d=http%3A%2F%2Fexample.com%2Fimages%2Favatar.jpg&s=400").toJavaURI
       )
     }
 
@@ -71,7 +71,7 @@ class GravatarServiceSpec extends Specification with Mockito {
         SttpBackendStub.synchronous.whenAnyRequest.thenRespondOk()
 
       service.retrieveURI("123test@test.com") should beSome(
-        SecureURI.format("0d77aed6b4c5857473c9a04c2017f8b8", "?d=404").toURI
+        SecureURI.format("0d77aed6b4c5857473c9a04c2017f8b8", "?d=404").toJavaURI
       )
     }
   }

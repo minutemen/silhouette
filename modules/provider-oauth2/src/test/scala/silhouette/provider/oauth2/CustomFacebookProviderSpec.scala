@@ -21,21 +21,20 @@ import java.net.URI
 import java.nio.file.Paths
 import java.time.Clock
 
+import cats.effect.IO._
+import cats.effect.{ Async, IO }
 import io.circe.Json
-import silhouette.http.BodyWriter._
-import silhouette.http.Method.GET
-import silhouette.http._
-import silhouette.http.client.{ Request, Response }
 import silhouette.provider.oauth2.FacebookProvider._
-import silhouette.provider.oauth2.OAuth2Provider.UnexpectedResponse
+import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social.SocialProvider.ProfileError
 import silhouette.provider.social._
-import silhouette.provider.social.state.StateHandler
 import silhouette.specs2.BaseFixture
 import silhouette.{ ConfigURI, LoginInfo }
+import sttp.client.asynchttpclient.cats.AsyncHttpClientCatsBackend
+import sttp.client.{ Request, Response, StringBody, SttpBackend, SttpClientException }
+import sttp.model.{ MediaType, Method, StatusCode }
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.io.Codec
 
 /**
  * Test case for the [[FacebookProvider]] class.
@@ -45,9 +44,13 @@ class CustomFacebookProviderSpec extends OAuth2ProviderSpec {
   "The `retrieveProfile` method" should {
     "fail with ProfileRetrievalException if API returns error" in new Context {
       val apiResult = ErrorJson.asJson
-      val httpResponse = Response(Status.`Bad Request`, Body.from(apiResult))
-      val httpRequest = Request(GET, DefaultApiURI.format(oAuth2Info.accessToken))
-      httpClient.execute(httpRequest) returns Future.successful(httpResponse)
+
+      sttpBackend = AsyncHttpClientCatsBackend.stub
+        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken)))
+        .thenRespond(Response(
+          StringBody(apiResult.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
+          StatusCode.BadRequest
+        ))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
         case e =>
@@ -55,18 +58,15 @@ class CustomFacebookProviderSpec extends OAuth2ProviderSpec {
           e.getCause.getMessage must equalTo(UnexpectedResponse.format(
             provider.id,
             apiResult,
-            Status.`Bad Request`
+            StatusCode.BadRequest
           ))
       }
     }
 
     "fail with ProfileRetrievalException if an unexpected error occurred" in new Context {
-      val httpResponse = mock[Response].smart
-      val httpRequest = Request(GET, DefaultApiURI.format(oAuth2Info.accessToken))
-
-      httpResponse.status returns Status.`Internal Server Error`
-      httpResponse.body throws new RuntimeException("")
-      httpClient.execute(httpRequest) returns Future.successful(httpResponse)
+      sttpBackend = AsyncHttpClientCatsBackend.stub
+        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken)))
+        .thenRespond(throw new SttpClientException.ConnectException(new RuntimeException))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
         case e => e.getMessage must equalTo(ProfileError.format(ID))
@@ -76,23 +76,25 @@ class CustomFacebookProviderSpec extends OAuth2ProviderSpec {
     "use the overridden API URI" in new Context {
       val uri = DefaultApiURI.copy(uri = DefaultApiURI.uri + "&new")
       val apiResult = UserProfileJson.asJson
-      val httpResponse = Response(Status.OK, Body.from(apiResult))
-      val httpRequest = Request(GET, uri.format(oAuth2Info.accessToken))
 
       config.apiURI returns Some(uri)
-      httpClient.execute(httpRequest) returns Future.successful(httpResponse)
+      sttpBackend = AsyncHttpClientCatsBackend.stub
+        .whenRequestMatches(requestMatcher(uri.format(oAuth2Info.accessToken)))
+        .thenRespond(Response(
+          StringBody(apiResult.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
+          StatusCode.Ok
+        ))
 
-      await(provider.retrieveProfile(oAuth2Info))
-
-      there was one(httpClient).execute(httpRequest)
+      provider.retrieveProfile(oAuth2Info).unsafeRunSync()
     }
 
     "return the social profile" in new Context {
-      val apiResult = UserProfileJson.asJson
-      val httpResponse = Response(Status.OK, Body.from(apiResult))
-      val httpRequest = Request(GET, DefaultApiURI.format(oAuth2Info.accessToken))
-
-      httpClient.execute(httpRequest) returns Future.successful(httpResponse)
+      sttpBackend = AsyncHttpClientCatsBackend.stub
+        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken)))
+        .thenRespond(Response(
+          StringBody(UserProfileJson.asJson.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
+          StatusCode.Ok
+        ))
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>
         p must be equalTo CustomSocialProfile(
@@ -143,7 +145,17 @@ class CustomFacebookProviderSpec extends OAuth2ProviderSpec {
     /**
      * The provider to test.
      */
-    lazy val provider = new CustomFacebookProvider(httpClient, stateHandler, clock, config)
+    lazy val provider = new CustomFacebookProvider(clock, config)
+
+    /**
+     * Matches the request for the STTP backend stub.
+     *
+     * @param uri To URI to match against.
+     * @return A partial function that matches the request.
+     */
+    def requestMatcher(uri: ConfigURI): PartialFunction[Request[_, _], Boolean] = {
+      case r: Request[_, _] => r.method == Method.GET && r.uri == uri.toSttpUri
+    }
   }
 
   /**
@@ -162,21 +174,19 @@ class CustomFacebookProviderSpec extends OAuth2ProviderSpec {
   /**
    * The Facebook OAuth2 Provider.
    *
-   * @param httpClient   The HTTP client implementation.
-   * @param stateHandler The state provider implementation.
-   * @param clock        The clock instance.
-   * @param config       The provider config.
-   * @param ec           The execution context.
+   * @param clock       The current clock instance.
+   * @param config      The provider config.
+   * @param sttpBackend The STTP backend.
+   * @param F           The IO monad type class.
    */
   class CustomFacebookProvider(
-    protected val httpClient: HttpClient,
-    protected val stateHandler: StateHandler,
     protected val clock: Clock,
     val config: OAuth2Config
   )(
     implicit
-    override implicit val ec: ExecutionContext
-  ) extends BaseFacebookProvider {
+    protected val sttpBackend: SttpBackend[IO, Nothing, Nothing],
+    protected val F: Async[IO]
+  ) extends BaseFacebookProvider[IO] {
 
     /**
      * The type of this class.
@@ -192,7 +202,7 @@ class CustomFacebookProviderSpec extends OAuth2ProviderSpec {
      * The profile parser implementation.
      */
     override val profileParser = (json: Json, authInfo: OAuth2Info) => {
-      new FacebookProfileParser()(ec).parse(json, authInfo).map { commonProfile =>
+      new FacebookProfileParser[IO]().parse(json, authInfo).map { commonProfile =>
         CustomSocialProfile(
           loginInfo = commonProfile.loginInfo,
           firstName = commonProfile.firstName,
@@ -202,7 +212,7 @@ class CustomFacebookProviderSpec extends OAuth2ProviderSpec {
           email = commonProfile.email,
           gender = json.hcursor.downField("gender").as[String].toOption
         )
-      }(ec)
+      }
     }
 
     /**
@@ -212,6 +222,6 @@ class CustomFacebookProviderSpec extends OAuth2ProviderSpec {
      * @return An instance of the provider initialized with new config.
      */
     override def withConfig(f: OAuth2Config => OAuth2Config): Self =
-      new CustomFacebookProvider(httpClient, stateHandler, clock, f(config))(ec)
+      new CustomFacebookProvider(clock, f(config))
   }
 }

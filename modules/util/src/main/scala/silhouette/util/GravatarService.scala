@@ -55,7 +55,7 @@ final case class GravatarService[F[_]: Monad] @Inject() (settings: GravatarServi
               logger.info(s"Gravatar API returns status `${response.code}` with error: $error")
               None
             case Right(_) =>
-              Some(url.toURI)
+              Some(url.toJavaURI)
           }
         }
       case None => Monad[F].pure(None)

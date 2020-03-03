@@ -20,19 +20,18 @@ package silhouette.provider.oauth2
 import java.net.URI
 import java.nio.file.Paths
 
-import silhouette.http.BodyWriter._
-import silhouette.http.Method.GET
-import silhouette.http.client.{ Request, Response }
-import silhouette.http.{ Body, Status }
+import cats.effect.IO._
 import silhouette.provider.oauth2.FoursquareProvider._
 import silhouette.provider.oauth2.OAuth2Provider.UnexpectedResponse
 import silhouette.provider.social.SocialProvider.ProfileError
 import silhouette.provider.social.{ CommonSocialProfile, ProfileRetrievalException }
 import silhouette.specs2.BaseFixture
 import silhouette.{ ConfigURI, LoginInfo }
+import sttp.client.asynchttpclient.cats.AsyncHttpClientCatsBackend
+import sttp.client.{ Request, Response, StringBody, SttpClientException }
+import sttp.model.{ MediaType, Method, StatusCode }
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.io.Codec
 
 /**
  * Test case for the [[FoursquareProvider]] class.
@@ -42,9 +41,13 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
   "The `retrieveProfile` method" should {
     "fail with ProfileRetrievalException if API returns error" in new Context {
       val apiResult = ErrorJson.asJson
-      val httpResponse = Response(Status.`Bad Request`, Body.from(apiResult))
-      val httpRequest = Request(GET, DefaultApiURI.format(oAuth2Info.accessToken, DefaultApiVersion))
-      httpClient.execute(httpRequest) returns Future.successful(httpResponse)
+
+      sttpBackend = AsyncHttpClientCatsBackend.stub
+        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken, DefaultApiVersion)))
+        .thenRespond(Response(
+          StringBody(apiResult.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
+          StatusCode.BadRequest
+        ))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
         case e =>
@@ -52,18 +55,15 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
           e.getCause.getMessage must equalTo(UnexpectedResponse.format(
             provider.id,
             apiResult,
-            Status.`Bad Request`
+            StatusCode.BadRequest
           ))
       }
     }
 
     "fail with ProfileRetrievalException if an unexpected error occurred" in new Context {
-      val httpResponse = mock[Response].smart
-      val httpRequest = Request(GET, DefaultApiURI.format(oAuth2Info.accessToken, DefaultApiVersion))
-
-      httpResponse.status returns Status.`Internal Server Error`
-      httpResponse.body throws new RuntimeException("")
-      httpClient.execute(httpRequest) returns Future.successful(httpResponse)
+      sttpBackend = AsyncHttpClientCatsBackend.stub
+        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken, DefaultApiVersion)))
+        .thenRespond(throw new SttpClientException.ConnectException(new RuntimeException))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
         case e => e.getMessage must equalTo(ProfileError.format(ID))
@@ -73,23 +73,25 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
     "use the overridden API URI" in new Context {
       val uri = DefaultApiURI.copy(uri = DefaultApiURI.uri + "&new")
       val apiResult = UserProfileJson.asJson
-      val httpResponse = Response(Status.OK, Body.from(apiResult))
-      val httpRequest = Request(GET, uri.format(oAuth2Info.accessToken, DefaultApiVersion))
 
       config.apiURI returns Some(uri)
-      httpClient.execute(httpRequest) returns Future.successful(httpResponse)
+      sttpBackend = AsyncHttpClientCatsBackend.stub
+        .whenRequestMatches(requestMatcher(uri.format(oAuth2Info.accessToken, DefaultApiVersion)))
+        .thenRespond(Response(
+          StringBody(apiResult.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
+          StatusCode.Ok
+        ))
 
-      await(provider.retrieveProfile(oAuth2Info))
-
-      there was one(httpClient).execute(httpRequest)
+      provider.retrieveProfile(oAuth2Info).unsafeRunSync()
     }
 
     "return the social profile" in new Context {
-      val apiResult = UserProfileJson.asJson
-      val httpResponse = Response(Status.OK, Body.from(apiResult))
-      val httpRequest = Request(GET, DefaultApiURI.format(oAuth2Info.accessToken, DefaultApiVersion))
-
-      httpClient.execute(httpRequest) returns Future.successful(httpResponse)
+      sttpBackend = AsyncHttpClientCatsBackend.stub
+        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken, DefaultApiVersion)))
+        .thenRespond(Response(
+          StringBody(UserProfileJson.asJson.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
+          StatusCode.Ok
+        ))
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>
         p must be equalTo CommonSocialProfile(
@@ -103,11 +105,12 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
     }
 
     "return the social profile if API is deprecated" in new Context {
-      val apiResult = DeprecatedJson.asJson
-      val httpResponse = Response(Status.OK, Body.from(apiResult))
-      val httpRequest = Request(GET, DefaultApiURI.format(oAuth2Info.accessToken, DefaultApiVersion))
-
-      httpClient.execute(httpRequest) returns Future.successful(httpResponse)
+      sttpBackend = AsyncHttpClientCatsBackend.stub
+        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken, DefaultApiVersion)))
+        .thenRespond(Response(
+          StringBody(DeprecatedJson.asJson.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
+          StatusCode.Ok
+        ))
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>
         p must be equalTo CommonSocialProfile(
@@ -123,12 +126,14 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
     "handle the custom API version property" in new Context {
       val customApiVersion = "20120101"
       val customProperties = Map(ApiVersion -> customApiVersion)
-      val apiResult = UserProfileJson.asJson
-      val httpResponse = Response(Status.OK, Body.from(apiResult))
-      val httpRequest = Request(GET, DefaultApiURI.format(oAuth2Info.accessToken, customApiVersion))
 
       config.customProperties returns customProperties
-      httpClient.execute(httpRequest) returns Future.successful(httpResponse)
+      sttpBackend = AsyncHttpClientCatsBackend.stub
+        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken, customApiVersion)))
+        .thenRespond(Response(
+          StringBody(UserProfileJson.asJson.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
+          StatusCode.Ok
+        ))
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>
         p must be equalTo CommonSocialProfile(
@@ -143,12 +148,14 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
 
     "handle the custom avatar resolution property" in new Context {
       val customProperties = Map(AvatarResolution -> "150x150")
-      val apiResult = UserProfileJson.asJson
-      val httpResponse = Response(Status.OK, Body.from(apiResult))
-      val httpRequest = Request(GET, DefaultApiURI.format(oAuth2Info.accessToken, DefaultApiVersion))
 
       config.customProperties returns customProperties
-      httpClient.execute(httpRequest) returns Future.successful(httpResponse)
+      sttpBackend = AsyncHttpClientCatsBackend.stub
+        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken, DefaultApiVersion)))
+        .thenRespond(Response(
+          StringBody(UserProfileJson.asJson.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
+          StatusCode.Ok
+        ))
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>
         p must be equalTo CommonSocialProfile(
@@ -197,6 +204,16 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
     /**
      * The provider to test.
      */
-    lazy val provider = new FoursquareProvider(httpClient, stateHandler, clock, config)
+    lazy val provider = new FoursquareProvider(clock, config)
+
+    /**
+     * Matches the request for the STTP backend stub.
+     *
+     * @param uri To URI to match against.
+     * @return A partial function that matches the request.
+     */
+    def requestMatcher(uri: ConfigURI): PartialFunction[Request[_, _], Boolean] = {
+      case r: Request[_, _] => r.method == Method.GET && r.uri == uri.toSttpUri
+    }
   }
 }

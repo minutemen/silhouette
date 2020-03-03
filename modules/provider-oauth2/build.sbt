@@ -22,6 +22,7 @@ libraryDependencies ++= Seq(
   Library.Sttp.core,
   Library.Sttp.circe,
   Library.Cats.core,
-  Library.Cats.effect
+  Library.Cats.effect,
+  Library.Sttp.cats % Test
 )
 //enablePlugins(Doc)

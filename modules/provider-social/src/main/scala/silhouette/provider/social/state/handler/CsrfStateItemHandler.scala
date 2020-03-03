@@ -21,7 +21,6 @@ import java.time.Clock
 
 import cats.effect.Async
 import cats.implicits._
-import com.typesafe.scalalogging.LazyLogging
 import io.circe.syntax._
 import io.circe.{ Decoder, Encoder, HCursor, Json }
 import javax.inject.Inject
@@ -75,7 +74,7 @@ class CsrfStateItemHandler[F[_]: Async] @Inject() (
   claimReader: JwtClaimReader,
   claimWriter: JwtClaimWriter,
   clock: Clock
-) extends StateItemHandler[F, CsrfStateItem] with LazyLogging {
+) extends StateItemHandler[F, CsrfStateItem] {
 
   /**
    * Gets the ID of the handler.

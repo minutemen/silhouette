@@ -47,7 +47,14 @@ case class ConfigURI(uri: String) {
    *
    * @return A [[java.net.URI]] instance.
    */
-  def toURI: URI = new URI(uri)
+  def toJavaURI: URI = new URI(uri)
+
+  /**
+   * Converts this instance to a [[sttp.model.Uri]] instance.
+   *
+   * @return A [[sttp.model.Uri]] instance.
+   */
+  def toSttpUri: Uri = Uri(toJavaURI)
 
   /**
    * Gets the string representation of the URI.
@@ -68,7 +75,7 @@ object ConfigURI {
    * @param uri The URI to convert.
    * @return A [[java.net.URI]] instance.
    */
-  implicit def toURI(uri: ConfigURI): URI = uri.toURI
+  implicit def toJavaURI(uri: ConfigURI): URI = uri.toJavaURI
 
   /**
    * Converts a [[ConfigURI]] to a [[sttp.model.Uri]].
@@ -76,5 +83,5 @@ object ConfigURI {
    * @param uri The URI to convert.
    * @return A [[sttp.model.Uri]] instance.
    */
-  implicit def toSttpUri(uri: ConfigURI): Uri = Uri(uri.toURI)
+  implicit def toSttpUri(uri: ConfigURI): Uri = uri.toSttpUri
 }
