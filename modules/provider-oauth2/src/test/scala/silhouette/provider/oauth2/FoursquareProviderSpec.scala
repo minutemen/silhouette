@@ -17,21 +17,19 @@
  */
 package silhouette.provider.oauth2
 
-import java.net.URI
 import java.nio.file.Paths
 
-import cats.effect.IO._
+import cats.effect.IO.{ Map => _, _ }
+import silhouette.LoginInfo
 import silhouette.provider.oauth2.FoursquareProvider._
 import silhouette.provider.oauth2.OAuth2Provider.UnexpectedResponse
 import silhouette.provider.social.SocialProvider.ProfileError
 import silhouette.provider.social.{ CommonSocialProfile, ProfileRetrievalException }
 import silhouette.specs2.BaseFixture
-import silhouette.{ ConfigURI, LoginInfo }
 import sttp.client.asynchttpclient.cats.AsyncHttpClientCatsBackend
-import sttp.client.{ Request, Response, StringBody, SttpClientException }
-import sttp.model.{ MediaType, Method, StatusCode }
-
-import scala.io.Codec
+import sttp.client.{ Request, Response, SttpClientException }
+import sttp.model.Uri._
+import sttp.model.{ Method, StatusCode, Uri }
 
 /**
  * Test case for the [[FoursquareProvider]] class.
@@ -43,11 +41,8 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
       val apiResult = ErrorJson.asJson
 
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken, DefaultApiVersion)))
-        .thenRespond(Response(
-          StringBody(apiResult.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
-          StatusCode.BadRequest
-        ))
+        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
+        .thenRespond(Response(apiResult.toString, StatusCode.BadRequest))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
         case e =>
@@ -62,7 +57,7 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
 
     "fail with ProfileRetrievalException if an unexpected error occurred" in new Context {
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken, DefaultApiVersion)))
+        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
         .thenRespond(throw new SttpClientException.ConnectException(new RuntimeException))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
@@ -71,27 +66,21 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
     }
 
     "use the overridden API URI" in new Context {
-      val uri = DefaultApiURI.copy(uri = DefaultApiURI.uri + "&new")
+      val uri = uri"$DefaultApiUri&new"
       val apiResult = UserProfileJson.asJson
 
-      config.apiURI returns Some(uri)
+      config.apiUri returns Some(uri)
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(uri.format(oAuth2Info.accessToken, DefaultApiVersion)))
-        .thenRespond(Response(
-          StringBody(apiResult.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
-          StatusCode.Ok
-        ))
+        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
+        .thenRespond(Response(apiResult.toString, StatusCode.Ok))
 
       provider.retrieveProfile(oAuth2Info).unsafeRunSync()
     }
 
     "return the social profile" in new Context {
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken, DefaultApiVersion)))
-        .thenRespond(Response(
-          StringBody(UserProfileJson.asJson.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
-          StatusCode.Ok
-        ))
+        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
+        .thenRespond(Response(UserProfileJson.asJson.toString, StatusCode.Ok))
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>
         p must be equalTo CommonSocialProfile(
@@ -99,18 +88,15 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
           firstName = Some("Apollonia"),
           lastName = Some("Vanova"),
           email = Some("apollonia.vanova@minutemen.group"),
-          avatarUri = Some(new URI("https://irs0.4sqi.net/img/user/100x100/blank_girl.png"))
+          avatarUri = Some(uri"https://irs0.4sqi.net/img/user/100x100/blank_girl.png")
         )
       }
     }
 
     "return the social profile if API is deprecated" in new Context {
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken, DefaultApiVersion)))
-        .thenRespond(Response(
-          StringBody(DeprecatedJson.asJson.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
-          StatusCode.Ok
-        ))
+        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
+        .thenRespond(Response(DeprecatedJson.asJson.toString, StatusCode.Ok))
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>
         p must be equalTo CommonSocialProfile(
@@ -118,30 +104,7 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
           firstName = Some("Apollonia"),
           lastName = Some("Vanova"),
           email = Some("apollonia.vanova@minutemen.group"),
-          avatarUri = Some(new URI("https://irs0.4sqi.net/img/user/100x100/blank_girl.png"))
-        )
-      }
-    }
-
-    "handle the custom API version property" in new Context {
-      val customApiVersion = "20120101"
-      val customProperties = Map(ApiVersion -> customApiVersion)
-
-      config.customProperties returns customProperties
-      sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken, customApiVersion)))
-        .thenRespond(Response(
-          StringBody(UserProfileJson.asJson.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
-          StatusCode.Ok
-        ))
-
-      profile(provider.retrieveProfile(oAuth2Info)) { p =>
-        p must be equalTo CommonSocialProfile(
-          loginInfo = LoginInfo(provider.id, "13221052"),
-          firstName = Some("Apollonia"),
-          lastName = Some("Vanova"),
-          email = Some("apollonia.vanova@minutemen.group"),
-          avatarUri = Some(new URI("https://irs0.4sqi.net/img/user/100x100/blank_girl.png"))
+          avatarUri = Some(uri"https://irs0.4sqi.net/img/user/100x100/blank_girl.png")
         )
       }
     }
@@ -151,11 +114,8 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
 
       config.customProperties returns customProperties
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken, DefaultApiVersion)))
-        .thenRespond(Response(
-          StringBody(UserProfileJson.asJson.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
-          StatusCode.Ok
-        ))
+        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
+        .thenRespond(Response(UserProfileJson.asJson.toString, StatusCode.Ok))
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>
         p must be equalTo CommonSocialProfile(
@@ -163,7 +123,7 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
           firstName = Some("Apollonia"),
           lastName = Some("Vanova"),
           email = Some("apollonia.vanova@minutemen.group"),
-          avatarUri = Some(new URI("https://irs0.4sqi.net/img/user/150x150/blank_girl.png"))
+          avatarUri = Some(uri"https://irs0.4sqi.net/img/user/150x150/blank_girl.png")
         )
       }
     }
@@ -193,9 +153,9 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
      * The OAuth2 config.
      */
     override lazy val config = spy(OAuth2Config(
-      authorizationURI = Some(ConfigURI("https://foursquare.com/oauth2/authenticate")),
-      accessTokenURI = ConfigURI("https://foursquare.com/oauth2/access_token"),
-      redirectURI = Some(ConfigURI("https://minutemen.group")),
+      authorizationUri = Some(uri"https://foursquare.com/oauth2/authenticate"),
+      accessTokenUri = uri"https://foursquare.com/oauth2/access_token",
+      redirectUri = Some(uri"https://minutemen.group"),
       clientID = "my.client.id",
       clientSecret = "my.client.secret",
       scope = None
@@ -212,8 +172,8 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
      * @param uri To URI to match against.
      * @return A partial function that matches the request.
      */
-    def requestMatcher(uri: ConfigURI): PartialFunction[Request[_, _], Boolean] = {
-      case r: Request[_, _] => r.method == Method.GET && r.uri == uri.toSttpUri
+    def requestMatcher(uri: Uri): PartialFunction[Request[_, _], Boolean] = {
+      case r: Request[_, _] => r.method == Method.GET && r.uri == uri
     }
   }
 }

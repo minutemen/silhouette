@@ -17,9 +17,7 @@
  */
 package silhouette
 
-import java.net.URI
-
-import sttp.model.Header
+import sttp.model.{ CookieWithMeta, Headers, Method, StatusCode, Uri }
 
 /**
  * HTTP related interfaces and implementations.
@@ -42,20 +40,18 @@ package object http {
     type ResponsePipeline = http.ResponsePipeline[Response]
 
     def request(
-      uri: URI = new URI("http://localhost/"),
+      uri: Uri = Uri("http", "localhost"),
       method: Method = Method.GET,
-      headers: Seq[Header] = Seq(),
-      cookies: Seq[Cookie] = Seq(),
-      queryParams: Map[String, Seq[String]] = Map()
+      headers: Headers = Headers(Seq()),
+      cookies: Seq[CookieWithMeta] = Seq()
     ): RequestPipeline = SilhouetteRequestPipeline(SilhouetteRequest(
       uri,
       method,
       headers,
-      cookies,
-      queryParams
+      cookies
     ))
     def request: RequestPipeline = request()
 
-    val response: ResponsePipeline = SilhouetteResponsePipeline(SilhouetteResponse(Status.OK))
+    val response: ResponsePipeline = SilhouetteResponsePipeline(SilhouetteResponse(StatusCode.Ok))
   }
 }

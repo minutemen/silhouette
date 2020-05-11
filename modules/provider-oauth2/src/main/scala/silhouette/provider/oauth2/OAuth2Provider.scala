@@ -28,10 +28,10 @@ import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social.state.StateHandler
 import silhouette.provider.social.{ SocialStateProvider, StatefulAuthInfo }
 import silhouette.provider.{ AccessDeniedException, UnexpectedResponseException }
-import silhouette.{ AuthInfo, ConfigURI, ConfigurationException }
+import silhouette.{ AuthInfo, ConfigurationException }
 import sttp.client._
 import sttp.client.circe._
-import sttp.model.{ Header, HeaderNames }
+import sttp.model.{ Header, HeaderNames, StatusCode, Uri }
 
 import scala.util.{ Failure, Try }
 
@@ -193,7 +193,7 @@ trait OAuth2Provider[F[_]] extends SocialStateProvider[F, OAuth2Config] with OAu
    * @return An error on failure or the auth info containing the access token on success.
    */
   def refresh(refreshToken: String): F[OAuth2Info] = {
-    config.refreshURI match {
+    config.refreshUri match {
       case Some(uri) =>
         val params = Map(
           GrantType -> RefreshToken,
@@ -267,22 +267,23 @@ trait OAuth2Provider[F[_]] extends SocialStateProvider[F, OAuth2Config] with OAu
     request: RequestPipeline[R],
     maybeState: Option[String] = None
   ): Either[Throwable, ResponsePipeline[SilhouetteResponse]] = {
-    config.authorizationURI match {
+    config.authorizationUri match {
       case Some(authorizationURI) =>
         val params = List(
           Some(ClientID -> config.clientID),
           Some(ResponseType -> Code),
           maybeState.map(State -> _),
           config.scope.map(Scope -> _),
-          config.redirectURI.map(uri => RedirectUri -> resolveCallbackUri(uri, request).toString)
-        ).flatten ++ config.authorizationParams.toList
+          config.redirectUri.map(uri => RedirectUri -> resolveCallbackUri(uri, request).toString)
+        ).flatten.toMap ++ config.authorizationParams
 
-        val encodedParams = params.map { p => encode(p._1, "UTF-8") + "=" + encode(p._2, "UTF-8") }
-        val uri = authorizationURI.toString + encodedParams.mkString("?", "&", "")
-        logger.debug("[%s] Use authorization URI: %s".format(id, config.authorizationURI))
+        val uri = uri"$authorizationURI?$params"
+        logger.debug("[%s] Use authorization URI: %s".format(
+          id, config.authorizationUri.map(_.toString()).getOrElse("")
+        ))
         logger.debug("[%s] Redirecting to: %s".format(id, uri))
-        Right(SilhouetteResponsePipeline(SilhouetteResponse(Status.`See Other`))
-          .withHeaders(Header.notValidated(HeaderNames.Location, uri)))
+        Right(SilhouetteResponsePipeline(SilhouetteResponse(StatusCode.SeeOther))
+          .withHeaders(Header(HeaderNames.Location, uri.toString())))
       case None => Left(new ConfigurationException(AuthorizationUriUndefined.format(id)))
     }
   }
@@ -301,9 +302,9 @@ trait OAuth2Provider[F[_]] extends SocialStateProvider[F, OAuth2Config] with OAu
       Code -> code
     ) ++
       config.accessTokenParams.map { case (key, value) => key -> value } ++
-      config.redirectURI.map(uri => Map(RedirectUri -> resolveCallbackUri(uri, request).toString)).getOrElse(Map())
+      config.redirectUri.map(uri => Map(RedirectUri -> resolveCallbackUri(uri, request).toString)).getOrElse(Map())
 
-    basicRequest.post(config.accessTokenURI)
+    basicRequest.post(config.accessTokenUri)
       .headers(authorizationHeader)
       .headers(accessTokenHeaders: _*)
       .body(params)
@@ -372,12 +373,12 @@ trait OAuth2Constants {
 /**
  * The OAuth2 configuration.
  *
- * @param authorizationURI    The authorization URI provided by the OAuth provider.
- * @param accessTokenURI      The access token URI provided by the OAuth provider.
- * @param redirectURI         The redirect URI to the application after a successful authentication on the OAuth
+ * @param authorizationUri    The authorization URI provided by the OAuth provider.
+ * @param accessTokenUri      The access token URI provided by the OAuth provider.
+ * @param redirectUri         The redirect URI to the application after a successful authentication on the OAuth
  *                            provider. The URI can be a relative path which will be resolved against the current
  *                            request's host.
- * @param apiURI              The URI to fetch the profile from the API. Can be used to override the default URI
+ * @param apiUri              The URI to fetch the profile from the API. Can be used to override the default URI
  *                            hardcoded in every provider implementation.
  * @param clientID            The client ID provided by the OAuth provider.
  * @param clientSecret        The client secret provided by the OAuth provider.
@@ -388,11 +389,11 @@ trait OAuth2Constants {
  * @param customProperties    A map of custom properties for the different providers.
  */
 case class OAuth2Config(
-  authorizationURI: Option[ConfigURI] = None,
-  accessTokenURI: ConfigURI,
-  redirectURI: Option[ConfigURI] = None,
-  refreshURI: Option[ConfigURI] = None,
-  apiURI: Option[ConfigURI] = None,
+  authorizationUri: Option[Uri] = None,
+  accessTokenUri: Uri,
+  redirectUri: Option[Uri] = None,
+  refreshUri: Option[Uri] = None,
+  apiUri: Option[Uri] = None,
   clientID: String, clientSecret: String,
   scope: Option[String] = None,
   authorizationParams: Map[String, String] = Map.empty,

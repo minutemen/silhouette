@@ -22,8 +22,8 @@ object Dependencies {
   object Version {
     val specs2 = "4.6.0"
     val circe = "0.13.0"
-    val cats = "2.1.0"
-    val sttp = "2.0.1"
+    val cats = "2.1.1"
+    val sttp = "2.1.0-RC1"
   }
 
   val resolvers = Seq()

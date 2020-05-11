@@ -19,7 +19,7 @@ package silhouette.http
 
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import sttp.model.Header
+import sttp.model.{ CookieWithMeta, Header, Headers, StatusCode }
 
 /**
  * Test case for the [[SilhouetteResponsePipeline]] class.
@@ -34,7 +34,7 @@ class SilhouetteResponsePipelineSpec extends Specification {
 
   "The `header` method" should {
     "return the list of header values" in new Context {
-      responsePipeline.header("TEST1") must beSome(Header.notValidated("TEST1", "value1, value2"))
+      responsePipeline.header("TEST1") must beSome(Header("TEST1", "value1, value2"))
     }
 
     "return an empty list if no header with the given name was found" in new Context {
@@ -44,55 +44,52 @@ class SilhouetteResponsePipelineSpec extends Specification {
 
   "The `withHeaders` method" should {
     "append a new header" in new Context {
-      responsePipeline.withHeaders(Header.notValidated("TEST3", "value1")).headers must be equalTo Seq(
-        Header.notValidated("TEST1", "value1, value2"),
-        Header.notValidated("TEST2", "value1"),
-        Header.notValidated("TEST3", "value1")
-      )
+      responsePipeline.withHeaders(
+        Header("TEST3", "value1")
+      ).headers must be equalTo Headers(Seq(
+          Header("TEST1", "value1, value2"),
+          Header("TEST2", "value1"),
+          Header("TEST3", "value1")
+        ))
     }
 
     "append multiple headers" in new Context {
       responsePipeline.withHeaders(
-        Header.notValidated("TEST3", "value1"),
-        Header.notValidated("TEST4", "value1")
-      ).headers must be equalTo Seq(
-          Header.notValidated("TEST1", "value1, value2"),
-          Header.notValidated("TEST2", "value1"),
-          Header.notValidated("TEST3", "value1"),
-          Header.notValidated("TEST4", "value1")
-        )
+        Header("TEST3", "value1"),
+        Header("TEST4", "value1")
+      ).headers must be equalTo Headers(Seq(
+          Header("TEST1", "value1, value2"),
+          Header("TEST2", "value1"),
+          Header("TEST3", "value1"),
+          Header("TEST4", "value1")
+        ))
     }
 
     "append multiple headers with the same name" in new Context {
       responsePipeline.withHeaders(
-        Header.notValidated("TEST3", "value1"),
-        Header.notValidated("TEST3", "value2, value3")
+        Header("TEST3", "value1"),
+        Header("TEST3", "value2, value3")
       ).headers must
-        be equalTo Seq(
-          Header.notValidated("TEST1", "value1, value2"),
-          Header.notValidated("TEST2", "value1"),
-          Header.notValidated("TEST3", "value1, value2, value3")
-        )
+        be equalTo Headers(Seq(
+          Header("TEST1", "value1, value2"),
+          Header("TEST2", "value1"),
+          Header("TEST3", "value1"),
+          Header("TEST3", "value2, value3")
+        ))
     }
 
-    "override an existing header" in new Context {
+    "not override any existing header" in new Context {
       responsePipeline.withHeaders(
-        Header.notValidated("TEST2", "value2"),
-        Header.notValidated("TEST2", "value3")
-      ).headers must be equalTo Seq(
-          Header.notValidated("TEST1", "value1, value2"),
-          Header.notValidated("TEST2", "value2, value3")
-        )
-    }
-
-    "override multiple existing headers" in new Context {
-      responsePipeline.withHeaders(
-        Header.notValidated("TEST1", "value3"),
-        Header.notValidated("TEST2", "value2")
-      ).headers must be equalTo Seq(
-          Header.notValidated("TEST1", "value3"),
-          Header.notValidated("TEST2", "value2")
-        )
+        Header("TEST1", "value3"),
+        Header("TEST2", "value2"),
+        Header("TEST2", "value3")
+      ).headers must be equalTo Headers(Seq(
+          Header("TEST1", "value1, value2"),
+          Header("TEST2", "value1"),
+          Header("TEST1", "value3"),
+          Header("TEST2", "value2"),
+          Header("TEST2", "value3")
+        ))
     }
   }
 
@@ -104,7 +101,7 @@ class SilhouetteResponsePipelineSpec extends Specification {
 
   "The `cookie` method" should {
     "return some cookie for the given name" in new Context {
-      responsePipeline.cookie("test1") must beSome(Cookie("test1", "value1"))
+      responsePipeline.cookie("test1") must beSome(CookieWithMeta.unsafeApply("test1", "value1"))
     }
 
     "return None if no cookie with the given name was found" in new Context {
@@ -114,25 +111,28 @@ class SilhouetteResponsePipelineSpec extends Specification {
 
   "The `withCookies` method" should {
     "append a new cookie" in new Context {
-      responsePipeline.withCookies(Cookie("test3", "value3")).cookies must be equalTo Seq(
-        Cookie("test1", "value1"),
-        Cookie("test2", "value2"),
-        Cookie("test3", "value3")
+      responsePipeline.withCookies(CookieWithMeta.unsafeApply("test3", "value3")).cookies must be equalTo Seq(
+        CookieWithMeta.unsafeApply("test1", "value1"),
+        CookieWithMeta.unsafeApply("test2", "value2"),
+        CookieWithMeta.unsafeApply("test3", "value3")
       )
     }
 
     "override an existing cookie" in new Context {
-      responsePipeline.withCookies(Cookie("test1", "value3")).cookies must be equalTo Seq(
-        Cookie("test1", "value3"),
-        Cookie("test2", "value2")
+      responsePipeline.withCookies(CookieWithMeta.unsafeApply("test1", "value3")).cookies must be equalTo Seq(
+        CookieWithMeta.unsafeApply("test1", "value3"),
+        CookieWithMeta.unsafeApply("test2", "value2")
       )
     }
 
     "use the last cookie if multiple cookies with the same name are given" in new Context {
-      responsePipeline.withCookies(Cookie("test1", "value3"), Cookie("test1", "value4")).cookies must be equalTo Seq(
-        Cookie("test1", "value4"),
-        Cookie("test2", "value2")
-      )
+      responsePipeline.withCookies(
+        CookieWithMeta.unsafeApply("test1", "value3"),
+        CookieWithMeta.unsafeApply("test1", "value4")
+      ).cookies must be equalTo Seq(
+          CookieWithMeta.unsafeApply("test1", "value4"),
+          CookieWithMeta.unsafeApply("test2", "value2")
+        )
     }
   }
 
@@ -151,14 +151,14 @@ class SilhouetteResponsePipelineSpec extends Specification {
      * A response.
      */
     val response = SilhouetteResponse(
-      status = Status.OK,
-      headers = Seq(
-        Header.notValidated("TEST1", "value1, value2"),
-        Header.notValidated("TEST2", "value1")
-      ),
+      status = StatusCode.Ok,
+      headers = Headers(Seq(
+        Header("TEST1", "value1, value2"),
+        Header("TEST2", "value1")
+      )),
       cookies = Seq(
-        Cookie("test1", "value1"),
-        Cookie("test2", "value2")
+        CookieWithMeta.unsafeApply("test1", "value1"),
+        CookieWithMeta.unsafeApply("test2", "value2")
       )
     )
 

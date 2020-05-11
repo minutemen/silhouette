@@ -17,21 +17,19 @@
  */
 package silhouette.provider.oauth2
 
-import java.net.URI
 import java.nio.file.Paths
 
 import cats.effect.IO._
-import silhouette.provider.oauth2.Auth0Provider.DefaultApiURI
+import silhouette.LoginInfo
+import silhouette.provider.oauth2.Auth0Provider.DefaultApiUri
 import silhouette.provider.oauth2.OAuth2Provider.UnexpectedResponse
 import silhouette.provider.social.SocialProvider.ProfileError
 import silhouette.provider.social.{ CommonSocialProfile, ProfileRetrievalException }
 import silhouette.specs2.BaseFixture
-import silhouette.{ ConfigURI, LoginInfo }
 import sttp.client.asynchttpclient.cats.AsyncHttpClientCatsBackend
-import sttp.client.{ Request, Response, StringBody, SttpClientException }
-import sttp.model.{ MediaType, Method, StatusCode }
-
-import scala.io.Codec
+import sttp.client.{ Request, Response, SttpClientException }
+import sttp.model.Uri._
+import sttp.model.{ Method, StatusCode, Uri }
 
 /**
  * Test case for the [[GoogleProvider]] class.
@@ -43,11 +41,8 @@ class GoogleProviderSpec extends OAuth2ProviderSpec {
       val apiResult = ErrorJson.asJson
 
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken)))
-        .thenRespond(Response(
-          StringBody(apiResult.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
-          StatusCode.BadRequest
-        ))
+        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
+        .thenRespond(Response(apiResult.toString, StatusCode.BadRequest))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
         case e =>
@@ -63,11 +58,8 @@ class GoogleProviderSpec extends OAuth2ProviderSpec {
     "fail with ProfileRetrievalException if API returns missing People API config" in new Context {
       val apiResult = MissingApiConfigJson.asJson
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken)))
-        .thenRespond(Response(
-          StringBody(apiResult.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
-          StatusCode.Forbidden
-        ))
+        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
+        .thenRespond(Response(apiResult.toString, StatusCode.Forbidden))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
         case e =>
@@ -82,7 +74,7 @@ class GoogleProviderSpec extends OAuth2ProviderSpec {
 
     "fail with ProfileRetrievalException if an unexpected error occurred" in new Context {
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken)))
+        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
         .thenRespond(throw new SttpClientException.ConnectException(new RuntimeException))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
@@ -91,27 +83,21 @@ class GoogleProviderSpec extends OAuth2ProviderSpec {
     }
 
     "use the overridden API URI" in new Context {
-      val uri = DefaultApiURI.copy(uri = DefaultApiURI.uri + "&new")
+      val uri = uri"$DefaultApiUri&new"
       val apiResult = UserProfileJson.asJson
 
-      config.apiURI returns Some(uri)
+      config.apiUri returns Some(uri)
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(uri.format(oAuth2Info.accessToken)))
-        .thenRespond(Response(
-          StringBody(apiResult.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
-          StatusCode.Ok
-        ))
+        .whenRequestMatches(requestMatcher(uri"$uri?access_token=${oAuth2Info.accessToken}"))
+        .thenRespond(Response(apiResult.toString, StatusCode.Ok))
 
       provider.retrieveProfile(oAuth2Info).unsafeRunSync()
     }
 
     "return the social profile with an email" in new Context {
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken)))
-        .thenRespond(Response(
-          StringBody(UserProfileJson.asJson.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
-          StatusCode.Ok
-        ))
+        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
+        .thenRespond(Response(UserProfileJson.asJson.toString, StatusCode.Ok))
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>
         p must be equalTo CommonSocialProfile(
@@ -120,19 +106,17 @@ class GoogleProviderSpec extends OAuth2ProviderSpec {
           lastName = Some("Vanova"),
           fullName = Some("Apollonia Vanova"),
           email = Some("apollonia.vanova@minutemen.group"),
-          avatarUri = Some(new URI("https://lh6.googleusercontent.com/-m34A6I77dJU/ASASAASADAAI/AVABAAAAAJk/" +
-            "5cg1hcjo_4s/photo.jpg?sz=50"))
+          avatarUri = Some(
+            uri"https://lh6.googleusercontent.com/-m34A6I77dJU/ASASAASADAAI/AVABAAAAAJk/5cg1hcjo_4s/photo.jpg?sz=50"
+          )
         )
       }
     }
 
     "return the social profile without an email" in new Context {
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken)))
-        .thenRespond(Response(
-          StringBody(WithoutEmailJson.asJson.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
-          StatusCode.Ok
-        ))
+        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
+        .thenRespond(Response(WithoutEmailJson.asJson.toString, StatusCode.Ok))
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>
         p must be equalTo CommonSocialProfile(
@@ -141,19 +125,17 @@ class GoogleProviderSpec extends OAuth2ProviderSpec {
           lastName = Some("Vanova"),
           fullName = Some("Apollonia Vanova"),
           email = None,
-          avatarUri = Some(new URI("https://lh6.googleusercontent.com/-m34A6I77dJU/ASASAASADAAI/AVABAAAAAJk/" +
-            "5cg1hcjo_4s/photo.jpg?sz=50"))
+          avatarUri = Some(
+            uri"https://lh6.googleusercontent.com/-m34A6I77dJU/ASASAASADAAI/AVABAAAAAJk/5cg1hcjo_4s/photo.jpg?sz=50"
+          )
         )
       }
     }
 
     "return the social profile with an avatar URI" in new Context {
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken)))
-        .thenRespond(Response(
-          StringBody(NonDefaultImageJson.asJson.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
-          StatusCode.Ok
-        ))
+        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
+        .thenRespond(Response(NonDefaultImageJson.asJson.toString, StatusCode.Ok))
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>
         p must be equalTo CommonSocialProfile(
@@ -162,19 +144,17 @@ class GoogleProviderSpec extends OAuth2ProviderSpec {
           lastName = Some("Vanova"),
           fullName = Some("Apollonia Vanova"),
           email = Some("apollonia.vanova@minutemen.group"),
-          avatarUri = Some(new URI("https://lh6.googleusercontent.com/-m34A6I77dJU/ASASAASADAAI/AVABAAAAAJk/" +
-            "5cg1hcjo_4s/photo.jpg?sz=50"))
+          avatarUri = Some(
+            uri"https://lh6.googleusercontent.com/-m34A6I77dJU/ASASAASADAAI/AVABAAAAAJk/5cg1hcjo_4s/photo.jpg?sz=50"
+          )
         )
       }
     }
 
     "return the social profile without an avatar URI" in new Context {
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken)))
-        .thenRespond(Response(
-          StringBody(DefaultImageJson.asJson.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
-          StatusCode.Ok
-        ))
+        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
+        .thenRespond(Response(DefaultImageJson.asJson.toString, StatusCode.Ok))
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>
         p must be equalTo CommonSocialProfile(
@@ -216,9 +196,9 @@ class GoogleProviderSpec extends OAuth2ProviderSpec {
      * The OAuth2 config.
      */
     override lazy val config = spy(OAuth2Config(
-      authorizationURI = Some(ConfigURI("https://accounts.google.com/o/oauth2/auth")),
-      accessTokenURI = ConfigURI("https://accounts.google.com/o/oauth2/token"),
-      redirectURI = Some(ConfigURI("https://minutemen.group")),
+      authorizationUri = Some(uri"https://accounts.google.com/o/oauth2/auth"),
+      accessTokenUri = uri"https://accounts.google.com/o/oauth2/token",
+      redirectUri = Some(uri"https://minutemen.group"),
       clientID = "my.client.id",
       clientSecret = "my.client.secret",
       scope = Some("profile,email")
@@ -235,8 +215,8 @@ class GoogleProviderSpec extends OAuth2ProviderSpec {
      * @param uri To URI to match against.
      * @return A partial function that matches the request.
      */
-    def requestMatcher(uri: ConfigURI): PartialFunction[Request[_, _], Boolean] = {
-      case r: Request[_, _] => r.method == Method.GET && r.uri == uri.toSttpUri
+    def requestMatcher(uri: Uri): PartialFunction[Request[_, _], Boolean] = {
+      case r: Request[_, _] => r.method == Method.GET && r.uri == uri
     }
   }
 }

@@ -15,9 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette.persistence
+package silhouette.http
+
+import sttp.model.CookieWithMeta
 
 /**
- * Provides DAO implementations to persist and retrieve objects.
+ * A trait that provides methods to access cookies.
  */
-package object daos
+trait WithCookies {
+
+  /**
+   * Gets the list of cookies.
+   *
+   * @return The list of cookies.
+   */
+  def cookies: Seq[CookieWithMeta]
+
+  /**
+   * Gets a cookie.
+   *
+   * @param name The name for which the cookie should be returned.
+   * @return Some cookie or None if no cookie for the given name could be found.
+   */
+  def cookie(name: String): Option[CookieWithMeta] = cookies.find(_.name == name)
+}

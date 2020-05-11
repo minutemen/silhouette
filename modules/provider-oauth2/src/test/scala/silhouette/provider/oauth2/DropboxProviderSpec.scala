@@ -20,18 +20,17 @@ package silhouette.provider.oauth2
 import java.nio.file.Paths
 
 import cats.effect.IO._
+import silhouette.LoginInfo
 import silhouette.http.BearerAuthorizationHeader
 import silhouette.provider.oauth2.DropboxProvider._
 import silhouette.provider.oauth2.OAuth2Provider.UnexpectedResponse
 import silhouette.provider.social.SocialProvider.ProfileError
 import silhouette.provider.social.{ CommonSocialProfile, ProfileRetrievalException }
 import silhouette.specs2.BaseFixture
-import silhouette.{ ConfigURI, LoginInfo }
 import sttp.client.asynchttpclient.cats.AsyncHttpClientCatsBackend
-import sttp.client.{ Request, Response, StringBody, SttpClientException }
-import sttp.model.{ MediaType, Method, StatusCode }
-
-import scala.io.Codec
+import sttp.client.{ Request, Response, SttpClientException }
+import sttp.model.Uri._
+import sttp.model.{ Method, StatusCode, Uri }
 
 /**
  * Test case for the [[DropboxProvider]] class.
@@ -43,11 +42,8 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
       val apiResult = ErrorJson.asJson
 
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiURI))
-        .thenRespond(Response(
-          StringBody(apiResult.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
-          StatusCode.BadRequest
-        ))
+        .whenRequestMatches(requestMatcher(DefaultApiUri))
+        .thenRespond(Response(apiResult.toString, StatusCode.BadRequest))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
         case e =>
@@ -62,7 +58,7 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
 
     "fail with ProfileRetrievalException if an unexpected error occurred" in new Context {
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiURI))
+        .whenRequestMatches(requestMatcher(DefaultApiUri))
         .thenRespond(throw new SttpClientException.ConnectException(new RuntimeException))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
@@ -71,27 +67,21 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
     }
 
     "use the overridden API URI" in new Context {
-      val uri = DefaultApiURI.copy(uri = DefaultApiURI.uri + "&new")
+      val uri = uri"$DefaultApiUri&new"
       val apiResult = UserProfileJson.asJson
 
-      config.apiURI returns Some(uri)
+      config.apiUri returns Some(uri)
       sttpBackend = AsyncHttpClientCatsBackend.stub
         .whenRequestMatches(requestMatcher(uri))
-        .thenRespond(Response(
-          StringBody(apiResult.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
-          StatusCode.Ok
-        ))
+        .thenRespond(Response(apiResult.toString, StatusCode.Ok))
 
       provider.retrieveProfile(oAuth2Info).unsafeRunSync()
     }
 
     "return the social profile" in new Context {
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiURI))
-        .thenRespond(Response(
-          StringBody(UserProfileJson.asJson.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
-          StatusCode.Ok
-        ))
+        .whenRequestMatches(requestMatcher(DefaultApiUri))
+        .thenRespond(Response(UserProfileJson.asJson.toString, StatusCode.Ok))
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>
         p must be equalTo CommonSocialProfile(
@@ -127,9 +117,9 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
      * The OAuth2 config.
      */
     override lazy val config = spy(OAuth2Config(
-      authorizationURI = Some(ConfigURI("https://www.dropbox.com/1/oauth2/authorize")),
-      accessTokenURI = ConfigURI("https://api.dropbox.com/1/oauth2/token"),
-      redirectURI = Some(ConfigURI("https://minutemen.group")),
+      authorizationUri = Some(uri"https://www.dropbox.com/1/oauth2/authorize"),
+      accessTokenUri = uri"https://api.dropbox.com/1/oauth2/token",
+      redirectUri = Some(uri"https://minutemen.group"),
       clientID = "my.client.id",
       clientSecret = "my.client.secret",
       scope = None
@@ -146,10 +136,10 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
      * @param uri To URI to match against.
      * @return A partial function that matches the request.
      */
-    def requestMatcher(uri: ConfigURI): PartialFunction[Request[_, _], Boolean] = {
+    def requestMatcher(uri: Uri): PartialFunction[Request[_, _], Boolean] = {
       case r: Request[_, _] =>
         r.method == Method.GET &&
-          r.uri == uri.toSttpUri &&
+          r.uri == uri &&
           r.headers.contains(BearerAuthorizationHeader(oAuth2Info.accessToken))
     }
   }

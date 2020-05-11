@@ -23,7 +23,7 @@ import io.circe.parser.parse
 import io.circe.{ Json, ParsingFailure }
 import silhouette.TransformException
 import silhouette.http.DefaultBodyReader._
-import silhouette.http.MimeType._
+import sttp.model.MediaType
 
 import scala.annotation.implicitNotFound
 import scala.collection.compat._
@@ -50,7 +50,7 @@ import scala.xml._
  * @param data        The body data.
  */
 protected[silhouette] final case class Body(
-  contentType: MimeType,
+  contentType: MediaType,
   codec: Codec = Body.DefaultCodec,
   data: immutable.ArraySeq[Byte]
 ) {
@@ -109,7 +109,7 @@ private[silhouette] object Body {
  */
 private[silhouette] object TextBody {
   type Type = String
-  final val contentType = `text/plain`
+  final val contentType = MediaType.TextPlain
   def unapply(body: Body): Option[(Codec, immutable.ArraySeq[Byte])] = body.contentType match {
     case this.contentType => Some((body.codec, body.data))
     case _                => None
@@ -121,7 +121,7 @@ private[silhouette] object TextBody {
  */
 private[silhouette] object FormUrlEncodedBody {
   type Type = Map[String, Seq[String]]
-  final val contentType = `application/x-www-form-urlencoded`
+  final val contentType = MediaType.ApplicationXWwwFormUrlencoded
   def unapply(body: Body): Option[(Codec, immutable.ArraySeq[Byte])] = body.contentType match {
     case this.contentType => Some((body.codec, body.data))
     case _                => None
@@ -133,8 +133,8 @@ private[silhouette] object FormUrlEncodedBody {
  */
 private[silhouette] object JsonBody {
   type Type = Json
-  final val contentType = `application/json`
-  final val allowedTypes = Seq(contentType, `text/json`)
+  final val contentType = MediaType.ApplicationJson
+  final val allowedTypes = Seq(contentType, MediaType("text", "json"))
   def unapply(body: Body): Option[(Codec, immutable.ArraySeq[Byte])] = body.contentType match {
     case ct if this.allowedTypes contains ct => Some((body.codec, body.data))
     case _                                   => None
@@ -146,8 +146,8 @@ private[silhouette] object JsonBody {
  */
 private[silhouette] object XmlBody {
   type Type = Node
-  final val contentType = `application/xml`
-  final val allowedTypes = Seq(contentType, `text/xml`)
+  final val contentType = MediaType.ApplicationXml
+  final val allowedTypes = Seq(contentType, MediaType("text", "xml"))
   def unapply(body: Body): Option[(Codec, immutable.ArraySeq[Byte])] = body.contentType match {
     case ct if this.allowedTypes contains ct => Some((body.codec, body.data))
     case _                                   => None
@@ -274,7 +274,7 @@ private[silhouette] trait DefaultBodyWriter {
    * @return A [[BodyWriter]] instance that transforms a string into a [[Body]].
    */
   implicit val stringWrites: Codec => BodyWriter[TextBody.Type] = (codec: Codec) => (str: TextBody.Type) => {
-    Body(`text/plain`, codec, str.getBytes(codec.charSet))
+    Body(MediaType.TextPlain, codec, str.getBytes(codec.charSet))
   }
 
   /**

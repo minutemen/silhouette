@@ -37,7 +37,7 @@ final case class HeaderTransport(name: String)
    * @param request The request pipeline to retrieve the payload from.
    * @return Some payload or None if no payload could be found in request.
    */
-  override def retrieve(request: Request): Option[String] = request.header(name).map(_.value)
+  override def retrieve(request: Request): Option[String] = request.headerValue(name)
 
   /**
    * Adds a header with the given payload to the request.
@@ -48,7 +48,7 @@ final case class HeaderTransport(name: String)
    * @return The manipulated request pipeline.
    */
   override def smuggle[R](payload: String, request: RequestPipeline[R]): RequestPipeline[R] =
-    request.withHeaders(Header.notValidated(name, payload))
+    request.withHeaders(Header(name, payload))
 
   /**
    * Adds a header with the given payload to the response.
@@ -59,7 +59,7 @@ final case class HeaderTransport(name: String)
    * @return The manipulated response pipeline.
    */
   override def embed[R](payload: String, response: ResponsePipeline[R]): ResponsePipeline[R] =
-    response.withHeaders(Header.notValidated(name, payload))
+    response.withHeaders(Header(name, payload))
 }
 
 /**

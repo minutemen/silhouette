@@ -17,7 +17,7 @@
  */
 package silhouette.http
 
-import sttp.model.Header
+import sttp.model.{ CookieWithMeta, Header }
 
 /**
  * Decorates a framework specific response implementation.
@@ -27,35 +27,13 @@ import sttp.model.Header
  *
  * @tparam R The type of the response.
  */
-trait ResponsePipeline[R] {
-
-  /**
-   * Gets the HTTP status code.
-   *
-   * @return The HTTP status code.
-   */
-  def status: Status
-
-  /**
-   * Gets all headers.
-   *
-   * @return All headers.
-   */
-  def headers: Seq[Header]
-
-  /**
-   * Gets the header for the given name.
-   *
-   * @param name The name of the header for which the header should be returned.
-   * @return Some header for the given name, None if no header for the given name could be found.
-   */
-  def header(name: String): Option[Header] = headers.find(_.name == name)
+trait ResponsePipeline[R] extends Response {
 
   /**
    * Creates a new response pipeline with the given headers.
    *
-   * This method must override any existing header with the same name. If multiple headers with the
-   * same name are given to this method, then the values must be composed into a list.
+   * This method appends new headers to the existing list of headers. Already existing headers with the same name will
+   * be kept untouched.
    *
    * If a request holds the following headers, then this method must implement the following behaviour:
    * {{{
@@ -65,34 +43,16 @@ trait ResponsePipeline[R] {
    *   )
    * }}}
    *
-   * Append a new header:
+   * Append a new headers:
    * {{{
-   *   withHeaders(Header("TEST3", "value1"))
+   *   withHeaders(Header("TEST3", "value1"), Header("TEST1", "value3"), Header("TEST1", "value4, value5"))
    *
    *   Seq(
-   *     Header("TEST1" -> "value1, value2"),
-   *     Header("TEST2" -> "value1"),
-   *     Header("TEST3" -> "value1")
-   *   )
-   * }}}
-   *
-   * Override the header `TEST1` with a new value:
-   * {{{
-   *   withHeaders(Header("TEST1", "value3"))
-   *
-   *   Seq(
+   *     Header("TEST1", "value1, value2"),
+   *     Header("TEST2", "value1"),
+   *     Header("TEST3", "value1"),
    *     Header("TEST1", "value3"),
-   *     Header("TEST2", "value1")
-   *   )
-   * }}}
-   *
-   * Compose headers with the same name:
-   * {{{
-   *   withHeaders(Header("TEST1", "value3"), Header("TEST1", "value4, value5"))
-   *
-   *   Set(
-   *     Header("TEST1", "value3, value4, value5"),
-   *     Header("TEST2", "value1")
+   *     Header("TEST1", "value4, value5")
    *   )
    * }}}
    *
@@ -100,21 +60,6 @@ trait ResponsePipeline[R] {
    * @return A new response pipeline instance with the set headers.
    */
   def withHeaders(headers: Header*): ResponsePipeline[R]
-
-  /**
-   * Gets the list of cookies.
-   *
-   * @return The list of cookies.
-   */
-  def cookies: Seq[Cookie]
-
-  /**
-   * Gets a cookie.
-   *
-   * @param name The name for which the cookie should be returned.
-   * @return Some cookie or None if no cookie for the given name could be found.
-   */
-  def cookie(name: String): Option[Cookie] = cookies.find(_.name == name)
 
   /**
    * Creates a new response pipeline with the given cookies.
@@ -164,7 +109,7 @@ trait ResponsePipeline[R] {
    * @param cookies The cookies to set.
    * @return A new response pipeline instance with the set cookies.
    */
-  def withCookies(cookies: Cookie*): ResponsePipeline[R]
+  def withCookies(cookies: CookieWithMeta*): ResponsePipeline[R]
 
   /**
    * Unboxes the framework specific response implementation.

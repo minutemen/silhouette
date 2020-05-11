@@ -27,8 +27,9 @@ import org.specs2.mutable.Specification
 import silhouette._
 import silhouette.authenticator._
 import silhouette.authenticator.pipeline.Dsl._
+import silhouette.http.Fake
 import silhouette.http.transport.RetrieveFromCookie
-import silhouette.http.{ Cookie, Fake }
+import sttp.model.CookieWithMeta
 
 /**
  * Test case for the [[AuthenticationPipeline]] class.
@@ -52,7 +53,7 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
 
     "return the `AuthFailure` state if the token couldn't be transformed into an authenticator" in new Context {
       val exception = new AuthenticatorException("Parse error")
-      val request = Fake.request.withCookies(Cookie("test", token))
+      val request = Fake.request.withCookies(CookieWithMeta.unsafeApply("test", token))
 
       authenticatorReader(token) returns IO.raiseError(exception)
 
@@ -63,7 +64,7 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
     }
 
     "return the `InvalidCredentials` state if the authenticator is invalid" in new Context {
-      val request = Fake.request.withCookies(Cookie("test", token))
+      val request = Fake.request.withCookies(CookieWithMeta.unsafeApply("test", token))
       val errors = NEL.of("Invalid authenticator")
 
       authenticatorReader(token) returns IO.pure(authenticator)
@@ -74,7 +75,7 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
 
     "return the `AuthFailure` state if the validator throws an exception" in new Context {
       val exception = new AuthenticatorException("Validation error")
-      val request = Fake.request.withCookies(Cookie("test", token))
+      val request = Fake.request.withCookies(CookieWithMeta.unsafeApply("test", token))
 
       authenticatorReader(token) returns IO.pure(authenticator)
       validator.isValid(authenticator) returns IO.raiseError(exception)
@@ -86,7 +87,7 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
     }
 
     "return the `MissingIdentity` state if the identity couldn't be found for the login info" in new Context {
-      val request = Fake.request.withCookies(Cookie("test", token))
+      val request = Fake.request.withCookies(CookieWithMeta.unsafeApply("test", token))
 
       authenticatorReader(token) returns IO.pure(authenticator)
       validator.isValid(authenticator) returns IO.pure(validNel(()))
@@ -97,7 +98,7 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
 
     "return the `AuthFailure` state if the identity reader throws an exception" in new Context {
       val exception = new AuthenticatorException("Retrieval error")
-      val request = Fake.request.withCookies(Cookie("test", token))
+      val request = Fake.request.withCookies(CookieWithMeta.unsafeApply("test", token))
 
       authenticatorReader(token) returns IO.pure(authenticator)
       validator.isValid(authenticator) returns IO.pure(validNel(()))
@@ -110,7 +111,7 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
     }
 
     "return the `Authenticated` state if the authentication process was successful" in new Context {
-      val request = Fake.request.withCookies(Cookie("test", token))
+      val request = Fake.request.withCookies(CookieWithMeta.unsafeApply("test", token))
 
       authenticatorReader(token) returns IO.pure(authenticator)
       validator.isValid(authenticator) returns IO.pure(validNel(()))

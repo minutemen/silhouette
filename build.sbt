@@ -128,13 +128,6 @@ lazy val `silhouette-provider-oauth2` = (project in file("modules/provider-oauth
     `silhouette-specs2` % Test
   )
 
-lazy val `silhouette-persistence` = (project in file("modules/persistence"))
-  .dependsOn(
-    `silhouette-core`,
-    `silhouette-password`,
-    `silhouette-specs2` % Test
-  )
-
 lazy val `silhouette-util` = (project in file("modules/util"))
   .dependsOn(
     `silhouette-core`,
@@ -161,7 +154,6 @@ lazy val silhouette = (project in file("."))
     `silhouette-provider-form`,
     `silhouette-provider-social`,
     `silhouette-provider-oauth2`,
-    `silhouette-persistence`,
     `silhouette-util`
   ).settings(
     publish := {},

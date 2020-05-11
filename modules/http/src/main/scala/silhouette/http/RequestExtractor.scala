@@ -19,6 +19,7 @@ package silhouette.http
 
 import com.typesafe.scalalogging.LazyLogging
 import silhouette.http.RequestBodyExtractor._
+import sttp.model.MediaType
 
 /**
  * Adds the ability to extract values from a request.
@@ -64,7 +65,7 @@ protected[silhouette] trait RequestExtractor[+R] extends LazyLogging {
   protected def fromQueryString(name: String, parts: Option[Parts]): Option[String] = {
     isAllowed(RequestPart.QueryString, parts) {
       logger.debug(s"Try to extract value with name `$name` from query string: $rawQueryString")
-      queryParam(name).headOption
+      queryParamValue(name)
     }
   }
 
@@ -78,7 +79,7 @@ protected[silhouette] trait RequestExtractor[+R] extends LazyLogging {
   protected def fromHeaders(name: String, parts: Option[Parts]): Option[String] = {
     isAllowed(RequestPart.Headers, parts) {
       logger.debug(s"Try to extract value with name `$name` from headers: $headers")
-      header(name).map(_.value)
+      headerValue(name)
     }
   }
 
@@ -235,7 +236,7 @@ object RequestBodyExtractor {
    * @param found    The found content type.
    * @param expected The list of expected content types.
    */
-  protected[silhouette] final case class WrongContentType(found: MimeType, expected: Seq[MimeType])
+  protected[silhouette] final case class WrongContentType(found: MediaType, expected: Seq[MediaType])
     extends ExtractionResult
 
   /**

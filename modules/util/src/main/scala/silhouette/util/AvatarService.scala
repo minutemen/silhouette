@@ -17,7 +17,7 @@
  */
 package silhouette.util
 
-import java.net.URI
+import sttp.model.Uri
 
 /**
  * Service to retrieve avatar URIs from an avatar service such as Gravatar.
@@ -28,7 +28,7 @@ trait AvatarService[F[_]] {
    * Retrieves the URI for an identifier.
    *
    * @param id The identifier for the avatar.
-   * @return Maybe an avatar URI or None if no URL could be found for the given identifier.
+   * @return Maybe an avatar URI or None if no URI could be found for the given identifier.
    */
-  def retrieveURI(id: String): F[Option[URI]]
+  def retrieveUri(id: String): F[Option[Uri]]
 }

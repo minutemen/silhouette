@@ -17,7 +17,6 @@
  */
 package silhouette.provider.oauth2
 
-import java.net.URI
 import java.time.Clock
 
 import cats.effect.Async
@@ -27,9 +26,10 @@ import silhouette.provider.UnexpectedResponseException
 import silhouette.provider.oauth2.GoogleProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
-import silhouette.{ ConfigURI, LoginInfo, RichACursor }
+import silhouette.{ LoginInfo, RichACursor }
 import sttp.client.circe.asJson
 import sttp.client.{ SttpBackend, basicRequest }
+import sttp.model.Uri._
 
 /**
  * Base Google OAuth2 Provider.
@@ -54,8 +54,8 @@ trait BaseGoogleProvider[F[_]] extends OAuth2Provider[F] {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
-    val uri = config.apiURI.getOrElse(DefaultApiURI).format(authInfo.accessToken)
-    basicRequest.get(uri)
+    val uri = config.apiUri.getOrElse(DefaultApiURI)
+    basicRequest.get(uri"$uri?access_token=${authInfo.accessToken}")
       .response(asJson[Json])
       .send().flatMap { response =>
         response.body match {
@@ -94,7 +94,7 @@ class GoogleProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, Comm
           val email = json.hcursor.downField("emailAddresses").downAt(isPrimary).downField("value").as[String].toOption
           val maybePrimaryPhoto = json.hcursor.downField("photos").downAt(isPrimary).focus
           val maybeAvatarURL = maybePrimaryPhoto.flatMap(
-            _.hcursor.downField("url").as[String].toOption.map(uri => new URI(uri))
+            _.hcursor.downField("url").as[String].toOption.map(uri => uri"$uri")
           )
           val isDefaultAvatar = maybePrimaryPhoto.exists(
             _.hcursor.downField("default").as[Boolean].toOption.getOrElse(false)
@@ -180,8 +180,7 @@ object GoogleProvider {
   /**
    * Default provider endpoint.
    */
-  val DefaultApiURI = ConfigURI("https://people.googleapis.com/v1/people/me?personFields=names,photos,emailAddresses" +
-    "&access_token=%s")
+  val DefaultApiURI = uri"https://people.googleapis.com/v1/people/me?personFields=names,photos,emailAddresses"
 
   /**
    * The error messages.

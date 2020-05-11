@@ -17,16 +17,13 @@
  */
 package silhouette.util
 
-import java.net.URI
-import java.net.URLEncoder._
-
 import cats.Monad
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
-import silhouette.ConfigURI
 import silhouette.crypto.Hash._
 import silhouette.util.GravatarService._
 import sttp.client._
+import sttp.model.Uri
 
 /**
  * Retrieves avatar URIs from the Gravatar service.
@@ -44,18 +41,17 @@ final case class GravatarService[F[_]: Monad] @Inject() (settings: GravatarServi
    * @param email The email address for the avatar.
    * @return Maybe an avatar URI or None if no avatar could be found for the given email address.
    */
-  override def retrieveURI(email: String): F[Option[URI]] = {
+  override def retrieveUri(email: String): F[Option[Uri]] = {
     hash(email) match {
       case Some(hash) =>
-        val encodedParams = settings.params.map { p => encode(p._1, "UTF-8") + "=" + encode(p._2, "UTF-8") }
-        val url = (if (settings.secure) SecureURI else InsecureURI).format(hash, encodedParams.mkString("?", "&", ""))
+        val url = (if (settings.secure) SecureURI else InsecureURI)(hash, settings.params)
         Monad[F].map(basicRequest.get(url).send()) { response =>
           response.body match {
             case Left(error) =>
               logger.info(s"Gravatar API returns status `${response.code}` with error: $error")
               None
             case Right(_) =>
-              Some(url.toJavaURI)
+              Some(url)
           }
         }
       case None => Monad[F].pure(None)
@@ -82,8 +78,10 @@ final case class GravatarService[F[_]: Monad] @Inject() (settings: GravatarServi
  * The companion object.
  */
 object GravatarService {
-  val InsecureURI = ConfigURI("http://www.gravatar.com/avatar/%s%s")
-  val SecureURI = ConfigURI("https://secure.gravatar.com/avatar/%s%s")
+  val InsecureURI = (hash: String, queryParams: Map[String, String]) =>
+    uri"http://www.gravatar.com/avatar/$hash?$queryParams"
+  val SecureURI = (hash: String, queryParams: Map[String, String]) =>
+    uri"https://secure.gravatar.com/avatar/$hash?$queryParams"
 }
 
 /**

@@ -17,19 +17,19 @@
  */
 package silhouette.provider.oauth2
 
-import java.net.URI
 import java.time.Clock
 
 import cats.effect.Async
 import cats.implicits._
 import io.circe.Json
+import silhouette.LoginInfo
 import silhouette.provider.UnexpectedResponseException
 import silhouette.provider.oauth2.InstagramProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
-import silhouette.{ ConfigURI, LoginInfo }
 import sttp.client.circe.asJson
 import sttp.client.{ SttpBackend, basicRequest }
+import sttp.model.Uri._
 
 /**
  * Base Instagram OAuth2 Provider.
@@ -53,8 +53,8 @@ trait BaseInstagramProvider[F[_]] extends OAuth2Provider[F] {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
-    val uri = config.apiURI.getOrElse(DefaultApiURI).format(authInfo.accessToken)
-    basicRequest.get(uri)
+    val uri = config.apiUri.getOrElse(DefaultApiUri)
+    basicRequest.get(uri"$uri?access_token=${authInfo.accessToken}")
       .response(asJson[Json])
       .send().flatMap { response =>
         response.body match {
@@ -88,7 +88,7 @@ class InstagramProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, C
           CommonSocialProfile(
             loginInfo = LoginInfo(ID, id),
             fullName = data.downField("full_name").as[String].toOption,
-            avatarUri = data.downField("profile_picture").as[String].toOption.map(uri => new URI(uri))
+            avatarUri = data.downField("profile_picture").as[String].toOption.map(uri => uri"$uri")
           )
         }
       case None =>
@@ -147,5 +147,5 @@ object InstagramProvider {
   /**
    * Default provider endpoint.
    */
-  val DefaultApiURI = ConfigURI("https://api.instagram.com/v1/users/self?access_token=%s")
+  val DefaultApiUri = uri"https://api.instagram.com/v1/users/self"
 }

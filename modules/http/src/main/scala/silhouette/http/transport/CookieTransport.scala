@@ -17,20 +17,24 @@
  */
 package silhouette.http.transport
 
+import java.time.Instant
+
 import silhouette.http._
+import sttp.model.CookieWithMeta
 
 import scala.concurrent.duration.FiniteDuration
 
 /**
  * The config for the cookie transport.
  *
- * @param name     The cookie name.
- * @param path     The cookie path.
- * @param domain   The cookie domain.
- * @param secure   Whether this cookie is secured, sent only for HTTPS requests.
- * @param httpOnly Whether this cookie is HTTP only, i.e. not accessible from client-side JavaScript code.
- * @param sameSite Whether this cookie forces the SameSite policy to prevent CSRF attacks.
- * @param maxAge   The duration a cookie expires. `None` for a transient cookie.
+ * @param name            The cookie name.
+ * @param path            The cookie path.
+ * @param domain          The cookie domain.
+ * @param secure          Whether this cookie is secured, sent only for HTTPS requests.
+ * @param httpOnly        Whether this cookie is HTTP only, i.e. not accessible from client-side JavaScript code.
+ * @param expires         The maximum lifetime of the cookie. `None` for a transient cookie.
+ * @param maxAge          The duration a cookie expires. `None` for a transient cookie.
+ * @param otherDirectives Like the SameSite directive.
  */
 final case class CookieTransportConfig(
   name: String,
@@ -38,8 +42,9 @@ final case class CookieTransportConfig(
   domain: Option[String] = None,
   secure: Boolean = true,
   httpOnly: Boolean = true,
-  sameSite: Option[Cookie.SameSite] = None,
-  maxAge: Option[FiniteDuration] = None
+  expires: Option[Instant] = None,
+  maxAge: Option[FiniteDuration] = None,
+  otherDirectives: Map[String, Option[String]] = Map()
 ) extends TransportConfig
 
 /**
@@ -91,7 +96,7 @@ final case class CookieTransport(config: CookieTransportConfig)
    * @return The manipulated response pipeline.
    */
   override def discard[R](response: ResponsePipeline[R]): ResponsePipeline[R] =
-    response.withCookies(cookie(value = "").copy(maxAge = Some(-86400)))
+    response.withCookies(cookie(value = "").maxAge(Some(-86400)))
 
   /**
    * Creates a cookie based on the config and the given value.
@@ -99,15 +104,16 @@ final case class CookieTransport(config: CookieTransportConfig)
    * @param value The cookie value.
    * @return A cookie value.
    */
-  private def cookie(value: String) = Cookie(
+  private def cookie(value: String) = CookieWithMeta.unsafeApply(
     name = config.name,
     value = value,
+    expires = config.expires,
     maxAge = config.maxAge.map(_.toSeconds.toInt),
     domain = config.domain,
     path = Some(config.path),
     secure = config.secure,
     httpOnly = config.httpOnly,
-    sameSite = config.sameSite
+    otherDirectives = config.otherDirectives
   )
 }
 

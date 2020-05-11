@@ -20,6 +20,7 @@ package silhouette.http.transport
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.http._
+import sttp.model.CookieWithMeta
 
 /**
  * Test case for the [[CookieTransport]] class.
@@ -34,7 +35,9 @@ class CookieTransportSpec extends Specification {
 
   "The `retrieve` method" should {
     "return some payload from the cookie with the given name" in new Context {
-      transport.retrieve(requestPipeline.withCookies(Cookie("test", "payload"))) must beSome("payload")
+      transport.retrieve(
+        requestPipeline.withCookies(CookieWithMeta.unsafeApply("test", "payload"))
+      ) must beSome("payload")
     }
 
     "return None if no cookie with the give name exists" in new Context {
@@ -44,7 +47,7 @@ class CookieTransportSpec extends Specification {
 
   "The `smuggle` method" should {
     "smuggle a cookie into the request" in new Context {
-      transport.smuggle("payload", requestPipeline).cookie("test") must beSome[Cookie].like {
+      transport.smuggle("payload", requestPipeline).cookie("test") must beSome[CookieWithMeta].like {
         case cookie =>
           cookie.value must be equalTo "payload"
       }
@@ -53,7 +56,7 @@ class CookieTransportSpec extends Specification {
 
   "The `embed` method" should {
     "embed a cookie into the response" in new Context {
-      transport.embed("payload", responsePipeline).cookie("test") must beSome[Cookie].like {
+      transport.embed("payload", responsePipeline).cookie("test") must beSome[CookieWithMeta].like {
         case cookie =>
           cookie.value must be equalTo "payload"
       }
@@ -62,7 +65,7 @@ class CookieTransportSpec extends Specification {
 
   "The `discard` method" should {
     "discard a cookie" in new Context {
-      transport.discard(responsePipeline).cookie("test") must beSome[Cookie].like {
+      transport.discard(responsePipeline).cookie("test") must beSome[CookieWithMeta].like {
         case cookie =>
           cookie.value must be equalTo ""
           cookie.maxAge must beSome(-86400)
@@ -73,7 +76,7 @@ class CookieTransportSpec extends Specification {
   "The `RetrieveFromCookie` reads" should {
     "read some payload from a cookie stored in the request" in new Context {
       RetrieveFromCookie("test")(
-        requestPipeline.withCookies(Cookie("test", "payload"))
+        requestPipeline.withCookies(CookieWithMeta.unsafeApply("test", "payload"))
       ) must beSome("payload")
     }
 
@@ -85,7 +88,7 @@ class CookieTransportSpec extends Specification {
   "The `SmuggleIntoCookie` writes" should {
     "smuggle a cookie into the request" in new Context {
       SmuggleIntoCookie(config)(requestPipeline)("payload")
-        .cookie("test") must beSome[Cookie].like {
+        .cookie("test") must beSome[CookieWithMeta].like {
           case cookie =>
             cookie.value must be equalTo "payload"
         }
@@ -95,7 +98,7 @@ class CookieTransportSpec extends Specification {
   "The `EmbedIntoCookie` writes" should {
     "embed a cookie into the response" in new Context {
       EmbedIntoCookie(config)(responsePipeline)("payload")
-        .cookie("test") must beSome[Cookie].like {
+        .cookie("test") must beSome[CookieWithMeta].like {
           case cookie =>
             cookie.value must be equalTo "payload"
         }
@@ -105,7 +108,7 @@ class CookieTransportSpec extends Specification {
   "The `DiscardCookie` writes" should {
     "discard a cookie" in new Context {
       DiscardCookie(config)(responsePipeline)
-        .cookie("test") must beSome[Cookie].like {
+        .cookie("test") must beSome[CookieWithMeta].like {
           case cookie =>
             cookie.value must be equalTo ""
             cookie.maxAge must beSome(-86400)

@@ -17,9 +17,8 @@
  */
 package silhouette.provider.social
 
-import java.net.URI
-
 import silhouette.LoginInfo
+import sttp.model.Uri
 
 /**
  * The social profile contains all the data returned from the social providers after authentication.
@@ -55,5 +54,5 @@ case class CommonSocialProfile(
   lastName: Option[String] = None,
   fullName: Option[String] = None,
   email: Option[String] = None,
-  avatarUri: Option[URI] = None
+  avatarUri: Option[Uri] = None
 ) extends SocialProfile

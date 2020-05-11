@@ -22,14 +22,15 @@ import java.time.Clock
 import cats.effect.Async
 import cats.implicits._
 import io.circe.Json
+import silhouette.LoginInfo
 import silhouette.http._
 import silhouette.provider.UnexpectedResponseException
 import silhouette.provider.oauth2.DropboxProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
-import silhouette.{ ConfigURI, LoginInfo }
 import sttp.client.circe.asJson
 import sttp.client.{ SttpBackend, basicRequest }
+import sttp.model.Uri._
 
 /**
  * Base Dropbox OAuth2 Provider.
@@ -53,7 +54,7 @@ trait BaseDropboxProvider[F[_]] extends OAuth2Provider[F] {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
-    basicRequest.get(config.apiURI.getOrElse[ConfigURI](DefaultApiURI))
+    basicRequest.get(config.apiUri.getOrElse(DefaultApiUri))
       .header(BearerAuthorizationHeader(authInfo.accessToken))
       .response(asJson[Json])
       .send().flatMap { response =>
@@ -143,5 +144,5 @@ object DropboxProvider {
   /**
    * Default provider endpoint.
    */
-  val DefaultApiURI: ConfigURI = ConfigURI("https://api.dropbox.com/1/account/info")
+  val DefaultApiUri = uri"https://api.dropbox.com/1/account/info"
 }

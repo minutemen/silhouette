@@ -17,19 +17,19 @@
  */
 package silhouette.provider.oauth2
 
-import java.net.URI
 import java.time.Clock
 
 import cats.effect.Async
 import cats.implicits._
 import io.circe.{ Decoder, HCursor, Json }
+import silhouette.LoginInfo
 import silhouette.provider.UnexpectedResponseException
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.oauth2.VKProvider._
 import silhouette.provider.social._
-import silhouette.{ ConfigURI, LoginInfo }
 import sttp.client.circe.asJson
 import sttp.client.{ SttpBackend, basicRequest }
+import sttp.model.Uri._
 
 /**
  * Base VK OAuth2 Provider.
@@ -62,8 +62,8 @@ trait BaseVKProvider[F[_]] extends OAuth2Provider[F] {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
-    val uri = config.apiURI.getOrElse(DefaultApiURI).format(authInfo.accessToken)
-    basicRequest.get(uri)
+    val uri = config.apiUri.getOrElse(DefaultApiUri)
+    basicRequest.get(uri"$uri?access_token=${authInfo.accessToken}")
       .response(asJson[Json])
       .send().flatMap { response =>
         response.body match {
@@ -105,7 +105,7 @@ class VKProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, CommonSo
             firstName = response.downField("first_name").as[String].toOption,
             lastName = response.downField("last_name").as[String].toOption,
             email = authInfo.params.flatMap(_.get("email")),
-            avatarUri = response.downField("photo_max_orig").as[String].toOption.map(uri => new URI(uri))
+            avatarUri = response.downField("photo_max_orig").as[String].toOption.map(uri => uri"$uri")
           )
         }
       case None =>
@@ -163,15 +163,9 @@ object VKProvider {
   val ID = "vk"
 
   /**
-   * The used API version.
-   */
-  val ApiVersion = "5.85"
-
-  /**
    * Default provider endpoint.
    */
-  val DefaultApiURI = ConfigURI("https://api.vk.com/method/users.get?fields=id,first_name,last_name," +
-    s"photo_max_orig&v=$ApiVersion&access_token=%s")
+  val DefaultApiUri = uri"https://api.vk.com/method/users.get?fields=id,first_name,last_name,photo_max_orig&v=5.85"
 
   /**
    * Converts the JSON into a [[OAuth2Info]] object.

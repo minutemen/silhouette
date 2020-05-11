@@ -17,29 +17,17 @@
  */
 package silhouette.http
 
-import scala.language.implicitConversions
+import sttp.model.StatusCode
 
 /**
- * Represents a HTTP request method.
- *
- * @param value The request method as string.
+ * Represents a response that offers access to the framework specific response implementation.
  */
-sealed abstract class Method(val value: String)
+trait Response extends WithHeaders with WithCookies {
 
-/**
- * The HTTP request methods.
- */
-object Method {
-  implicit def toString(method: Method): String = method.value
-  implicit def fromString(method: String): Method = new Method(method) {}
-
-  case object GET extends Method("GET")
-  case object POST extends Method("POST")
-  case object PUT extends Method("PUT")
-  case object PATCH extends Method("PATCH")
-  case object DELETE extends Method("DELETE")
-  case object HEAD extends Method("HEAD")
-  case object OPTION extends Method("OPTION")
-  case object CONNECT extends Method("CONNECT")
-  case object TRACE extends Method("TRACE")
+  /**
+   * Gets the HTTP status code.
+   *
+   * @return The HTTP status code.
+   */
+  def status: StatusCode
 }

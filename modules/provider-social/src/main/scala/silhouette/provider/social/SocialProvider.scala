@@ -17,14 +17,13 @@
  */
 package silhouette.provider.social
 
-import java.net.URI
-
 import cats.effect.Async
 import cats.implicits._
 import silhouette.AuthInfo
 import silhouette.http.{ RequestPipeline, ResponsePipeline, SilhouetteResponse }
 import silhouette.provider.Provider
 import silhouette.provider.social.SocialProvider._
+import sttp.model.Uri
 
 /**
  * The base interface for all social providers.
@@ -99,12 +98,15 @@ trait SocialProvider[F[_], C] extends Provider with SocialProfileBuilder[F] {
    * @param uri     The URI to resolve.
    * @param request The current request.
    * @tparam R The type of the request.
-   * @return The absolute url.
+   * @return The absolute URI.
    */
   protected def resolveCallbackUri[R](
-    uri: URI,
+    uri: Uri,
     request: RequestPipeline[R]
-  ): URI = if (uri.isAbsolute) uri else request.uri.resolve(uri)
+  ): Uri = {
+    val javaURI = uri.toJavaUri
+    if (javaURI.isAbsolute) uri else Uri(request.uri.toJavaUri.resolve(javaURI))
+  }
 }
 
 /**

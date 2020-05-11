@@ -19,6 +19,7 @@ package silhouette.jwt.jose4j
 
 import java.time.Instant
 
+import cats.implicits._
 import io.circe.{ Json, JsonObject }
 import org.jose4j.jwt.JwtClaims
 import silhouette.jwt.jose4j.Jose4jClaimReader._
@@ -91,9 +92,6 @@ final case class Jose4jClaimReader(consumer: Jose4jConsumer) extends JwtClaimRea
    * @return A Json object representing the custom claims on the right or an error on the left.
    */
   private def transformCustomClaims(claims: java.util.Map[String, Object]): Either[Throwable, JsonObject] = {
-    import cats.instances.either._
-    import cats.instances.list._
-    import cats.syntax.traverse._
     def fromNumber(number: Number): Json = number match {
       case v: java.lang.Integer => Json.fromInt(v)
       case v: java.lang.Long    => Json.fromLong(v)
@@ -118,7 +116,13 @@ final case class Jose4jClaimReader(consumer: Jose4jConsumer) extends JwtClaimRea
       case Some(v)                       => Left(new JwtException(UnexpectedJsonValue.format(v)))
     }
 
-    fromMap(claims)
+    claims.asScala.toList.map(t => t._1 -> toJson(t._2)).partitionMap {
+      case (_, Left(e))     => Left(e)
+      case (k, Right(json)) => Right(k -> json)
+    } match {
+      case (Nil, rights)       => Right(JsonObject.fromIterable(rights))
+      case (firstLeft :: _, _) => Left(firstLeft)
+    }
   }
 }
 

@@ -24,7 +24,6 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import silhouette.AuthInfo
 import silhouette.http.ResponsePipeline
-import silhouette.specs2.Wait
 
 import scala.reflect.ClassTag
 import scala.util.Try
@@ -32,7 +31,7 @@ import scala.util.Try
 /**
  * Base test case for the social providers.
  */
-trait SocialProviderSpec[A <: AuthInfo] extends Specification with Mockito with JsonMatchers with Wait {
+trait SocialProviderSpec[A <: AuthInfo] extends Specification with Mockito with JsonMatchers {
 
   /**
    * Applies a matcher on a simple result.

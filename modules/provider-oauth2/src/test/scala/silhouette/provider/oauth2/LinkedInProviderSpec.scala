@@ -17,21 +17,19 @@
  */
 package silhouette.provider.oauth2
 
-import java.net.URI
 import java.nio.file.Paths
 
 import cats.effect.IO._
+import silhouette.LoginInfo
 import silhouette.provider.oauth2.LinkedInProvider._
 import silhouette.provider.oauth2.OAuth2Provider.UnexpectedResponse
 import silhouette.provider.social.SocialProvider.ProfileError
 import silhouette.provider.social.{ CommonSocialProfile, ProfileRetrievalException }
 import silhouette.specs2.BaseFixture
-import silhouette.{ ConfigURI, LoginInfo }
 import sttp.client.asynchttpclient.cats.AsyncHttpClientCatsBackend
-import sttp.client.{ Request, Response, StringBody, SttpClientException }
-import sttp.model.{ MediaType, Method, StatusCode }
-
-import scala.io.Codec
+import sttp.client.{ Request, Response, SttpClientException }
+import sttp.model.Uri._
+import sttp.model.{ Method, StatusCode, Uri }
 
 /**
  * Test case for the [[LinkedInProvider]] class.
@@ -43,11 +41,8 @@ class LinkedInProviderSpec extends OAuth2ProviderSpec {
       val apiResult = ErrorJson.asJson
 
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken)))
-        .thenRespond(Response(
-          StringBody(apiResult.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
-          StatusCode.BadRequest
-        ))
+        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
+        .thenRespond(Response(apiResult.toString, StatusCode.BadRequest))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
         case e =>
@@ -62,7 +57,7 @@ class LinkedInProviderSpec extends OAuth2ProviderSpec {
 
     "fail with ProfileRetrievalException if an unexpected error occurred" in new Context {
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken)))
+        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
         .thenRespond(throw new SttpClientException.ConnectException(new RuntimeException))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
@@ -71,37 +66,32 @@ class LinkedInProviderSpec extends OAuth2ProviderSpec {
     }
 
     "use the overridden API URI" in new Context {
-      val uri = DefaultApiURI.copy(uri = DefaultApiURI.uri + "&new")
+      val uri = uri"$DefaultApiUri&new"
       val apiResult = UserProfileJson.asJson
 
-      config.apiURI returns Some(uri)
+      config.apiUri returns Some(uri)
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(uri.format(oAuth2Info.accessToken)))
-        .thenRespond(Response(
-          StringBody(apiResult.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
-          StatusCode.Ok
-        ))
+        .whenRequestMatches(requestMatcher(uri"$uri?access_token=${oAuth2Info.accessToken}"))
+        .thenRespond(Response(apiResult.toString, StatusCode.Ok))
 
       provider.retrieveProfile(oAuth2Info).unsafeRunSync()
     }
 
     "return the social profile" in new Context {
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiURI.format(oAuth2Info.accessToken)))
-        .thenRespond(Response(
-          StringBody(UserProfileJson.asJson.toString, Codec.UTF8.charSet.name(), Some(MediaType.ApplicationJson)),
-          StatusCode.Ok
-        ))
+        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
+        .thenRespond(Response(UserProfileJson.asJson.toString, StatusCode.Ok))
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>
+        val uriStr = "http://media.linkedin.com/mpr/mprx/0_fsPnURNRhLhk_Ue2fjKLUZkB2FL6TOe2S4bdUZz61GA9Ysxu_y_" +
+          "sz4THGW5JGJWhaMleN0F61-Dg"
         p must be equalTo CommonSocialProfile(
           loginInfo = LoginInfo(provider.id, "NhZXBl_O6f"),
           firstName = Some("Apollonia"),
           lastName = Some("Vanova"),
           fullName = Some("Apollonia Vanova"),
           email = Some("apollonia.vanova@minutemen.group"),
-          avatarUri = Some(new URI("http://media.linkedin.com/mpr/mprx/0_fsPnURNRhLhk_Ue2fjKLUZkB2FL6TOe2S4" +
-            "bdUZz61GA9Ysxu_y_sz4THGW5JGJWhaMleN0F61-Dg"))
+          avatarUri = Some(uri"$uriStr")
         )
       }
     }
@@ -130,9 +120,9 @@ class LinkedInProviderSpec extends OAuth2ProviderSpec {
      * The OAuth2 config.
      */
     override lazy val config = spy(OAuth2Config(
-      authorizationURI = Some(ConfigURI("https://www.linkedin.com/uas/oauth2/authorization")),
-      accessTokenURI = ConfigURI("https://www.linkedin.com/uas/oauth2/accessToken"),
-      redirectURI = Some(ConfigURI("https://minutemen.group")),
+      authorizationUri = Some(uri"https://www.linkedin.com/uas/oauth2/authorization"),
+      accessTokenUri = uri"https://www.linkedin.com/uas/oauth2/accessToken",
+      redirectUri = Some(uri"https://minutemen.group"),
       clientID = "my.client.id",
       clientSecret = "my.client.secret",
       scope = None
@@ -149,8 +139,8 @@ class LinkedInProviderSpec extends OAuth2ProviderSpec {
      * @param uri To URI to match against.
      * @return A partial function that matches the request.
      */
-    def requestMatcher(uri: ConfigURI): PartialFunction[Request[_, _], Boolean] = {
-      case r: Request[_, _] => r.method == Method.GET && r.uri == uri.toSttpUri
+    def requestMatcher(uri: Uri): PartialFunction[Request[_, _], Boolean] = {
+      case r: Request[_, _] => r.method == Method.GET && r.uri == uri
     }
   }
 }

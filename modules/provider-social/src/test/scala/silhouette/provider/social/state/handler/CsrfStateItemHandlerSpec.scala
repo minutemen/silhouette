@@ -25,9 +25,9 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.crypto.SecureID
-import silhouette.http._
 import silhouette.http.transport.CookieTransportConfig
 import silhouette.jwt.{ JwtClaimReader, JwtClaimWriter }
+import sttp.model.CookieWithMeta
 
 /**
  * Test case for the [[CsrfStateItemHandler]] class.
@@ -107,7 +107,7 @@ class CsrfStateItemHandlerSpec extends Specification with Mockito with JsonMatch
      * @param value The cookie value.
      * @return A cookie instance with the given value.
      */
-    def cookie(value: String): Cookie = Cookie(
+    def cookie(value: String): CookieWithMeta = CookieWithMeta.unsafeApply(
       name = cookieTransportConfig.name,
       value = value,
       maxAge = cookieTransportConfig.maxAge.map(_.toSeconds.toInt),
@@ -115,7 +115,7 @@ class CsrfStateItemHandlerSpec extends Specification with Mockito with JsonMatch
       domain = cookieTransportConfig.domain,
       secure = cookieTransportConfig.secure,
       httpOnly = cookieTransportConfig.httpOnly,
-      sameSite = cookieTransportConfig.sameSite
+      otherDirectives = cookieTransportConfig.otherDirectives
     )
   }
 }

@@ -25,9 +25,9 @@ import org.specs2.mutable.Specification
 import silhouette.LoginInfo
 import silhouette.authenticator.pipeline.Dsl._
 import silhouette.authenticator.{ Authenticator, AuthenticatorWriter, TargetPipeline }
+import silhouette.http.Fake
 import silhouette.http.transport.{ CookieTransportConfig, DiscardCookie, EmbedIntoHeader }
-import silhouette.http.{ Cookie, Fake }
-import sttp.model.Header
+import sttp.model.{ CookieWithMeta, Header }
 
 /**
  * Test case for the [[TargetPipeline]] class.
@@ -45,7 +45,7 @@ class TargetPipelineSpec extends Specification with Mockito {
       embedPipeline(authenticator, responsePipeline).unsafeRunSync() must
         beLike[Fake.ResponsePipeline] {
           case response =>
-            response.header("test") must beSome(Header.notValidated("test", authenticator.toString))
+            response.header("test") must beSome(Header("test", authenticator.toString))
         }
     }
 
@@ -53,7 +53,7 @@ class TargetPipelineSpec extends Specification with Mockito {
       discardPipeline(authenticator, responsePipeline).unsafeRunSync() must
         beLike[Fake.ResponsePipeline] {
           case response =>
-            response.cookie("test") must beSome(Cookie(
+            response.cookie("test") must beSome(CookieWithMeta.unsafeApply(
               name = "test",
               value = "",
               maxAge = Some(-86400),

@@ -18,7 +18,7 @@
 package silhouette.http
 
 import silhouette.RichSeq._
-import sttp.model.Header
+import sttp.model.{ CookieWithMeta, Header, Headers, StatusCode }
 
 /**
  * A Silhouette response implementation.
@@ -28,9 +28,9 @@ import sttp.model.Header
  * @param cookies The cookies.
  */
 protected[silhouette] case class SilhouetteResponse(
-  status: Status,
-  headers: Seq[Header] = Seq(),
-  cookies: Seq[Cookie] = Seq()
+  status: StatusCode,
+  headers: Headers = Headers(Seq()),
+  cookies: Seq[CookieWithMeta] = Seq()
 )
 
 /**
@@ -46,14 +46,14 @@ final protected[silhouette] case class SilhouetteResponsePipeline(protected val 
    *
    * @return The HTTP status code.
    */
-  override def status: Status = response.status
+  override def status: StatusCode = response.status
 
   /**
    * Gets all headers.
    *
    * @return All headers.
    */
-  override def headers: Seq[Header] = response.headers
+  override def headers: Headers = response.headers
 
   /**
    * Creates a new response pipeline with the given headers.
@@ -64,18 +64,7 @@ final protected[silhouette] case class SilhouetteResponsePipeline(protected val 
    * @return A new response pipeline instance with the added headers.
    */
   override def withHeaders(headers: Header*): SilhouetteResponsePipeline = {
-    val groupedHeaders = headers.groupByPreserveOrder(_.name).map {
-      case (key, h) => Header.notValidated(key, h.mkString(", "))
-    }
-    val newHeaders = groupedHeaders.foldLeft(this.headers) {
-      case (acc, header) =>
-        acc.indexWhere(_.is(header.name)) match {
-          case -1 => acc :+ header
-          case i  => acc.patch(i, Seq(header), 1)
-        }
-    }
-
-    copy(response.copy(headers = newHeaders))
+    copy(response.copy(headers = Headers(response.headers.headers ++ headers)))
   }
 
   /**
@@ -83,7 +72,7 @@ final protected[silhouette] case class SilhouetteResponsePipeline(protected val 
    *
    * @return The list of cookies.
    */
-  override def cookies: Seq[Cookie] = response.cookies
+  override def cookies: Seq[CookieWithMeta] = response.cookies
 
   /**
    * Creates a new response pipeline with the given cookies.
@@ -93,7 +82,7 @@ final protected[silhouette] case class SilhouetteResponsePipeline(protected val 
    * @param cookies The cookies to add.
    * @return A new response pipeline instance with the added cookies.
    */
-  override def withCookies(cookies: Cookie*): SilhouetteResponsePipeline = {
+  override def withCookies(cookies: CookieWithMeta*): SilhouetteResponsePipeline = {
     val filteredCookies = cookies.groupByPreserveOrder(_.name).map(_._2.last)
     val newCookies = filteredCookies.foldLeft(this.cookies) {
       case (acc, cookie) =>

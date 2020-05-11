@@ -32,14 +32,13 @@ import org.specs2.specification.Scope
 import silhouette.jwt.jose4j.Jose4jClaimReader._
 import silhouette.jwt.jose4j.Jose4jClaimWriter._
 import silhouette.jwt.{ Claims, JwtException, ReservedClaims }
-import silhouette.specs2.WithBouncyCastle
 
 import scala.util.Try
 
 /**
  * Test case for the [[Jose4jClaimReader]] and [[Jose4jClaimWriter]] classes.
  */
-class TransformerSpec extends Specification with WithBouncyCastle {
+class TransformerSpec extends Specification {
 
   "The `transformer`" should {
     "transform a JWT with an `iss` claim" in new Context {

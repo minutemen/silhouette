@@ -25,6 +25,7 @@ import silhouette.http.Body._
 import silhouette.http.BodyReader._
 import silhouette.http.BodyWriter._
 import silhouette.http.DefaultBodyReader._
+import sttp.model.MediaType
 
 import scala.xml.Node
 
@@ -85,21 +86,21 @@ class DefaultBodyFormatSpec extends Specification {
     "return a Failure on unsupported content type" in new Context {
       validXmlBody.as[String] must beFailedTry.like {
         case e: UnsupportedContentTypeException =>
-          e.getMessage must be equalTo errorMsg(MimeType.`text/plain`, XmlBody.contentType)
+          e.getMessage must be equalTo errorMsg(MediaType.TextPlain, XmlBody.contentType)
       }
       validXmlBody.as[Map[String, Seq[String]]] must beFailedTry.like {
         case e: UnsupportedContentTypeException =>
           e.getMessage must be equalTo errorMsg(
-            MimeType.`application/x-www-form-urlencoded`, MimeType.`application/xml`
+            MediaType.ApplicationXWwwFormUrlencoded, MediaType.ApplicationXml
           )
       }
       validXmlBody.as[Json] must beFailedTry.like {
         case e: UnsupportedContentTypeException =>
-          e.getMessage must be equalTo errorMsg(JsonBody.allowedTypes, MimeType.`application/xml`)
+          e.getMessage must be equalTo errorMsg(JsonBody.allowedTypes, MediaType.ApplicationXml)
       }
       validJsonBody.as[Node] must beFailedTry.like {
         case e: UnsupportedContentTypeException =>
-          e.getMessage must be equalTo errorMsg(XmlBody.allowedTypes, MimeType.`application/json`)
+          e.getMessage must be equalTo errorMsg(XmlBody.allowedTypes, MediaType.ApplicationJson)
       }
     }
   }
@@ -108,7 +109,7 @@ class DefaultBodyFormatSpec extends Specification {
     "throw an `UnsupportedContentTypeException` if the content type isn't of type `text/plain`" in new Context {
       BodyReader.stringReads(validXmlBody) must beFailedTry.like {
         case e: UnsupportedContentTypeException =>
-          e.getMessage must be equalTo errorMsg(MimeType.`text/plain`, MimeType.`application/xml`)
+          e.getMessage must be equalTo errorMsg(MediaType.TextPlain, MediaType.ApplicationXml)
       }
     }
 
@@ -133,7 +134,7 @@ class DefaultBodyFormatSpec extends Specification {
         BodyReader.formUrlEncodedReads(validXmlBody) must beFailedTry.like {
           case e: UnsupportedContentTypeException =>
             e.getMessage must be equalTo errorMsg(
-              MimeType.`application/x-www-form-urlencoded`, MimeType.`application/xml`
+              MediaType.ApplicationXWwwFormUrlencoded, MediaType.ApplicationXml
             )
         }
       }
@@ -163,7 +164,7 @@ class DefaultBodyFormatSpec extends Specification {
     "throw an `UnsupportedContentTypeException` if the content type isn't of type `application/json`" in new Context {
       BodyReader.circeJsonReads(validXmlBody) must beFailedTry.like {
         case e: UnsupportedContentTypeException =>
-          e.getMessage must be equalTo errorMsg(JsonBody.allowedTypes, MimeType.`application/xml`)
+          e.getMessage must be equalTo errorMsg(JsonBody.allowedTypes, MediaType.ApplicationXml)
       }
     }
 
@@ -194,7 +195,7 @@ class DefaultBodyFormatSpec extends Specification {
     "throw an `UnsupportedContentTypeException` if the content type isn't of type `application/xml`" in new Context {
       BodyReader.scalaXmlReads(validJsonBody) must beFailedTry.like {
         case e: UnsupportedContentTypeException =>
-          e.getMessage must be equalTo errorMsg(XmlBody.allowedTypes, MimeType.`application/json`)
+          e.getMessage must be equalTo errorMsg(XmlBody.allowedTypes, MediaType.ApplicationJson)
       }
     }
 
@@ -235,19 +236,19 @@ class DefaultBodyFormatSpec extends Specification {
     val validStringBody = Body.from(validString)
     val validFormUrlEncodedBody = Body.from(validFormUrlEncoded)
     val invalidFormUrlEncodedBody = Body(
-      contentType = MimeType.`application/x-www-form-urlencoded`,
+      contentType = MediaType.ApplicationXWwwFormUrlencoded,
       data = invalidFormUrlEncodedString.getBytes(Body.DefaultCodec.charSet)
     )
     val emptyFormUrlEncodedBody = Body.from(emptyFormUrlEncoded)
     val validJsonBody = Body.from(parseJson(validJson))
     val invalidJsonBody = Body(
-      contentType = MimeType.`application/json`,
+      contentType = MediaType.ApplicationJson,
       data = invalidJson.getBytes(Body.DefaultCodec.charSet)
     )
     val emptyJsonBody = Body.from(parseJson(emptyJson))
     val validXmlBody = Body.from(parseXml(validXml))
     val invalidXmlBody = Body(
-      contentType = MimeType.`application/xml`,
+      contentType = MediaType.ApplicationXml,
       data = invalidXml.getBytes(Body.DefaultCodec.charSet)
     )
 
@@ -258,7 +259,7 @@ class DefaultBodyFormatSpec extends Specification {
      * @param actual   The actual mime type.
      * @return The error message.
      */
-    def errorMsg(expected: MimeType, actual: MimeType): String = UnsupportedContentType.format(expected, actual)
+    def errorMsg(expected: MediaType, actual: MediaType): String = UnsupportedContentType.format(expected, actual)
 
     /**
      * Helper message to create the `UnsupportedContentType` error messages.
@@ -267,7 +268,7 @@ class DefaultBodyFormatSpec extends Specification {
      * @param actual   The actual mime type.
      * @return The error message.
      */
-    def errorMsg(allowed: Seq[MimeType], actual: MimeType): String =
+    def errorMsg(allowed: Seq[MediaType], actual: MediaType): String =
       UnsupportedContentType.format(allowed.mkString(", "), actual)
 
     /**

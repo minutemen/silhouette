@@ -17,20 +17,20 @@
  */
 package silhouette.provider.oauth2
 
-import java.net.URI
 import java.time.Clock
 
 import cats.effect.Async
 import cats.implicits._
 import io.circe.Json
+import silhouette.LoginInfo
 import silhouette.http._
 import silhouette.provider.UnexpectedResponseException
 import silhouette.provider.oauth2.FoursquareProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
-import silhouette.{ ConfigURI, LoginInfo }
 import sttp.client.circe.asJson
 import sttp.client.{ SttpBackend, basicRequest }
+import sttp.model.Uri._
 
 /**
  * Base Foursquare OAuth2 provider.
@@ -55,9 +55,8 @@ trait BaseFoursquareProvider[F[_]] extends OAuth2Provider[F] {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
-    val version = config.customProperties.getOrElse(ApiVersion, DefaultApiVersion)
-    val uri = config.apiURI.getOrElse[ConfigURI](DefaultApiURI).format(authInfo.accessToken, version)
-    basicRequest.get(uri)
+    val uri = config.apiUri.getOrElse(DefaultApiUri)
+    basicRequest.get(uri"$uri?oauth_token=${authInfo.accessToken}")
       .header(BearerAuthorizationHeader(authInfo.accessToken))
       .response(asJson[Json])
       .send().flatMap { response =>
@@ -106,7 +105,7 @@ class FoursquareProfileParser[F[_]: Async](config: OAuth2Config)
             lastName = user.downField("lastName").as[String].toOption,
             email = user.downField("contact").downField("email").as[String].toOption.filter(!_.isEmpty),
             avatarUri = for (prefix <- avatarURLPart1; postfix <- avatarURLPart2)
-              yield new URI(prefix + resolution + postfix)
+              yield uri"${prefix + resolution + postfix}"
           )
         }
       case None => Async[F].raiseError(new UnexpectedResponseException(JsonPathError.format(ID, "response.user", json)))
@@ -163,15 +162,10 @@ object FoursquareProvider {
 
   /**
    * Default provider endpoint.
-   */
-  val DefaultApiURI: ConfigURI = ConfigURI("https://api.foursquare.com/v2/users/self?oauth_token=%s&v=%s")
-
-  /**
-   * The version of this implementation.
    *
    * @see https://developer.foursquare.com/overview/versioning
    */
-  val DefaultApiVersion = "20181001"
+  val DefaultApiUri = uri"https://api.foursquare.com/v2/users/self?v=20181001"
 
   /**
    * The default avatar resolution.
@@ -181,6 +175,5 @@ object FoursquareProvider {
   /**
    * Some custom properties for this provider.
    */
-  val ApiVersion = "api.version"
   val AvatarResolution = "avatar.resolution"
 }

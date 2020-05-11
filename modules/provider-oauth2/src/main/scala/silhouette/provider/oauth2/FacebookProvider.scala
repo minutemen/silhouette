@@ -17,19 +17,19 @@
  */
 package silhouette.provider.oauth2
 
-import java.net.URI
 import java.time.Clock
 
 import cats.effect.Async
 import cats.implicits._
 import io.circe.Json
+import silhouette.LoginInfo
 import silhouette.provider.UnexpectedResponseException
 import silhouette.provider.oauth2.FacebookProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
-import silhouette.{ ConfigURI, LoginInfo }
 import sttp.client.circe.asJson
 import sttp.client.{ SttpBackend, basicRequest }
+import sttp.model.Uri._
 
 /**
  * Base Facebook OAuth2 Provider.
@@ -54,8 +54,8 @@ trait BaseFacebookProvider[F[_]] extends OAuth2Provider[F] {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
-    val uri = config.apiURI.getOrElse(DefaultApiURI).format(authInfo.accessToken)
-    basicRequest.get(uri)
+    val uri = config.apiUri.getOrElse(DefaultApiUri)
+    basicRequest.get(uri"$uri?access_token=${authInfo.accessToken}")
       .response(asJson[Json])
       .send().flatMap { response =>
         response.body match {
@@ -91,7 +91,7 @@ class FacebookProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, Co
         fullName = json.hcursor.downField("name").as[String].toOption,
         email = json.hcursor.downField("email").as[String].toOption,
         avatarUri = json.hcursor.downField("picture")
-          .downField("data").downField("url").as[String].toOption.map(uri => new URI(uri))
+          .downField("data").downField("url").as[String].toOption.map(uri => uri"$uri")
       )
     }
   }
@@ -147,6 +147,6 @@ object FacebookProvider {
   /**
    * Default provider endpoint.
    */
-  val DefaultApiURI = ConfigURI("https://graph.facebook.com/v3.1/me?fields=name,first_name,last_name,picture,email&" +
-    "return_ssl_resources=1&access_token=%s")
+  val DefaultApiUri =
+    uri"https://graph.facebook.com/v3.1/me?fields=name,first_name,last_name,picture,email&return_ssl_resources=1"
 }
