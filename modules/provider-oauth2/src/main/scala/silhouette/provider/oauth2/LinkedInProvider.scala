@@ -34,8 +34,9 @@ import sttp.model.Uri._
 /**
  * Base LinkedIn OAuth2 Provider.
  *
- * @see https://developer.linkedin.com/docs/oauth2
- * @see https://developer.linkedin.com/docs/signin-with-linkedin
+ * @see https://developer.linkedin.com/documents/oauth-10a
+ * @see https://developer.linkedin.com/documents/authentication
+ * @see https://developer.linkedin.com/documents/inapiprofile
  *
  * @tparam F The type of the IO monad.
  */
@@ -54,7 +55,7 @@ trait BaseLinkedInProvider[F[_]] extends OAuth2Provider[F] {
    */
   override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
     val uri = config.apiUri.getOrElse(DefaultApiUri)
-    basicRequest.get(uri"$uri?oauth2_access_token=${authInfo.accessToken}")
+    basicRequest.get(uri.param("oauth2_access_token", authInfo.accessToken))
       .response(asJson[Json])
       .send().flatMap { response =>
         response.body match {

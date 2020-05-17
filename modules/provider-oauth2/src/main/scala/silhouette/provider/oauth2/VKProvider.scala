@@ -53,7 +53,7 @@ trait BaseVKProvider[F[_]] extends OAuth2Provider[F] {
    *
    * VK provider needs it own JSON decoder to extract the email from response.
    */
-  override implicit protected val accessTokenDecoder: Decoder[OAuth2Info] = VKProvider.infoDecoder(clock)
+  override implicit protected val accessTokenDecoder: Decoder[OAuth2Info] = infoDecoder(clock)
 
   /**
    * Builds the social profile.
@@ -63,7 +63,7 @@ trait BaseVKProvider[F[_]] extends OAuth2Provider[F] {
    */
   override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
     val uri = config.apiUri.getOrElse(DefaultApiUri)
-    basicRequest.get(uri"$uri?access_token=${authInfo.accessToken}")
+    basicRequest.get(uri.param("access_token", authInfo.accessToken))
       .response(asJson[Json])
       .send().flatMap { response =>
         response.body match {

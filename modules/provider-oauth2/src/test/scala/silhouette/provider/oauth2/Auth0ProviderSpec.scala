@@ -22,8 +22,8 @@ import java.nio.file.Paths
 import cats.effect.IO._
 import silhouette.LoginInfo
 import silhouette.http.BearerAuthorizationHeader
-import silhouette.provider.oauth2.Auth0Provider._
-import silhouette.provider.oauth2.OAuth2Provider._
+import silhouette.provider.oauth2.Auth0Provider.DefaultApiUri
+import silhouette.provider.oauth2.OAuth2Provider.UnexpectedResponse
 import silhouette.provider.social.SocialProvider.ProfileError
 import silhouette.provider.social.{ CommonSocialProfile, ProfileRetrievalException }
 import silhouette.specs2.BaseFixture
@@ -62,12 +62,12 @@ class Auth0ProviderSpec extends OAuth2ProviderSpec {
         .thenRespond(throw new SttpClientException.ConnectException(new RuntimeException))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
-        case e => e.getMessage must equalTo(ProfileError.format(ID))
+        case e => e.getMessage must equalTo(ProfileError.format(provider.id))
       }
     }
 
     "use the overridden API URI" in new Context {
-      val uri = uri"$DefaultApiUri?new"
+      val uri = DefaultApiUri.param("new", "true")
       val apiResult = UserProfileJson.asJson
 
       config.apiUri returns Some(uri)
@@ -88,6 +88,8 @@ class Auth0ProviderSpec extends OAuth2ProviderSpec {
           "d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Flu.png"
         p must be equalTo CommonSocialProfile(
           loginInfo = LoginInfo(provider.id, "auth0|56961100fc02d8a0339b1a2a"),
+          firstName = Some("Apollonia"),
+          lastName = Some("Vanova"),
           fullName = Some("Apollonia Vanova"),
           email = Some("apollonia.vanova@minutemen.group"),
           avatarUri = Some(uri"$uriStr")

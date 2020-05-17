@@ -24,13 +24,14 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.crypto.Hash._
-import silhouette.jwt.{ JwtException, _ }
 import silhouette.jwt.jose4j.Jose4jClaimReader._
+import silhouette.jwt.{ JwtException, _ }
+import silhouette.specs2.WithBouncyCastle
 
 /**
  * Test case for the [[SimpleJose4jConsumer]] and [[SimpleJose4jProducer]] implementations.
  */
-class SimpleSpec extends Specification with Mockito {
+class SimpleSpec extends Specification with Mockito with WithBouncyCastle {
 
   "The `transformer`" should {
     "transform a JWT with the `HS256` algorithm" in new Context {

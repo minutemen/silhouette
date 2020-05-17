@@ -24,8 +24,8 @@ import cats.effect.IO._
 import cats.effect.{ Async, IO }
 import io.circe.Json
 import silhouette.LoginInfo
-import silhouette.provider.oauth2.FacebookProvider._
-import silhouette.provider.oauth2.OAuth2Provider._
+import silhouette.provider.oauth2.FacebookProvider.DefaultApiUri
+import silhouette.provider.oauth2.OAuth2Provider.UnexpectedResponse
 import silhouette.provider.social.SocialProvider.ProfileError
 import silhouette.provider.social._
 import silhouette.specs2.BaseFixture
@@ -44,7 +44,7 @@ class CustomFacebookProviderSpec extends OAuth2ProviderSpec {
       val apiResult = ErrorJson.asJson
 
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
+        .whenRequestMatches(requestMatcher(DefaultApiUri.param("access_token", oAuth2Info.accessToken)))
         .thenRespond(Response(apiResult.toString, StatusCode.BadRequest))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
@@ -60,21 +60,21 @@ class CustomFacebookProviderSpec extends OAuth2ProviderSpec {
 
     "fail with ProfileRetrievalException if an unexpected error occurred" in new Context {
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
+        .whenRequestMatches(requestMatcher(DefaultApiUri.param("access_token", oAuth2Info.accessToken)))
         .thenRespond(throw new SttpClientException.ConnectException(new RuntimeException))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
-        case e => e.getMessage must equalTo(ProfileError.format(ID))
+        case e => e.getMessage must equalTo(ProfileError.format(provider.id))
       }
     }
 
     "use the overridden API URI" in new Context {
-      val uri = uri"$DefaultApiUri?new"
+      val uri = DefaultApiUri.param("new", "true")
       val apiResult = UserProfileJson.asJson
 
       config.apiUri returns Some(uri)
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(uri"$uri?access_token=${oAuth2Info.accessToken}"))
+        .whenRequestMatches(requestMatcher(uri.param("access_token", oAuth2Info.accessToken)))
         .thenRespond(Response(apiResult.toString, StatusCode.Ok))
 
       provider.retrieveProfile(oAuth2Info).unsafeRunSync()
@@ -82,7 +82,7 @@ class CustomFacebookProviderSpec extends OAuth2ProviderSpec {
 
     "return the social profile" in new Context {
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
+        .whenRequestMatches(requestMatcher(DefaultApiUri.param("access_token", oAuth2Info.accessToken)))
         .thenRespond(Response(UserProfileJson.asJson.toString, StatusCode.Ok))
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>

@@ -22,7 +22,7 @@ import java.nio.file.Paths
 import cats.effect.IO._
 import silhouette.LoginInfo
 import silhouette.http.BearerAuthorizationHeader
-import silhouette.provider.oauth2.DropboxProvider._
+import silhouette.provider.oauth2.DropboxProvider.DefaultApiUri
 import silhouette.provider.oauth2.OAuth2Provider.UnexpectedResponse
 import silhouette.provider.social.SocialProvider.ProfileError
 import silhouette.provider.social.{ CommonSocialProfile, ProfileRetrievalException }
@@ -62,12 +62,12 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
         .thenRespond(throw new SttpClientException.ConnectException(new RuntimeException))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
-        case e => e.getMessage must equalTo(ProfileError.format(ID))
+        case e => e.getMessage must equalTo(ProfileError.format(provider.id))
       }
     }
 
     "use the overridden API URI" in new Context {
-      val uri = uri"$DefaultApiUri&new"
+      val uri = DefaultApiUri.param("new", "true")
       val apiResult = UserProfileJson.asJson
 
       config.apiUri returns Some(uri)

@@ -54,7 +54,7 @@ trait BaseInstagramProvider[F[_]] extends OAuth2Provider[F] {
    */
   override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
     val uri = config.apiUri.getOrElse(DefaultApiUri)
-    basicRequest.get(uri"$uri?access_token=${authInfo.accessToken}")
+    basicRequest.get(uri.param("access_token", authInfo.accessToken))
       .response(asJson[Json])
       .send().flatMap { response =>
         response.body match {

@@ -56,8 +56,7 @@ trait BaseFoursquareProvider[F[_]] extends OAuth2Provider[F] {
    */
   override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
     val uri = config.apiUri.getOrElse(DefaultApiUri)
-    basicRequest.get(uri"$uri?oauth_token=${authInfo.accessToken}")
-      .header(BearerAuthorizationHeader(authInfo.accessToken))
+    basicRequest.get(uri.param("oauth_token", authInfo.accessToken))
       .response(asJson[Json])
       .send().flatMap { response =>
         response.body match {

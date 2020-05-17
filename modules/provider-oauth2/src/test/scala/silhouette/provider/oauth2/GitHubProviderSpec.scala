@@ -21,7 +21,7 @@ import java.nio.file.Paths
 
 import cats.effect.IO._
 import silhouette.LoginInfo
-import silhouette.provider.oauth2.GitHubProvider._
+import silhouette.provider.oauth2.GitHubProvider.DefaultApiUri
 import silhouette.provider.oauth2.OAuth2Provider.UnexpectedResponse
 import silhouette.provider.social.SocialProvider.ProfileError
 import silhouette.provider.social.{ CommonSocialProfile, ProfileRetrievalException }
@@ -41,7 +41,7 @@ class GitHubProviderSpec extends OAuth2ProviderSpec {
       val apiResult = ErrorJson.asJson
 
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
+        .whenRequestMatches(requestMatcher(DefaultApiUri))
         .thenRespond(Response(apiResult.toString, StatusCode.BadRequest))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
@@ -57,21 +57,21 @@ class GitHubProviderSpec extends OAuth2ProviderSpec {
 
     "fail with ProfileRetrievalException if an unexpected error occurred" in new Context {
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
+        .whenRequestMatches(requestMatcher(DefaultApiUri))
         .thenRespond(throw new SttpClientException.ConnectException(new RuntimeException))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
-        case e => e.getMessage must equalTo(ProfileError.format(ID))
+        case e => e.getMessage must equalTo(ProfileError.format(provider.id))
       }
     }
 
     "use the overridden API URI" in new Context {
-      val uri = uri"$DefaultApiUri&new"
+      val uri = DefaultApiUri.param("new", "true")
       val apiResult = UserProfileJson.asJson
 
       config.apiUri returns Some(uri)
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(uri"$uri?access_token=${oAuth2Info.accessToken}"))
+        .whenRequestMatches(requestMatcher(uri))
         .thenRespond(Response(apiResult.toString, StatusCode.Ok))
 
       provider.retrieveProfile(oAuth2Info).unsafeRunSync()
@@ -79,7 +79,7 @@ class GitHubProviderSpec extends OAuth2ProviderSpec {
 
     "return the social profile" in new Context {
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(uri"$DefaultApiUri?access_token=${oAuth2Info.accessToken}"))
+        .whenRequestMatches(requestMatcher(DefaultApiUri))
         .thenRespond(Response(UserProfileJson.asJson.toString, StatusCode.Ok))
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>

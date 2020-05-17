@@ -15,17 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package silhouette
+package silhouette.specs2
 
-import scala.concurrent.ExecutionContext
+import java.security.Security
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.specs2.mutable.Specification
+
+import scala.util.{ Failure, Try }
 
 /**
- * A trait that can be mixed in, to provide an execution context.
+ * Add the Bouncy Castle JCE provider to a test.
  */
-trait ExecutionContextProvider {
+trait WithBouncyCastle {
+  self: Specification =>
 
-  /**
-   * The execution context to handle the asynchronous operations.
-   */
-  implicit val ec: ExecutionContext
+  Try {
+    val provider = new BouncyCastleProvider()
+    if (Option(Security.getProvider(provider.getName)).isDefined) {
+      Security.removeProvider(provider.getName)
+    }
+    Security.addProvider(provider)
+  }.recoverWith {
+    case e: Exception => Failure(new RuntimeException("Could not initialize bouncy castle encryption", e))
+  }
 }

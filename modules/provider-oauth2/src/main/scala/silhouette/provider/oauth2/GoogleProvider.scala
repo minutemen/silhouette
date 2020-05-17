@@ -54,8 +54,8 @@ trait BaseGoogleProvider[F[_]] extends OAuth2Provider[F] {
    * @return On success the build social profile, otherwise a failure.
    */
   override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
-    val uri = config.apiUri.getOrElse(DefaultApiURI)
-    basicRequest.get(uri"$uri?access_token=${authInfo.accessToken}")
+    val uri = config.apiUri.getOrElse(DefaultApiUri)
+    basicRequest.get(uri.param("access_token", authInfo.accessToken))
       .response(asJson[Json])
       .send().flatMap { response =>
         response.body match {
@@ -180,7 +180,7 @@ object GoogleProvider {
   /**
    * Default provider endpoint.
    */
-  val DefaultApiURI = uri"https://people.googleapis.com/v1/people/me?personFields=names,photos,emailAddresses"
+  val DefaultApiUri = uri"https://people.googleapis.com/v1/people/me?personFields=names,photos,emailAddresses"
 
   /**
    * The error messages.
