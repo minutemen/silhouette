@@ -27,6 +27,7 @@ import silhouette.http.BodyWriter._
 import silhouette.http.DefaultBodyReader._
 import sttp.model.MediaType
 
+import scala.collection.immutable.Seq
 import scala.xml.Node
 
 /**

@@ -21,6 +21,8 @@ import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import sttp.model.{ CookieWithMeta, Header, Headers, StatusCode }
 
+import scala.collection.immutable.Seq
+
 /**
  * Test case for the [[SilhouetteResponsePipeline]] class.
  */

@@ -28,6 +28,7 @@ import sttp.model.MediaType
 import scala.annotation.implicitNotFound
 import scala.collection.compat._
 import scala.collection.compat.immutable.ArraySeq
+import scala.collection.immutable.Seq
 import scala.io.Codec
 import scala.language.implicitConversions
 import scala.util.{ Failure, Success, Try }

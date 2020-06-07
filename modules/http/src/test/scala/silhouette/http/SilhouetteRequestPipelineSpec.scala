@@ -27,6 +27,7 @@ import silhouette.http.BodyWriter._
 import sttp.model.Uri._
 import sttp.model._
 
+import scala.collection.immutable.Seq
 import scala.xml.{ Node, XML }
 
 /**
