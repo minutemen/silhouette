@@ -56,7 +56,7 @@ object BasicSettings extends AutoPlugin {
     organization := "group.minutemen",
     resolvers ++= Dependencies.resolvers,
     scalaVersion := crossScalaVersions.value.head,
-    crossScalaVersions := Seq("2.13.1", "2.12.10"),
+    crossScalaVersions := Seq("2.13.2", "2.12.11"),
     scalacOptions ++= {
       scalacOptionsCommon ++ (scalaBinaryVersion.value match {
         case "2.12" => `scalacOptions2.12.x`

@@ -91,6 +91,7 @@ final case class Jose4jClaimReader(consumer: Jose4jConsumer) extends JwtClaimRea
    * @param claims The custom claims to Transforms.
    * @return A Json object representing the custom claims on the right or an error on the left.
    */
+  @scala.annotation.nowarn("msg=Unused import")
   private def transformCustomClaims(claims: java.util.Map[String, Object]): Either[Throwable, JsonObject] = {
     def fromNumber(number: Number): Json = number match {
       case v: java.lang.Integer => Json.fromInt(v)
@@ -116,6 +117,7 @@ final case class Jose4jClaimReader(consumer: Jose4jConsumer) extends JwtClaimRea
       case Some(v)                       => Left(new JwtException(UnexpectedJsonValue.format(v)))
     }
 
+    import scala.collection.compat._
     claims.asScala.toList.map(t => t._1 -> toJson(t._2)).partitionMap {
       case (_, Left(e))     => Left(e)
       case (k, Right(json)) => Right(k -> json)

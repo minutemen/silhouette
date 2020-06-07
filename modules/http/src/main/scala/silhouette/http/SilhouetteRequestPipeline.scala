@@ -20,6 +20,8 @@ package silhouette.http
 import silhouette.RichSeq._
 import sttp.model._
 
+import scala.collection.immutable.Seq
+
 /**
  * The Silhouette request implementation.
  *

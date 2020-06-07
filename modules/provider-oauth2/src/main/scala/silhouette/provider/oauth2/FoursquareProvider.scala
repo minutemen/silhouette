@@ -23,7 +23,6 @@ import cats.effect.Async
 import cats.implicits._
 import io.circe.Json
 import silhouette.LoginInfo
-import silhouette.http._
 import silhouette.provider.UnexpectedResponseException
 import silhouette.provider.oauth2.FoursquareProvider._
 import silhouette.provider.oauth2.OAuth2Provider._

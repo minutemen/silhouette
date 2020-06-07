@@ -17,7 +17,9 @@
  */
 package silhouette
 
-import sttp.model.{ CookieWithMeta, Headers, Method, StatusCode, Uri }
+import sttp.model._
+
+import scala.collection.immutable.Seq
 
 /**
  * HTTP related interfaces and implementations.

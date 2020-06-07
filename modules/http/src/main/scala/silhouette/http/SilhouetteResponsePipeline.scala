@@ -20,6 +20,8 @@ package silhouette.http
 import silhouette.RichSeq._
 import sttp.model.{ CookieWithMeta, Header, Headers, StatusCode }
 
+import scala.collection.immutable.Seq
+
 /**
  * A Silhouette response implementation.
  *
