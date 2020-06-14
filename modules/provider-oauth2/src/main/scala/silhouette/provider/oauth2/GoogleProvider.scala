@@ -17,21 +17,19 @@
  */
 package silhouette.provider.oauth2
 
-import java.net.URI
 import java.time.Clock
 
+import cats.effect.Async
+import cats.implicits._
 import io.circe.Json
-import silhouette.http.Method.GET
-import silhouette.http.client.Request
-import silhouette.http.{ HttpClient, Status }
 import silhouette.provider.UnexpectedResponseException
 import silhouette.provider.oauth2.GoogleProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
-import silhouette.provider.social.state.StateHandler
-import silhouette.{ ConfigURI, LoginInfo, RichACursor }
-
-import scala.concurrent.{ ExecutionContext, Future }
+import silhouette.{ LoginInfo, RichACursor }
+import sttp.client.circe.asJson
+import sttp.client.{ SttpBackend, basicRequest }
+import sttp.model.Uri._
 
 /**
  * Base Google OAuth2 Provider.
@@ -39,8 +37,10 @@ import scala.concurrent.{ ExecutionContext, Future }
  * @see https://developers.google.com/people/api/rest/v1/people/get
  * @see https://developers.google.com/people/v1/how-tos/authorizing
  * @see https://developers.google.com/identity/protocols/OAuth2
+ *
+ * @tparam F The type of the IO monad.
  */
-trait BaseGoogleProvider extends OAuth2Provider {
+trait BaseGoogleProvider[F[_]] extends OAuth2Provider[F] {
 
   /**
    * The provider ID.
@@ -53,27 +53,27 @@ trait BaseGoogleProvider extends OAuth2Provider {
    * @param authInfo The auth info received from the provider.
    * @return On success the build social profile, otherwise a failure.
    */
-  override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
-    val uri = config.apiURI.getOrElse(DefaultApiURI).format(authInfo.accessToken)
-
-    httpClient.execute(Request(GET, uri)).flatMap { response =>
-      withParsedJson(response) { json =>
-        response.status match {
-          case Status.OK =>
+  override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
+    val uri = config.apiUri.getOrElse(DefaultApiUri)
+    basicRequest.get(uri.param("access_token", authInfo.accessToken))
+      .response(asJson[Json])
+      .send().flatMap { response =>
+        response.body match {
+          case Left(error) =>
+            F.raiseError(new UnexpectedResponseException(UnexpectedResponse.format(id, error.body, response.code)))
+          case Right(json) =>
             profileParser.parse(json, authInfo)
-          case status =>
-            Future.failed(new UnexpectedResponseException(UnexpectedResponse.format(id, json, status)))
         }
       }
-    }
   }
 }
 
 /**
  * The profile parser for the common social profile.
+ *
+ * @tparam F The type of the IO monad.
  */
-class GoogleProfileParser(implicit val ec: ExecutionContext)
-  extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
+class GoogleProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, CommonSocialProfile, OAuth2Info] {
 
   /**
    * Parses the social profile.
@@ -86,15 +86,15 @@ class GoogleProfileParser(implicit val ec: ExecutionContext)
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = {
+  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] = {
     json.hcursor.downField("names").downAt(isPrimary).focus.map(_.hcursor) match {
       case Some(names) =>
         val maybeID = names.downField("metadata").downField("source").downField("id").as[String]
-        Future.fromTry(maybeID.getOrError(names.value, "metadata.source.id", ID)).map { id =>
+        Async[F].fromTry(maybeID.getOrError(names.value, "metadata.source.id", ID)).map { id =>
           val email = json.hcursor.downField("emailAddresses").downAt(isPrimary).downField("value").as[String].toOption
           val maybePrimaryPhoto = json.hcursor.downField("photos").downAt(isPrimary).focus
           val maybeAvatarURL = maybePrimaryPhoto.flatMap(
-            _.hcursor.downField("url").as[String].toOption.map(uri => new URI(uri))
+            _.hcursor.downField("url").as[String].toOption.map(uri => uri"$uri")
           )
           val isDefaultAvatar = maybePrimaryPhoto.exists(
             _.hcursor.downField("default").as[Boolean].toOption.getOrElse(false)
@@ -111,7 +111,7 @@ class GoogleProfileParser(implicit val ec: ExecutionContext)
 
         }
       case None =>
-        Future.failed(new UnexpectedResponseException(NoPrimaryEntry.format(ID, "names", json)))
+        Async[F].raiseError(new UnexpectedResponseException(NoPrimaryEntry.format(ID, "names", json)))
     }
   }
 
@@ -133,26 +133,25 @@ class GoogleProfileParser(implicit val ec: ExecutionContext)
 /**
  * The Google OAuth2 Provider.
  *
- * @param httpClient   The HTTP client implementation.
- * @param stateHandler The state provider implementation.
- * @param clock        The current clock instance.
- * @param config       The provider config.
- * @param ec           The execution context.
+ * @param clock       The current clock instance.
+ * @param config      The provider config.
+ * @param sttpBackend The STTP backend.
+ * @param F           The IO monad type class.
+ * @tparam F The type of the IO monad.
  */
-class GoogleProvider(
-  protected val httpClient: HttpClient,
-  protected val stateHandler: StateHandler,
+class GoogleProvider[F[_]](
   protected val clock: Clock,
   val config: OAuth2Config
 )(
   implicit
-  override implicit val ec: ExecutionContext
-) extends BaseGoogleProvider with CommonProfileBuilder {
+  protected val sttpBackend: SttpBackend[F, Nothing, Nothing],
+  protected val F: Async[F]
+) extends BaseGoogleProvider[F] with CommonProfileBuilder[F] {
 
   /**
    * The type of this class.
    */
-  override type Self = GoogleProvider
+  override type Self = GoogleProvider[F]
 
   /**
    * The profile parser implementation.
@@ -165,8 +164,7 @@ class GoogleProvider(
    * @param f A function which gets the config passed and returns different config.
    * @return An instance of the provider initialized with new config.
    */
-  override def withConfig(f: OAuth2Config => OAuth2Config): Self =
-    new GoogleProvider(httpClient, stateHandler, clock, f(config))
+  override def withConfig(f: OAuth2Config => OAuth2Config): Self = new GoogleProvider(clock, f(config))
 }
 
 /**
@@ -182,8 +180,7 @@ object GoogleProvider {
   /**
    * Default provider endpoint.
    */
-  val DefaultApiURI = ConfigURI("https://people.googleapis.com/v1/people/me?personFields=names,photos,emailAddresses" +
-    "&access_token=%s")
+  val DefaultApiUri = uri"https://people.googleapis.com/v1/people/me?personFields=names,photos,emailAddresses"
 
   /**
    * The error messages.

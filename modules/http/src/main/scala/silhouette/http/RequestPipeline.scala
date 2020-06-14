@@ -17,7 +17,7 @@
  */
 package silhouette.http
 
-import java.net.URI
+import sttp.model.{ CookieWithMeta, Header, Method, Uri }
 
 /**
  * Allows to modify a framework specific request implementation.
@@ -50,7 +50,7 @@ trait RequestPipeline[+R] extends Request with RequestExtractor[R] {
    * @param uri The absolute URI of the request target.
    * @return A new request pipeline instance with the set URI.
    */
-  def withUri(uri: URI): RequestPipeline[R]
+  def withUri(uri: Uri): RequestPipeline[R]
 
   /**
    * Creates a new request pipeline with the given HTTP request method.
@@ -63,45 +63,27 @@ trait RequestPipeline[+R] extends Request with RequestExtractor[R] {
   /**
    * Creates a new request pipeline with the given headers.
    *
-   * This method must override any existing header with the same name. If multiple headers with the
-   * same name are given to this method, then the values must be composed into a list.
+   * This method appends new headers to the existing list of headers. Already existing headers with the same name will
+   * be kept untouched.
    *
    * If a request holds the following headers, then this method must implement the following behaviour:
    * {{{
    *   Seq(
-   *     Header("TEST1", Seq("value1", "value2")),
+   *     Header("TEST1", "value1, value2"),
    *     Header("TEST2", "value1")
    *   )
    * }}}
    *
-   * Append a new header:
+   * Append a new headers:
    * {{{
-   *   withHeaders(Header("TEST3", "value1"))
+   *   withHeaders(Header("TEST3", "value1"), Header("TEST1", "value3"), Header("TEST1", "value4, value5"))
    *
    *   Seq(
-   *     Header("TEST1" -> Seq("value1", "value2")),
-   *     Header("TEST2" -> Seq("value1")),
-   *     Header("TEST3" -> Seq("value1"))
-   *   )
-   * }}}
-   *
-   * Override the header `TEST1` with a new value:
-   * {{{
-   *   withHeaders(Header("TEST1", "value3"))
-   *
-   *   Seq(
-   *     Header("TEST1", Seq("value3")),
-   *     Header("TEST2", Seq("value1"))
-   *   )
-   * }}}
-   *
-   * Compose headers with the same name:
-   * {{{
-   *   withHeaders(Header("TEST1", "value3"), Header("TEST1", Seq("value4", "value5")))
-   *
-   *   Set(
-   *     Header("TEST1", Seq("value3", "value4", "value5")),
-   *     Header("TEST2", Seq("value1"))
+   *     Header("TEST1", "value1, value2"),
+   *     Header("TEST2", "value1"),
+   *     Header("TEST3", "value1"),
+   *     Header("TEST1", "value3"),
+   *     Header("TEST1", "value4, value5")
    *   )
    * }}}
    *
@@ -113,7 +95,7 @@ trait RequestPipeline[+R] extends Request with RequestExtractor[R] {
   /**
    * Creates a new request pipeline with the given cookies.
    *
-   * This method must override any existing cookie with the same name. If multiple cookies with the
+   * This method replaces any existing cookie with the same name. If multiple cookies with the
    * same name are given to this method, then the last cookie in the list wins.
    *
    * If a request holds the following cookies, then this method must implement the following behaviour:
@@ -158,50 +140,32 @@ trait RequestPipeline[+R] extends Request with RequestExtractor[R] {
    * @param cookies The cookies to set.
    * @return A new request pipeline instance with the set cookies.
    */
-  def withCookies(cookies: Cookie*): RequestPipeline[R]
+  def withCookies(cookies: CookieWithMeta*): RequestPipeline[R]
 
   /**
    * Creates a new request pipeline with the given query params.
    *
-   * This method must override any existing query param with the same name. If multiple query params with the
-   * same name are given to this method, then the values must be composed into a list.
+   * This method appends new query params to the existing list of query params. Already existing params with the same
+   * name will be kept untouched.
    *
    * If a request holds the following query params, then this method must implement the following behaviour:
    * {{{
-   *   Map(
-   *     "TEST1" -> Seq("value1", "value2"),
-   *     "TEST2" -> Seq("value1")
+   *   Seq(
+   *     ("test1", Seq("value1", "value2")),
+   *     ("test2", Seq("value2"))
    *   )
    * }}}
    *
    * Append a new query param:
    * {{{
-   *   withQueryParams("test3" -> "value1")
+   *   withQueryParams("test3" -> "value1", "test1" -> "value3", "test1" -> "value4"))
    *
    *   Map(
    *     "test1" -> Seq("value1", "value2"),
    *     "test2" -> Seq("value1"),
-   *     "test3" -> Seq("value1")
-   *   )
-   * }}}
-   *
-   * Override the query param `test1` with a new value:
-   * {{{
-   *   withQueryParams("test1" -> "value3")
-   *
-   *   Map(
+   *     "test3" -> Seq("value1"),
    *     "test1" -> Seq("value3"),
-   *     "test2" -> Seq("value1")
-   *   )
-   * }}}
-   *
-   * Compose query params with the same name:
-   * {{{
-   *   withQueryParams("test1" -> "value3", "test1" -> "value4")
-   *
-   *   Map(
-   *     "test1" -> Seq("value3", "value4"),
-   *     "test2" -> Seq("value1")
+   *     "test1" -> Seq("value4")
    *   )
    * }}}
    *

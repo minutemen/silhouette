@@ -17,32 +17,23 @@
  */
 package silhouette.util
 
-import java.net.URI
-import java.net.URLEncoder._
-
+import cats.Monad
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
 import silhouette.crypto.Hash._
-import silhouette.http.client.Request
-import silhouette.http.{ HttpClient, Method, Status }
 import silhouette.util.GravatarService._
-import silhouette.{ ConfigURI, ExecutionContextProvider }
-
-import scala.concurrent.{ ExecutionContext, Future }
+import sttp.client._
+import sttp.model.Uri
 
 /**
  * Retrieves avatar URIs from the Gravatar service.
  *
- * @param httpClient The HTTP client implementation.
- * @param settings   The Gravatar service settings.
+ * @param settings The Gravatar service settings.
  */
-class GravatarService @Inject() (
-  httpClient: HttpClient,
-  settings: GravatarServiceConfig = GravatarServiceConfig()
-)(
+final case class GravatarService[F[_]: Monad] @Inject() (settings: GravatarServiceConfig = GravatarServiceConfig())(
   implicit
-  val ec: ExecutionContext
-) extends AvatarService with LazyLogging with ExecutionContextProvider {
+  val sttpBackend: SttpBackend[F, Nothing, Nothing]
+) extends AvatarService[F] with LazyLogging {
 
   /**
    * Retrieves the URI for the given email address.
@@ -50,24 +41,20 @@ class GravatarService @Inject() (
    * @param email The email address for the avatar.
    * @return Maybe an avatar URI or None if no avatar could be found for the given email address.
    */
-  override def retrieveURI(email: String): Future[Option[URI]] = {
+  override def retrieveUri(email: String): F[Option[Uri]] = {
     hash(email) match {
       case Some(hash) =>
-        val encodedParams = settings.params.map { p => encode(p._1, "UTF-8") + "=" + encode(p._2, "UTF-8") }
-        val url = (if (settings.secure) SecureURI else InsecureURI).format(hash, encodedParams.mkString("?", "&", ""))
-        httpClient.execute(Request(url, Method.GET)).map {
-          _.status match {
-            case Status.OK => Some(url.toURI)
-            case status =>
-              logger.info("Gravatar API returns status: " + status)
+        val url = (if (settings.secure) SecureURI else InsecureURI)(hash, settings.params)
+        Monad[F].map(basicRequest.get(url).send()) { response =>
+          response.body match {
+            case Left(error) =>
+              logger.info(s"Gravatar API returns status `${response.code}` with error: $error")
               None
+            case Right(_) =>
+              Some(url)
           }
-        }.recover {
-          case e =>
-            logger.info("Error invoking gravatar API", e)
-            None
         }
-      case None => Future.successful(None)
+      case None => Monad[F].pure(None)
     }
   }
 
@@ -91,8 +78,10 @@ class GravatarService @Inject() (
  * The companion object.
  */
 object GravatarService {
-  val InsecureURI = ConfigURI("http://www.gravatar.com/avatar/%s%s")
-  val SecureURI = ConfigURI("https://secure.gravatar.com/avatar/%s%s")
+  val InsecureURI = (hash: String, queryParams: Map[String, String]) =>
+    uri"http://www.gravatar.com/avatar/$hash?$queryParams"
+  val SecureURI = (hash: String, queryParams: Map[String, String]) =>
+    uri"https://secure.gravatar.com/avatar/$hash?$queryParams"
 }
 
 /**

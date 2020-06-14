@@ -17,39 +17,36 @@
  */
 package silhouette.authenticator.validator
 
-import org.specs2.concurrent.ExecutionEnv
+import cats.data.Validated._
+import cats.effect.IO
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.LoginInfo
 import silhouette.authenticator.Authenticator
-import silhouette.authenticator.Validator.{ Invalid, Valid }
 import silhouette.authenticator.validator.FingerprintValidator._
-import silhouette.specs2.WaitPatience
 
 /**
  * Test case for the [[FingerprintValidator]] class.
- *
- * @param ev The execution environment.
  */
-class FingerprintValidatorSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
+class FingerprintValidatorSpec extends Specification with Mockito {
 
   "The `isValid` method" should {
     "return always Valid if no fingerprint is stored in the authenticator" in new Context {
-      FingerprintValidator("test")
-        .isValid(authenticator) must beEqualTo(Valid).awaitWithPatience
+      FingerprintValidator[IO]("test")
+        .isValid(authenticator).unsafeRunSync() must beEqualTo(validNel(()))
     }
 
     "return Valid if fingerprint stored in the authenticator matches the given fingerprint" in new Context {
-      FingerprintValidator("test")
-        .isValid(authenticator.copy(fingerprint = Some("test"))) must beEqualTo(Valid).awaitWithPatience
+      FingerprintValidator[IO]("test")
+        .isValid(authenticator.copy(fingerprint = Some("test"))).unsafeRunSync() must beEqualTo(validNel(()))
     }
 
     "return Invalid if fingerprint stored in the authenticator doesn't match the given fingerprint" in new Context {
-      FingerprintValidator("invalid")
-        .isValid(authenticator.copy(fingerprint = Some("test"))) must beEqualTo(Invalid(Seq(
+      FingerprintValidator[IO]("invalid")
+        .isValid(authenticator.copy(fingerprint = Some("test"))).unsafeRunSync() must beEqualTo(invalidNel(
           Error.format("invalid", "test")
-        ))).awaitWithPatience
+        ))
     }
   }
 

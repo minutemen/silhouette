@@ -19,13 +19,13 @@ package silhouette.provider.social
 
 import io.circe.Json
 
-import scala.concurrent.Future
-
 /**
  * Builds the social profile.
+ *
+ * @tparam F The type of the IO monad.
  */
-trait SocialProfileBuilder {
-  self: SocialProvider[_] =>
+trait SocialProfileBuilder[F[_]] {
+  self: SocialProvider[F, _] =>
 
   /**
    * The content type to parse a profile from.
@@ -43,23 +43,25 @@ trait SocialProfileBuilder {
    * Subclasses need to implement this method to populate the profile information from the service provider.
    *
    * @param authInfo The auth info received from the provider.
-   * @return On success the build social profile, otherwise a failure.
+   * @return Either an error on the left or the build social profile on the right.
    */
-  protected def buildProfile(authInfo: A): Future[Profile]
+  protected def buildProfile(authInfo: A): F[Profile]
 
   /**
    * Returns the profile parser implementation.
    *
    * @return The profile parser implementation.
    */
-  protected def profileParser: SocialProfileParser[Content, Profile, A]
+  protected def profileParser: SocialProfileParser[F, Content, Profile, A]
 }
 
 /**
  * The profile builder for the common social profile.
+ *
+ * @tparam F The type of the IO monad.
  */
-trait CommonProfileBuilder {
-  self: SocialProfileBuilder =>
+trait CommonProfileBuilder[F[_]] {
+  self: SocialProfileBuilder[F] =>
 
   /**
    * The type of the profile a profile builder is responsible for.

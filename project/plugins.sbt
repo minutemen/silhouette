@@ -17,9 +17,9 @@
  */
 logLevel := Level.Warn
 
-addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.5.1")
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.6.1")
 
-addSbtPlugin("org.scoverage" % "sbt-coveralls" % "1.2.6")
+addSbtPlugin("org.scoverage" % "sbt-coveralls" % "1.2.7")
 
 addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.8.2")
 
@@ -38,3 +38,5 @@ addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.9")
 addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "1.0.0")
 
 addSbtPlugin("com.thoughtworks.sbt-api-mappings" % "sbt-api-mappings" % "latest.release")
+
+addSbtPlugin("com.dwijnand" % "sbt-travisci" % "1.2.0")

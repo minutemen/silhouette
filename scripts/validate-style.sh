@@ -27,7 +27,7 @@ SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # NOTE: echo "q" is needed because SBT prompts the user for input on encountering a build file
 # with failure (either resolution or compilation); the "q" makes SBT quit.
 ERRORS=$(echo -e "q\n" \
-  | ${SCRIPTS_DIR}/scalastyle.sh \
+  | "$SCRIPTS_DIR/scalastyle.sh" \
   | awk '{if($1~/error/)print}' \
 )
 

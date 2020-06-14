@@ -17,6 +17,8 @@
  */
 package silhouette
 
+import cats.data.NonEmptyList
+
 /**
  * Represents the authentication state.
  *
@@ -30,7 +32,7 @@ package silhouette
  * @tparam I The type of the identity.
  * @tparam C The type of the credentials.
  */
-sealed trait AuthState[I <: Identity, C <: Credentials] extends Product with Serializable
+sealed trait AuthState[I <: Identity, +C <: Credentials] extends Product with Serializable
 
 /**
  * Represents a state where a failure occurred in the authentication process.
@@ -38,7 +40,7 @@ sealed trait AuthState[I <: Identity, C <: Credentials] extends Product with Ser
  * @tparam I The type of the identity.
  * @tparam C The type of the credentials.
  */
-sealed trait Unauthenticated[I <: Identity, C <: Credentials] extends AuthState[I, C]
+sealed trait Unauthenticated[I <: Identity, +C <: Credentials] extends AuthState[I, C]
 
 /**
  * Represents a state where an exception was thrown in the authentication process.
@@ -47,7 +49,7 @@ sealed trait Unauthenticated[I <: Identity, C <: Credentials] extends AuthState[
  * @tparam I The type of the identity.
  * @tparam C The type of the credentials.
  */
-final case class AuthFailure[I <: Identity, C <: Credentials](cause: Exception) extends Unauthenticated[I, C]
+final case class AuthFailure[I <: Identity, +C <: Credentials](cause: Throwable) extends Unauthenticated[I, C]
 
 /**
  * Represents a state where no credentials were found.
@@ -55,7 +57,7 @@ final case class AuthFailure[I <: Identity, C <: Credentials](cause: Exception) 
  * @tparam I The type of the identity.
  * @tparam C The type of the credentials.
  */
-final case class MissingCredentials[I <: Identity, C <: Credentials]() extends Unauthenticated[I, C]
+final case class MissingCredentials[I <: Identity, +C <: Credentials]() extends Unauthenticated[I, C]
 
 /**
  * Represents a state where invalid credentials were found.
@@ -65,7 +67,7 @@ final case class MissingCredentials[I <: Identity, C <: Credentials]() extends U
  * @tparam I The type of the identity.
  * @tparam C The type of the credentials.
  */
-final case class InvalidCredentials[I <: Identity, C <: Credentials](credentials: C, errors: Seq[String])
+final case class InvalidCredentials[I <: Identity, +C <: Credentials](credentials: C, errors: NonEmptyList[String])
   extends Unauthenticated[I, C]
 
 /**
@@ -76,7 +78,7 @@ final case class InvalidCredentials[I <: Identity, C <: Credentials](credentials
  * @tparam I The type of the identity.
  * @tparam C The type of the credentials.
  */
-final case class MissingIdentity[I <: Identity, C <: Credentials](credentials: C, loginInfo: LoginInfo)
+final case class MissingIdentity[I <: Identity, +C <: Credentials](credentials: C, loginInfo: LoginInfo)
   extends Unauthenticated[I, C]
 
 /**
@@ -88,7 +90,7 @@ final case class MissingIdentity[I <: Identity, C <: Credentials](credentials: C
  * @tparam I The type of the identity.
  * @tparam C The type of the credentials.
  */
-final case class Authenticated[I <: Identity, C <: Credentials](
+final case class Authenticated[I <: Identity, +C <: Credentials](
   identity: I,
   credentials: C,
   loginInfo: LoginInfo

@@ -17,33 +17,31 @@
  */
 package silhouette.authenticator.validator
 
-import org.specs2.concurrent.ExecutionEnv
+import cats.data.Validated._
+import cats.effect.IO
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.LoginInfo
 import silhouette.authenticator.Authenticator
-import silhouette.authenticator.Validator.{ Invalid, Valid }
 import silhouette.authenticator.validator.BackingStoreValidator._
-import silhouette.specs2.WaitPatience
-
-import scala.concurrent.Future
 
 /**
  * Test case for the [[BackingStoreValidator]] class.
- *
- * @param ev The execution environment.
  */
-class BackingStoreValidatorSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
+class BackingStoreValidatorSpec extends Specification with Mockito {
 
   "The `isValid` method" should {
     "return Valid if the authenticator is valid" in new Context {
-      BackingStoreValidator(_ => Future.successful(true)).isValid(authenticator) must beEqualTo(Valid).awaitWithPatience
+      BackingStoreValidator[IO](_ => IO.pure(true))
+        .isValid(authenticator)
+        .unsafeRunSync() must beEqualTo(validNel(()))
     }
 
     "return Invalid if the authenticator is invalid" in new Context {
-      BackingStoreValidator(_ => Future.successful(false)).isValid(authenticator) must
-        beEqualTo(Invalid(Seq(Error))).awaitWithPatience
+      BackingStoreValidator[IO](_ => IO.pure(false))
+        .isValid(authenticator)
+        .unsafeRunSync() must beEqualTo(invalidNel(Error))
     }
   }
 

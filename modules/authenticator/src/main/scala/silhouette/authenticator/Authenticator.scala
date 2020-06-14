@@ -19,6 +19,7 @@ package silhouette.authenticator
 
 import java.time.{ Clock, Instant }
 
+import cats.effect.Async
 import io.circe.Json
 import silhouette.RichInstant._
 import silhouette.authenticator.Validator._
@@ -26,7 +27,6 @@ import silhouette.http.{ Request, RequestPipeline }
 import silhouette.{ Credentials, LoginInfo }
 
 import scala.concurrent.duration._
-import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * An authenticator tracks an authenticated user.
@@ -147,18 +147,13 @@ final case class Authenticator(
    * Checks if the authenticator is valid.
    *
    * @param validators The list of validators to validate the authenticator with.
-   * @param ec         The execution context to perform the async operations.
+   * @tparam F The type of the IO monad.
    * @return True if the authenticator is valid, false otherwise.
    */
-  def isValid(validators: Set[Validator])(
-    implicit
-    ec: ExecutionContext
-  ): Future[Status] = {
-    Future.sequence(validators.map(_.isValid(this))).map {
-      _.collect { case Invalid(errors) => errors }.flatten.toList match {
-        case Nil    => Valid
-        case errors => Invalid(errors)
-      }
-    }
+  def isValid[F[_]: Async](validators: Set[Validator[F]]): F[Status] = {
+    import cats.instances.list._
+    import cats.syntax.foldable._
+    import cats.syntax.traverse._
+    Async[F].map(validators.map(_.isValid(this)).toList.sequence)(_.sequence_)
   }
 }

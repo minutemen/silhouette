@@ -17,32 +17,15 @@
  */
 package silhouette.crypto
 
-import scala.concurrent.Future
-
 /**
  * Represents a secure (in a cryptographically sense) ID.
  */
-trait SecureID[T] {
+trait SecureID[F[_], T] {
 
   /**
    * Gets a secure ID.
    *
    * @return The secure ID.
    */
-  def get: T
-}
-
-/**
- * Represents a secure (in a cryptographically sense) ID that will be created in an async way.
- *
- * @tparam T The type of the ID.
- */
-trait SecureAsyncID[T] extends SecureID[Future[T]] {
-
-  /**
-   * Gets a secure ID in an async way.
-   *
-   * @return The secure ID.
-   */
-  override def get: Future[T]
+  def get: F[T]
 }

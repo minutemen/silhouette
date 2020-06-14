@@ -17,14 +17,13 @@
  */
 package silhouette.provider.form
 
+import cats.effect.Async
 import javax.inject.Inject
 import silhouette.password.PasswordHasherRegistry
 import silhouette.provider.IdentityNotFoundException
 import silhouette.provider.form.PasswordLoginProvider._
 import silhouette.provider.password.{ InvalidPasswordException, PasswordProvider }
 import silhouette.{ ConfigurationException, Credentials, LoginInfo }
-
-import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * Credentials to authenticate with an identifier (pseudonym, email address, ...) and a password.
@@ -48,16 +47,13 @@ case class PasswordCredentials(identifier: String, password: String) extends Cre
  * @param authInfoWriter         A function that writes the [[silhouette.password.PasswordInfo]] for the given
  *                               [[LoginInfo]].
  * @param passwordHasherRegistry The password hashers used by the application.
- * @param ec                     The execution context to handle the asynchronous operations.
+ * @tparam F The type of the IO monad.
  */
-class PasswordLoginProvider @Inject() (
-  protected val authInfoReader: PasswordProvider#AuthInfoReader,
-  protected val authInfoWriter: PasswordProvider#AuthInfoWriter,
+class PasswordLoginProvider[F[_]: Async] @Inject() (
+  protected val authInfoReader: PasswordProvider[F]#AuthInfoReader,
+  protected val authInfoWriter: PasswordProvider[F]#AuthInfoWriter,
   protected val passwordHasherRegistry: PasswordHasherRegistry
-)(
-  implicit
-  val ec: ExecutionContext
-) extends PasswordProvider {
+) extends PasswordProvider[F] {
 
   /**
    * Gets the provider ID.
@@ -72,13 +68,13 @@ class PasswordLoginProvider @Inject() (
    * @param credentials The credentials to authenticate with.
    * @return The login info if the authentication was successful, otherwise a failure.
    */
-  def authenticate(credentials: PasswordCredentials): Future[LoginInfo] = {
-    loginInfo(credentials).flatMap { loginInfo =>
-      authenticate(loginInfo, credentials.password).flatMap {
-        case Successful               => Future.successful(loginInfo)
-        case InvalidPassword(error)   => Future.failed(new InvalidPasswordException(error))
-        case UnsupportedHasher(error) => Future.failed(new ConfigurationException(error))
-        case NotFound(error)          => Future.failed(new IdentityNotFoundException(error))
+  def authenticate(credentials: PasswordCredentials): F[LoginInfo] = {
+    Async[F].flatMap(loginInfo(credentials)) { loginInfo =>
+      Async[F].flatMap(authenticate(loginInfo, credentials.password)) {
+        case Successful               => Async[F].pure(loginInfo)
+        case InvalidPassword(error)   => Async[F].raiseError(new InvalidPasswordException(error))
+        case UnsupportedHasher(error) => Async[F].raiseError(new ConfigurationException(error))
+        case NotFound(error)          => Async[F].raiseError(new IdentityNotFoundException(error))
       }
     }
   }
@@ -97,8 +93,8 @@ class PasswordLoginProvider @Inject() (
    * @param credentials The credentials to authenticate with.
    * @return The login info created from the credentials.
    */
-  def loginInfo(credentials: PasswordCredentials): Future[LoginInfo] =
-    Future.successful(LoginInfo(id, credentials.identifier))
+  def loginInfo(credentials: PasswordCredentials): F[LoginInfo] =
+    Async[F].pure(LoginInfo(id, credentials.identifier))
 }
 
 /**

@@ -19,7 +19,9 @@ import Dependencies._
 
 libraryDependencies ++= Seq(
   Library.jose4j,
-  Library.collectionCombat
+  Library.collectionCombat,
+  Library.Silencer.compiler,
+  Library.Silencer.lib
 )
 
 //enablePlugins(Doc)

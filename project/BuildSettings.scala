@@ -24,20 +24,45 @@ import sbt._
 object BasicSettings extends AutoPlugin {
   override def trigger: PluginTrigger = allRequirements
 
+  val `scalacOptions2.12.x` = Seq(
+    "-Xlint:adapted-args",
+    "-Ywarn-inaccessible",
+    "-Ywarn-infer-any",
+    "-Xlint:nullary-override",
+    "-Xlint:nullary-unit",
+    "-Xmax-classfile-name", "254",
+    "-language:higherKinds",
+    "-Ypartial-unification"
+  )
+
+  val `scalacOptions2.13.x` = Seq(
+    "-Xlint:adapted-args",
+    "-Xlint:inaccessible",
+    "-Xlint:infer-any",
+    "-Xlint:nullary-override",
+    "-Xlint:nullary-unit"
+  )
+
+  val scalacOptionsCommon = Seq(
+    "-unchecked",
+    "-deprecation",
+    "-feature",
+    "-encoding", "utf8",
+    "-Xfatal-warnings",
+    "-Xlint"
+  )
+
   override def projectSettings: Seq[Setting[_]] = Seq(
     organization := "group.minutemen",
     resolvers ++= Dependencies.resolvers,
     scalaVersion := crossScalaVersions.value.head,
-    crossScalaVersions := Seq("2.12.8", "2.13.0"),
-    scalacOptions ++= Seq(
-      "-deprecation", // Emit warning and location for usages of deprecated APIs.
-      "-feature", // Emit warning and location for usages of features that should be imported explicitly.
-      "-unchecked", // Enable additional warnings where generated code depends on assumptions.
-      "-Xfatal-warnings", // Fail the compilation if there are any warnings.
-      "-Xlint", // Enable recommended additional warnings.
-      "-Ywarn-dead-code", // Warn when dead code is identified.
-      "-Ywarn-numeric-widen" // Warn when numerics are widened.
-    ),
+    crossScalaVersions := Seq("2.13.2", "2.12.11"),
+    scalacOptions ++= {
+      scalacOptionsCommon ++ (scalaBinaryVersion.value match {
+        case "2.12" => `scalacOptions2.12.x`
+        case "2.13" => `scalacOptions2.13.x`
+      })
+    },
     scalacOptions in Test ~= { options: Seq[String] =>
       options filterNot (_ == "-Ywarn-dead-code") // Allow dead code in tests (to support using mockito).
     },
@@ -117,11 +142,6 @@ object Publish extends AutoPlugin {
           <id>akkie</id>
           <name>Christian Kaps</name>
           <url>http://mohiva.com</url>
-        </developer>
-        <developer>
-          <id>datalek</id>
-          <name>Alessandro Ferlin</name>
-          <url>https://github.com/datalek</url>
         </developer>
       </developers>
   }

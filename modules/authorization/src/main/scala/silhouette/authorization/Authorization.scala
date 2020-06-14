@@ -17,17 +17,18 @@
  */
 package silhouette.authorization
 
+import cats.effect.Async
+import cats.implicits._
 import silhouette.Identity
-
-import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * A trait to define an authorization policy that can be applied to an identity to provide access control to resources.
  *
+ * @tparam F The type of the IO monad.
  * @tparam I The type of the identity.
  * @tparam C The type of the context.
  */
-trait Authorization[I <: Identity, C] {
+trait Authorization[F[_], I <: Identity, C] {
 
   /**
    * Checks whether the user is authorized or not.
@@ -36,13 +37,15 @@ trait Authorization[I <: Identity, C] {
    * @param context  The current context instance.
    * @return True if the user is authorized, false otherwise.
    */
-  def isAuthorized(identity: I, context: C): Future[Boolean]
+  def isAuthorized(identity: I, context: C): F[Boolean]
 }
 
 /**
  * An authorization policy that always grants access to resources.
+ *
+ * @tparam F The type of the IO monad.
  */
-case object Authorized extends Authorization[Identity, Any] {
+case class Authorized[F[_]: Async]() extends Authorization[F, Identity, Any] {
 
   /**
    * Checks whether the user is authorized or not.
@@ -51,14 +54,16 @@ case object Authorized extends Authorization[Identity, Any] {
    * @param context  The current context instance.
    * @return True if the user is authorized, false otherwise.
    */
-  override def isAuthorized(identity: Identity, context: Any): Future[Boolean] =
-    Future.successful(true)
+  override def isAuthorized(identity: Identity, context: Any): F[Boolean] =
+    Async[F].pure(true)
 }
 
 /**
  * An authorization policy that always denies access to resources.
+ *
+ * @tparam F The type of the IO monad.
  */
-case object Unauthorized extends Authorization[Identity, Any] {
+case class Unauthorized[F[_]: Async]() extends Authorization[F, Identity, Any] {
 
   /**
    * Checks whether the user is authorized or not.
@@ -67,8 +72,8 @@ case object Unauthorized extends Authorization[Identity, Any] {
    * @param context  The current context instance.
    * @return True if the user is authorized, false otherwise.
    */
-  override def isAuthorized(identity: Identity, context: Any): Future[Boolean] =
-    Future.successful(false)
+  override def isAuthorized(identity: Identity, context: Any): F[Boolean] =
+    Async[F].pure(false)
 }
 
 /**
@@ -80,20 +85,19 @@ object Authorization {
    * Defines additional methods on an `Authorization` instance.
    *
    * @param self The `Authorization` instance on which the additional methods should be defined.
-   * @param ec   The execution context to handle the asynchronous operations.
+   * @tparam F The type of the IO monad.
+   * @tparam I The type of the identity.
+   * @tparam C The type of the context.
    */
-  implicit final class RichAuthorization[I <: Identity, C](self: Authorization[I, C])(
-    implicit
-    ec: ExecutionContext
-  ) {
+  implicit final class RichAuthorization[F[_]: Async, I <: Identity, C](self: Authorization[F, I, C]) {
 
     /**
      * Performs a logical negation on an `Authorization` result.
      *
      * @return An `Authorization` which performs a logical negation on an `Authorization` result.
      */
-    def unary_! : Authorization[I, C] = (identity: I, context: C) => {
-      self.isAuthorized(identity, context).map(x => !x)
+    def unary_! : Authorization[F, I, C] = (identity: I, context: C) => {
+      Async[F].map(self.isAuthorized(identity, context))(x => !x)
     }
 
     /**
@@ -102,7 +106,7 @@ object Authorization {
      * @param authorization The right hand operand.
      * @return An authorization which performs a logical AND operation with two `Authorization` instances.
      */
-    def &&(authorization: Authorization[I, C]): Authorization[I, C] = (identity: I, context: C) => {
+    def &&(authorization: Authorization[F, I, C]): Authorization[F, I, C] = (identity: I, context: C) => {
       val leftF = self.isAuthorized(identity, context)
       val rightF = authorization.isAuthorized(identity, context)
       for {
@@ -117,7 +121,7 @@ object Authorization {
      * @param authorization The right hand operand.
      * @return An authorization which performs a logical OR operation with two `Authorization` instances.
      */
-    def ||(authorization: Authorization[I, C]): Authorization[I, C] = (identity: I, context: C) => {
+    def ||(authorization: Authorization[F, I, C]): Authorization[F, I, C] = (identity: I, context: C) => {
       val leftF = self.isAuthorized(identity, context)
       val rightF = authorization.isAuthorized(identity, context)
       for {

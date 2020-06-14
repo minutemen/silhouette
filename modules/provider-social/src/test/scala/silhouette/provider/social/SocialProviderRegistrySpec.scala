@@ -17,6 +17,7 @@
  */
 package silhouette.provider.social
 
+import cats.effect.IO
 import org.specs2.matcher.MatchResult
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
@@ -37,19 +38,19 @@ class SocialProviderRegistrySpec extends Specification with Mockito {
     }
 
     "return a provider by its ID as SocialProvider" in new Context {
-      val provider = registry.get[SocialProvider[_]]("google")
+      val provider = registry.get[SocialProvider[IO, _]]("google")
 
-      provider must beSome[SocialProvider[_]].like[MatchResult[SocialProvider[_]]] {
+      provider must beSome[SocialProvider[IO, _]].like[MatchResult[SocialProvider[IO, _]]] {
         case value =>
           value.id must be equalTo google.id
-          value must beAnInstanceOf[SocialProvider[_]]
+          value must beAnInstanceOf[SocialProvider[IO, _]]
       }
     }
 
     "return a provider by its ID as OAuth2Provider" in new Context {
       val provider = registry.get[OAuth2Provider]("google")
 
-      provider must beSome.like {
+      provider must beSome[OAuth2Provider].like {
         case value =>
           value.id must be equalTo google.id
           value must beAnInstanceOf[OAuth2Provider]
@@ -57,7 +58,7 @@ class SocialProviderRegistrySpec extends Specification with Mockito {
     }
 
     "return None if no provider for the given ID exists" in new Context {
-      registry.get[SocialProvider[_]]("yahoo") must beNone
+      registry.get[SocialProvider[IO, _]]("yahoo") must beNone
     }
   }
 
@@ -76,8 +77,8 @@ class SocialProviderRegistrySpec extends Specification with Mockito {
     case class OAuth1Config()
     case class OAuth2Config()
 
-    trait OAuth1Provider extends SocialProvider[OAuth1Config]
-    trait OAuth2Provider extends SocialProvider[OAuth2Config]
+    trait OAuth1Provider extends SocialProvider[IO, OAuth1Config]
+    trait OAuth2Provider extends SocialProvider[IO, OAuth2Config]
     trait TwitterProvider extends OAuth1Provider
     trait YahooProvider extends OAuth1Provider
     trait FacebookProvider extends OAuth2Provider

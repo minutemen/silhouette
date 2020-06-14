@@ -17,75 +17,63 @@
  */
 package silhouette.util
 
-import org.specs2.concurrent.ExecutionEnv
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import silhouette.http.client.{ Request, Response }
-import silhouette.http.{ HttpClient, Status }
-import silhouette.specs2.WaitPatience
 import silhouette.util.GravatarService._
-
-import scala.concurrent.Future
+import sttp.client.Identity
+import sttp.client.testing.SttpBackendStub
 
 /**
  * Test case for the [[GravatarService]] class.
- *
- * @param ev The execution environment.
  */
-class GravatarServiceSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
+class GravatarServiceSpec extends Specification with Mockito {
 
   "The `retrieveURI` method" should {
     "return None if email is empty" in new Context {
-      service.retrieveURI("") should beNone.awaitWithPatience
+      service.retrieveUri("") should beNone
     }
 
     "return None if HTTP status code isn't 200" in new Context {
-      response.status returns Status.`Not Found`
+      override implicit val sttpBackend: SttpBackendStub[Identity, Nothing] =
+        SttpBackendStub.synchronous.whenAnyRequest.thenRespondNotFound
 
-      service.retrieveURI(email) should beNone.awaitWithPatience
-    }
-
-    "return None if HTTP status code isn't 200" in new Context {
-      response.status returns Status.`Not Found`
-
-      service.retrieveURI(email) should beNone.awaitWithPatience
-    }
-
-    "return None if exception will be thrown during API request" in new Context {
-      response.status throws new RuntimeException("Timeout error")
-
-      service.retrieveURI(email) should beNone.awaitWithPatience
+      service.retrieveUri(email) should beNone
     }
 
     "return secure Avatar URI" in new Context {
-      response.status returns Status.OK
+      override implicit val sttpBackend: SttpBackendStub[Identity, Nothing] =
+        SttpBackendStub.synchronous.whenAnyRequest.thenRespondOk()
 
-      service.retrieveURI(email) should beSome(SecureURI.format(hash, "?d=404").toURI).awaitWithPatience
+      service.retrieveUri(email) should beSome(SecureURI(hash, Map("d" -> "404")))
     }
 
     "return insecure Avatar URI" in new Context {
       config.secure returns false
-      response.status returns Status.OK
+      override implicit val sttpBackend: SttpBackendStub[Identity, Nothing] =
+        SttpBackendStub.synchronous.whenAnyRequest.thenRespondOk()
 
-      service.retrieveURI(email) should beSome(InsecureURI.format(hash, "?d=404").toURI).awaitWithPatience
+      service.retrieveUri(email) should beSome(InsecureURI(hash, Map("d" -> "404")))
     }
 
     "return an URI with additional parameters" in new Context {
-      config.params returns Map("d" -> "http://example.com/images/avatar.jpg", "s" -> "400")
-      response.status returns Status.OK
+      config.params returns Map("d" -> "https://api.adorable.io/avatars/400/abott@adorable.io.png", "s" -> "400")
+      override implicit val sttpBackend: SttpBackendStub[Identity, Nothing] =
+        SttpBackendStub.synchronous.whenAnyRequest.thenRespondOk()
 
-      service.retrieveURI(email) should beSome(
-        SecureURI.format(hash, "?d=http%3A%2F%2Fexample.com%2Fimages%2Favatar.jpg&s=400").toURI
-      ).awaitWithPatience
+      service.retrieveUri(email).map(_.toString()) should beSome(
+        "https://secure.gravatar.com/avatar/0c91c2a94e7f613f82f08863c675ac5f?d=" +
+          "https://api.adorable.io/avatars/400/abott@adorable.io.png&s=400"
+      )
     }
 
     "not trim leading zeros" in new Context {
-      response.status returns Status.OK
+      override implicit val sttpBackend: SttpBackendStub[Identity, Nothing] =
+        SttpBackendStub.synchronous.whenAnyRequest.thenRespondOk()
 
-      service.retrieveURI("123test@test.com") should beSome(
-        SecureURI.format("0d77aed6b4c5857473c9a04c2017f8b8", "?d=404").toURI
-      ).awaitWithPatience
+      service.retrieveUri("123test@test.com") should beSome(
+        SecureURI("0d77aed6b4c5857473c9a04c2017f8b8", Map("d" -> "404"))
+      )
     }
   }
 
@@ -95,18 +83,9 @@ class GravatarServiceSpec(implicit ev: ExecutionEnv) extends Specification with 
   trait Context extends Scope {
 
     /**
-     * The HTTP response mock.
+     * The STTP backend.
      */
-    val response = mock[Response].smart
-
-    /**
-     * The HTTP layer mock.
-     */
-    val httpClient = {
-      val m = mock[HttpClient].smart
-      m.execute(any[Request]()) returns Future.successful(response)
-      m
-    }
+    implicit val sttpBackend: SttpBackendStub[Identity, Nothing] = SttpBackendStub.synchronous
 
     /**
      * The Gravatar service config.
@@ -116,7 +95,7 @@ class GravatarServiceSpec(implicit ev: ExecutionEnv) extends Specification with 
     /**
      * The Gravatar service implementation.
      */
-    val service = new GravatarService(httpClient, config)
+    lazy val service = GravatarService(config)
 
     /**
      * The email for which the Avatar should be retrieved.

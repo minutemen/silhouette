@@ -17,16 +17,16 @@
  */
 package silhouette.provider.http
 
+import cats.data.{ NonEmptyList => NEL }
+import cats.effect.Async
 import javax.inject.Inject
 import silhouette._
 import silhouette.http.transport.RetrieveBasicCredentialsFromHeader
-import silhouette.http.{ BasicCredentials, RequestPipeline }
+import silhouette.http.{ BasicCredentials, RequestPipeline, ResponsePipeline }
 import silhouette.password.PasswordHasherRegistry
 import silhouette.provider.RequestProvider
 import silhouette.provider.http.BasicAuthProvider._
 import silhouette.provider.password.PasswordProvider
-
-import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * A request provider implementation which supports HTTP basic authentication.
@@ -43,21 +43,17 @@ import scala.concurrent.{ ExecutionContext, Future }
  *                               [[LoginInfo]].
  * @param identityReader         The reader to retrieve the [[Identity]] for the [[LoginInfo]].
  * @param passwordHasherRegistry The password hashers used by the application.
- * @param ec                     The execution context to handle the asynchronous operations.
+ * @tparam F The type of the IO monad.
  * @tparam R The type of the request.
+ * @tparam P The type of the response.
  * @tparam I The type of the identity.
  */
-class BasicAuthProvider[R, I <: Identity] @Inject() (
-  protected val authInfoReader: PasswordProvider#AuthInfoReader,
-  protected val authInfoWriter: PasswordProvider#AuthInfoWriter,
-  protected val identityReader: LoginInfo => Future[Option[I]],
+class BasicAuthProvider[F[_]: Async, R, P, I <: Identity] @Inject() (
+  protected val authInfoReader: PasswordProvider[F]#AuthInfoReader,
+  protected val authInfoWriter: PasswordProvider[F]#AuthInfoWriter,
+  protected val identityReader: LoginInfo => F[Option[I]],
   protected val passwordHasherRegistry: PasswordHasherRegistry
-)(
-  implicit
-  val ec: ExecutionContext
-) extends RequestProvider[R, I]
-  with PasswordProvider
-  with ExecutionContextProvider {
+) extends PasswordProvider[F] with RequestProvider[F, R, P, I] {
 
   /**
    * The type of the credentials.
@@ -75,30 +71,24 @@ class BasicAuthProvider[R, I <: Identity] @Inject() (
    * Authenticates an identity based on credentials sent in a request.
    *
    * @param request The request pipeline.
-   * @return Some login info on successful authentication or None if the authentication was unsuccessful.
+   * @param handler A function that returns a [[http.ResponsePipeline]] for the given [[AuthState]].
+   * @return The [[http.ResponsePipeline]].
    */
-  override def authenticate(request: RequestPipeline[R]): Future[AuthState[I, BasicCredentials]] = {
-    RetrieveBasicCredentialsFromHeader().read(request) match {
+  override def authenticate(request: RequestPipeline[R])(handler: AuthStateHandler): F[ResponsePipeline[P]] = {
+    RetrieveBasicCredentialsFromHeader()(request) match {
       case Some(credentials) =>
         val loginInfo = LoginInfo(id, credentials.username)
-        authenticate(loginInfo, credentials.password).flatMap {
+        Async[F].flatMap(authenticate(loginInfo, credentials.password)) {
           case Successful =>
-            identityReader(loginInfo).map {
-              case Some(identity) => Authenticated(identity, credentials, loginInfo)
-              case None           => MissingIdentity(credentials, loginInfo)
+            Async[F].flatMap(identityReader(loginInfo)) {
+              case Some(identity) => handler(Authenticated(identity, credentials, loginInfo))
+              case None           => handler(MissingIdentity(credentials, loginInfo))
             }
-
-          case InvalidPassword(error) =>
-            Future.successful(InvalidCredentials(credentials, Seq(error)))
-
-          case UnsupportedHasher(error) =>
-            Future.successful(AuthFailure(new ConfigurationException(error)))
-
-          case NotFound(error) =>
-            Future.successful(InvalidCredentials(credentials, Seq(error)))
+          case InvalidPassword(error)   => handler(InvalidCredentials(credentials, NEL.of(error)))
+          case UnsupportedHasher(error) => handler(AuthFailure(new ConfigurationException(error)))
+          case NotFound(error)          => handler(InvalidCredentials(credentials, NEL.of(error)))
         }
-      case None =>
-        Future.successful(MissingCredentials())
+      case None => handler(MissingCredentials())
     }
   }
 }

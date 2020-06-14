@@ -19,26 +19,28 @@ package silhouette.provider.oauth2
 
 import java.time.Clock
 
+import cats.effect.Async
+import cats.implicits._
 import io.circe.Json
-import silhouette.http.Method.GET
+import silhouette.LoginInfo
 import silhouette.http._
-import silhouette.http.client.Request
 import silhouette.provider.UnexpectedResponseException
 import silhouette.provider.oauth2.DropboxProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
-import silhouette.provider.social.state.StateHandler
-import silhouette.{ ConfigURI, LoginInfo }
-
-import scala.concurrent.{ ExecutionContext, Future }
+import sttp.client.circe.asJson
+import sttp.client.{ SttpBackend, basicRequest }
+import sttp.model.Uri._
 
 /**
  * Base Dropbox OAuth2 Provider.
  *
  * @see https://www.dropbox.com/developers/blog/45/using-oauth-20-with-the-core-api
  * @see https://www.dropbox.com/developers/core/docs#oauth2-methods
+ *
+ * @tparam F The type of the IO monad.
  */
-trait BaseDropboxProvider extends OAuth2Provider {
+trait BaseDropboxProvider[F[_]] extends OAuth2Provider[F] {
 
   /**
    * The provider ID.
@@ -51,30 +53,27 @@ trait BaseDropboxProvider extends OAuth2Provider {
    * @param authInfo The auth info received from the provider.
    * @return On success the build social profile, otherwise a failure.
    */
-  override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
-    val uri = config.apiURI.getOrElse[ConfigURI](DefaultApiURI)
-    val request = Request(GET, uri).withHeaders(Header(Header.Name.Authorization, s"Bearer ${authInfo.accessToken}"))
-
-    httpClient.execute(request).flatMap { response =>
-      withParsedJson(response) { json =>
-        response.status match {
-          case Status.OK =>
+  override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
+    basicRequest.get(config.apiUri.getOrElse(DefaultApiUri))
+      .header(BearerAuthorizationHeader(authInfo.accessToken))
+      .response(asJson[Json])
+      .send().flatMap { response =>
+        response.body match {
+          case Left(error) =>
+            F.raiseError(new UnexpectedResponseException(UnexpectedResponse.format(id, error.body, response.code)))
+          case Right(json) =>
             profileParser.parse(json, authInfo)
-          case status =>
-            Future.failed(new UnexpectedResponseException(UnexpectedResponse.format(id, json, status)))
         }
       }
-    }
   }
 }
 
 /**
  * The profile parser for the common social profile.
  *
- * @param ec The execution context.
+ * @tparam F The type of the IO monad.
  */
-class DropboxProfileParser(implicit val ec: ExecutionContext)
-  extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
+class DropboxProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, CommonSocialProfile, OAuth2Info] {
 
   /**
    * Parses the social profile.
@@ -83,8 +82,8 @@ class DropboxProfileParser(implicit val ec: ExecutionContext)
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = {
-    Future.fromTry(json.hcursor.downField("uid").as[Long].getOrError(json, "uid", ID)).map { id =>
+  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] = {
+    Async[F].fromTry(json.hcursor.downField("uid").as[Long].getOrError(json, "uid", ID)).map { id =>
       CommonSocialProfile(
         loginInfo = LoginInfo(ID, id.toString),
         firstName = json.hcursor.downField("name_details").downField("given_name").as[String].toOption,
@@ -98,26 +97,25 @@ class DropboxProfileParser(implicit val ec: ExecutionContext)
 /**
  * The Dropbox OAuth2 Provider.
  *
- * @param httpClient   The HTTP client implementation.
- * @param stateHandler The state provider implementation.
- * @param clock        The current clock instance.
- * @param config       The provider config.
- * @param ec           The execution context.
+ * @param clock       The current clock instance.
+ * @param config      The provider config.
+ * @param sttpBackend The STTP backend.
+ * @param F           The IO monad type class.
+ * @tparam F The type of the IO monad.
  */
-class DropboxProvider(
-  protected val httpClient: HttpClient,
-  protected val stateHandler: StateHandler,
+class DropboxProvider[F[_]](
   protected val clock: Clock,
   val config: OAuth2Config
 )(
   implicit
-  override implicit val ec: ExecutionContext
-) extends BaseDropboxProvider with CommonProfileBuilder {
+  protected val sttpBackend: SttpBackend[F, Nothing, Nothing],
+  protected val F: Async[F]
+) extends BaseDropboxProvider[F] with CommonProfileBuilder[F] {
 
   /**
    * The type of this class.
    */
-  override type Self = DropboxProvider
+  override type Self = DropboxProvider[F]
 
   /**
    * The profile parser implementation.
@@ -130,8 +128,7 @@ class DropboxProvider(
    * @param f A function which gets the config passed and returns different config.
    * @return An instance of the provider initialized with new config.
    */
-  override def withConfig(f: OAuth2Config => OAuth2Config): Self =
-    new DropboxProvider(httpClient, stateHandler, clock, f(config))
+  override def withConfig(f: OAuth2Config => OAuth2Config): Self = new DropboxProvider(clock, f(config))
 }
 
 /**
@@ -147,5 +144,5 @@ object DropboxProvider {
   /**
    * Default provider endpoint.
    */
-  val DefaultApiURI: ConfigURI = ConfigURI("https://api.dropbox.com/1/account/info")
+  val DefaultApiUri = uri"https://api.dropbox.com/1/account/info"
 }

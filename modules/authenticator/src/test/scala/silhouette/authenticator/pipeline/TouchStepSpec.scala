@@ -24,12 +24,11 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import silhouette.LoginInfo
 import silhouette.authenticator.Authenticator
-import silhouette.specs2.WaitPatience
 
 /**
  * Test case for the [[TouchStep]] class.
  */
-class TouchStepSpec extends Specification with Mockito with WaitPatience {
+class TouchStepSpec extends Specification with Mockito {
 
   "The `apply` method" should {
     "touch the authenticator if touching is enabled" in new Context {

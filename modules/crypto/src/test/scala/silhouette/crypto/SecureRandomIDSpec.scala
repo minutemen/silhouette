@@ -17,29 +17,24 @@
  */
 package silhouette.crypto
 
-import org.specs2.control.NoLanguageFeatures
+import cats.effect.IO
 import org.specs2.mutable.Specification
-
-import scala.concurrent.Await
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
-import scala.language.postfixOps
 
 /**
  * Test case for the [[SecureRandomID]] class.
  */
-class SecureRandomIDSpec extends Specification with NoLanguageFeatures {
+class SecureRandomIDSpec extends Specification {
 
   "The generator" should {
     "return a 128 byte length secure random number" in {
-      val id = Await.result(new SecureRandomID().get, 10 seconds)
+      val id = new SecureRandomID[IO]().get.unsafeRunSync()
 
       id must have size (128 * 2)
       id must beMatching("[a-f0-9]+")
     }
 
     "return a 265 byte length secure random number" in {
-      val id = Await.result(new SecureRandomID(256).get, 10 seconds)
+      val id = new SecureRandomID[IO](256).get.unsafeRunSync()
 
       id must have size (256 * 2)
       id must beMatching("[a-f0-9]+")

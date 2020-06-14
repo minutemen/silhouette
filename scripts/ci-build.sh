@@ -24,19 +24,19 @@ SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo ""
 echo "Validating code formatting"
-${SCRIPTS_DIR}/validate-format.sh
+"$SCRIPTS_DIR/validate-format.sh"
 
 echo ""
 echo "Validating code style"
-${SCRIPTS_DIR}/validate-style.sh
+"$SCRIPTS_DIR/validate-style.sh"
 
 echo ""
 echo "Testing and generating documentation"
-${SCRIPTS_DIR}/sbt.sh clean coverage test doc
+"$SCRIPTS_DIR/sbt.sh" clean coverage test doc
 
 echo ""
 echo "Aggregate coverage from sub-projects"
-${SCRIPTS_DIR}/sbt.sh coverageReport coverageAggregate
+"$SCRIPTS_DIR/sbt.sh" coverageReport coverageAggregate
 
 echo ""
 echo "Build finished"

@@ -21,7 +21,10 @@ object Dependencies {
 
   object Version {
     val specs2 = "4.6.0"
-    val circe = "0.12.0-M4"
+    val circe = "0.13.0"
+    val cats = "2.1.1"
+    val sttp = "2.1.0-RC1"
+    val silencer = "1.7.0"
   }
 
   val resolvers = Seq()
@@ -39,6 +42,22 @@ object Dependencies {
       val parser = "io.circe" %% "circe-parser" % Version.circe
     }
 
+    object Cats {
+      val core = "org.typelevel" %% "cats-core" % Version.cats
+      val effect = "org.typelevel" %% "cats-effect" % Version.cats
+    }
+
+    object Sttp {
+      val core = "com.softwaremill.sttp.client" %% "core" % Version.sttp
+      val circe = "com.softwaremill.sttp.client" %% "circe" % Version.sttp
+      val cats = "com.softwaremill.sttp.client" %% "async-http-client-backend-cats" % Version.sttp
+    }
+
+    object Silencer {
+      val compiler = compilerPlugin("com.github.ghik" % "silencer-plugin" % Version.silencer cross CrossVersion.full)
+      val lib = "com.github.ghik" % "silencer-lib" % Version.silencer % Provided cross CrossVersion.full
+    }
+
     val jbcrypt = "org.mindrot" % "jbcrypt" % "0.3m"
     val slf4jApi = "org.slf4j" % "slf4j-api" % "1.7.13"
     val inject = "javax.inject" % "javax.inject" % "1"
@@ -46,7 +65,7 @@ object Dependencies {
     val jose4j = "org.bitbucket.b_c" % "jose4j" % "0.5.4"
     val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15on" % "1.56"
     val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.2.0"
-    val collectionCombat = "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.1"
+    val collectionCombat = "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.6"
     val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
     val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
   }

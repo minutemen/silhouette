@@ -17,25 +17,28 @@
  */
 package silhouette.authenticator
 
+import cats.effect.{ Async, Sync }
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
 import silhouette._
 import silhouette.authenticator.AuthenticatorProvider._
-import silhouette.http.RequestPipeline
+import silhouette.http.{ RequestPipeline, ResponsePipeline }
 import silhouette.provider.RequestProvider
-
-import scala.concurrent.Future
 
 /**
  * A request provider implementation that supports authentication with an [[Authenticator]].
  *
- * @param pipeline The authentication pipeline which transforms a request into an [[AuthState]].
+ * @param authenticationPipeline The authentication pipeline which transforms a request into an [[AuthState]].
+ * @param targetPipeline         The target pipeline which writes an [[Authenticator]] to the [[http.ResponsePipeline]].
+ * @tparam F The type of the IO monad.
  * @tparam R The type of the request.
+ * @tparam P The type of the response.
  * @tparam I The type of the identity.
  */
-class AuthenticatorProvider[R, I <: Identity] @Inject() (
-  pipeline: AuthenticationPipeline[RequestPipeline[R], I]
-) extends RequestProvider[R, I] with LazyLogging {
+class AuthenticatorProvider[F[_]: Async, R, P, I <: Identity] @Inject() (
+  authenticationPipeline: AuthenticationPipeline[F, RequestPipeline[R], I],
+  targetPipeline: TargetPipeline[F, ResponsePipeline[P]]
+) extends RequestProvider[F, R, P, I] with LazyLogging {
 
   /**
    * The type of the credentials.
@@ -53,10 +56,17 @@ class AuthenticatorProvider[R, I <: Identity] @Inject() (
    * Authenticates an identity based on an [[Authenticator]] sent in a request.
    *
    * @param request The request pipeline.
-   * @return The [[AuthState]].
+   * @param handler A function that returns a [[http.ResponsePipeline]] for the given [[AuthState]].
+   * @return The [[http.ResponsePipeline]].
    */
-  override def authenticate(request: RequestPipeline[R]): Future[AuthState[I, Authenticator]] =
-    pipeline.read(request)
+  override def authenticate(request: RequestPipeline[R])(handler: AuthStateHandler): F[ResponsePipeline[P]] = {
+    Async[F].flatMap(authenticationPipeline(request)) {
+      case authState @ Authenticated(_, authenticator, _) =>
+        Sync[F].flatMap(handler(authState))(targetPipeline(authenticator, _))
+      case authState =>
+        handler(authState)
+    }
+  }
 }
 
 /**

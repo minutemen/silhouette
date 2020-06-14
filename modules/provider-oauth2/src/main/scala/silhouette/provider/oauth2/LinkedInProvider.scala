@@ -17,29 +17,30 @@
  */
 package silhouette.provider.oauth2
 
-import java.net.URI
 import java.time.Clock
 
+import cats.effect.Async
+import cats.implicits._
 import io.circe.Json
-import silhouette.http.Method.GET
-import silhouette.http.client.Request
-import silhouette.http.{ HttpClient, Status }
+import silhouette.LoginInfo
 import silhouette.provider.UnexpectedResponseException
 import silhouette.provider.oauth2.LinkedInProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
-import silhouette.provider.social.state.StateHandler
-import silhouette.{ ConfigURI, LoginInfo }
-
-import scala.concurrent.{ ExecutionContext, Future }
+import sttp.client.circe.asJson
+import sttp.client.{ SttpBackend, basicRequest }
+import sttp.model.Uri._
 
 /**
  * Base LinkedIn OAuth2 Provider.
  *
- * @see https://developer.linkedin.com/docs/oauth2
- * @see https://developer.linkedin.com/docs/signin-with-linkedin
+ * @see https://developer.linkedin.com/documents/oauth-10a
+ * @see https://developer.linkedin.com/documents/authentication
+ * @see https://developer.linkedin.com/documents/inapiprofile
+ *
+ * @tparam F The type of the IO monad.
  */
-trait BaseLinkedInProvider extends OAuth2Provider {
+trait BaseLinkedInProvider[F[_]] extends OAuth2Provider[F] {
 
   /**
    * The provider ID.
@@ -52,27 +53,27 @@ trait BaseLinkedInProvider extends OAuth2Provider {
    * @param authInfo The auth info received from the provider.
    * @return On success the build social profile, otherwise a failure.
    */
-  override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
-    val uri = config.apiURI.getOrElse(DefaultApiURI).format(authInfo.accessToken)
-
-    httpClient.execute(Request(GET, uri)).flatMap { response =>
-      withParsedJson(response) { json =>
-        response.status match {
-          case Status.OK =>
+  override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
+    val uri = config.apiUri.getOrElse(DefaultApiUri)
+    basicRequest.get(uri.param("oauth2_access_token", authInfo.accessToken))
+      .response(asJson[Json])
+      .send().flatMap { response =>
+        response.body match {
+          case Left(error) =>
+            F.raiseError(new UnexpectedResponseException(UnexpectedResponse.format(id, error.body, response.code)))
+          case Right(json) =>
             profileParser.parse(json, authInfo)
-          case status =>
-            Future.failed(new UnexpectedResponseException(UnexpectedResponse.format(id, json, status)))
         }
       }
-    }
   }
 }
 
 /**
  * The profile parser for the common social profile.
+ *
+ * @tparam F The type of the IO monad.
  */
-class LinkedInProfileParser(implicit val ec: ExecutionContext)
-  extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
+class LinkedInProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, CommonSocialProfile, OAuth2Info] {
 
   /**
    * Parses the social profile.
@@ -81,15 +82,15 @@ class LinkedInProfileParser(implicit val ec: ExecutionContext)
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = {
-    Future.fromTry(json.hcursor.downField("id").as[String].getOrError(json, "id", ID)).map { id =>
+  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] = {
+    Async[F].fromTry(json.hcursor.downField("id").as[String].getOrError(json, "id", ID)).map { id =>
       CommonSocialProfile(
         loginInfo = LoginInfo(ID, id),
         firstName = json.hcursor.downField("firstName").as[String].toOption,
         lastName = json.hcursor.downField("lastName").as[String].toOption,
         fullName = json.hcursor.downField("formattedName").as[String].toOption,
         email = json.hcursor.downField("emailAddress").as[String].toOption,
-        avatarUri = json.hcursor.downField("pictureUrl").as[String].toOption.map(uri => new URI(uri))
+        avatarUri = json.hcursor.downField("pictureUrl").as[String].toOption.map(uri => uri"$uri")
       )
     }
   }
@@ -98,26 +99,25 @@ class LinkedInProfileParser(implicit val ec: ExecutionContext)
 /**
  * The LinkedIn OAuth2 Provider.
  *
- * @param httpClient   The HTTP client implementation.
- * @param stateHandler The state provider implementation.
- * @param clock        The current clock instance.
- * @param config       The provider config.
- * @param ec           The execution context.
+ * @param clock       The current clock instance.
+ * @param config      The provider config.
+ * @param sttpBackend The STTP backend.
+ * @param F           The IO monad type class.
+ * @tparam F The type of the IO monad.
  */
-class LinkedInProvider(
-  protected val httpClient: HttpClient,
-  protected val stateHandler: StateHandler,
+class LinkedInProvider[F[_]](
   protected val clock: Clock,
   val config: OAuth2Config
 )(
   implicit
-  override implicit val ec: ExecutionContext
-) extends BaseLinkedInProvider with CommonProfileBuilder {
+  protected val sttpBackend: SttpBackend[F, Nothing, Nothing],
+  protected val F: Async[F]
+) extends BaseLinkedInProvider[F] with CommonProfileBuilder[F] {
 
   /**
    * The type of this class.
    */
-  override type Self = LinkedInProvider
+  override type Self = LinkedInProvider[F]
 
   /**
    * The profile parser implementation.
@@ -130,8 +130,7 @@ class LinkedInProvider(
    * @param f A function which gets the config passed and returns different config.
    * @return An instance of the provider initialized with new config.
    */
-  override def withConfig(f: OAuth2Config => OAuth2Config): Self =
-    new LinkedInProvider(httpClient, stateHandler, clock, f(config))
+  override def withConfig(f: OAuth2Config => OAuth2Config): Self = new LinkedInProvider(clock, f(config))
 }
 
 /**
@@ -147,6 +146,8 @@ object LinkedInProvider {
   /**
    * Default provider endpoint.
    */
-  val DefaultApiURI = ConfigURI("https://api.linkedin.com/v1/people/~:(id,first-name,last-name,formatted-name," +
-    "picture-url,email-address)?format=json&oauth2_access_token=%s")
+  val DefaultApiUri = {
+    val baseUri = "https://api.linkedin.com"
+    uri"$baseUri/v1/people/~:(id,first-name,last-name,formatted-name,picture-url,email-address)?format=json"
+  }
 }

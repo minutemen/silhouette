@@ -21,13 +21,14 @@ import java.net.{ URLDecoder, URLEncoder }
 
 import io.circe.parser.parse
 import io.circe.{ Json, ParsingFailure }
-import silhouette.http.DefaultBodyReads._
-import silhouette.http.MimeType._
-import silhouette.{ Reads, TransformException, Writes }
+import silhouette.TransformException
+import silhouette.http.DefaultBodyReader._
+import sttp.model.MediaType
 
 import scala.annotation.implicitNotFound
 import scala.collection.compat._
 import scala.collection.compat.immutable.ArraySeq
+import scala.collection.immutable.Seq
 import scala.io.Codec
 import scala.language.implicitConversions
 import scala.util.{ Failure, Success, Try }
@@ -50,7 +51,7 @@ import scala.xml._
  * @param data        The body data.
  */
 protected[silhouette] final case class Body(
-  contentType: MimeType,
+  contentType: MediaType,
   codec: Codec = Body.DefaultCodec,
   data: immutable.ArraySeq[Byte]
 ) {
@@ -63,13 +64,14 @@ protected[silhouette] final case class Body(
   def raw: String = new String(data.toArray, codec.charSet)
 
   /**
-   * Tries to transforms the body into a T, throwing an exception if it can't. An implicit BodyReads[T] must be defined.
+   * Tries to transforms the body into a T, throwing an exception if it can't. An implicit [[BodyReader]] must be
+   * defined.
    *
-   * @param reads The reads transformer.
+   * @param reader The body reader.
    * @tparam T The type of the body to transform to.
    * @return The body transformed to the given type on success, a failure otherwise.
    */
-  def as[T](implicit reads: BodyReads[T]): Try[T] = reads.read(this)
+  def as[T](implicit reader: BodyReader[T]): Try[T] = reader(this)
 }
 
 /**
@@ -83,16 +85,16 @@ private[silhouette] object Body {
   val DefaultCodec: Codec = Codec.UTF8
 
   /**
-   * Creates a [[Body]] from T. An implicit BodyWrites[T] must be defined.
+   * Creates a [[Body]] from T. An implicit [[BodyWriter]] must be defined.
    *
    * @param value  The value to create the body from.
    * @param codec  The codec of the resulting body.
-   * @param writes The writes transformer.
+   * @param writer The body writer.
    * @tparam T The type of the value.
    * @return The body representation of the given value.
    */
-  def from[T](value: T, codec: Codec = Body.DefaultCodec)(implicit writes: Codec => BodyWrites[T]): Body =
-    writes(codec).write(value)
+  def from[T](value: T, codec: Codec = Body.DefaultCodec)(implicit writer: Codec => BodyWriter[T]): Body =
+    writer(codec)(value)
 
   /**
    * Converts an `Array[Byte]` to an `ArraySeq[Byte]` instance.
@@ -108,7 +110,7 @@ private[silhouette] object Body {
  */
 private[silhouette] object TextBody {
   type Type = String
-  final val contentType = `text/plain`
+  final val contentType = MediaType.TextPlain
   def unapply(body: Body): Option[(Codec, immutable.ArraySeq[Byte])] = body.contentType match {
     case this.contentType => Some((body.codec, body.data))
     case _                => None
@@ -120,7 +122,7 @@ private[silhouette] object TextBody {
  */
 private[silhouette] object FormUrlEncodedBody {
   type Type = Map[String, Seq[String]]
-  final val contentType = `application/x-www-form-urlencoded`
+  final val contentType = MediaType.ApplicationXWwwFormUrlencoded
   def unapply(body: Body): Option[(Codec, immutable.ArraySeq[Byte])] = body.contentType match {
     case this.contentType => Some((body.codec, body.data))
     case _                => None
@@ -132,8 +134,8 @@ private[silhouette] object FormUrlEncodedBody {
  */
 private[silhouette] object JsonBody {
   type Type = Json
-  final val contentType = `application/json`
-  final val allowedTypes = Seq(contentType, `text/json`)
+  final val contentType = MediaType.ApplicationJson
+  final val allowedTypes = Seq(contentType, MediaType("text", "json"))
   def unapply(body: Body): Option[(Codec, immutable.ArraySeq[Byte])] = body.contentType match {
     case ct if this.allowedTypes contains ct => Some((body.codec, body.data))
     case _                                   => None
@@ -145,8 +147,8 @@ private[silhouette] object JsonBody {
  */
 private[silhouette] object XmlBody {
   type Type = Node
-  final val contentType = `application/xml`
-  final val allowedTypes = Seq(contentType, `text/xml`)
+  final val contentType = MediaType.ApplicationXml
+  final val allowedTypes = Seq(contentType, MediaType("text", "xml"))
   def unapply(body: Body): Option[(Codec, immutable.ArraySeq[Byte])] = body.contentType match {
     case ct if this.allowedTypes contains ct => Some((body.codec, body.data))
     case _                                   => None
@@ -158,40 +160,40 @@ private[silhouette] object XmlBody {
  *
  * @tparam T The target type on the read operation.
  */
-@implicitNotFound("No Body transformer found for type ${T}. Try to implement an implicit BodyReads for this type.")
-protected[silhouette] trait BodyReads[T] extends Reads[Body, Try[T]]
+@implicitNotFound("No Body reader found for type ${T}. Try to implement an implicit BodyReader for this type.")
+protected[silhouette] trait BodyReader[T] extends (Body => Try[T])
 
 /**
  * Transforms an instance of `T` into a [[Body]].
  *
  * @tparam T The source type on the write operation
  */
-@implicitNotFound("No Body transformer found for type ${T}. Try to implement an implicit BodyWrites for this type.")
-protected[silhouette] trait BodyWrites[T] extends Writes[T, Body]
+@implicitNotFound("No Body transformer found for type ${T}. Try to implement an implicit BodyWriter for this type.")
+protected[silhouette] trait BodyWriter[T] extends (T => Body)
 
 /**
- * The only aim of this object is to provide a default implicit [[BodyReads]], that uses
- * the [[DefaultBodyReads]] trait to provide the lowest implicit conversion chain.
+ * The only aim of this object is to provide a default implicit [[BodyReader]], that uses
+ * the [[DefaultBodyReader]] trait to provide the lowest implicit conversion chain.
  */
-private[silhouette] object BodyReads extends DefaultBodyReads
+private[silhouette] object BodyReader extends DefaultBodyReader
 
 /**
- * The only aim of this object is to provide a default implicit [[BodyWrites]], that uses
- * the [[DefaultBodyWrites]] trait to provide the lowest implicit conversion chain.
+ * The only aim of this object is to provide a default implicit [[BodyWriter]], that uses
+ * the [[DefaultBodyWriter]] trait to provide the lowest implicit conversion chain.
  */
-private[silhouette] object BodyWrites extends DefaultBodyWrites
+private[silhouette] object BodyWriter extends DefaultBodyWriter
 
 /**
- * Provides implicit [[BodyReads]] for the body types supported by Silhouette.
+ * Provides implicit [[BodyReader]] for the body types supported by Silhouette.
  */
-private[silhouette] trait DefaultBodyReads {
+private[silhouette] trait DefaultBodyReader {
 
   /**
    * Transforms a [[Body]] into string.
    *
-   * @return A [[BodyReads]] instance that transforms a [[Body]] into a string.
+   * @return A [[BodyReader]] instance that transforms a [[Body]] into a string.
    */
-  implicit val stringReads: BodyReads[TextBody.Type] = {
+  implicit val stringReads: BodyReader[TextBody.Type] = {
     case TextBody(codec, bytes) =>
       Try(new String(bytes.toArray, codec.charSet))
     case Body(ct, _, _) =>
@@ -201,9 +203,9 @@ private[silhouette] trait DefaultBodyReads {
   /**
    * Transforms a [[Body]] into form URL encoded string.
    *
-   * @return A [[BodyReads]] instance that transforms a [[Body]] into a form URL encoded string.
+   * @return A [[BodyReader]] instance that transforms a [[Body]] into a form URL encoded string.
    */
-  implicit val formUrlEncodedReads: BodyReads[FormUrlEncodedBody.Type] = {
+  implicit val formUrlEncodedReads: BodyReader[FormUrlEncodedBody.Type] = {
     case FormUrlEncodedBody(codec, bytes) =>
       Try {
         val data = new String(bytes.toArray, codec.charSet)
@@ -230,9 +232,9 @@ private[silhouette] trait DefaultBodyReads {
   /**
    * Transforms a [[Body]] into a Circe JSON object.
    *
-   * @return A [[BodyReads]] instance that transforms a [[Body]] into a Circe JSON object.
+   * @return A [[BodyReader]] instance that transforms a [[Body]] into a Circe JSON object.
    */
-  implicit val circeJsonReads: BodyReads[JsonBody.Type] = {
+  implicit val circeJsonReads: BodyReader[JsonBody.Type] = {
     case JsonBody(codec, bytes) =>
       parse(new String(bytes.toArray, codec.charSet)) match {
         case Left(ParsingFailure(msg, e)) => Failure(new TransformException(msg, Option(e)))
@@ -247,9 +249,9 @@ private[silhouette] trait DefaultBodyReads {
   /**
    * Transforms a [[Body]] into a Scala XML object.
    *
-   * @return A [[BodyReads]] instance that transforms a [[Body]] into a Scala XML object.
+   * @return A [[BodyReader]] instance that transforms a [[Body]] into a Scala XML object.
    */
-  implicit val scalaXmlReads: BodyReads[XmlBody.Type] = {
+  implicit val scalaXmlReads: BodyReader[XmlBody.Type] = {
     case XmlBody(codec, bytes) =>
       Try(XML.loadString(new String(bytes.toArray, codec.charSet))).recoverWith {
         case e: SAXParseException => Failure(new TransformException(e.getMessage, Option(e)))
@@ -262,26 +264,26 @@ private[silhouette] trait DefaultBodyReads {
 }
 
 /**
- * Provides implicit [[BodyWrites]] for the body types supported by Silhouette.
+ * Provides implicit [[BodyWriter]] for the body types supported by Silhouette.
  */
-private[silhouette] trait DefaultBodyWrites {
+private[silhouette] trait DefaultBodyWriter {
   import Body._
 
   /**
    * Transforms a string into a [[Body]].
    *
-   * @return A [[BodyWrites]] instance that transforms a string into a [[Body]].
+   * @return A [[BodyWriter]] instance that transforms a string into a [[Body]].
    */
-  implicit val stringWrites: Codec => BodyWrites[TextBody.Type] = (codec: Codec) => (str: TextBody.Type) => {
-    Body(`text/plain`, codec, str.getBytes(codec.charSet))
+  implicit val stringWrites: Codec => BodyWriter[TextBody.Type] = (codec: Codec) => (str: TextBody.Type) => {
+    Body(MediaType.TextPlain, codec, str.getBytes(codec.charSet))
   }
 
   /**
    * Transforms a form URL encoded string into [[Body]].
    *
-   * @return A [[BodyWrites]] instance that transforms a form URL encoded string into [[Body]].
+   * @return A [[BodyWriter]] instance that transforms a form URL encoded string into [[Body]].
    */
-  implicit val formUrlEncodedWrites: Codec => BodyWrites[FormUrlEncodedBody.Type] = {
+  implicit val formUrlEncodedWrites: Codec => BodyWriter[FormUrlEncodedBody.Type] = {
     codec: Codec =>
       {
         formData: FormUrlEncodedBody.Type =>
@@ -298,18 +300,18 @@ private[silhouette] trait DefaultBodyWrites {
   /**
    * Transforms a Circe JSON object into a [[Body]].
    *
-   * @return A [[BodyWrites]] instance that transforms a Circe JSON object into a [[Body]].
+   * @return A [[BodyWriter]] instance that transforms a Circe JSON object into a [[Body]].
    */
-  implicit val circeJsonWrites: Codec => BodyWrites[JsonBody.Type] = (codec: Codec) => (json: JsonBody.Type) => {
+  implicit val circeJsonWrites: Codec => BodyWriter[JsonBody.Type] = (codec: Codec) => (json: JsonBody.Type) => {
     Body(JsonBody.contentType, codec, json.noSpaces.getBytes(codec.charSet))
   }
 
   /**
    * Transforms a Scala XML object into a [[Body]] and vice versa.
    *
-   * @return A [[BodyWrites]] instance that transforms a Scala XML object into a [[Body]] and vice versa.
+   * @return A [[BodyWriter]] instance that transforms a Scala XML object into a [[Body]] and vice versa.
    */
-  implicit val scalaXmlWrites: Codec => BodyWrites[XmlBody.Type] = (codec: Codec) => (xml: XmlBody.Type) => {
+  implicit val scalaXmlWrites: Codec => BodyWriter[XmlBody.Type] = (codec: Codec) => (xml: XmlBody.Type) => {
     Body(XmlBody.contentType, codec, xml.mkString.getBytes(codec.charSet))
   }
 }
@@ -317,7 +319,7 @@ private[silhouette] trait DefaultBodyWrites {
 /**
  * The companion object.
  */
-private[silhouette] object DefaultBodyReads {
+private[silhouette] object DefaultBodyReader {
 
   /**
    * The error messages.

@@ -17,13 +17,18 @@
  */
 package silhouette.provider.social.state
 
-import silhouette.crypto.Signer
-import silhouette.http.{ RequestPipeline, ResponsePipeline }
-import silhouette.provider.social.SocialProviderException
-import silhouette.provider.social.state.DefaultStateHandler._
-import silhouette.provider.social.state.StateItem.ItemStructure
+import java.time.Clock
 
-import scala.concurrent.{ ExecutionContext, Future }
+import cats.data.{ NonEmptyList => NEL }
+import cats.effect.Async
+import cats.implicits._
+import io.circe.{ Json, JsonObject }
+import javax.inject.Inject
+import silhouette.RichInstant._
+import silhouette.http.{ RequestPipeline, ResponseWriter }
+import silhouette.jwt.{ Claims, JwtClaimReader, JwtClaimWriter }
+
+import scala.concurrent.duration._
 
 /**
  * Provides a way to handle different types of state for providers that allow a state param.
@@ -37,198 +42,86 @@ import scala.concurrent.{ ExecutionContext, Future }
  * could be an URL were the user should be redirected after authentication to the provider, or
  * any other per-authentication based state. An other important state handler protects the
  * application for CSRF attacks.
- */
-trait StateHandler {
-
-  /**
-   * The concrete instance of the state handler.
-   */
-  type Self <: StateHandler
-
-  /**
-   * The item handlers configured for this handler
-   */
-  val handlers: Set[StateItemHandler]
-
-  /**
-   * Creates a copy of the state provider with a new handler added.
-   *
-   * There exists two types of state handlers. The first type are global state handlers which can be configured
-   * by the user with the help of a configuration mechanism or through dependency injection. And there a local
-   * state handlers which are provided by the application itself. This method exists to handle the last type of
-   * state handlers, because it allows to extend the list of user defined state handlers from inside the library.
-   *
-   * @param handler The handler to add.
-   * @return A new state provider with a new handler added.
-   */
-  def withHandler(handler: StateItemHandler): Self
-
-  /**
-   * Gets the social state for all handlers.
-   *
-   * @return The social state for all handlers.
-   */
-  def state: Future[State]
-
-  /**
-   * Serializes the given state into a single state value which can be passed with the state param.
-   *
-   * @param state The social state to serialize.
-   * @return Some serialized state as string if a state handler was registered and if a state item is available,
-   *         None otherwise.
-   */
-  def serialize(state: State): Option[String]
-
-  /**
-   * Unserializes the social state from the state param.
-   *
-   * @param state   The state to unserialize.
-   * @param request The request to read the value of the state param from.
-   * @tparam R The type of the request.
-   * @return The social state on success, an error on failure.
-   */
-  def unserialize[R](state: String)(implicit request: RequestPipeline[R]): Future[State]
-
-  /**
-   * Publishes the state to the client.
-   *
-   * @param response The response to send to the client.
-   * @param state    The state to publish.
-   * @param request  The current request.
-   * @tparam R The type of the request.
-   * @tparam P The type of the response.
-   * @return The response to send to the client.
-   */
-  def publish[R, P](response: ResponsePipeline[P], state: State)(
-    implicit
-    request: RequestPipeline[R]
-  ): ResponsePipeline[P]
-}
-
-/**
- * The base implementation of the [[StateHandler]].
  *
- * @param handlers The item handlers configured for this handler.
- * @param signer   The signer implementation to sign the state.
- * @param ec       The execution context to handle the asynchronous operations.
+ * @tparam F The type of the IO monad.
+ * @param handlers    The item handlers configured for this handler.
+ * @param config      The state handler config.
+ * @param claimReader The JWT claim reader function.
+ * @param claimWriter The JWT claim writer function.
+ * @param clock       The current clock.
  */
-class DefaultStateHandler(val handlers: Set[StateItemHandler], signer: Signer)(implicit ec: ExecutionContext)
-  extends StateHandler {
+case class StateHandler[F[_]: Async] @Inject() (
+  handlers: NEL[StateItemHandler[F, StateItem]],
+  config: StateHandlerConfig,
+  claimReader: JwtClaimReader,
+  claimWriter: JwtClaimWriter,
+  clock: Clock
+) {
 
   /**
-   * The concrete instance of the state provider.
+   * Returns a JWT that contains the state items and a function that can embed item specific state into a response.
+   *
+   * A state item handler is able to embed some item specific state into the response. In the unserialize method
+   * it can then be extracted from the request. So this method returns also a function, that can write this state
+   * to a response.
+   *
+   * @tparam R The type of the response.
+   * @return Either an error or a JWT and a function, that is able embed item specific state into a response pipeline.
    */
-  override type Self = DefaultStateHandler
-
-  /**
-   * Creates a copy of the state provider with a new handler added.
-   *
-   * There exists two types of state handlers. The first type are global state handlers which can be configured
-   * by the user with the help of a configuration mechanism or through dependency injection. And there a local
-   * state handlers which are provided by the application itself. This method exists to handle the last type of
-   * state handlers, because it allows to extend the list of user defined state handlers from inside the library.
-   *
-   * @param handler The handler to add.
-   * @return A new state provider with a new handler added.
-   */
-  override def withHandler(handler: StateItemHandler): DefaultStateHandler = {
-    new DefaultStateHandler(handlers + handler, signer)
-  }
-
-  /**
-   * Gets the social state for all handlers.
-   *
-   * @return The social state for all handlers.
-   */
-  override def state: Future[State] = {
-    Future.sequence(handlers.map(_.item)).map(items => State(items.toSet))
-  }
-
-  /**
-   * Serializes the given state into a single state value which can be passed with the state param.
-   *
-   * If no handler is registered on the provider or if no state items are available, then we omit state signing,
-   * because it makes no sense the sign an empty state.
-   *
-   * @param state The social state to serialize.
-   * @return Some serialized state as string if a state handler was registered and if a state item is available,
-   *         None otherwise.
-   */
-  override def serialize(state: State): Option[String] = {
-    if (handlers.isEmpty || state.items.isEmpty) {
-      None
-    } else {
-      Some(signer.sign(state.items.flatMap { i =>
-        handlers.flatMap(h => h.canHandle(i).map(h.serialize)).map(_.asString)
-      }.mkString(".")))
+  def serialize[R]: F[(String, ResponseWriter[R])] = {
+    for {
+      items <- handlers.map(h => h.serialize[R].map(t => (h.id, t._1, t._2))).sequence
+      jsonMap <- Async[F].pure(items.foldLeft(Map.empty[String, Json]) {
+        case (acc, (handlerID, json, _)) => acc + (handlerID -> json)
+      })
+      responseWriter = items.foldLeft[ResponseWriter[R]](identity) {
+        case (acc, (_, _, responseWriter)) => acc andThen responseWriter
+      }
+      jwt <- Async[F].fromEither(
+        claimWriter.apply(Claims(
+          issuer = config.jwtIssuer,
+          subject = config.jwtSubject,
+          expirationTime = config.jwtExpiry.map(clock.instant() + _),
+          custom = JsonObject.fromMap(jsonMap)
+        ))
+      )
+    } yield {
+      jwt -> responseWriter
     }
   }
 
   /**
    * Unserializes the social state from the state param.
    *
-   * If no handler is registered on the provider then we omit the state validation. This is needed in some cases
-   * where the authentication process was started from a client side library and not from Silhouette.
+   * A state item handler is able to embed some item specific state into the response. In this method it can then
+   * be extracted from the request.
    *
-   * @param state   The state to unserialize.
+   * @param state   The state to unserialize as JWT.
    * @param request The request to read the value of the state param from.
    * @tparam R The type of the request.
    * @return The social state on success, an error on failure.
    */
-  override def unserialize[R](state: String)(implicit request: RequestPipeline[R]): Future[State] = {
-    if (handlers.isEmpty) {
-      Future.successful(State(Set()))
-    } else {
-      Future.fromTry(signer.extract(state)).flatMap { state =>
-        state.split('.').toList match {
-          case Nil | List("") =>
-            Future.successful(State(Set()))
-          case items =>
-            Future.sequence {
-              items.map {
-                case ItemStructure(item) => handlers.find(_.canHandle(item)) match {
-                  case Some(handler) => handler.unserialize(item)
-                  case None          => Future.failed(new SocialProviderException(MissingItemHandlerError.format(item)))
-                }
-                case item => Future.failed(new SocialProviderException(ItemExtractionError.format(item)))
-              }
-            }.map(items => State(items.toSet))
-        }
-      }
-    }
-  }
-
-  /**
-   * Publishes the state to the client.
-   *
-   * @param response The response to send to the client.
-   * @param state    The state to publish.
-   * @param request  The current request.
-   * @tparam R The type of the request.
-   * @tparam P The type of the response.
-   * @return The response to send to the client.
-   * @see [[PublishableStateItemHandler]]
-   */
-  override def publish[R, P](response: ResponsePipeline[P], state: State)(
-    implicit
-    request: RequestPipeline[R]
-  ): ResponsePipeline[P] = {
-    handlers.collect { case h: PublishableStateItemHandler => h }.foldLeft(response) { (r, handler) =>
-      state.items.foldLeft(r) { (r, item) =>
-        handler.canHandle(item).map(item => handler.publish(item, r)).getOrElse(r)
-      }
+  def unserialize[R](state: String, request: RequestPipeline[R]): F[State] = {
+    for {
+      claims <- Async[F].fromEither(claimReader(state))
+      items <- handlers.map(h =>
+        h.unserialize(claims.custom.toMap(h.id), request).map(item => h.id -> item)
+      ).sequence
+    } yield {
+      State(items.toNem)
     }
   }
 }
 
 /**
- * The companion object for the [[DefaultStateHandler]] class.
+ * The state handler config.
+ *
+ * @param jwtIssuer  An issuer for the JWT token.
+ * @param jwtSubject An subject for the JWT token.
+ * @param jwtExpiry  An expiry for the JWT token.
  */
-object DefaultStateHandler {
-
-  /**
-   * Some errors.
-   */
-  val MissingItemHandlerError = "None of the registered handlers can handle the given state item: %s"
-  val ItemExtractionError = "Cannot extract social state item from string: %s"
-}
+case class StateHandlerConfig(
+  jwtIssuer: Option[String] = Some("silhouette-state-handler"),
+  jwtSubject: Option[String] = Some("silhouette-state"),
+  jwtExpiry: Option[FiniteDuration] = Some(5.minutes)
+)

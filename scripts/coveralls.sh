@@ -26,7 +26,7 @@ source "$SCRIPTS_DIR/vars.sh"
 if [ "$TRAVIS_SCALA_VERSION" == "$SCALA_VERSION" ]; then
   echo ""
   echo "Publish coverage report"
-  ${SCRIPTS_DIR}/sbt.sh coveralls
+  "$SCRIPTS_DIR/sbt.sh" coveralls
 
   echo ""
   echo "Report published"

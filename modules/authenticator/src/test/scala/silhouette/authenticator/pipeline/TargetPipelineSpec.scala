@@ -17,38 +17,51 @@
  */
 package silhouette.authenticator.pipeline
 
-import org.specs2.concurrent.ExecutionEnv
+import cats.effect.IO
+import cats.effect.IO._
 import org.specs2.matcher.Scope
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import silhouette.LoginInfo
 import silhouette.authenticator.pipeline.Dsl._
-import silhouette.authenticator.{ Authenticator, TargetPipeline, Writes }
-import silhouette.http.transport.EmbedIntoHeader
-import silhouette.http.{ Fake, Header, ResponsePipeline, SilhouetteResponse }
-import silhouette.specs2.WaitPatience
-
-import scala.concurrent.Future
+import silhouette.authenticator.{ Authenticator, AuthenticatorWriter, TargetPipeline }
+import silhouette.http.Fake
+import silhouette.http.transport.{ CookieTransportConfig, DiscardCookie, EmbedIntoHeader }
+import sttp.model.{ CookieWithMeta, Header }
 
 /**
  * Test case for the [[TargetPipeline]] class.
- *
- * @param ev The execution environment.
  */
-class TargetPipelineSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
+class TargetPipelineSpec extends Specification with Mockito {
 
-  "The `write` method" should {
+  "The pipeline" should {
     "write the authenticator with the `statefulWriter`" in new Context {
-      pipeline.write(authenticator -> responsePipeline)
+      embedPipeline(authenticator, responsePipeline).unsafeRunSync()
 
-      there was one(asyncStep).apply(authenticator)
+      there was one(ioStep).apply(authenticator)
     }
 
     "embed the authenticator into the response" in new Context {
-      pipeline.write(authenticator -> responsePipeline) must beLike[ResponsePipeline[SilhouetteResponse]] {
-        case response =>
-          response.header("test") must beSome(Header("test", authenticator.toString))
-      }.awaitWithPatience
+      embedPipeline(authenticator, responsePipeline).unsafeRunSync() must
+        beLike[Fake.ResponsePipeline] {
+          case response =>
+            response.header("test") must beSome(Header("test", authenticator.toString))
+        }
+    }
+
+    "discard a cookie from the response" in new Context {
+      discardPipeline(authenticator, responsePipeline).unsafeRunSync() must
+        beLike[Fake.ResponsePipeline] {
+          case response =>
+            response.cookie("test") must beSome(CookieWithMeta.unsafeApply(
+              name = "test",
+              value = "",
+              maxAge = Some(-86400),
+              path = Some("/"),
+              secure = true,
+              httpOnly = true
+            ))
+        }
     }
   }
 
@@ -73,19 +86,19 @@ class TargetPipelineSpec(implicit ev: ExecutionEnv) extends Specification with M
     val responsePipeline = Fake.response
 
     /**
-     * An `AsyncStep` implementation.
+     * An `IO` step implementation.
      */
-    val asyncStep = {
-      val m = mock[AsyncStep]
-      m.apply(authenticator) returns Future.successful(authenticator)
+    val ioStep: Step[Authenticator, IO[Authenticator]] = {
+      val m = mock[Step[Authenticator, IO[Authenticator]]]
+      m.apply(authenticator) returns IO.pure(authenticator)
       m
     }
 
     /**
-     * An `ModifyStep` implementation.
+     * An pure step implementation.
      */
-    val modifyStep = {
-      val m = mock[ModifyStep]
+    val pureStep: Step[Authenticator, Authenticator] = {
+      val m = mock[Step[Authenticator, Authenticator]]
       m.apply(authenticator) returns authenticator
       m
     }
@@ -93,17 +106,24 @@ class TargetPipelineSpec(implicit ev: ExecutionEnv) extends Specification with M
     /**
      * A writes that transforms the [[Authenticator]] into a serialized form of the [[Authenticator]].
      */
-    val authenticatorWrites = {
-      val m = mock[Writes[String]]
-      m.write(authenticator) returns Future.successful(authenticator.toString)
+    val authenticatorWriter: AuthenticatorWriter[IO, String] = {
+      val m = mock[AuthenticatorWriter[IO, String]]
+      m.apply(authenticator) returns IO.pure(authenticator.toString)
       m
     }
 
     /**
-     * The pipeline to test.
+     * The embed pipeline to test.
      */
-    val pipeline = TargetPipeline[ResponsePipeline[SilhouetteResponse]](authenticator =>
-      authenticator >> modifyStep >> asyncStep >> authenticatorWrites >> EmbedIntoHeader("test")
+    val embedPipeline = TargetPipeline[IO, Fake.ResponsePipeline](target =>
+      ~pureStep >> ioStep >> authenticatorWriter >> EmbedIntoHeader("test")(target)
+    )
+
+    /**
+     * The discard pipeline to test.
+     */
+    val discardPipeline = TargetPipeline[IO, Fake.ResponsePipeline](target =>
+      ~ioStep >> xx(target) >> DiscardCookie[Fake.Response](CookieTransportConfig("test"))
     )
   }
 }

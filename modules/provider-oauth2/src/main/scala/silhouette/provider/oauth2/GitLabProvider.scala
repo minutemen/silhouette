@@ -17,21 +17,19 @@
  */
 package silhouette.provider.oauth2
 
-import java.net.URI
 import java.time.Clock
 
+import cats.effect.Async
+import cats.implicits._
 import io.circe.Json
-import silhouette.http.Method.GET
-import silhouette.http.client.Request
-import silhouette.http.{ HttpClient, Status }
+import silhouette.LoginInfo
 import silhouette.provider.UnexpectedResponseException
 import silhouette.provider.oauth2.GitLabProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
-import silhouette.provider.social.state.StateHandler
-import silhouette.{ ConfigURI, LoginInfo }
-
-import scala.concurrent.{ ExecutionContext, Future }
+import sttp.client.circe.asJson
+import sttp.client.{ SttpBackend, basicRequest }
+import sttp.model.Uri._
 
 /**
  * Base GitLab OAuth2 Provider.
@@ -40,8 +38,10 @@ import scala.concurrent.{ ExecutionContext, Future }
  * @see https://gitlab.com/help/integration/oauth_provider.md
  * @see https://gitlab.com/help/api/README.md#status-codes
  * @see https://gitlab.com/help/api/users.md
+ *
+ * @tparam F The type of the IO monad.
  */
-trait BaseGitLabProvider extends OAuth2Provider {
+trait BaseGitLabProvider[F[_]] extends OAuth2Provider[F] {
 
   /**
    * The provider ID.
@@ -54,27 +54,27 @@ trait BaseGitLabProvider extends OAuth2Provider {
    * @param authInfo The auth info received from the provider.
    * @return On success the build social profile, otherwise a failure.
    */
-  override protected def buildProfile(authInfo: OAuth2Info): Future[Profile] = {
-    val uri = config.apiURI.getOrElse(DefaultApiURI).format(authInfo.accessToken)
-
-    httpClient.execute(Request(GET, uri)).flatMap { response =>
-      withParsedJson(response) { json =>
-        response.status match {
-          case Status.OK =>
+  override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
+    val uri = config.apiUri.getOrElse(DefaultApiUri)
+    basicRequest.get(uri.param("access_token", authInfo.accessToken))
+      .response(asJson[Json])
+      .send().flatMap { response =>
+        response.body match {
+          case Left(error) =>
+            F.raiseError(new UnexpectedResponseException(UnexpectedResponse.format(id, error.body, response.code)))
+          case Right(json) =>
             profileParser.parse(json, authInfo)
-          case status =>
-            Future.failed(new UnexpectedResponseException(UnexpectedResponse.format(id, json, status)))
         }
       }
-    }
   }
 }
 
 /**
  * The profile parser for the common social profile.
+ *
+ * @tparam F The type of the IO monad.
  */
-class GitLabProfileParser(implicit val ec: ExecutionContext)
-  extends SocialProfileParser[Json, CommonSocialProfile, OAuth2Info] {
+class GitLabProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, CommonSocialProfile, OAuth2Info] {
 
   /**
    * Parses the social profile.
@@ -83,13 +83,13 @@ class GitLabProfileParser(implicit val ec: ExecutionContext)
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): Future[CommonSocialProfile] = {
-    Future.fromTry(json.hcursor.downField("id").as[Long].getOrError(json, "id", ID)).map { id =>
+  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] = {
+    Async[F].fromTry(json.hcursor.downField("id").as[Long].getOrError(json, "id", ID)).map { id =>
       CommonSocialProfile(
         loginInfo = LoginInfo(ID, id.toString),
         fullName = json.hcursor.downField("name").as[String].toOption,
         email = json.hcursor.downField("email").as[String].toOption,
-        avatarUri = json.hcursor.downField("avatar_url").as[String].toOption.map(uri => new URI(uri))
+        avatarUri = json.hcursor.downField("avatar_url").as[String].toOption.map(uri => uri"$uri")
       )
     }
   }
@@ -98,26 +98,25 @@ class GitLabProfileParser(implicit val ec: ExecutionContext)
 /**
  * The GitLab OAuth2 Provider.
  *
- * @param httpClient   The HTTP client implementation.
- * @param stateHandler The state provider implementation.
- * @param clock        The current clock instance.
- * @param config       The provider config.
- * @param ec           The execution context.
+ * @param clock       The current clock instance.
+ * @param config      The provider config.
+ * @param sttpBackend The STTP backend.
+ * @param F           The IO monad type class.
+ * @tparam F The type of the IO monad.
  */
-class GitLabProvider(
-  protected val httpClient: HttpClient,
-  protected val stateHandler: StateHandler,
+class GitLabProvider[F[_]](
   protected val clock: Clock,
   val config: OAuth2Config
 )(
   implicit
-  override implicit val ec: ExecutionContext
-) extends BaseGitLabProvider with CommonProfileBuilder {
+  protected val sttpBackend: SttpBackend[F, Nothing, Nothing],
+  protected val F: Async[F]
+) extends BaseGitLabProvider[F] with CommonProfileBuilder[F] {
 
   /**
    * The type of this class.
    */
-  override type Self = GitLabProvider
+  override type Self = GitLabProvider[F]
 
   /**
    * The profile parser implementation.
@@ -130,8 +129,7 @@ class GitLabProvider(
    * @param f A function which gets the config passed and returns different config.
    * @return An instance of the provider initialized with new config.
    */
-  override def withConfig(f: OAuth2Config => OAuth2Config): Self =
-    new GitLabProvider(httpClient, stateHandler, clock, f(config))
+  override def withConfig(f: OAuth2Config => OAuth2Config): Self = new GitLabProvider(clock, f(config))
 }
 
 /**
@@ -147,5 +145,5 @@ object GitLabProvider {
   /**
    * Default provider endpoint.
    */
-  val DefaultApiURI = ConfigURI("https://gitlab.com/api/v4/user?access_token=%s")
+  val DefaultApiUri = uri"https://gitlab.com/api/v4/user"
 }

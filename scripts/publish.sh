@@ -32,7 +32,7 @@ if [ "$TRAVIS_REPO_SLUG" == "minutemen/silhouette" ] &&
   echo ""
   echo "Starting publishing SNAPSHOT version: $PROJECT_VERSION"
 
-  ${SCRIPTS_DIR}/sbt.sh +publish
+  "$SCRIPTS_DIR/sbt.sh" +publish
 
   echo ""
   echo "Finished SNAPSHOT publishing process"

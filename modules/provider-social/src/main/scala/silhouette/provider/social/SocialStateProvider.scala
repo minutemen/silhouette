@@ -17,51 +17,42 @@
  */
 package silhouette.provider.social
 
-import io.circe.{ Decoder, Encoder }
 import silhouette.AuthInfo
 import silhouette.http.{ RequestPipeline, ResponsePipeline, SilhouetteResponse }
-import silhouette.provider.social.state.StateItem
-
-import scala.concurrent.Future
-import scala.reflect.ClassTag
+import silhouette.provider.social.state.{ State, StateHandler }
 
 /**
- * A stateful auth info, wraps the `AuthInfo` with user state.
+ * A stateful auth info, wraps the `AuthInfo` with state.
  *
- * @param authInfo  The auth info.
- * @param userState The user state.
+ * @param authInfo The auth info.
+ * @param state    The state params returned from the provider.
  * @tparam A The type of the auth info.
- * @tparam S The type of the user state.
  */
-case class StatefulAuthInfo[A <: AuthInfo, +S <: StateItem](authInfo: A, userState: S)
+case class StatefulAuthInfo[A <: AuthInfo](authInfo: A, state: State)
 
 /**
  * Extends the [[SocialProvider]] with the ability to handle provider specific state.
  *
+ * @tparam F The type of the IO monad.
  * @tparam C The type of the config.
  */
-trait SocialStateProvider[C] extends SocialProvider[C] {
+trait SocialStateProvider[F[_], C] extends SocialProvider[F, C] {
 
   /**
-   * Authenticates the user and returns the auth information and the user state.
+   * Authenticates the user and returns the auth information and the state params passed to the provider.
    *
    * Returns either a [[StatefulAuthInfo]] if all went OK or a `ResponsePipeline` that the controller
    * sends to the browser (e.g.: in the case of OAuth where the user needs to be redirected to the service
    * provider).
    *
-   * @param decoder  The JSON decoder.
-   * @param encoder  The JSON encoder.
-   * @param request  The request.
-   * @param classTag The class tag for the user state item.
-   * @tparam S The type of the user state item.
+   * @param request      The request pipeline.
+   * @param stateHandler The state handler instance which handles the state serialization/deserialization.
    * @tparam R The type of the request.
-   * @return Either a `ResponsePipeline` or the [[StatefulAuthInfo]] from the provider.
+   * @return Either the [[silhouette.http.ResponsePipeline]] on the left or the [[StatefulAuthInfo]] from the
+   *         provider on the right.
    */
-  def authenticate[S <: StateItem, R](userState: S)(
-    implicit
-    decoder: Decoder[S],
-    encoder: Encoder[S],
+  def authenticate[R](
     request: RequestPipeline[R],
-    classTag: ClassTag[S]
-  ): Future[Either[ResponsePipeline[SilhouetteResponse], StatefulAuthInfo[A, S]]]
+    stateHandler: StateHandler[F]
+  ): F[Either[ResponsePipeline[SilhouetteResponse], StatefulAuthInfo[A]]]
 }

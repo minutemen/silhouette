@@ -19,46 +19,43 @@ package silhouette.authenticator.validator
 
 import java.time.{ Clock, Instant, ZoneId }
 
-import SlidingWindowValidator._
-import org.specs2.concurrent.ExecutionEnv
+import cats.data.Validated._
+import cats.effect.IO
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
-import silhouette.specs2.WaitPatience
 import silhouette.LoginInfo
 import silhouette.authenticator.Authenticator
-import silhouette.authenticator.Validator.{ Invalid, Valid }
+import silhouette.authenticator.validator.SlidingWindowValidator._
 
 import scala.concurrent.duration._
 
 /**
  * Test case for the [[SlidingWindowValidator]] class.
- *
- * @param ev The execution environment.
  */
-class SlidingWindowValidatorSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
+class SlidingWindowValidatorSpec extends Specification with Mockito {
 
   "The `isValid` method" should {
     "return always Valid if the `touched` property isn't set" in new Context {
-      SlidingWindowValidator(1.minute, clock)
-        .isValid(authenticator) must beEqualTo(Valid).awaitWithPatience
+      SlidingWindowValidator[IO](1.minute, clock)
+        .isValid(authenticator).unsafeRunSync() must beEqualTo(validNel(()))
     }
 
     "return Valid if the authenticator is not timed out" in new Context {
-      SlidingWindowValidator(1.minute, Clock.fixed(instant, UTC))
-        .isValid(authenticator.touch(clock)) must beEqualTo(Valid).awaitWithPatience
+      SlidingWindowValidator[IO](1.minute, Clock.fixed(instant, UTC))
+        .isValid(authenticator.touch(clock)).unsafeRunSync() must beEqualTo(validNel(()))
     }
 
     "return Valid if the authenticator was idle for exactly one minute" in new Context {
-      SlidingWindowValidator(1.minute, Clock.fixed(instant.plusSeconds(60), UTC))
-        .isValid(authenticator.touch(clock)) must beEqualTo(Valid).awaitWithPatience
+      SlidingWindowValidator[IO](1.minute, Clock.fixed(instant.plusSeconds(60), UTC))
+        .isValid(authenticator.touch(clock)).unsafeRunSync() must beEqualTo(validNel(()))
     }
 
     "return Invalid if the authenticator was idle for exactly one minute and 1 second " in new Context {
-      SlidingWindowValidator(1.minute, Clock.fixed(instant.plusSeconds(61), UTC))
-        .isValid(authenticator.touch(clock)) must beEqualTo(Invalid(List(
+      SlidingWindowValidator[IO](1.minute, Clock.fixed(instant.plusSeconds(61), UTC))
+        .isValid(authenticator.touch(clock)).unsafeRunSync() must beEqualTo(invalidNel(
           Error.format(1000.millis)
-        ))).awaitWithPatience
+        ))
     }
   }
 

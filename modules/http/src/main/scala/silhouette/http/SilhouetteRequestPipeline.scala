@@ -17,9 +17,10 @@
  */
 package silhouette.http
 
-import java.net.URI
-
 import silhouette.RichSeq._
+import sttp.model._
+
+import scala.collection.immutable.Seq
 
 /**
  * The Silhouette request implementation.
@@ -28,15 +29,13 @@ import silhouette.RichSeq._
  * @param method      The HTTP request method.
  * @param headers     The headers.
  * @param cookies     The cookies.
- * @param queryParams The query params.
  * @param body        An optional request body.
  */
 final protected[silhouette] case class SilhouetteRequest(
-  uri: URI,
+  uri: Uri,
   method: Method,
-  headers: Seq[Header] = Seq(),
-  cookies: Seq[Cookie] = Seq(),
-  queryParams: Map[String, Seq[String]] = Map(),
+  headers: Headers = Headers(Seq()),
+  cookies: Seq[CookieWithMeta] = Seq(),
   body: Option[Body] = None
 )
 
@@ -69,7 +68,7 @@ final protected[silhouette] case class SilhouetteRequestPipeline(
    *
    * @return The absolute URI of the request target.
    */
-  override def uri: URI = request.uri
+  override def uri: Uri = request.uri
 
   /**
    * Creates a new request pipeline with the given URI.
@@ -80,7 +79,7 @@ final protected[silhouette] case class SilhouetteRequestPipeline(
    * @param uri The absolute URI of the request target.
    * @return A new request pipeline instance with the set URI.
    */
-  override def withUri(uri: URI): SilhouetteRequestPipeline = copy(request.copy(uri = uri))
+  override def withUri(uri: Uri): SilhouetteRequestPipeline = copy(request.copy(uri = uri))
 
   /**
    * Gets the HTTP request method.
@@ -102,7 +101,7 @@ final protected[silhouette] case class SilhouetteRequestPipeline(
    *
    * @return All headers.
    */
-  override def headers: Seq[Header] = request.headers
+  override def headers: Headers = request.headers
 
   /**
    * Creates a new request pipeline with the given headers.
@@ -112,27 +111,15 @@ final protected[silhouette] case class SilhouetteRequestPipeline(
    * @param headers The headers to set.
    * @return A new request pipeline instance with the set headers.
    */
-  override def withHeaders(headers: Header*): SilhouetteRequestPipeline = {
-    val groupedHeaders = headers.groupByPreserveOrder(_.name).map {
-      case (key, h) => Header(key, h.flatMap(_.values): _*)
-    }
-    val newHeaders = groupedHeaders.foldLeft(request.headers) {
-      case (acc, header) =>
-        acc.indexWhere(_.name == header.name) match {
-          case -1 => acc :+ header
-          case i  => acc.patch(i, Seq(header), 1)
-        }
-    }
-
-    copy(request.copy(headers = newHeaders))
-  }
+  override def withHeaders(headers: Header*): SilhouetteRequestPipeline =
+    copy(request.copy(headers = Headers(request.headers.headers ++ headers)))
 
   /**
    * Gets the list of cookies.
    *
    * @return The list of cookies.
    */
-  override def cookies: Seq[Cookie] = request.cookies
+  override def cookies: Seq[CookieWithMeta] = request.cookies
 
   /**
    * Creates a new request pipeline with the given cookies.
@@ -142,7 +129,7 @@ final protected[silhouette] case class SilhouetteRequestPipeline(
    * @param cookies The cookies to set.
    * @return A new request pipeline instance with the set cookies.
    */
-  override def withCookies(cookies: Cookie*): SilhouetteRequestPipeline = {
+  override def withCookies(cookies: CookieWithMeta*): SilhouetteRequestPipeline = {
     val filteredCookies = cookies.groupByPreserveOrder(_.name).map(_._2.last)
     val newCookies = filteredCookies.foldLeft(request.cookies) {
       case (acc, cookie) =>
@@ -160,7 +147,7 @@ final protected[silhouette] case class SilhouetteRequestPipeline(
    *
    * @return All query params.
    */
-  def queryParams: Map[String, Seq[String]] = request.queryParams
+  override def queryParams: QueryParams = request.uri.params
 
   /**
    * Creates a new request pipeline with the given query params.
@@ -171,13 +158,7 @@ final protected[silhouette] case class SilhouetteRequestPipeline(
    * @return A new request pipeline instance with the set query params.
    */
   override def withQueryParams(params: (String, String)*): SilhouetteRequestPipeline = {
-    val newParams = params.groupByPreserveOrder(_._1).map {
-      case (key, value) => key -> value.map(_._2)
-    }.foldLeft(request.queryParams) {
-      case (acc, (key, value)) => acc + (key -> value)
-    }
-
-    copy(request.copy(queryParams = newParams))
+    copy(request.copy(uri = request.uri.params(params: _*)))
   }
 
   /**

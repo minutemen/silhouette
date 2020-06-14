@@ -17,22 +17,20 @@
  */
 package silhouette.provider.oauth2
 
-import java.net.URI
 import java.nio.file.Paths
 
-import silhouette.http.BodyWrites._
-import silhouette.http.Method.GET
-import silhouette.http.client.{ Request, Response }
-import silhouette.http.{ Body, Header, Status }
-import silhouette.provider.oauth2.Auth0Provider._
-import silhouette.provider.oauth2.OAuth2Provider._
+import cats.effect.IO._
+import silhouette.LoginInfo
+import silhouette.http.BearerAuthorizationHeader
+import silhouette.provider.oauth2.Auth0Provider.DefaultApiUri
+import silhouette.provider.oauth2.OAuth2Provider.UnexpectedResponse
 import silhouette.provider.social.SocialProvider.ProfileError
 import silhouette.provider.social.{ CommonSocialProfile, ProfileRetrievalException }
 import silhouette.specs2.BaseFixture
-import silhouette.{ ConfigURI, LoginInfo }
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import sttp.client.asynchttpclient.cats.AsyncHttpClientCatsBackend
+import sttp.client.{ Request, Response, SttpClientException }
+import sttp.model.Uri._
+import sttp.model.{ Method, StatusCode, Uri }
 
 /**
  * Test case for the [[Auth0Provider]] class.
@@ -42,11 +40,10 @@ class Auth0ProviderSpec extends OAuth2ProviderSpec {
   "The `retrieveProfile` method" should {
     "fail with ProfileRetrievalException if API returns error" in new Context {
       val apiResult = ErrorJson.asJson
-      val httpResponse = Response(Status.`Bad Request`, Body.from(apiResult))
-      val httpRequest = Request(GET, DefaultApiURI).withHeaders(
-        Header(Header.Name.Authorization, s"Bearer ${oAuth2Info.accessToken}")
-      )
-      httpClient.execute(httpRequest) returns Future.successful(httpResponse)
+
+      sttpBackend = AsyncHttpClientCatsBackend.stub
+        .whenRequestMatches(requestMatcher(DefaultApiUri))
+        .thenRespond(Response(apiResult.toString, StatusCode.BadRequest))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
         case e =>
@@ -54,58 +51,48 @@ class Auth0ProviderSpec extends OAuth2ProviderSpec {
           e.getCause.getMessage must equalTo(UnexpectedResponse.format(
             provider.id,
             apiResult,
-            Status.`Bad Request`
+            StatusCode.BadRequest
           ))
       }
     }
 
     "fail with ProfileRetrievalException if an unexpected error occurred" in new Context {
-      val httpResponse = mock[Response].smart
-      val httpRequest = Request(GET, DefaultApiURI).withHeaders(
-        Header(Header.Name.Authorization, s"Bearer ${oAuth2Info.accessToken}")
-      )
-
-      httpResponse.status returns Status.`Internal Server Error`
-      httpResponse.body throws new RuntimeException("")
-      httpClient.execute(httpRequest) returns Future.successful(httpResponse)
+      sttpBackend = AsyncHttpClientCatsBackend.stub
+        .whenRequestMatches(requestMatcher(DefaultApiUri))
+        .thenRespond(throw new SttpClientException.ConnectException(new RuntimeException))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
-        case e => e.getMessage must equalTo(ProfileError.format(ID))
+        case e => e.getMessage must equalTo(ProfileError.format(provider.id))
       }
     }
 
     "use the overridden API URI" in new Context {
-      val uri = DefaultApiURI.copy(uri = DefaultApiURI.uri + "&new")
+      val uri = DefaultApiUri.param("new", "true")
       val apiResult = UserProfileJson.asJson
-      val httpResponse = Response(Status.OK, Body.from(apiResult))
-      val httpRequest = Request(GET, uri).withHeaders(
-        Header(Header.Name.Authorization, s"Bearer ${oAuth2Info.accessToken}")
-      )
 
-      config.apiURI returns Some(uri)
-      httpClient.execute(httpRequest) returns Future.successful(httpResponse)
+      config.apiUri returns Some(uri)
+      sttpBackend = AsyncHttpClientCatsBackend.stub
+        .whenRequestMatches(requestMatcher(uri))
+        .thenRespond(Response(apiResult.toString, StatusCode.Ok))
 
-      await(provider.retrieveProfile(oAuth2Info))
-
-      there was one(httpClient).execute(httpRequest)
+      provider.retrieveProfile(oAuth2Info).unsafeRunSync()
     }
 
     "return the social profile" in new Context {
-      val apiResult = UserProfileJson.asJson
-      val httpResponse = Response(Status.OK, Body.from(apiResult))
-      val httpRequest = Request(GET, DefaultApiURI).withHeaders(
-        Header(Header.Name.Authorization, s"Bearer ${oAuth2Info.accessToken}")
-      )
-
-      httpClient.execute(httpRequest) returns Future.successful(httpResponse)
+      sttpBackend = AsyncHttpClientCatsBackend.stub
+        .whenRequestMatches(requestMatcher(DefaultApiUri))
+        .thenRespond(Response(UserProfileJson.asJson.toString, StatusCode.Ok))
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>
+        val uriStr = "https://s.gravatar.com/avatar/c1c49231ce863e5f33d7f42cd44632f4?s=480&r=pg&" +
+          "d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Flu.png"
         p must be equalTo CommonSocialProfile(
           loginInfo = LoginInfo(provider.id, "auth0|56961100fc02d8a0339b1a2a"),
+          firstName = Some("Apollonia"),
+          lastName = Some("Vanova"),
           fullName = Some("Apollonia Vanova"),
           email = Some("apollonia.vanova@minutemen.group"),
-          avatarUri = Some(new URI("https://s.gravatar.com/avatar/c1c49231ce863e5f33d7f42cd44632f4?s=480&r=pg&" +
-            "d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Flu.png"))
+          avatarUri = Some(uri"$uriStr")
         )
       }
     }
@@ -134,10 +121,10 @@ class Auth0ProviderSpec extends OAuth2ProviderSpec {
      * The OAuth2 config.
      */
     override lazy val config = spy(OAuth2Config(
-      authorizationURI = Some(ConfigURI("https://gerritforge.eu.auth0.com/authorize")),
-      accessTokenURI = ConfigURI("https://gerritforge.eu.auth0.com/oauth/token"),
-      redirectURI = Some(ConfigURI("https://minutemen.group")),
-      refreshURI = Some(ConfigURI("https://gerritforge.eu.auth0.com/oauth/token")),
+      authorizationUri = Some(uri"https://gerritforge.eu.auth0.com/authorize"),
+      accessTokenUri = uri"https://gerritforge.eu.auth0.com/oauth/token",
+      redirectUri = Some(uri"https://minutemen.group"),
+      refreshUri = Some(uri"https://gerritforge.eu.auth0.com/oauth/token"),
       clientID = "some.client.id",
       clientSecret = "some.secret",
       scope = Some("email")
@@ -146,6 +133,19 @@ class Auth0ProviderSpec extends OAuth2ProviderSpec {
     /**
      * The provider to test.
      */
-    lazy val provider = new Auth0Provider(httpClient, stateHandler, clock, config)
+    lazy val provider = new Auth0Provider(clock, config)
+
+    /**
+     * Matches the request for the STTP backend stub.
+     *
+     * @param uri To URI to match against.
+     * @return A partial function that matches the request.
+     */
+    def requestMatcher(uri: Uri): PartialFunction[Request[_, _], Boolean] = {
+      case r: Request[_, _] =>
+        r.method == Method.GET &&
+          r.uri == uri &&
+          r.headers.contains(BearerAuthorizationHeader(oAuth2Info.accessToken))
+    }
   }
 }

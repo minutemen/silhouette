@@ -20,6 +20,7 @@ package silhouette.http
 import silhouette.Credentials
 import silhouette.crypto.Base64
 
+import scala.language.implicitConversions
 import scala.util.{ Success, Try }
 
 /**
@@ -78,3 +79,17 @@ object BasicCredentials {
  * @param value The token value.
  */
 case class BearerToken(value: String) extends HttpCredentials(AuthScheme.Bearer)
+
+/**
+ * The companion object of the [[BearerToken]].
+ */
+object BearerToken {
+
+  /**
+   * Instantiates a [[BearerToken]] from a string.
+   *
+   * @param token The bearer token as string.
+   * @return A [[BearerToken]] instance.
+   */
+  implicit def strToBearerToken(token: String): BearerToken = BearerToken(token)
+}

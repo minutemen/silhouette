@@ -24,8 +24,8 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.crypto.Hash._
+import silhouette.jwt.jose4j.Jose4jClaimReader._
 import silhouette.jwt.{ JwtException, _ }
-import silhouette.jwt.jose4j.Jose4jReads._
 import silhouette.specs2.WithBouncyCastle
 
 /**
@@ -113,49 +113,49 @@ class SimpleSpec extends Specification with Mockito with WithBouncyCastle {
   "The `consumer`" should {
     "throw an JwtException if the 'sub' claim is required but missed" in new Context {
       override val jwsConfiguration = JwsHmacConfiguration(HS256, new HmacKey(sha256("some.secret")))
-      override lazy val reads = Jose4jReads(consumer.copy(requireSubject = true))
+      override lazy val claimReader = Jose4jClaimReader(consumer.copy(requireSubject = true))
 
       fraudulent(Claims())
     }
 
     "throw an JwtException if the 'jti' claim is required but missed" in new Context {
       override val jwsConfiguration = JwsHmacConfiguration(HS256, new HmacKey(sha256("some.secret")))
-      override lazy val reads = Jose4jReads(consumer.copy(requireJwtID = true))
+      override lazy val claimReader = Jose4jClaimReader(consumer.copy(requireJwtID = true))
 
       fraudulent(Claims())
     }
 
     "throw an JwtException if the 'exp' claim is required but missed" in new Context {
       override val jwsConfiguration = JwsHmacConfiguration(HS256, new HmacKey(sha256("some.secret")))
-      override lazy val reads = Jose4jReads(consumer.copy(requireExpirationTime = true))
+      override lazy val claimReader = Jose4jClaimReader(consumer.copy(requireExpirationTime = true))
 
       fraudulent(Claims())
     }
 
     "throw an JwtException if the 'iat' claim is required but missed" in new Context {
       override val jwsConfiguration = JwsHmacConfiguration(HS256, new HmacKey(sha256("some.secret")))
-      override lazy val reads = Jose4jReads(consumer.copy(requireIssuedAt = true))
+      override lazy val claimReader = Jose4jClaimReader(consumer.copy(requireIssuedAt = true))
 
       fraudulent(Claims())
     }
 
     "throw an JwtException if the 'nbf' claim is required but missed" in new Context {
       override val jwsConfiguration = JwsHmacConfiguration(HS256, new HmacKey(sha256("some.secret")))
-      override lazy val reads = Jose4jReads(consumer.copy(requireNotBefore = true))
+      override lazy val claimReader = Jose4jClaimReader(consumer.copy(requireNotBefore = true))
 
       fraudulent(Claims())
     }
 
     "throw an JwtException if the expected issuer is not available in the JWT" in new Context {
       override val jwsConfiguration = JwsHmacConfiguration(HS256, new HmacKey(sha256("some.secret")))
-      override lazy val reads = Jose4jReads(consumer.copy(expectedIssuer = Some("test1")))
+      override lazy val claimReader = Jose4jClaimReader(consumer.copy(expectedIssuer = Some("test1")))
 
       fraudulent(Claims(issuer = Some("test2")))
     }
 
     "throw an JwtException if the expected audience is not available in the JWT" in new Context {
       override val jwsConfiguration = JwsHmacConfiguration(HS256, new HmacKey(sha256("some.secret")))
-      override lazy val reads = Jose4jReads(consumer.copy(expectedAudience = Some(List("test1", "test2"))))
+      override lazy val claimReader = Jose4jClaimReader(consumer.copy(expectedAudience = Some(List("test1", "test2"))))
 
       fraudulent(Claims(audience = Some(List("test3"))))
     }
@@ -208,12 +208,12 @@ class SimpleSpec extends Specification with Mockito with WithBouncyCastle {
     /**
      * The reads to test.
      */
-    lazy val reads = Jose4jReads(consumer)
+    lazy val claimReader = Jose4jClaimReader(consumer)
 
     /**
      * The writes to test.
      */
-    lazy val writes = Jose4jWrites(producer)
+    lazy val claimWriter = Jose4jClaimWriter(producer)
 
     /**
      * A helper method which transforms claims into a JWT and vice versa to check if the same
@@ -223,9 +223,9 @@ class SimpleSpec extends Specification with Mockito with WithBouncyCastle {
      * @return A Specs2 match result.
      */
     protected def transform(claims: Claims): MatchResult[Any] = {
-      writes.write(claims) must beSuccessfulTry.like {
+      claimWriter.apply(claims) must beRight[String].like {
         case jwt =>
-          reads.read(jwt) must beSuccessfulTry.withValue(claims)
+          claimReader.apply(jwt) must beRight(claims)
       }
     }
 
@@ -237,9 +237,9 @@ class SimpleSpec extends Specification with Mockito with WithBouncyCastle {
      * @return A Specs2 match result.
      */
     protected def fraudulent(claims: Claims): MatchResult[Any] = {
-      writes.write(claims) must beSuccessfulTry.like {
+      claimWriter.apply(claims) must beRight[String].like {
         case jwt =>
-          reads.read(jwt) must beFailedTry.like {
+          claimReader.apply(jwt) must beLeft[Throwable].like {
             case e: JwtException => e.getMessage must startWith(FraudulentJwtToken.format(""))
           }
       }

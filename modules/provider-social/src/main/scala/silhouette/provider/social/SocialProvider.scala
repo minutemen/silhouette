@@ -17,26 +17,26 @@
  */
 package silhouette.provider.social
 
-import java.net.URI
-
-import silhouette.http.{ HttpClient, RequestPipeline, ResponsePipeline, SilhouetteResponse }
+import cats.effect.Async
+import cats.implicits._
+import silhouette.AuthInfo
+import silhouette.http.{ RequestPipeline, ResponsePipeline, SilhouetteResponse }
 import silhouette.provider.Provider
 import silhouette.provider.social.SocialProvider._
-import silhouette.{ AuthInfo, ExecutionContextProvider }
-
-import scala.concurrent.Future
+import sttp.model.Uri
 
 /**
  * The base interface for all social providers.
  *
+ * @tparam F The type of the IO monad.
  * @tparam C The type of the config.
  */
-trait SocialProvider[C] extends Provider with SocialProfileBuilder with ExecutionContextProvider {
+trait SocialProvider[F[_], C] extends Provider with SocialProfileBuilder[F] {
 
   /**
    * The type of the concrete implementation of this abstract type.
    */
-  type Self <: SocialProvider[C]
+  type Self <: SocialProvider[F, C]
 
   /**
    * The type of the auth info.
@@ -44,9 +44,9 @@ trait SocialProvider[C] extends Provider with SocialProfileBuilder with Executio
   type A <: AuthInfo
 
   /**
-   * The HTTP client implementation.
+   * The IO monad type class.
    */
-  protected val httpClient: HttpClient
+  implicit protected val F: Async[F]
 
   /**
    * Gets the provider config.
@@ -72,12 +72,10 @@ trait SocialProvider[C] extends Provider with SocialProfileBuilder with Executio
    *
    * @param request The request pipeline.
    * @tparam R The type of the request.
-   * @return Either a `ResponsePipeline` or the `AuthInfo` from the provider.
+   * @return Either the [[silhouette.http.ResponsePipeline]] on the left or the [[AuthInfo]] from the provider on
+   *         the right.
    */
-  def authenticate[R]()(
-    implicit
-    request: RequestPipeline[R]
-  ): Future[Either[ResponsePipeline[SilhouetteResponse], A]]
+  def authenticate[R](request: RequestPipeline[R]): F[Either[ResponsePipeline[SilhouetteResponse], A]]
 
   /**
    * Retrieves the user profile for the given auth info.
@@ -85,12 +83,11 @@ trait SocialProvider[C] extends Provider with SocialProfileBuilder with Executio
    * This method can be used to retrieve the profile information for an already authenticated identity.
    *
    * @param authInfo The auth info for which the profile information should be retrieved.
-   * @return The profile information for the given auth info.
+   * @return Either an error on the left or the build social profile on the right.
    */
-  def retrieveProfile(authInfo: A): Future[Profile] = {
+  def retrieveProfile(authInfo: A): F[Profile] = {
     buildProfile(authInfo).recoverWith {
-      case e =>
-        Future.failed(new ProfileRetrievalException(ProfileError.format(id), Some(e)))
+      case e => F.raiseError(new ProfileRetrievalException(ProfileError.format(id), Some(e)))
     }
   }
 
@@ -102,12 +99,15 @@ trait SocialProvider[C] extends Provider with SocialProfileBuilder with Executio
    * @param uri     The URI to resolve.
    * @param request The current request.
    * @tparam R The type of the request.
-   * @return The absolute url.
+   * @return The absolute URI.
    */
-  protected def resolveCallbackUri[R](uri: URI)(
-    implicit
+  protected def resolveCallbackUri[R](
+    uri: Uri,
     request: RequestPipeline[R]
-  ): URI = if (uri.isAbsolute) uri else request.uri.resolve(uri)
+  ): Uri = {
+    val javaURI = uri.toJavaUri
+    if (javaURI.isAbsolute) uri else Uri(request.uri.toJavaUri.resolve(javaURI))
+  }
 }
 
 /**

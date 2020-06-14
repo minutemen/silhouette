@@ -19,41 +19,38 @@ package silhouette.authenticator.validator
 
 import java.time.{ Clock, Instant, ZoneId }
 
-import org.specs2.concurrent.ExecutionEnv
+import cats.data.Validated._
+import cats.effect.IO
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.LoginInfo
 import silhouette.authenticator.Authenticator
-import silhouette.authenticator.Validator.{ Invalid, Valid }
 import silhouette.authenticator.validator.ExpirationValidator._
-import silhouette.specs2.WaitPatience
 
 import scala.concurrent.duration._
 
 /**
  * Test case for the [[ExpirationValidator]] class.
- *
- * @param ev The execution environment.
  */
-class ExpirationValidatorSpec(implicit ev: ExecutionEnv) extends Specification with Mockito with WaitPatience {
+class ExpirationValidatorSpec extends Specification with Mockito {
 
   "The `isValid` method" should {
     "return always Valid if the `expires` property isn't set" in new Context {
-      ExpirationValidator(clock)
-        .isValid(authenticator) must beEqualTo(Valid).awaitWithPatience
+      ExpirationValidator[IO](clock)
+        .isValid(authenticator).unsafeRunSync() must beEqualTo(validNel(()))
     }
 
     "return Valid if the authenticator is not expired" in new Context {
-      ExpirationValidator(Clock.fixed(instant.plusSeconds(60), UTC))
-        .isValid(authenticator.withExpiry(1.minute, clock)) must beEqualTo(Valid).awaitWithPatience
+      ExpirationValidator[IO](Clock.fixed(instant.plusSeconds(60), UTC))
+        .isValid(authenticator.withExpiry(1.minute, clock)).unsafeRunSync() must beEqualTo(validNel(()))
     }
 
     "return Invalid if the authenticator is expired" in new Context {
-      ExpirationValidator(Clock.fixed(instant.plusSeconds(61), UTC))
-        .isValid(authenticator.withExpiry(1.minute, clock)) must beEqualTo(
-          Invalid(Seq(Error.format(1000.millis)))
-        ).awaitWithPatience
+      ExpirationValidator[IO](Clock.fixed(instant.plusSeconds(61), UTC))
+        .isValid(authenticator.withExpiry(1.minute, clock)).unsafeRunSync() must beEqualTo(
+          invalidNel(Error.format(1000.millis))
+        )
     }
   }
 

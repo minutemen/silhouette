@@ -17,48 +17,28 @@
  */
 package silhouette.authenticator
 
+import cats.data.ValidatedNel
 import silhouette.authenticator.Validator._
-
-import scala.concurrent.{ ExecutionContext, Future }
 
 /**
  * Adds the ability to validate an [[Authenticator]].
+ *
+ * @tparam F The type of the IO monad.
  */
-trait Validator {
+trait Validator[F[_]] {
 
   /**
    * Checks if the authenticator is valid.
    *
    * @param authenticator The authenticator to validate.
-   * @param ec            The execution context to perform the async operations.
-   * @return [[silhouette.authenticator.Validator.Valid]] if the authenticator is valid,
-   *        [[silhouette.authenticator.Validator.Invalid]] otherwise.
+   * @return [[cats.data.Validated]] if the authenticator is valid or invalid.
    */
-  def isValid(authenticator: Authenticator)(
-    implicit
-    ec: ExecutionContext
-  ): Future[Status]
+  def isValid(authenticator: Authenticator): F[Status]
 }
 
 /**
  * The companion object.
  */
 object Validator {
-
-  /**
-   * The validation status.
-   */
-  sealed trait Status
-
-  /**
-   * Indicates that the validation was successful.
-   */
-  case object Valid extends Status
-
-  /**
-   * Indicates that the validation failed.
-   *
-   * @param errors The validation errors.
-   */
-  final case class Invalid(errors: Seq[String]) extends Status
+  type Status = ValidatedNel[String, Unit]
 }

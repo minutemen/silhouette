@@ -43,7 +43,7 @@ elif ( set -o noclobber; echo "$$" > "$LOCK_FILE") 2> /dev/null; then
   trap 'rm -f "$LOCK_FILE"; exit $?' INT TERM EXIT
 
   # critical-section BK: (the protected bit)
-  OUTPUT=$(${SCRIPTS_DIR}/sbt.sh --error 'set showSuccess := false' buildVersions 2>&- | tail -2)
+  OUTPUT=$("$SCRIPTS_DIR/sbt.sh" --error 'set showSuccess := false' buildVersions 2>&- | tail -2)
   PROJECT_VERSION=$(echo "${OUTPUT//$'\n'/ }" | sed "s/.*PROJECT_VERSION \([^ ]*\).*$/\1/")
   SCALA_VERSION=$(echo "${OUTPUT//$'\n'/ }" | sed "s/.*SCALA_VERSION \([^ ]*\).*$/\1/")
 

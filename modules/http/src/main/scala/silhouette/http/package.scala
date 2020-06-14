@@ -17,31 +17,43 @@
  */
 package silhouette
 
-import java.net.URI
+import sttp.model._
+
+import scala.collection.immutable.Seq
 
 /**
  * HTTP related interfaces and implementations.
  */
 package object http {
+
+  /**
+   * A function that gets a response and returns a response. Can be used as type for functions that writes to
+   * a response.
+   */
+  type ResponseWriter[R] = ResponsePipeline[R] => ResponsePipeline[R]
+
+  /**
+   * The fake request and response definitions. Useful for testing.
+   */
   protected[silhouette] object Fake {
-    type Request = RequestPipeline[SilhouetteRequest]
-    type Response = ResponsePipeline[SilhouetteResponse]
+    type Request = SilhouetteRequest
+    type Response = SilhouetteResponse
+    type RequestPipeline = http.RequestPipeline[Request]
+    type ResponsePipeline = http.ResponsePipeline[Response]
 
     def request(
-      uri: URI = new URI("http://localhost/"),
+      uri: Uri = Uri("http", "localhost"),
       method: Method = Method.GET,
-      headers: Seq[Header] = Seq(),
-      cookies: Seq[Cookie] = Seq(),
-      queryParams: Map[String, Seq[String]] = Map()
-    ): Request = SilhouetteRequestPipeline(SilhouetteRequest(
+      headers: Headers = Headers(Seq()),
+      cookies: Seq[CookieWithMeta] = Seq()
+    ): RequestPipeline = SilhouetteRequestPipeline(SilhouetteRequest(
       uri,
       method,
       headers,
-      cookies,
-      queryParams
+      cookies
     ))
-    def request: Request = request()
+    def request: RequestPipeline = request()
 
-    val response: Response = SilhouetteResponsePipeline(SilhouetteResponse(Status.OK))
+    val response: ResponsePipeline = SilhouetteResponsePipeline(SilhouetteResponse(StatusCode.Ok))
   }
 }

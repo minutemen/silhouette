@@ -21,6 +21,8 @@ import org.jose4j.jws.JsonWebSignature
 import org.jose4j.jwt.JwtClaims
 import silhouette.jwt._
 
+import scala.util.Try
+
 /**
  * Produces JWT tokens with the help of the [jose4j](https://bitbucket.org/b_c/jose4j/wiki/Home) library.
  *
@@ -38,9 +40,9 @@ trait Jose4jProducer {
    * Produces claims and returns a JWT as string.
    *
    * @param claims The claims to produce.
-   * @return The produced JWT string.
+   * @return The produced JWT string on the right or an error on the left.
    */
-  def produce(claims: JwtClaims): String
+  def produce(claims: JwtClaims): Either[Throwable, String]
 }
 
 /**
@@ -54,9 +56,9 @@ final case class SimpleJose4jProducer(jwsConfiguration: JwsConfiguration[String]
    * Produces claims and returns a JWT as string.
    *
    * @param claims The claims to produce.
-   * @return The produced JWT string.
+   * @return The produced JWT string on the right or an error on the left.
    */
-  override def produce(claims: JwtClaims): String = {
+  override def produce(claims: JwtClaims): Either[Throwable, String] = Try {
     val jws = new JsonWebSignature()
     jws.setPayload(claims.toJson)
     jwsConfiguration match {
@@ -74,5 +76,5 @@ final case class SimpleJose4jProducer(jwsConfiguration: JwsConfiguration[String]
         jws.setKey(privateKey)
     }
     jws.getCompactSerialization
-  }
+  }.toEither
 }

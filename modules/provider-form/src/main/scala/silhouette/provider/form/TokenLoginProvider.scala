@@ -22,12 +22,10 @@ import silhouette.LoginInfo
 import silhouette.provider.Provider
 import silhouette.provider.form.TokenLoginProvider._
 
-import scala.concurrent.Future
-
 /**
  * A provider for authenticating with a token like OTP.
  */
-class TokenLoginProvider @Inject() () extends Provider {
+class TokenLoginProvider[F[_]] @Inject() () extends Provider {
 
   /**
    * Gets the provider ID.
@@ -42,7 +40,7 @@ class TokenLoginProvider @Inject() () extends Provider {
    * @param token The token to authenticate with.
    * @return The login info if the authentication was successful, otherwise a failure.
    */
-  def authenticate(token: String): Future[LoginInfo] = ???
+  def authenticate(token: String): F[LoginInfo] = ???
 }
 
 /**

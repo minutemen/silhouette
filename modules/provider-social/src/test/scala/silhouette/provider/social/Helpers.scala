@@ -17,21 +17,21 @@
  */
 package silhouette.provider.social
 
+import cats.effect.IO
+import org.specs2.execute.Result
 import org.specs2.matcher.{ JsonMatchers, MatchResult }
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import silhouette.AuthInfo
 import silhouette.http.ResponsePipeline
-import silhouette.provider.social.state.StateItem
-import silhouette.specs2.Wait
 
-import scala.concurrent.Future
 import scala.reflect.ClassTag
+import scala.util.Try
 
 /**
  * Base test case for the social providers.
  */
-trait SocialProviderSpec[A <: AuthInfo] extends Specification with Mockito with JsonMatchers with Wait {
+trait SocialProviderSpec[A <: AuthInfo] extends Specification with Mockito with JsonMatchers {
 
   /**
    * Applies a matcher on a simple result.
@@ -41,11 +41,11 @@ trait SocialProviderSpec[A <: AuthInfo] extends Specification with Mockito with 
    * @tparam P The type of the request.
    * @return A specs2 match result.
    */
-  def result[P](providerResult: Future[Either[ResponsePipeline[P], A]])(
-    b: Future[ResponsePipeline[P]] => MatchResult[_]
+  def result[P](providerResult: IO[Either[ResponsePipeline[P], A]])(
+    b: IO[ResponsePipeline[P]] => MatchResult[_]
   ): MatchResult[Either[ResponsePipeline[P], A]] = {
-    await(providerResult) must beLeft[ResponsePipeline[P]].like {
-      case result => b(Future.successful(result))
+    providerResult.unsafeRunSync() must beLeft[ResponsePipeline[P]].like {
+      case result => b(IO.pure(result))
     }
   }
 
@@ -57,10 +57,10 @@ trait SocialProviderSpec[A <: AuthInfo] extends Specification with Mockito with 
    * @tparam P The type of the request.
    * @return A specs2 match result.
    */
-  def authInfo[P](providerResult: Future[Either[ResponsePipeline[P], A]])(
+  def authInfo[P](providerResult: IO[Either[ResponsePipeline[P], A]])(
     b: A => MatchResult[_]
   ): MatchResult[Either[ResponsePipeline[P], A]] = {
-    await(providerResult) must beRight[A].like {
+    providerResult.unsafeRunSync() must beRight[A].like {
       case authInfo => b(authInfo)
     }
   }
@@ -72,8 +72,8 @@ trait SocialProviderSpec[A <: AuthInfo] extends Specification with Mockito with 
    * @param b              The matcher block to apply.
    * @return A specs2 match result.
    */
-  def profile(providerResult: Future[SocialProfile])(b: SocialProfile => MatchResult[_]): MatchResult[SocialProfile] = {
-    await(providerResult) must beLike[SocialProfile] {
+  def profile(providerResult: IO[SocialProfile])(b: SocialProfile => MatchResult[_]): MatchResult[SocialProfile] = {
+    providerResult.unsafeRunSync() must beLike[SocialProfile] {
       case socialProfile => b(socialProfile)
     }
   }
@@ -88,24 +88,19 @@ trait SocialProviderSpec[A <: AuthInfo] extends Specification with Mockito with 
    * @param f A matcher function.
    * @return A specs2 match result.
    */
-  def failed[E <: Throwable: ClassTag](providerResult: Future[_])(
+  def failed[E <: Throwable: ClassTag](providerResult: IO[_])(
     f: => PartialFunction[Throwable, MatchResult[_]]
-  ): MatchResult[Throwable] = {
-    implicit class Rethrow(t: Throwable) {
-      def rethrow = { throw t; t }
-    }
-
-    lazy val result = await(providerResult.failed)
-
-    result must not(throwAn[E])
-    result.rethrow must throwAn[E].like(f)
+  ): Result = {
+    Try(
+      providerResult.unsafeRunSync()
+    ) must beAFailedTry(f): Result
   }
 }
 
 /**
  * Base test case for the social state providers.
  */
-trait SocialStateProviderSpec[A <: AuthInfo, S <: StateItem] extends SocialProviderSpec[A] {
+trait SocialStateProviderSpec[A <: AuthInfo] extends SocialProviderSpec[A] {
 
   /**
    * Applies a matcher on a simple result.
@@ -115,11 +110,11 @@ trait SocialStateProviderSpec[A <: AuthInfo, S <: StateItem] extends SocialProvi
    * @tparam P The type of the response.
    * @return A specs2 match result.
    */
-  def statefulResult[P](providerResult: Future[Either[ResponsePipeline[P], StatefulAuthInfo[A, S]]])(
-    b: Future[ResponsePipeline[P]] => MatchResult[_]
-  ): MatchResult[Either[ResponsePipeline[P], StatefulAuthInfo[A, S]]] = {
-    await(providerResult) must beLeft[ResponsePipeline[P]].like {
-      case result => b(Future.successful(result))
+  def statefulResult[P](providerResult: IO[Either[ResponsePipeline[P], StatefulAuthInfo[A]]])(
+    b: IO[ResponsePipeline[P]] => MatchResult[_]
+  ): MatchResult[Either[ResponsePipeline[P], StatefulAuthInfo[A]]] = {
+    providerResult.unsafeRunSync() must beLeft[ResponsePipeline[P]].like {
+      case result => b(IO.pure(result))
     }
   }
 
@@ -131,10 +126,10 @@ trait SocialStateProviderSpec[A <: AuthInfo, S <: StateItem] extends SocialProvi
    * @tparam P The type of the response.
    * @return A specs2 match result.
    */
-  def statefulAuthInfo[P](providerResult: Future[Either[ResponsePipeline[P], StatefulAuthInfo[A, S]]])(
-    b: StatefulAuthInfo[A, S] => MatchResult[_]
-  ): MatchResult[Either[ResponsePipeline[P], StatefulAuthInfo[A, S]]] = {
-    await(providerResult) must beRight[StatefulAuthInfo[A, S]].like {
+  def statefulAuthInfo[P](providerResult: IO[Either[ResponsePipeline[P], StatefulAuthInfo[A]]])(
+    b: StatefulAuthInfo[A] => MatchResult[_]
+  ): MatchResult[Either[ResponsePipeline[P], StatefulAuthInfo[A]]] = {
+    providerResult.unsafeRunSync() must beRight[StatefulAuthInfo[A]].like {
       case info => b(info)
     }
   }

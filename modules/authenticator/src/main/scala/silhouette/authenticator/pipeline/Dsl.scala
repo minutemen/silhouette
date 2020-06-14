@@ -17,157 +17,281 @@
  */
 package silhouette.authenticator.pipeline
 
-import silhouette.Fitting._
-import silhouette.authenticator.{ Authenticator, Reads => AuthenticatorReads, Writes => AuthenticatorWrites }
-import silhouette.http.{ EmbedWrites, RequestPipeline, ResponsePipeline, RetrieveReads }
+import cats.data.{ EitherT, Kleisli }
+import cats.effect.{ Async, ContextShift, IO }
+import silhouette.authenticator.Authenticator
+import silhouette.authenticator.pipeline.Dsl.NoneError
+import silhouette.{ AuthState, Identity, MissingCredentials }
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.Future
 import scala.language.implicitConversions
+import scala.util.Try
 
 /**
  * A simple DSL to model authenticator pipelines.
  */
-object Dsl {
+object Dsl extends DslLowPriorityImplicits {
 
   /**
-   * A DSL for working with [[silhouette.http.RetrieveReads]] implementations.
-   *
-   * @tparam P The type of the payload.
+   * Maybe is an IO monad that represents a success and an error case. It's represented by the monad transformer
+   * [[cats.data.EitherT]] from Cats, because it allows us to easily compose [[scala.util.Either]] and `F[_]` together
+   * without writing a lot of boilerplate and it makes it easy to compose it with [[cats.data.Kleisli]].
    */
-  trait RetrieveReadsDsl[P] {
-    def >>(reads: RetrieveReads[P]): Option[P]
+  type Maybe[F[_], A] = EitherT[F, Throwable, A]
+
+  /**
+   * A transformation function that transform a type `A` to [[Maybe]].
+   */
+  type MaybeWriter[F[_], A, B] = A => Maybe[F, B]
+
+  /**
+   * Kleisli that works with [[Maybe]].
+   *
+   * Represents a function `A => Maybe[F, B]`.
+   */
+  type KleisliM[F[_], A, B] = Kleisli[({ type L[T] = Maybe[F, T] })#L, A, B]
+
+  /**
+   * Option handles a missing case with [[scala.None]] which cannot be easily translated into a throwable. Therefore
+   * this [[scala.Throwable]] represents the [[scala.None]] case for the [[Maybe]] type which acts as an error that
+   * can directly be translated to an auth state.
+   */
+  final case class NoneError[I <: Identity](state: AuthState[I, Authenticator]) extends Throwable()
+
+  /**
+   * The companion object for [[KleisliM]].
+   */
+  object KleisliM {
+
+    /**
+     * Lifts a function `A` => `B` with the help of a [[MaybeWriter]] into a [[KleisliM]].
+     *
+     * {{{
+     * import silhouette.http.transport.RetrieveFromCookie
+     * import silhouette.authenticator.pipeline.Dsl._
+     * import silhouette.authenticator.transformer.SatReader
+     *
+     * KleisliM.lift(RetrieveFromCookie("test")) >> SatReader(...)
+     * }}}
+     *
+     * @param f      The function to convert.
+     * @param writes The writes that transforms the value of the function `A` => `B` into a [[KleisliM]].
+     * @tparam F The type of the IO monad.
+     * @tparam A The type of the function parameter.
+     * @tparam B The type the function returns.
+     * @tparam C The type that will be stored in [[Maybe]].
+     * @return A [[KleisliM]] for a function `A` => `B`.
+     */
+    def lift[F[_], A, B, C](f: A => B)(
+      implicit
+      writes: MaybeWriter[F, B, C]
+    ): KleisliM[F, A, C] = Kleisli((a: A) => writes(f(a)))
+
+    /**
+     * Lifts a new value into a [[KleisliM]].
+     *
+     * {{{
+     * import silhouette.http.transport.{ DiscardCookie, CookieTransportConfig }
+     * import silhouette.authenticator.pipeline.Dsl._
+     *
+     * KleisliM.liftV(target) >> DiscardCookie[Fake.Response](CookieTransportConfig("test"))
+     * }}}
+     *
+     * The resulting [[KleisliM]] discards the incoming value and uses the lifted value as return value.
+     *
+     * @tparam F The type of the IO monad.
+     * @return A [[KleisliM]] for a value [[scala.Any]] => `A`.
+     */
+    def liftV[F[_]: Async, A](a: A): KleisliM[F, Any, A] = Kleisli((_: Any) => EitherT.pure[F, Throwable](a))
   }
 
   /**
-   * A DSL for working with [[silhouette.http.EmbedWrites]] implementations.
+   * Monkey patches a function `A` => `B`.
    *
-   * @tparam R The type of the request.
-   * @tparam P The type of the payload.
+   * @param f      The function to patch.
+   * @param writes The writes that transforms the value of the function `A` => `B` into a [[KleisliM]].
+   * @tparam F The type of the IO monad.
+   * @tparam A The type of the function parameter.
+   * @tparam B The type the function returns.
+   * @tparam C The type that will be stored in [[Maybe]].
    */
-  trait EmbedWritesDsl[R, P] {
-    def >>(writes: EmbedWrites[R, P]): ResponsePipeline[R] => Future[ResponsePipeline[R]]
+  implicit class Function1Ops[F[_]: Async, A, B, C](f: A => B)(implicit writes: MaybeWriter[F, B, C]) {
+
+    /**
+     * Lifts a function `A` => `B` into a [[KleisliM]].
+     *
+     * {{{
+     * import silhouette.http.transport.RetrieveFromCookie
+     * import silhouette.authenticator.pipeline.Dsl._
+     * import silhouette.authenticator.transformer.SatReader
+     *
+     * ~RetrieveFromCookie("authenticator") >> SatReader(...)
+     * }}}
+     *
+     * @param writes The writes that transforms the value of the function `A` => `B` into a [[KleisliM]].
+     * @return A [[KleisliM]] for the function `A` => `B`.
+     */
+    def unary_~(
+      implicit
+      writes: MaybeWriter[F, B, C]
+    ): KleisliM[F, A, C] = KleisliM.lift(f)
   }
 
   /**
-   * A DSL for working with [[silhouette.authenticator.Reads]] implementations.
+   * Monkey patches a [[KleisliM]] instance.
    *
-   * @tparam S The source type that the reads transforms into an [[Authenticator]].
+   * @param kleisliM The instance to patch.
+   * @tparam F The type of the IO monad.
+   * @tparam A The type of the function parameter.
+   * @tparam B The type the function returns.
    */
-  trait AuthenticatorReadsDsl[S] {
-    def >>(reads: AuthenticatorReads[S]): Future[Option[Authenticator]]
+  implicit class KleisliMOps[F[_]: Async, A, B](kleisliM: KleisliM[F, A, B]) {
+
+    /**
+     * Composes two functions.
+     *
+     * An alias for the `cats.data.Kleisli.andThen` function that allows to pass a [[KleisliM]] instance.
+     *
+     * {{{
+     * import silhouette.http.transport.RetrieveFromCookie
+     * import silhouette.authenticator.pipeline.Dsl._
+     * import silhouette.authenticator.transformer.SatReader
+     *
+     * ~RetrieveFromCookie("authenticator") >> SatReader(...)
+     * }}}
+     *
+     * @param k The function to compose.
+     * @tparam C The type the function returns after the composition.
+     * @return A new [[KleisliM]] from `A` to `C`.
+     */
+    def >>[C](k: KleisliM[F, B, C]): KleisliM[F, A, C] = kleisliM.andThen(k)
   }
 
   /**
-   * A DSL for working with [[silhouette.authenticator.Writes]] implementations.
+   * A transformation function that transforms an [[scala.Option]] to [[Maybe]].
    *
-   * @tparam T The target type to which an [[Authenticator]] will be converted.
-   */
-  trait AuthenticatorWritesDsl[T] {
-    def >>(writes: AuthenticatorWrites[T]): Future[T]
-  }
-
-  /**
-   * A DSL for working with [[silhouette.authenticator.pipeline.ModifyStep]] implementations.
-   */
-  trait ModifyStepDsl {
-    def >>(step: ModifyStep): Authenticator
-  }
-
-  /**
-   * A DSL for working with [[silhouette.authenticator.pipeline.AsyncStep]] implementations.
-   */
-  trait AsyncStepDsl {
-    def >>(step: AsyncStep): Future[Authenticator]
-  }
-
-  /**
-   * Transforms a [[silhouette.http.RequestPipeline]] into a [[RetrieveReadsDsl]].
+   * In case of [[scala.None]], the function uses the implicit [[NoneError]], which can be translated directly to
+   * an [[AuthState]]. There is automatically a low-priority implicit in scope, which translates to the
+   * `MissingCredentials` state. This can be overridden by defining a custom implicit.
    *
-   * @param requestPipeline The request pipeline to transform.
-   * @tparam T The type of the value the reads returns.
-   * @tparam R The type of the request.
-   * @return A [[RetrieveReadsDsl]].
+   * @param noneError The error which should be used in the none case.
+   * @tparam F The IO monad.
+   * @tparam A The type to convert.
+   * @tparam I The type of the identity.
+   * @return The [[Maybe]] representation for the [[scala.Option]] type.
    */
-  implicit def requestPipelineToRetrieveReadsDsl[T, R](requestPipeline: RequestPipeline[R]): RetrieveReadsDsl[T] = {
-    _.read(requestPipeline)
-  }
-
-  /**
-   * Transforms an [[Authenticator]] into an [[AuthenticatorWritesDsl]].
-   *
-   * @param authenticator The authenticator to transform.
-   * @tparam T The target type to which an [[Authenticator]] will be converted.
-   * @return An [[AuthenticatorWritesDsl]].
-   */
-  implicit def authenticatorToAuthenticatorWritesDsl[T](authenticator: Authenticator): AuthenticatorWritesDsl[T] =
-    _.write(authenticator)
-
-  /**
-   * Transforms an [[Authenticator]] into a [[ModifyStepDsl]].
-   *
-   * @param authenticator The authenticator to transform.
-   * @return An [[ModifyStepDsl]].
-   */
-  implicit def authenticatorToModifyStepDsl(authenticator: Authenticator): ModifyStepDsl =
-    _.apply(authenticator)
-
-  /**
-   * Transforms an [[Authenticator]] into an [[AsyncStepDsl]].
-   *
-   * @param authenticator The authenticator to transform.
-   * @return An [[AsyncStepDsl]].
-   */
-  implicit def authenticatorToEffectStepDsl(authenticator: Authenticator): AsyncStepDsl =
-    _.apply(authenticator)
-
-  /**
-   * Transforms a value returned from a [[RetrieveReadsDsl]] into an [[AuthenticatorReadsDsl]].
-   *
-   * @param value The value to transform into an authenticator.
-   * @tparam T The type of the value.
-   * @return An [[AuthenticatorReadsDsl]].
-   */
-  implicit def retrieveReadsDslToAuthenticatorReadsDsl[T](value: Option[T]): AuthenticatorReadsDsl[T] = {
-    reads => value andThenFuture reads
-  }
-
-  /**
-   * Transforms an [[Authenticator]] returned from an [[ModifyStepDsl]] into an [[AuthenticatorWritesDsl]].
-   *
-   * @param authenticator The authenticator to transform into T.
-   * @tparam T The type of the result.
-   * @return An [[AuthenticatorWritesDsl]].
-   */
-  implicit def modifyStepDslToAuthenticatorWritesDsl[T](
-    authenticator: Authenticator
-  ): AuthenticatorWritesDsl[T] = {
-    writes => writes(authenticator)
-  }
-
-  /**
-   * Transforms an [[Authenticator]] returned from an [[AsyncStepDsl]] into an [[AuthenticatorWritesDsl]].
-   *
-   * @param authenticator The authenticator to transform into T.
-   * @tparam T The type of the result.
-   * @return An [[AuthenticatorWritesDsl]].
-   */
-  implicit def asyncStepDslToAuthenticatorWritesDsl[T](
-    authenticator: Future[Authenticator]
-  ): AuthenticatorWritesDsl[T] = {
-    writes => authenticator andThenFuture writes
-  }
-
-  /**
-   * Transforms a value returned from an [[AuthenticatorWritesDsl]] into an [[EmbedWritesDsl]].
-   *
-   * @param payload The serialized form of the authenticator to embed into the response.
-   * @param ec The implicit execution context.
-   * @tparam R The type of the request.
-   * @tparam P The type of the payload.
-   * @return An [[EmbedWritesDsl]].
-   */
-  implicit def authenticatorWritesDslToEmbedWritesDsl[R, P](payload: Future[P])(
+  implicit def optionToMaybeWriter[F[_]: Async, A, I <: Identity](
     implicit
-    ec: ExecutionContext
-  ): EmbedWritesDsl[R, P] = writes => responsePipeline => payload.map(p => writes.write(p -> responsePipeline))
+    noneError: () => NoneError[I]
+  ): MaybeWriter[F, Option[A], A] = (value: Option[A]) =>
+    EitherT.fromEither[F](value.toRight(noneError()))
+
+  /**
+   * A transformation function that transforms a [[scala.util.Try]] to [[Maybe]].
+   *
+   * @tparam F The IO monad.
+   * @tparam A The type to convert.
+   * @return The [[Maybe]] representation for the [[scala.util.Try]] type.
+   */
+  implicit def tryToMaybeWriter[F[_]: Async, A]: MaybeWriter[F, Try[A], A] = (value: Try[A]) =>
+    EitherT.fromEither[F](value.toEither)
+
+  /**
+   * A transformation function that transforms an `Either[Throwable, A]` to [[Maybe]].
+   *
+   * @tparam F The IO monad.
+   * @tparam A The type to convert.
+   * @return The [[Maybe]] representation for the `Either[Throwable, A]` type.
+   */
+  implicit def eitherToMaybeWriter[F[_]: Async, A]: MaybeWriter[F, Either[Throwable, A], A] =
+    (value: Either[Throwable, A]) => EitherT.fromEither[F](value)
+
+  /**
+   * A transformation function that transforms a [[scala.concurrent.Future]] effect to [[Dsl.Maybe]].
+   *
+   * @tparam A The type to convert.
+   * @return The [[Dsl.Maybe]] representation for the `Either[Throwable, A]` type.
+   */
+  implicit def futureToMaybeWriter[A, B](
+    implicit
+    writer: Dsl.MaybeWriter[IO, A, B],
+    contextShift: ContextShift[IO]
+  ): Dsl.MaybeWriter[IO, Future[A], B] = (value: Future[A]) =>
+    for {
+      r <- EitherT.right(IO.fromFuture(IO(value)))
+      v <- writer(r)
+    } yield v
+
+  /**
+   * A transformation function that transforms a functional effect to [[Dsl.Maybe]].
+   *
+   * @tparam F The IO monad.
+   * @tparam A The type to convert.
+   * @return The [[Dsl.Maybe]] representation for the `Either[Throwable, A]` type.
+   */
+  implicit def effectToMaybeWriter[F[_]: Async, A, B](
+    implicit
+    writer: Dsl.MaybeWriter[F, A, B]
+  ): Dsl.MaybeWriter[F, F[A], B] = (value: F[A]) =>
+    for {
+      r <- EitherT.right(value)
+      v <- writer(r)
+    } yield v
+
+  /**
+   * Provides an implicit conversion from a function `A` => `B` to [[KleisliM]] .
+   *
+   * @param f      The function to convert.
+   * @param writes The writes that transforms the value of the function `A` => `B` into a [[KleisliM]].
+   * @tparam F The type of the IO monad.
+   * @tparam A The type of the function parameter.
+   * @tparam B The type the function returns.
+   * @tparam C The type that will be stored in [[Maybe]].
+   * @return A [[KleisliM]] from a function `A` => `B`.
+   */
+  implicit def toKleisliM[F[_], A, B, C](f: A => B)(
+    implicit
+    writes: Dsl.MaybeWriter[F, B, C]
+  ): Dsl.KleisliM[F, A, C] = Dsl.KleisliM.lift(f)
+
+  /**
+   * An alias for the [[KleisliM.liftV]] function.
+   *
+   * {{{
+   * import silhouette.http.transport.{ DiscardCookie, CookieTransportConfig }
+   * import silhouette.authenticator.pipeline.Dsl._
+   *
+   * xx(target) >> DiscardCookie[Fake.Response](CookieTransportConfig("test"))
+   * }}}
+   *
+   * @tparam F The type of the IO monad.
+   * @return A [[KleisliM]] for a value [[scala.Any]] => `A`.
+   */
+  def xx[F[_]: Async, C](a: C): KleisliM[F, Any, C] = KleisliM.liftV(a)
+}
+
+/**
+ * Low-priority implicits for the Dsl.
+ */
+trait DslLowPriorityImplicits {
+
+  /**
+   * A low priority transformation function that transforms any type to [[Dsl.Maybe]].
+   *
+   * @tparam F The IO monad.
+   * @tparam A The type to convert.
+   * @return The [[Dsl.Maybe]] representation for type `A`.
+   */
+  implicit def toMaybeWrites[F[_]: Async, A]: Dsl.MaybeWriter[F, A, A] = (value: A) =>
+    EitherT.pure[F, Throwable](value)
+
+  /**
+   * A low priority transformation that returns a [[Dsl.NoneError]] that can be translated to a `MissingCredentials` s
+   * tate.
+   *
+   * @tparam I The type of the identity.
+   * @return A [[Dsl.NoneError]] that can be translated to a `MissingCredentials` state.
+   */
+  implicit def noneToMissingCredentials[I <: Identity]: () => Dsl.NoneError[I] =
+    () => NoneError(MissingCredentials())
 }

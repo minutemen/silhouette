@@ -17,64 +17,11 @@
  */
 package silhouette.provider.social.state
 
-import com.typesafe.scalalogging.LazyLogging
-import io.circe.Json
-import io.circe.parser.parse
-import silhouette.crypto.Base64
-
 /**
  * An item which can be a part of a social state.
  *
  * The social state consists of one state item per handler. So this item describes the state
  * an handler can handle. A state item can be of any type. The handler to which the state item
- * pertains, must be able to serialize/deserialize this state item.
+ * pertains, must be able to serialize/deserialize this state item to [[io.circe.Json]].
  */
 trait StateItem
-
-/**
- * The companion object of the [[StateItem]].
- */
-object StateItem {
-
-  /**
-   * A class which represents the serialized structure of a social state item.
-   *
-   * @param id   A unique identifier for the state item.
-   * @param data The state item data as JSON.
-   */
-  case class ItemStructure(id: String, data: Json) {
-
-    /**
-     * Returns the serialized representation of the item.
-     *
-     * @return The serialized representation of the item.
-     */
-    def asString: String = s"${Base64.encode(id)}-${Base64.encode(data.noSpaces)}"
-  }
-
-  /**
-   * The companion object of the [[ItemStructure]].
-   */
-  object ItemStructure extends LazyLogging {
-
-    /**
-     * An extractor which unserializes a state item from a string.
-     *
-     * @param str The string to unserialize.
-     * @return Some [[ItemStructure]] instance on success, None on failure.
-     */
-    def unapply(str: String): Option[ItemStructure] = {
-      str.split('-').toList match {
-        case List(id, data) =>
-          parse(Base64.decode(data)).fold(
-            error => {
-              logger.info(error.message, error)
-              None
-            },
-            json => Some(ItemStructure(Base64.decode(id), json))
-          )
-        case _ => None
-      }
-    }
-  }
-}
