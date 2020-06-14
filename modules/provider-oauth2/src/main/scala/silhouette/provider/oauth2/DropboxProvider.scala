@@ -29,7 +29,7 @@ import silhouette.provider.oauth2.DropboxProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
 import sttp.client.circe.asJson
-import sttp.client.{ SttpBackend, basicRequest }
+import sttp.client.{ basicRequest, SttpBackend }
 import sttp.model.Uri._
 
 /**
@@ -53,11 +53,13 @@ trait BaseDropboxProvider[F[_]] extends OAuth2Provider[F] {
    * @param authInfo The auth info received from the provider.
    * @return On success the build social profile, otherwise a failure.
    */
-  override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
-    basicRequest.get(config.apiUri.getOrElse(DefaultApiUri))
+  override protected def buildProfile(authInfo: OAuth2Info): F[Profile] =
+    basicRequest
+      .get(config.apiUri.getOrElse(DefaultApiUri))
       .header(BearerAuthorizationHeader(authInfo.accessToken))
       .response(asJson[Json])
-      .send().flatMap { response =>
+      .send()
+      .flatMap { response =>
         response.body match {
           case Left(error) =>
             F.raiseError(new UnexpectedResponseException(UnexpectedResponse.format(id, error.body, response.code)))
@@ -65,7 +67,6 @@ trait BaseDropboxProvider[F[_]] extends OAuth2Provider[F] {
             profileParser.parse(json, authInfo)
         }
       }
-  }
 }
 
 /**
@@ -82,7 +83,7 @@ class DropboxProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, Com
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] = {
+  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] =
     Async[F].fromTry(json.hcursor.downField("uid").as[Long].getOrError(json, "uid", ID)).map { id =>
       CommonSocialProfile(
         loginInfo = LoginInfo(ID, id.toString),
@@ -91,7 +92,6 @@ class DropboxProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, Com
         fullName = json.hcursor.downField("display_name").as[String].toOption
       )
     }
-  }
 }
 
 /**
@@ -110,7 +110,8 @@ class DropboxProvider[F[_]](
   implicit
   protected val sttpBackend: SttpBackend[F, Nothing, Nothing],
   protected val F: Async[F]
-) extends BaseDropboxProvider[F] with CommonProfileBuilder[F] {
+) extends BaseDropboxProvider[F]
+    with CommonProfileBuilder[F] {
 
   /**
    * The type of this class.

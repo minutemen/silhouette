@@ -45,11 +45,11 @@ sealed abstract class AuthScheme(name: String) {
    * @param value The complete authentication scheme.
    * @return The value of the auth scheme.
    */
-  def unapply(value: String): Option[String] = if (value.startsWith(s"$name ")) {
-    Some(value.replace(s"$name ", ""))
-  } else {
-    None
-  }
+  def unapply(value: String): Option[String] =
+    if (value.startsWith(s"$name "))
+      Some(value.replace(s"$name ", ""))
+    else
+      None
 }
 
 /**

@@ -64,7 +64,8 @@ trait RequestProvider[F[_], R, P, I <: Identity] extends Provider {
  * @tparam I The type of the identity.
  */
 case class RequestProviders[F[_], R, P, I <: Identity](providers: NonEmptyList[RequestProvider[F, R, P, I]])
-  extends RequestProvider[F, R, P, I] with LazyLogging {
+  extends RequestProvider[F, R, P, I]
+    with LazyLogging {
 
   /**
    * The type of the credentials.
@@ -85,7 +86,7 @@ case class RequestProviders[F[_], R, P, I <: Identity](providers: NonEmptyList[R
    * @return The [[http.ResponsePipeline]].
    */
   override def authenticate(request: RequestPipeline[R])(handler: AuthStateHandler): F[ResponsePipeline[P]] = {
-    def auth(head: RequestProvider[F, R, P, I], tail: List[RequestProvider[F, R, P, I]]): F[ResponsePipeline[P]] = {
+    def auth(head: RequestProvider[F, R, P, I], tail: List[RequestProvider[F, R, P, I]]): F[ResponsePipeline[P]] =
       head.authenticate(request) {
         case state: Authenticated[I, C] => handler(state)
         case state: Unauthenticated[I, C] =>
@@ -105,7 +106,6 @@ case class RequestProviders[F[_], R, P, I <: Identity](providers: NonEmptyList[R
             case h :: t => auth(h, t)
           }
       }
-    }
 
     auth(providers.head, providers.tail)
   }

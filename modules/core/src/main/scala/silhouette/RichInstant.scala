@@ -33,9 +33,8 @@ class RichInstant(instant: Instant) {
    * @param duration The duration to add.
    * @return An [[java.time.Instant]] instance with the added duration.
    */
-  def +(duration: FiniteDuration): Instant = {
+  def +(duration: FiniteDuration): Instant =
     instant.plusMillis(duration.toMillis)
-  }
 
   /**
    * Subtracts an instant from an instant and returns the duration of it.
@@ -43,9 +42,8 @@ class RichInstant(instant: Instant) {
    * @param sub The instant to subtract.
    * @return An [[java.time.Instant]] instance with the added instance.
    */
-  def -(sub: Instant): FiniteDuration = {
+  def -(sub: Instant): FiniteDuration =
     FiniteDuration(instant.minusMillis(sub.toEpochMilli).toEpochMilli, MILLISECONDS)
-  }
 
   /**
    * Subtracts a duration from an instant.
@@ -53,9 +51,8 @@ class RichInstant(instant: Instant) {
    * @param duration The duration to subtract.
    * @return A [[java.time.Instant]] instance with the subtracted duration.
    */
-  def -(duration: FiniteDuration): Instant = {
+  def -(duration: FiniteDuration): Instant =
     instant.minusMillis(duration.toMillis)
-  }
 }
 
 /**

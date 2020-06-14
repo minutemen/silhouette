@@ -65,9 +65,8 @@ final protected[silhouette] case class SilhouetteResponsePipeline(protected val 
    * @param headers The headers to add.
    * @return A new response pipeline instance with the added headers.
    */
-  override def withHeaders(headers: Header*): SilhouetteResponsePipeline = {
+  override def withHeaders(headers: Header*): SilhouetteResponsePipeline =
     copy(response.copy(headers = Headers(response.headers.headers ++ headers)))
-  }
 
   /**
    * Gets the list of cookies.

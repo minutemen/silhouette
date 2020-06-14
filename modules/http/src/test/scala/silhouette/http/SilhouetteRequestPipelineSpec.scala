@@ -53,51 +53,67 @@ class SilhouetteRequestPipelineSpec extends Specification {
 
   "The `withHeaders` method" should {
     "append a new header" in new Context {
-      requestPipeline.withHeaders(
-        Header("TEST3", "value1")
-      ).headers must be equalTo Headers(Seq(
+      requestPipeline
+        .withHeaders(
+          Header("TEST3", "value1")
+        )
+        .headers must be equalTo Headers(
+        Seq(
           Header("TEST1", "value1, value2"),
           Header("TEST2", "value1"),
           Header("TEST3", "value1")
-        ))
+        )
+      )
     }
 
     "append multiple headers" in new Context {
-      requestPipeline.withHeaders(
-        Header("TEST3", "value1"),
-        Header("TEST4", "value1")
-      ).headers must be equalTo Headers(Seq(
+      requestPipeline
+        .withHeaders(
+          Header("TEST3", "value1"),
+          Header("TEST4", "value1")
+        )
+        .headers must be equalTo Headers(
+        Seq(
           Header("TEST1", "value1, value2"),
           Header("TEST2", "value1"),
           Header("TEST3", "value1"),
           Header("TEST4", "value1")
-        ))
+        )
+      )
     }
 
     "append multiple headers with the same name" in new Context {
-      requestPipeline.withHeaders(
-        Header("TEST3", "value1"),
-        Header("TEST3", "value2, value3")
-      ).headers must be equalTo Headers(Seq(
+      requestPipeline
+        .withHeaders(
+          Header("TEST3", "value1"),
+          Header("TEST3", "value2, value3")
+        )
+        .headers must be equalTo Headers(
+        Seq(
           Header("TEST1", "value1, value2"),
           Header("TEST2", "value1"),
           Header("TEST3", "value1"),
           Header("TEST3", "value2, value3")
-        ))
+        )
+      )
     }
 
     "not override any existing header" in new Context {
-      requestPipeline.withHeaders(
-        Header("TEST1", "value1, value2"),
-        Header("TEST2", "value2"),
-        Header("TEST2", "value3")
-      ).headers must be equalTo Headers(Seq(
+      requestPipeline
+        .withHeaders(
+          Header("TEST1", "value1, value2"),
+          Header("TEST2", "value2"),
+          Header("TEST2", "value3")
+        )
+        .headers must be equalTo Headers(
+        Seq(
           Header("TEST1", "value1, value2"),
           Header("TEST2", "value1"),
           Header("TEST1", "value1, value2"),
           Header("TEST2", "value2"),
           Header("TEST2", "value3")
-        ))
+        )
+      )
     }
   }
 
@@ -134,13 +150,15 @@ class SilhouetteRequestPipelineSpec extends Specification {
     }
 
     "use the last cookie if multiple cookies with the same name are given" in new Context {
-      requestPipeline.withCookies(
-        CookieWithMeta.unsafeApply("test1", "value3"),
-        CookieWithMeta.unsafeApply("test1", "value4")
-      ).cookies must be equalTo Seq(
-          CookieWithMeta.unsafeApply("test1", "value4"),
-          CookieWithMeta.unsafeApply("test2", "value2")
+      requestPipeline
+        .withCookies(
+          CookieWithMeta.unsafeApply("test1", "value3"),
+          CookieWithMeta.unsafeApply("test1", "value4")
         )
+        .cookies must be equalTo Seq(
+        CookieWithMeta.unsafeApply("test1", "value4"),
+        CookieWithMeta.unsafeApply("test2", "value2")
+      )
     }
   }
 
@@ -173,63 +191,100 @@ class SilhouetteRequestPipelineSpec extends Specification {
 
   "The `withQueryParams` method" should {
     "append a new query param" in new Context {
-      requestPipeline.withQueryParams(
-        "test3" -> "value1"
-      ).queryParams.toMap must be equalTo QueryParams.fromMultiMap(Map(
-          "test1" -> Seq("value1", "value2"),
-          "test2" -> Seq("value1"),
-          "test3" -> Seq("value1")
-        )).toMap
+      requestPipeline
+        .withQueryParams(
+          "test3" -> "value1"
+        )
+        .queryParams
+        .toMap must be equalTo QueryParams
+        .fromMultiMap(
+          Map(
+            "test1" -> Seq("value1", "value2"),
+            "test2" -> Seq("value1"),
+            "test3" -> Seq("value1")
+          )
+        )
+        .toMap
     }
 
     "append multiple query params" in new Context {
-      requestPipeline.withQueryParams(
-        "test3" -> "value1",
-        "test4" -> "value1"
-      ).queryParams.toMap must be equalTo QueryParams.fromMultiMap(Map(
-          "test1" -> Seq("value1", "value2"),
-          "test2" -> Seq("value1"),
-          "test3" -> Seq("value1"),
-          "test4" -> Seq("value1")
-        )).toMap
+      requestPipeline
+        .withQueryParams(
+          "test3" -> "value1",
+          "test4" -> "value1"
+        )
+        .queryParams
+        .toMap must be equalTo QueryParams
+        .fromMultiMap(
+          Map(
+            "test1" -> Seq("value1", "value2"),
+            "test2" -> Seq("value1"),
+            "test3" -> Seq("value1"),
+            "test4" -> Seq("value1")
+          )
+        )
+        .toMap
     }
 
     "append multiple query params with the same name" in new Context {
-      requestPipeline.withQueryParams(
-        "test3" -> "value1",
-        "test3" -> "value2"
-      ).queryParams.toMap must be equalTo QueryParams.fromMultiMap(Map(
-          "test1" -> Seq("value1", "value2"),
-          "test2" -> Seq("value1"),
-          "test3" -> Seq("value1", "value2")
-        )).toMap
+      requestPipeline
+        .withQueryParams(
+          "test3" -> "value1",
+          "test3" -> "value2"
+        )
+        .queryParams
+        .toMap must be equalTo QueryParams
+        .fromMultiMap(
+          Map(
+            "test1" -> Seq("value1", "value2"),
+            "test2" -> Seq("value1"),
+            "test3" -> Seq("value1", "value2")
+          )
+        )
+        .toMap
     }
 
     "override an existing query param" in new Context {
-      requestPipeline.withQueryParams(
-        "test2" -> "value2",
-        "test2" -> "value3"
-      ).queryParams.toMap must be equalTo QueryParams.fromMultiMap(Map(
-          "test1" -> Seq("value1", "value2"),
-          "test2" -> Seq("value2", "value3")
-        )).toMap
+      requestPipeline
+        .withQueryParams(
+          "test2" -> "value2",
+          "test2" -> "value3"
+        )
+        .queryParams
+        .toMap must be equalTo QueryParams
+        .fromMultiMap(
+          Map(
+            "test1" -> Seq("value1", "value2"),
+            "test2" -> Seq("value2", "value3")
+          )
+        )
+        .toMap
     }
 
     "override multiple existing query params" in new Context {
-      requestPipeline.withQueryParams(
-        "test1" -> "value3",
-        "test2" -> "value2"
-      ).queryParams.toMap must be equalTo QueryParams.fromMultiMap(Map(
-          "test1" -> Seq("value3"),
-          "test2" -> Seq("value2")
-        )).toMap
+      requestPipeline
+        .withQueryParams(
+          "test1" -> "value3",
+          "test2" -> "value2"
+        )
+        .queryParams
+        .toMap must be equalTo QueryParams
+        .fromMultiMap(
+          Map(
+            "test1" -> Seq("value3"),
+            "test2" -> Seq("value2")
+          )
+        )
+        .toMap
     }
   }
 
   "The `withBodyExtractor` method" should {
     "set a new body extractor for the request" in new Context {
-      requestPipeline.withBodyExtractor(new CustomBodyExtractor)
-        .bodyExtractor.raw(request.body) must be equalTo "custom"
+      requestPipeline
+        .withBodyExtractor(new CustomBodyExtractor)
+        .bodyExtractor
+        .raw(request.body) must be equalTo "custom"
     }
   }
 
@@ -256,13 +311,15 @@ class SilhouetteRequestPipelineSpec extends Specification {
       val userAgent = "test-user-agent"
       val acceptLanguage = "test-accept-language"
       val acceptCharset = "test-accept-charset"
-      requestPipeline.withHeaders(
-        Header("User-Agent", userAgent),
-        Header("Accept-Language", acceptLanguage),
-        Header("Accept-Charset", acceptCharset)
-      ).fingerprint() must be equalTo Hash.sha1(
-          userAgent + ":" + acceptLanguage + ":" + acceptCharset
+      requestPipeline
+        .withHeaders(
+          Header("User-Agent", userAgent),
+          Header("Accept-Language", acceptLanguage),
+          Header("Accept-Charset", acceptCharset)
         )
+        .fingerprint() must be equalTo Hash.sha1(
+        userAgent + ":" + acceptLanguage + ":" + acceptCharset
+      )
     }
   }
 
@@ -272,20 +329,28 @@ class SilhouetteRequestPipelineSpec extends Specification {
       val acceptLanguage = "test-accept-language"
       val acceptCharset = "test-accept-charset"
       val acceptEncoding = "gzip, deflate"
-      requestPipeline.withHeaders(
-        Header(HeaderNames.UserAgent, userAgent),
-        Header(HeaderNames.AcceptLanguage, acceptLanguage),
-        Header(HeaderNames.AcceptCharset, acceptCharset),
-        Header(HeaderNames.AcceptEncoding, acceptEncoding)
-      ).fingerprint(request => Hash.sha1(new StringBuilder()
-          .append(request.headerValue(HeaderNames.UserAgent).getOrElse("")).append(":")
-          .append(request.headerValue(HeaderNames.AcceptLanguage).getOrElse("")).append(":")
-          .append(request.headerValue(HeaderNames.AcceptCharset).getOrElse("")).append(":")
-          .append(request.headerValue(HeaderNames.AcceptEncoding).getOrElse(""))
-          .toString()
-        )) must be equalTo Hash.sha1(
-          userAgent + ":" + acceptLanguage + ":" + acceptCharset + ":" + acceptEncoding
+      requestPipeline
+        .withHeaders(
+          Header(HeaderNames.UserAgent, userAgent),
+          Header(HeaderNames.AcceptLanguage, acceptLanguage),
+          Header(HeaderNames.AcceptCharset, acceptCharset),
+          Header(HeaderNames.AcceptEncoding, acceptEncoding)
         )
+        .fingerprint(request =>
+          Hash.sha1(
+            new StringBuilder()
+              .append(request.headerValue(HeaderNames.UserAgent).getOrElse(""))
+              .append(":")
+              .append(request.headerValue(HeaderNames.AcceptLanguage).getOrElse(""))
+              .append(":")
+              .append(request.headerValue(HeaderNames.AcceptCharset).getOrElse(""))
+              .append(":")
+              .append(request.headerValue(HeaderNames.AcceptEncoding).getOrElse(""))
+              .toString()
+          )
+        ) must be equalTo Hash.sha1(
+        userAgent + ":" + acceptLanguage + ":" + acceptCharset + ":" + acceptEncoding
+      )
     }
   }
 
@@ -439,10 +504,12 @@ class SilhouetteRequestPipelineSpec extends Specification {
     val request = SilhouetteRequest(
       uri = uri"http://localhost?test1=value1&test1=value2&test2=value1",
       method = Method.POST,
-      headers = Headers(Seq(
-        Header("TEST1", "value1, value2"),
-        Header("TEST2", "value1")
-      )),
+      headers = Headers(
+        Seq(
+          Header("TEST1", "value1, value2"),
+          Header("TEST2", "value1")
+        )
+      ),
       cookies = Seq(
         CookieWithMeta.unsafeApply("test1", "value1"),
         CookieWithMeta.unsafeApply("test2", "value2")
@@ -460,8 +527,7 @@ class SilhouetteRequestPipelineSpec extends Specification {
      * @param body The body to create the request with.
      * @return A request pipeline with the given body.
      */
-    def withBody(body: Body): SilhouetteRequestPipeline = {
+    def withBody(body: Body): SilhouetteRequestPipeline =
       SilhouetteRequestPipeline(request.copy(body = Some(body)))
-    }
   }
 }

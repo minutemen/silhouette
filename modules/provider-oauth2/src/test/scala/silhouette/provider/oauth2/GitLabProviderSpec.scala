@@ -47,11 +47,13 @@ class GitLabProviderSpec extends OAuth2ProviderSpec {
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
         case e =>
           e.getMessage must equalTo(ProfileError.format(provider.id))
-          e.getCause.getMessage must equalTo(UnexpectedResponse.format(
-            provider.id,
-            apiResult,
-            StatusCode.BadRequest
-          ))
+          e.getCause.getMessage must equalTo(
+            UnexpectedResponse.format(
+              provider.id,
+              apiResult,
+              StatusCode.BadRequest
+            )
+          )
       }
     }
 
@@ -115,14 +117,16 @@ class GitLabProviderSpec extends OAuth2ProviderSpec {
     /**
      * The OAuth2 config.
      */
-    override lazy val config = spy(OAuth2Config(
-      authorizationUri = Some(uri"https://gitlab.com/oauth/authoriz"),
-      accessTokenUri = uri"https://gitlab.com/oauth/token",
-      redirectUri = Some(uri"https://minutemen.group"),
-      clientID = "my.client.id",
-      clientSecret = "my.client.secret",
-      scope = Some("api")
-    ))
+    override lazy val config = spy(
+      OAuth2Config(
+        authorizationUri = Some(uri"https://gitlab.com/oauth/authoriz"),
+        accessTokenUri = uri"https://gitlab.com/oauth/token",
+        redirectUri = Some(uri"https://minutemen.group"),
+        clientID = "my.client.id",
+        clientSecret = "my.client.secret",
+        scope = Some("api")
+      )
+    )
 
     /**
      * The provider to test.

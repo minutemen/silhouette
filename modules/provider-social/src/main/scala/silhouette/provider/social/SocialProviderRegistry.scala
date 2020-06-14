@@ -17,7 +17,7 @@
  */
 package silhouette.provider.social
 
-import scala.reflect.{ ClassTag, classTag }
+import scala.reflect.{ classTag, ClassTag }
 
 /**
  * A registry that holds and provides access to all social provider implementations.
@@ -32,9 +32,8 @@ case class SocialProviderRegistry[F[_]](providers: Seq[SocialProvider[F, _]]) {
    * @tparam T The type of the provider.
    * @return Some specific provider type or None if no provider for the given type could be found.
    */
-  def get[T <: SocialProvider[F, _]: ClassTag]: Option[T] = {
+  def get[T <: SocialProvider[F, _]: ClassTag]: Option[T] =
     providers.find(p => classTag[T].runtimeClass.isInstance(p)).map(_.asInstanceOf[T])
-  }
 
   /**
    * Gets a specific provider by its ID.
@@ -50,7 +49,6 @@ case class SocialProviderRegistry[F[_]](providers: Seq[SocialProvider[F, _]]) {
    * @tparam T The type of the provider.
    * @return A list of providers that match a certain type.
    */
-  def getSeq[T <: SocialProvider[F, _]: ClassTag]: Seq[T] = {
+  def getSeq[T <: SocialProvider[F, _]: ClassTag]: Seq[T] =
     providers.filter(p => classTag[T].runtimeClass.isInstance(p)).map(_.asInstanceOf[T])
-  }
 }

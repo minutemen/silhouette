@@ -54,22 +54,25 @@ final case class JwtWriter[F[_]: Async](
    * @param authenticator The authenticator to transform.
    * @return A JWT on success, an error on failure.
    */
-  override def apply(authenticator: Authenticator): F[String] = {
+  override def apply(authenticator: Authenticator): F[String] =
     Async[F].fromEither {
-      claimWriter(Claims(
-        issuer = issuer,
-        subject = Some(Base64.encode(authenticator.loginInfo.asJson.toString())),
-        audience = audience,
-        expirationTime = authenticator.expires,
-        notBefore = notBefore,
-        issuedAt = authenticator.touched,
-        jwtID = Some(authenticator.id),
-        custom = JsonObject.fromIterable(Seq(
-          Some("tags" -> Json.arr(authenticator.tags.map(Json.fromString): _*)),
-          authenticator.fingerprint.map("fingerprint" -> Json.fromString(_)),
-          authenticator.payload.map("payload" -> _)
-        ).flatten)
-      ))
+      claimWriter(
+        Claims(
+          issuer = issuer,
+          subject = Some(Base64.encode(authenticator.loginInfo.asJson.toString())),
+          audience = audience,
+          expirationTime = authenticator.expires,
+          notBefore = notBefore,
+          issuedAt = authenticator.touched,
+          jwtID = Some(authenticator.id),
+          custom = JsonObject.fromIterable(
+            Seq(
+              Some("tags" -> Json.arr(authenticator.tags.map(Json.fromString): _*)),
+              authenticator.fingerprint.map("fingerprint" -> Json.fromString(_)),
+              authenticator.payload.map("payload" -> _)
+            ).flatten
+          )
+        )
+      )
     }
-  }
 }

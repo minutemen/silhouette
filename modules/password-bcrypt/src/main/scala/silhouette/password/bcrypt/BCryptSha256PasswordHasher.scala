@@ -59,10 +59,11 @@ class BCryptSha256PasswordHasher(logRounds: Int = 10) extends BCryptPasswordHash
    * @param plainPassword The password to hash.
    * @return A PasswordInfo containing the hashed password.
    */
-  override def hash(plainPassword: String): PasswordInfo = PasswordInfo(
-    hasher = id,
-    password = BCrypt.hashpw(Hash.sha256(plainPassword), BCrypt.gensalt(logRounds))
-  )
+  override def hash(plainPassword: String): PasswordInfo =
+    PasswordInfo(
+      hasher = id,
+      password = BCrypt.hashpw(Hash.sha256(plainPassword), BCrypt.gensalt(logRounds))
+    )
 
   /**
    * Checks if a password matches the hashed version.
@@ -71,9 +72,8 @@ class BCryptSha256PasswordHasher(logRounds: Int = 10) extends BCryptPasswordHash
    * @param suppliedPassword The password supplied by the user trying to log in.
    * @return True if the password matches, false otherwise.
    */
-  override def matches(passwordInfo: PasswordInfo, suppliedPassword: String): Boolean = {
+  override def matches(passwordInfo: PasswordInfo, suppliedPassword: String): Boolean =
     BCrypt.checkpw(Hash.sha256(suppliedPassword), passwordInfo.password)
-  }
 }
 
 /**

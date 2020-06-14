@@ -25,5 +25,4 @@ import silhouette.SilhouetteException
  * @param msg   The exception message.
  * @param cause The exception cause.
  */
-class JwtException(msg: String, cause: Option[Throwable] = None)
-  extends SilhouetteException(msg, cause)
+class JwtException(msg: String, cause: Option[Throwable] = None) extends SilhouetteException(msg, cause)

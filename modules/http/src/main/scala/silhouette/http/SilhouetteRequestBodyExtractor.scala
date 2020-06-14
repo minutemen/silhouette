@@ -42,7 +42,7 @@ class SilhouetteRequestBodyExtractor extends RequestBodyExtractor[Option[Body]] 
    * @param name      The name of the value to extract.
    * @return The extracted value on success, otherwise an error on failure.
    */
-  override def fromJson(maybeBody: Option[Body], name: String): ExtractionResult = {
+  override def fromJson(maybeBody: Option[Body], name: String): ExtractionResult =
     maybeBody match {
       case Some(body @ JsonBody(_, _)) =>
         body.as[JsonBody.Type] match {
@@ -56,7 +56,6 @@ class SilhouetteRequestBodyExtractor extends RequestBodyExtractor[Option[Body]] 
       case Some(body) => WrongContentType(body.contentType, JsonBody.allowedTypes)
       case None       => WithoutBody
     }
-  }
 
   /**
    * Extracts a value from XML body.
@@ -65,7 +64,7 @@ class SilhouetteRequestBodyExtractor extends RequestBodyExtractor[Option[Body]] 
    * @param name      The name of the value to extract.
    * @return The extracted value on success, otherwise an error on failure.
    */
-  override def fromXml(maybeBody: Option[Body], name: String): ExtractionResult = {
+  override def fromXml(maybeBody: Option[Body], name: String): ExtractionResult =
     maybeBody match {
       case Some(body @ XmlBody(_, _)) =>
         body.as[XmlBody.Type] match {
@@ -79,7 +78,6 @@ class SilhouetteRequestBodyExtractor extends RequestBodyExtractor[Option[Body]] 
       case Some(body) => WrongContentType(body.contentType, XmlBody.allowedTypes)
       case None       => WithoutBody
     }
-  }
 
   /**
    * Extracts a value from form-url-encoded body.
@@ -88,7 +86,7 @@ class SilhouetteRequestBodyExtractor extends RequestBodyExtractor[Option[Body]] 
    * @param name      The name of the value to extract.
    * @return The extracted value on success, otherwise an error on failure.
    */
-  override def fromFormUrlEncoded(maybeBody: Option[Body], name: String): ExtractionResult = {
+  override def fromFormUrlEncoded(maybeBody: Option[Body], name: String): ExtractionResult =
     maybeBody match {
       case Some(body @ FormUrlEncodedBody(_, _)) =>
         body.as[FormUrlEncodedBody.Type] match {
@@ -102,5 +100,4 @@ class SilhouetteRequestBodyExtractor extends RequestBodyExtractor[Option[Body]] 
       case Some(body) => WrongContentType(body.contentType, JsonBody.allowedTypes)
       case None       => WithoutBody
     }
-  }
 }

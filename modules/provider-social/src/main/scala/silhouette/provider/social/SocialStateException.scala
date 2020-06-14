@@ -23,5 +23,4 @@ package silhouette.provider.social
  * @param msg The exception message.
  * @param cause The exception cause.
  */
-class SocialStateException(msg: String, cause: Option[Throwable] = None)
-  extends SocialProviderException(msg, cause)
+class SocialStateException(msg: String, cause: Option[Throwable] = None) extends SocialProviderException(msg, cause)

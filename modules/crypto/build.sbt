@@ -19,6 +19,6 @@ import Dependencies._
 
 libraryDependencies ++= Seq(
   Library.commonCodec,
-  Library.Cats.effect,
+  Library.Cats.effect
 )
 //enablePlugins(Doc)

@@ -28,7 +28,7 @@ import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
 import silhouette.{ LoginInfo, RichACursor }
 import sttp.client.circe.asJson
-import sttp.client.{ SttpBackend, basicRequest }
+import sttp.client.{ basicRequest, SttpBackend }
 import sttp.model.Uri._
 
 /**
@@ -55,9 +55,11 @@ trait BaseGoogleProvider[F[_]] extends OAuth2Provider[F] {
    */
   override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
     val uri = config.apiUri.getOrElse(DefaultApiUri)
-    basicRequest.get(uri.param("access_token", authInfo.accessToken))
+    basicRequest
+      .get(uri.param("access_token", authInfo.accessToken))
       .response(asJson[Json])
-      .send().flatMap { response =>
+      .send()
+      .flatMap { response =>
         response.body match {
           case Left(error) =>
             F.raiseError(new UnexpectedResponseException(UnexpectedResponse.format(id, error.body, response.code)))
@@ -86,7 +88,7 @@ class GoogleProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, Comm
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] = {
+  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] =
     json.hcursor.downField("names").downAt(isPrimary).focus.map(_.hcursor) match {
       case Some(names) =>
         val maybeID = names.downField("metadata").downField("source").downField("id").as[String]
@@ -113,7 +115,6 @@ class GoogleProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, Comm
       case None =>
         Async[F].raiseError(new UnexpectedResponseException(NoPrimaryEntry.format(ID, "names", json)))
     }
-  }
 
   /**
    * Indicates if the entry in the array is the primary entry.
@@ -125,9 +126,8 @@ class GoogleProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, Comm
    * @param json The entry from a JSON array.
    * @return True if the entry is the primary entry, false otherwise.
    */
-  private def isPrimary(json: Json): Boolean = {
+  private def isPrimary(json: Json): Boolean =
     json.hcursor.downField("metadata").downField("primary").as[Boolean].toOption.getOrElse(false)
-  }
 }
 
 /**
@@ -146,7 +146,8 @@ class GoogleProvider[F[_]](
   implicit
   protected val sttpBackend: SttpBackend[F, Nothing, Nothing],
   protected val F: Async[F]
-) extends BaseGoogleProvider[F] with CommonProfileBuilder[F] {
+) extends BaseGoogleProvider[F]
+    with CommonProfileBuilder[F] {
 
   /**
    * The type of this class.

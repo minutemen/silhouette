@@ -33,12 +33,13 @@ case object BearerAuthSchemeReader extends (String => Try[BearerToken]) {
    * @param value The "Bearer" `Authorization` header value.
    * @return Some token or a failure if the value could not be parsed.
    */
-  override def apply(value: String): Try[BearerToken] = value match {
-    case AuthScheme.Bearer(token) =>
-      Success(BearerToken(token))
-    case _ =>
-      Failure(new TransformException(MissingBearerAuthIdentifier))
-  }
+  override def apply(value: String): Try[BearerToken] =
+    value match {
+      case AuthScheme.Bearer(token) =>
+        Success(BearerToken(token))
+      case _ =>
+        Failure(new TransformException(MissingBearerAuthIdentifier))
+    }
 
   /**
    * The error messages.

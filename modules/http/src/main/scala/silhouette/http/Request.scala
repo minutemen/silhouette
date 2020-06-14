@@ -95,14 +95,16 @@ trait Request extends WithHeaders with WithCookies {
    *
    * @return A default fingerprint from the request.
    */
-  def fingerprint(): String = {
-    Hash.sha1(new StringBuilder()
-      .append(headerValue(HeaderNames.UserAgent).getOrElse("")).append(":")
-      .append(headerValue(HeaderNames.AcceptLanguage).getOrElse("")).append(":")
-      .append(headerValue(HeaderNames.AcceptCharset).getOrElse(""))
-      .toString()
+  def fingerprint(): String =
+    Hash.sha1(
+      new StringBuilder()
+        .append(headerValue(HeaderNames.UserAgent).getOrElse(""))
+        .append(":")
+        .append(headerValue(HeaderNames.AcceptLanguage).getOrElse(""))
+        .append(":")
+        .append(headerValue(HeaderNames.AcceptCharset).getOrElse(""))
+        .toString()
     )
-  }
 
   /**
    * Indicates if the request is a secure HTTPS request.

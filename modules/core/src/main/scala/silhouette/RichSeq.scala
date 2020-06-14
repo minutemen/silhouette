@@ -34,14 +34,14 @@ class RichSeq[A](seq: Seq[A]) {
    * @tparam K The type of the value that should be used for grouping.
    * @return A sequence containing the grouped items.
    */
-  def groupByPreserveOrder[K](f: A => K): Seq[(K, List[A])] = {
+  def groupByPreserveOrder[K](f: A => K): Seq[(K, List[A])] =
     seq.foldRight(List[(K, List[A])]())((item: A, res: List[(K, List[A])]) =>
       res match {
         case Nil                               => List((f(item), List(item)))
         case (k, kLst) :: tail if k == f(item) => (k, item :: kLst) :: tail
         case _                                 => (f(item), List(item)) :: res
-      })
-  }
+      }
+    )
 }
 
 /**

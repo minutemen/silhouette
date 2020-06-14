@@ -47,11 +47,13 @@ class InstagramProviderSpec extends OAuth2ProviderSpec {
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
         case e =>
           e.getMessage must equalTo(ProfileError.format(provider.id))
-          e.getCause.getMessage must equalTo(UnexpectedResponse.format(
-            provider.id,
-            apiResult,
-            StatusCode.BadRequest
-          ))
+          e.getCause.getMessage must equalTo(
+            UnexpectedResponse.format(
+              provider.id,
+              apiResult,
+              StatusCode.BadRequest
+            )
+          )
       }
     }
 
@@ -114,14 +116,16 @@ class InstagramProviderSpec extends OAuth2ProviderSpec {
     /**
      * The OAuth2 config.
      */
-    override lazy val config = spy(OAuth2Config(
-      authorizationUri = Some(uri"https://api.instagram.com/oauth/authorize"),
-      accessTokenUri = uri"https://api.instagram.com/oauth/access_token",
-      redirectUri = Some(uri"https://minutemen.group"),
-      clientID = "my.client.id",
-      clientSecret = "my.client.secret",
-      scope = Some("basic")
-    ))
+    override lazy val config = spy(
+      OAuth2Config(
+        authorizationUri = Some(uri"https://api.instagram.com/oauth/authorize"),
+        accessTokenUri = uri"https://api.instagram.com/oauth/access_token",
+        redirectUri = Some(uri"https://minutemen.group"),
+        clientID = "my.client.id",
+        clientSecret = "my.client.secret",
+        scope = Some("basic")
+      )
+    )
 
     /**
      * The provider to test.

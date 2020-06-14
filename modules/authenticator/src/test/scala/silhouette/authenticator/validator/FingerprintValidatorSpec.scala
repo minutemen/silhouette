@@ -34,19 +34,24 @@ class FingerprintValidatorSpec extends Specification with Mockito {
   "The `isValid` method" should {
     "return always Valid if no fingerprint is stored in the authenticator" in new Context {
       FingerprintValidator[IO]("test")
-        .isValid(authenticator).unsafeRunSync() must beEqualTo(validNel(()))
+        .isValid(authenticator)
+        .unsafeRunSync() must beEqualTo(validNel(()))
     }
 
     "return Valid if fingerprint stored in the authenticator matches the given fingerprint" in new Context {
       FingerprintValidator[IO]("test")
-        .isValid(authenticator.copy(fingerprint = Some("test"))).unsafeRunSync() must beEqualTo(validNel(()))
+        .isValid(authenticator.copy(fingerprint = Some("test")))
+        .unsafeRunSync() must beEqualTo(validNel(()))
     }
 
     "return Invalid if fingerprint stored in the authenticator doesn't match the given fingerprint" in new Context {
       FingerprintValidator[IO]("invalid")
-        .isValid(authenticator.copy(fingerprint = Some("test"))).unsafeRunSync() must beEqualTo(invalidNel(
+        .isValid(authenticator.copy(fingerprint = Some("test")))
+        .unsafeRunSync() must beEqualTo(
+        invalidNel(
           Error.format("invalid", "test")
-        ))
+        )
+      )
     }
   }
 

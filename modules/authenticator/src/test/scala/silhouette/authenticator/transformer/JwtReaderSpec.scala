@@ -75,9 +75,13 @@ class JwtReaderSpec extends Specification with Mockito {
     }
 
     "return the tags as empty array if the `tags` in the custom claim JSON isn't an array" in new Context {
-      claimReader(jwt) returns Right(claims.copy(custom = JsonObject(
-        "tags" -> Json.fromString("some string")
-      )))
+      claimReader(jwt) returns Right(
+        claims.copy(custom =
+          JsonObject(
+            "tags" -> Json.fromString("some string")
+          )
+        )
+      )
 
       jwtReader(jwt).unsafeRunSync() must beLike[Authenticator] {
         case value =>

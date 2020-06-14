@@ -104,7 +104,10 @@ final case class Authenticator(
    * @param request The request.
    * @return A copy of this authenticator with a default fingerprint.
    */
-  def withFingerPrint()(implicit request: Request): Authenticator =
+  def withFingerPrint()(
+    implicit
+    request: Request
+  ): Authenticator =
     copy(fingerprint = Some(request.fingerprint()))
 
   /**

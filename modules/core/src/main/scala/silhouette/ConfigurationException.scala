@@ -23,5 +23,4 @@ package silhouette
  * @param msg   The exception message.
  * @param cause The exception cause.
  */
-class ConfigurationException(msg: String, cause: Option[Throwable] = None)
-  extends SilhouetteException(msg, cause)
+class ConfigurationException(msg: String, cause: Option[Throwable] = None) extends SilhouetteException(msg, cause)

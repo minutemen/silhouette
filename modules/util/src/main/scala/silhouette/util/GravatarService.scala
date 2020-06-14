@@ -33,7 +33,8 @@ import sttp.model.Uri
 final case class GravatarService[F[_]: Monad] @Inject() (settings: GravatarServiceConfig = GravatarServiceConfig())(
   implicit
   val sttpBackend: SttpBackend[F, Nothing, Nothing]
-) extends AvatarService[F] with LazyLogging {
+) extends AvatarService[F]
+    with LazyLogging {
 
   /**
    * Retrieves the URI for the given email address.
@@ -41,7 +42,7 @@ final case class GravatarService[F[_]: Monad] @Inject() (settings: GravatarServi
    * @param email The email address for the avatar.
    * @return Maybe an avatar URI or None if no avatar could be found for the given email address.
    */
-  override def retrieveUri(email: String): F[Option[Uri]] = {
+  override def retrieveUri(email: String): F[Option[Uri]] =
     hash(email) match {
       case Some(hash) =>
         val url = (if (settings.secure) SecureURI else InsecureURI)(hash, settings.params)
@@ -56,7 +57,6 @@ final case class GravatarService[F[_]: Monad] @Inject() (settings: GravatarServi
         }
       case None => Monad[F].pure(None)
     }
-  }
 
   /**
    * Builds the hash for the given email address.
@@ -66,11 +66,10 @@ final case class GravatarService[F[_]: Monad] @Inject() (settings: GravatarServi
    */
   private def hash(email: String): Option[String] = {
     val s = email.trim.toLowerCase
-    if (s.length > 0) {
+    if (s.length > 0)
       Some(md5(s.getBytes))
-    } else {
+    else
       None
-    }
   }
 }
 
@@ -80,6 +79,7 @@ final case class GravatarService[F[_]: Monad] @Inject() (settings: GravatarServi
 object GravatarService {
   val InsecureURI = (hash: String, queryParams: Map[String, String]) =>
     uri"http://www.gravatar.com/avatar/$hash?$queryParams"
+
   val SecureURI = (hash: String, queryParams: Map[String, String]) =>
     uri"https://secure.gravatar.com/avatar/$hash?$queryParams"
 }

@@ -29,7 +29,5 @@ class StateHandlerSpec extends Specification with Mockito {
   /**
    * The context.
    */
-  trait Context extends Scope {
-
-  }
+  trait Context extends Scope {}
 }

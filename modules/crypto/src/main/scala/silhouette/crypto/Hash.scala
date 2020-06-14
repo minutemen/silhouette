@@ -39,7 +39,10 @@ object Hash {
    * @param codec The codec used to convert the string into a byte array.
    * @return The byte array representation of the string.
    */
-  implicit def strToByteArray(str: String)(implicit codec: Codec): Array[Byte] = str.getBytes(codec.charSet)
+  implicit def strToByteArray(str: String)(
+    implicit
+    codec: Codec
+  ): Array[Byte] = str.getBytes(codec.charSet)
 
   /**
    * Creates a MD5 hash from the given byte array.
@@ -88,7 +91,6 @@ object Hash {
    * @param bytes     The bytes to create a hash from.
    * @return The hash for the given algorithm and the given bytes.
    */
-  private def hash(algorithm: String, bytes: Array[Byte]): String = {
+  private def hash(algorithm: String, bytes: Array[Byte]): String =
     MessageDigest.getInstance(algorithm).digest(bytes).map("%02x".format(_)).mkString
-  }
 }

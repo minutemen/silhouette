@@ -96,9 +96,10 @@ object Authorization {
      *
      * @return An `Authorization` which performs a logical negation on an `Authorization` result.
      */
-    def unary_! : Authorization[F, I, C] = (identity: I, context: C) => {
-      Async[F].map(self.isAuthorized(identity, context))(x => !x)
-    }
+    def unary_! : Authorization[F, I, C] =
+      (identity: I, context: C) => {
+        Async[F].map(self.isAuthorized(identity, context))(x => !x)
+      }
 
     /**
      * Performs a logical AND operation with two `Authorization` instances.
@@ -106,14 +107,15 @@ object Authorization {
      * @param authorization The right hand operand.
      * @return An authorization which performs a logical AND operation with two `Authorization` instances.
      */
-    def &&(authorization: Authorization[F, I, C]): Authorization[F, I, C] = (identity: I, context: C) => {
-      val leftF = self.isAuthorized(identity, context)
-      val rightF = authorization.isAuthorized(identity, context)
-      for {
-        left <- leftF
-        right <- rightF
-      } yield left && right
-    }
+    def &&(authorization: Authorization[F, I, C]): Authorization[F, I, C] =
+      (identity: I, context: C) => {
+        val leftF = self.isAuthorized(identity, context)
+        val rightF = authorization.isAuthorized(identity, context)
+        for {
+          left <- leftF
+          right <- rightF
+        } yield left && right
+      }
 
     /**
      * Performs a logical OR operation with two `Authorization` instances.
@@ -121,13 +123,14 @@ object Authorization {
      * @param authorization The right hand operand.
      * @return An authorization which performs a logical OR operation with two `Authorization` instances.
      */
-    def ||(authorization: Authorization[F, I, C]): Authorization[F, I, C] = (identity: I, context: C) => {
-      val leftF = self.isAuthorized(identity, context)
-      val rightF = authorization.isAuthorized(identity, context)
-      for {
-        left <- leftF
-        right <- rightF
-      } yield left || right
-    }
+    def ||(authorization: Authorization[F, I, C]): Authorization[F, I, C] =
+      (identity: I, context: C) => {
+        val leftF = self.isAuthorized(identity, context)
+        val rightF = authorization.isAuthorized(identity, context)
+        for {
+          left <- leftF
+          right <- rightF
+        } yield left || right
+      }
   }
 }

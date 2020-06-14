@@ -50,11 +50,13 @@ class CustomFacebookProviderSpec extends OAuth2ProviderSpec {
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
         case e =>
           e.getMessage must equalTo(ProfileError.format(provider.id))
-          e.getCause.getMessage must equalTo(UnexpectedResponse.format(
-            provider.id,
-            apiResult,
-            StatusCode.BadRequest
-          ))
+          e.getCause.getMessage must equalTo(
+            UnexpectedResponse.format(
+              provider.id,
+              apiResult,
+              StatusCode.BadRequest
+            )
+          )
       }
     }
 
@@ -123,14 +125,16 @@ class CustomFacebookProviderSpec extends OAuth2ProviderSpec {
     /**
      * The OAuth2 config.
      */
-    override lazy val config = spy(OAuth2Config(
-      authorizationUri = Some(uri"https://graph.facebook.com/oauth/authorize"),
-      accessTokenUri = uri"https://graph.facebook.com/oauth/access_token",
-      redirectUri = Some(uri"https://minutemen.group"),
-      clientID = "my.client.id",
-      clientSecret = "my.client.secret",
-      scope = Some("email")
-    ))
+    override lazy val config = spy(
+      OAuth2Config(
+        authorizationUri = Some(uri"https://graph.facebook.com/oauth/authorize"),
+        accessTokenUri = uri"https://graph.facebook.com/oauth/access_token",
+        redirectUri = Some(uri"https://minutemen.group"),
+        clientID = "my.client.id",
+        clientSecret = "my.client.secret",
+        scope = Some("email")
+      )
+    )
 
     /**
      * The provider to test.

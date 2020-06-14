@@ -48,11 +48,13 @@ class Auth0ProviderSpec extends OAuth2ProviderSpec {
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
         case e =>
           e.getMessage must equalTo(ProfileError.format(provider.id))
-          e.getCause.getMessage must equalTo(UnexpectedResponse.format(
-            provider.id,
-            apiResult,
-            StatusCode.BadRequest
-          ))
+          e.getCause.getMessage must equalTo(
+            UnexpectedResponse.format(
+              provider.id,
+              apiResult,
+              StatusCode.BadRequest
+            )
+          )
       }
     }
 
@@ -120,15 +122,17 @@ class Auth0ProviderSpec extends OAuth2ProviderSpec {
     /**
      * The OAuth2 config.
      */
-    override lazy val config = spy(OAuth2Config(
-      authorizationUri = Some(uri"https://gerritforge.eu.auth0.com/authorize"),
-      accessTokenUri = uri"https://gerritforge.eu.auth0.com/oauth/token",
-      redirectUri = Some(uri"https://minutemen.group"),
-      refreshUri = Some(uri"https://gerritforge.eu.auth0.com/oauth/token"),
-      clientID = "some.client.id",
-      clientSecret = "some.secret",
-      scope = Some("email")
-    ))
+    override lazy val config = spy(
+      OAuth2Config(
+        authorizationUri = Some(uri"https://gerritforge.eu.auth0.com/authorize"),
+        accessTokenUri = uri"https://gerritforge.eu.auth0.com/oauth/token",
+        redirectUri = Some(uri"https://minutemen.group"),
+        refreshUri = Some(uri"https://gerritforge.eu.auth0.com/oauth/token"),
+        clientID = "some.client.id",
+        clientSecret = "some.secret",
+        scope = Some("email")
+      )
+    )
 
     /**
      * The provider to test.

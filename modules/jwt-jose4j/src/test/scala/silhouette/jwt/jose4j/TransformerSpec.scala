@@ -74,16 +74,18 @@ class TransformerSpec extends Specification {
     }
 
     "transform a complex JWT" in new Context {
-      transform(Claims(
-        issuer = Some("test"),
-        subject = Some("test"),
-        audience = Some(List("test1", "test2")),
-        expirationTime = Some(Clock.systemUTC().instant()),
-        notBefore = Some(Clock.systemUTC().instant()),
-        issuedAt = Some(Clock.systemUTC().instant()),
-        jwtID = Some("test"),
-        custom = customClaims
-      ))
+      transform(
+        Claims(
+          issuer = Some("test"),
+          subject = Some("test"),
+          audience = Some(List("test1", "test2")),
+          expirationTime = Some(Clock.systemUTC().instant()),
+          notBefore = Some(Clock.systemUTC().instant()),
+          issuedAt = Some(Clock.systemUTC().instant()),
+          jwtID = Some("test"),
+          custom = customClaims
+        )
+      )
     }
   }
 
@@ -134,7 +136,7 @@ class TransformerSpec extends Specification {
      * A simple producer for testing.
      */
     val producer = new Jose4jProducer {
-      override def produce(claims: JwtClaims): Either[Throwable, String] = {
+      override def produce(claims: JwtClaims): Either[Throwable, String] =
         Try {
           val jws = new JsonWebSignature()
           jws.setAlgorithmConstraints(AlgorithmConstraints.NO_CONSTRAINTS)
@@ -142,21 +144,20 @@ class TransformerSpec extends Specification {
           jws.setAlgorithmHeaderValue(NONE)
           jws.getCompactSerialization
         }.toEither
-      }
     }
 
     /**
      * A simple consumer for testing.
      */
     val consumer = new Jose4jConsumer {
-      override def consume(jwt: String): Either[Throwable, JwtClaims] = {
+      override def consume(jwt: String): Either[Throwable, JwtClaims] =
         Try(new JwtConsumerBuilder())
           .map(builder => builder.setJwsAlgorithmConstraints(AlgorithmConstraints.NO_CONSTRAINTS))
           .map(builder => builder.setDisableRequireSignature())
           .map(builder => builder.setSkipAllValidators())
           .map(builder => builder.setSkipAllDefaultValidators())
-          .map(_.build().processToClaims(jwt)).toEither
-      }
+          .map(_.build().processToClaims(jwt))
+          .toEither
     }
 
     /**
@@ -177,8 +178,8 @@ class TransformerSpec extends Specification {
       "string" -> Json.fromString("string"),
       "int" -> Json.fromInt(1234567890),
       "long" -> Json.fromLong(1234567890L),
-      "float" -> Json.fromFloatOrNull(1.2F),
-      "double" -> Json.fromDoubleOrNull(1.2D),
+      "float" -> Json.fromFloatOrNull(1.2f),
+      "double" -> Json.fromDoubleOrNull(1.2d),
       "bigInt" -> Json.fromBigInt(new java.math.BigInteger("10000000000000000000000000000000")),
       "bigDecimal" -> Json.fromBigDecimal(new java.math.BigDecimal("100000000000000000000000000000.00")),
       "null" -> Json.Null,
@@ -202,16 +203,17 @@ class TransformerSpec extends Specification {
      * @param claims The claims to check for.
      * @return A Specs2 match result.
      */
-    protected def transform(claims: Claims): MatchResult[Any] = {
+    protected def transform(claims: Claims): MatchResult[Any] =
       writer.apply(claims) must beRight[String].like {
         case jwt =>
-          reader.apply(jwt) must beRight(claims.copy(
-            expirationTime = claims.expirationTime.map(_.truncatedTo(ChronoUnit.SECONDS)),
-            notBefore = claims.notBefore.map(_.truncatedTo(ChronoUnit.SECONDS)),
-            issuedAt = claims.issuedAt.map(_.truncatedTo(ChronoUnit.SECONDS))
-          ))
+          reader.apply(jwt) must beRight(
+            claims.copy(
+              expirationTime = claims.expirationTime.map(_.truncatedTo(ChronoUnit.SECONDS)),
+              notBefore = claims.notBefore.map(_.truncatedTo(ChronoUnit.SECONDS)),
+              issuedAt = claims.issuedAt.map(_.truncatedTo(ChronoUnit.SECONDS))
+            )
+          )
       }
-    }
 
     /**
      * A helper method which overrides reserved claims and checks for an exception.

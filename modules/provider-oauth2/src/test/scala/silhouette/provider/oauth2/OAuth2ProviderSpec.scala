@@ -180,8 +180,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
       val code = "my.code"
       val request = Fake.request.withQueryParams(Code -> code)
 
-      c.sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenAnyRequest
+      c.sttpBackend = AsyncHttpClientCatsBackend.stub.whenAnyRequest
         .thenRespond(Response("<html></html>", StatusCode.Ok))
 
       failed[UnexpectedResponseException](c.provider.authenticate(request)) {
@@ -194,14 +193,16 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
       val code = "my.code"
       val request = Fake.request.withQueryParams(Code -> code)
 
-      c.sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenAnyRequest
+      c.sttpBackend = AsyncHttpClientCatsBackend.stub.whenAnyRequest
         .thenRespond(Response("Unauthorized", StatusCode.Unauthorized))
 
       failed[UnexpectedResponseException](c.provider.authenticate(request)) {
-        case e => e.getMessage must be equalTo UnexpectedResponse.format(
-          c.provider.id, "Unauthorized", StatusCode.Unauthorized
-        )
+        case e =>
+          e.getMessage must be equalTo UnexpectedResponse.format(
+            c.provider.id,
+            "Unauthorized",
+            StatusCode.Unauthorized
+          )
       }
     }
 
@@ -209,14 +210,16 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
       val code = "my.code"
       val request = Fake.request.withQueryParams(Code -> code)
 
-      c.sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenAnyRequest
+      c.sttpBackend = AsyncHttpClientCatsBackend.stub.whenAnyRequest
         .thenRespond(Response(Json.obj().noSpaces, StatusCode.Ok))
 
       failed[UnexpectedResponseException](c.provider.authenticate(request)) {
-        case e => e.getMessage must be equalTo UnexpectedResponse.format(
-          c.provider.id, "{}", StatusCode.Ok
-        )
+        case e =>
+          e.getMessage must be equalTo UnexpectedResponse.format(
+            c.provider.id,
+            "{}",
+            StatusCode.Ok
+          )
       }
     }
 
@@ -224,8 +227,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
       val code = "my.code"
       val request = Fake.request.withQueryParams(Code -> code)
 
-      c.sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenAnyRequest
+      c.sttpBackend = AsyncHttpClientCatsBackend.stub.whenAnyRequest
         .thenRespond(Response(c.oAuth2InfoJson.toString, StatusCode.Ok))
 
       authInfo(c.provider.authenticate(request))(_ must be equalTo c.oAuth2Info): Result
@@ -254,8 +256,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
         case Some(_) =>
           val refreshToken = "some-refresh-token"
 
-          c.sttpBackend = AsyncHttpClientCatsBackend.stub
-            .whenAnyRequest
+          c.sttpBackend = AsyncHttpClientCatsBackend.stub.whenAnyRequest
             .thenRespond(Response("<html></html>", StatusCode.Ok))
 
           failed[UnexpectedResponseException](c.provider.refresh(refreshToken)) {
@@ -272,14 +273,16 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
         case Some(_) =>
           val refreshToken = "some-refresh-token"
 
-          c.sttpBackend = AsyncHttpClientCatsBackend.stub
-            .whenAnyRequest
+          c.sttpBackend = AsyncHttpClientCatsBackend.stub.whenAnyRequest
             .thenRespond(Response("Unauthorized", StatusCode.Unauthorized))
 
           failed[UnexpectedResponseException](c.provider.refresh(refreshToken)) {
-            case e => e.getMessage must be equalTo UnexpectedResponse.format(
-              c.provider.id, "Unauthorized", StatusCode.Unauthorized
-            )
+            case e =>
+              e.getMessage must be equalTo UnexpectedResponse.format(
+                c.provider.id,
+                "Unauthorized",
+                StatusCode.Unauthorized
+              )
           }: Result
       }
     }
@@ -291,14 +294,16 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
         case Some(_) =>
           val refreshToken = "some-refresh-token"
 
-          c.sttpBackend = AsyncHttpClientCatsBackend.stub
-            .whenAnyRequest
+          c.sttpBackend = AsyncHttpClientCatsBackend.stub.whenAnyRequest
             .thenRespond(Response(Json.obj().noSpaces, StatusCode.Ok))
 
           failed[UnexpectedResponseException](c.provider.refresh(refreshToken)) {
-            case e => e.getMessage must be equalTo UnexpectedResponse.format(
-              c.provider.id, "{}", StatusCode.Ok
-            )
+            case e =>
+              e.getMessage must be equalTo UnexpectedResponse.format(
+                c.provider.id,
+                "{}",
+                StatusCode.Ok
+              )
           }: Result
       }
     }
@@ -310,8 +315,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
         case Some(_) =>
           val refreshToken = "some-refresh-token"
 
-          c.sttpBackend = AsyncHttpClientCatsBackend.stub
-            .whenAnyRequest
+          c.sttpBackend = AsyncHttpClientCatsBackend.stub.whenAnyRequest
             .thenRespond(Response(c.oAuth2InfoJson.toString, StatusCode.Ok))
 
           c.provider.refresh(refreshToken).unsafeRunSync() must be equalTo c.oAuth2Info: Result
@@ -355,7 +359,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
   )(
     implicit
     c: BaseContext
-  ) = {
+  ) =
     c.config.authorizationUri match {
       case None =>
         skipped("authorizationUri is not defined, so this step isn't needed for provider: " + c.provider.getClass)
@@ -383,7 +387,6 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
             }: Result
         }
     }
-  }
 
   /**
    * Base context.
@@ -442,9 +445,10 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
      * @return The authorization header.
      * @see https://tools.ietf.org/html/rfc6749#section-2.3.1
      */
-    def authorizationHeader: Header = BasicAuthorizationHeader(
-      BasicCredentials(encode(config.clientID, "UTF-8"), encode(config.clientSecret, "UTF-8"))
-    )
+    def authorizationHeader: Header =
+      BasicAuthorizationHeader(
+        BasicCredentials(encode(config.clientID, "UTF-8"), encode(config.clientSecret, "UTF-8"))
+      )
 
     /**
      * Extracts the params of a URL.
@@ -452,9 +456,10 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
      * @param url The url to parse.
      * @return The params of a URL.
      */
-    def urlParams(url: String): Map[String, String] = (url.split('&') map { str =>
-      val pair = str.split('=')
-      pair(0) -> pair(1)
-    }).toMap
+    def urlParams(url: String): Map[String, String] =
+      (url.split('&') map { str =>
+        val pair = str.split('=')
+        pair(0) -> pair(1)
+      }).toMap
   }
 }

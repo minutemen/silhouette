@@ -45,10 +45,11 @@ class BCryptPasswordHasher(logRounds: Int = 10) extends PasswordHasher {
    * @param plainPassword The password to hash.
    * @return A PasswordInfo containing the hashed password.
    */
-  override def hash(plainPassword: String): PasswordInfo = PasswordInfo(
-    hasher = id,
-    password = BCrypt.hashpw(plainPassword, BCrypt.gensalt(logRounds))
-  )
+  override def hash(plainPassword: String): PasswordInfo =
+    PasswordInfo(
+      hasher = id,
+      password = BCrypt.hashpw(plainPassword, BCrypt.gensalt(logRounds))
+    )
 
   /**
    * Checks if a password matches the hashed version.
@@ -57,9 +58,8 @@ class BCryptPasswordHasher(logRounds: Int = 10) extends PasswordHasher {
    * @param suppliedPassword The password supplied by the user trying to log in.
    * @return True if the password matches, false otherwise.
    */
-  override def matches(passwordInfo: PasswordInfo, suppliedPassword: String): Boolean = {
+  override def matches(passwordInfo: PasswordInfo, suppliedPassword: String): Boolean =
     BCrypt.checkpw(suppliedPassword, passwordInfo.password)
-  }
 
   /**
    * Indicates if a password info hashed with this hasher is deprecated.
@@ -70,14 +70,13 @@ class BCryptPasswordHasher(logRounds: Int = 10) extends PasswordHasher {
    * @return True if the given password info is deprecated, false otherwise. If a hasher isn't
    *         suitable for the given password, this method should return None.
    */
-  override def isDeprecated(passwordInfo: PasswordInfo): Option[Boolean] = {
+  override def isDeprecated(passwordInfo: PasswordInfo): Option[Boolean] =
     Option(isSuitable(passwordInfo)).collect {
       case true =>
         val LogRoundsPattern(lr) = passwordInfo.password
         // Is deprecated if the log rounds has changed
         lr != logRounds.toString
     }
-  }
 }
 
 /**

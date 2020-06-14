@@ -48,11 +48,13 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
         case e =>
           e.getMessage must equalTo(ProfileError.format(provider.id))
-          e.getCause.getMessage must equalTo(UnexpectedResponse.format(
-            provider.id,
-            apiResult,
-            StatusCode.BadRequest
-          ))
+          e.getCause.getMessage must equalTo(
+            UnexpectedResponse.format(
+              provider.id,
+              apiResult,
+              StatusCode.BadRequest
+            )
+          )
       }
     }
 
@@ -116,14 +118,16 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
     /**
      * The OAuth2 config.
      */
-    override lazy val config = spy(OAuth2Config(
-      authorizationUri = Some(uri"https://www.dropbox.com/1/oauth2/authorize"),
-      accessTokenUri = uri"https://api.dropbox.com/1/oauth2/token",
-      redirectUri = Some(uri"https://minutemen.group"),
-      clientID = "my.client.id",
-      clientSecret = "my.client.secret",
-      scope = None
-    ))
+    override lazy val config = spy(
+      OAuth2Config(
+        authorizationUri = Some(uri"https://www.dropbox.com/1/oauth2/authorize"),
+        accessTokenUri = uri"https://api.dropbox.com/1/oauth2/token",
+        redirectUri = Some(uri"https://minutemen.group"),
+        clientID = "my.client.id",
+        clientSecret = "my.client.secret",
+        scope = None
+      )
+    )
 
     /**
      * The provider to test.

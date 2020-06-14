@@ -222,12 +222,11 @@ class SimpleSpec extends Specification with Mockito with WithBouncyCastle {
      * @param claims The claims to check for.
      * @return A Specs2 match result.
      */
-    protected def transform(claims: Claims): MatchResult[Any] = {
+    protected def transform(claims: Claims): MatchResult[Any] =
       claimWriter.apply(claims) must beRight[String].like {
         case jwt =>
           claimReader.apply(jwt) must beRight(claims)
       }
-    }
 
     /**
      * A helper method which transforms claims into a JWT and vice versa to check if the consumer
@@ -236,13 +235,12 @@ class SimpleSpec extends Specification with Mockito with WithBouncyCastle {
      * @param claims The claims to check for.
      * @return A Specs2 match result.
      */
-    protected def fraudulent(claims: Claims): MatchResult[Any] = {
+    protected def fraudulent(claims: Claims): MatchResult[Any] =
       claimWriter.apply(claims) must beRight[String].like {
         case jwt =>
           claimReader.apply(jwt) must beLeft[Throwable].like {
             case e: JwtException => e.getMessage must startWith(FraudulentJwtToken.format(""))
           }
       }
-    }
   }
 }

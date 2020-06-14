@@ -45,7 +45,7 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
 
     "return a custom state if no token was found in request and if a custom NoneError was defined" in new Context {
       val request = Fake.request
-      override implicit val noneError: () => NoneError[User] =
+      implicit override val noneError: () => NoneError[User] =
         () => NoneError(AuthFailure(new RuntimeException("test")))
 
       pipeline(request).unsafeRunSync().toString must beEqualTo(noneError().state.toString)

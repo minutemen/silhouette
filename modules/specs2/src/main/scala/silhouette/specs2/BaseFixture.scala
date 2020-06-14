@@ -55,10 +55,14 @@ trait BaseFixture {
     }
     lazy val asXml: Elem = XML.load(inputStream)
 
-    def as[T](implicit d: Decoder[T]): T = asJson.as[T] match {
-      case Left(e)     => throw new RuntimeException(s"Cannot decode JSON", e)
-      case Right(json) => json
-    }
+    def as[T](
+      implicit
+      d: Decoder[T]
+    ): T =
+      asJson.as[T] match {
+        case Left(e)     => throw new RuntimeException(s"Cannot decode JSON", e)
+        case Right(json) => json
+      }
   }
 
   /**
@@ -85,12 +89,14 @@ trait BaseFixture {
    * @param path        The fixture path.
    * @return The test fixture.
    */
-  def load(classLoader: ClassLoader, path: Path): F = {
-    wrap(Option(classLoader.getResourceAsStream(path.toString)) match {
-      case Some(is) => is
-      case None     => throw new FileNotFoundException("Cannot load test fixture: " + path)
-    }, path)
-  }
+  def load(classLoader: ClassLoader, path: Path): F =
+    wrap(
+      Option(classLoader.getResourceAsStream(path.toString)) match {
+        case Some(is) => is
+        case None     => throw new FileNotFoundException("Cannot load test fixture: " + path)
+      },
+      path
+    )
 
   /**
    * Gets a path for a fixture from class path.

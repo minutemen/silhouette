@@ -39,9 +39,11 @@ package object silhouette {
      */
     def downAt(p: Json => Boolean): ACursor = {
       @tailrec
-      def find(c: ACursor): ACursor = {
-        if (c.succeeded) { if (c.focus.exists(p)) c else find(c.right) } else c
-      }
+      def find(c: ACursor): ACursor =
+        if (c.succeeded)
+          if (c.focus.exists(p)) c
+          else find(c.right)
+        else c
 
       find(cursor.downArray)
     }

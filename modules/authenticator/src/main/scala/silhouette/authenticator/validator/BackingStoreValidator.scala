@@ -40,10 +40,11 @@ final case class BackingStoreValidator[F[_]: Async](validator: Authenticator => 
    * @param authenticator The [[Authenticator]] to validate.
    * @return [[cats.data.Validated]] if the authenticator is valid or invalid.
    */
-  override def isValid(authenticator: Authenticator): F[Status] = Async[F].map(validator(authenticator)) {
-    case true  => validNel(())
-    case false => invalidNel(Error)
-  }
+  override def isValid(authenticator: Authenticator): F[Status] =
+    Async[F].map(validator(authenticator)) {
+      case true  => validNel(())
+      case false => invalidNel(Error)
+    }
 }
 
 /**

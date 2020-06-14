@@ -39,13 +39,13 @@ final case class FingerprintValidator[F[_]: Async](fingerprint: String) extends 
    * @param authenticator The [[Authenticator]] to validate.
    * @return [[cats.data.Validated]] if the authenticator is valid or invalid.
    */
-  override def isValid(authenticator: Authenticator): F[Status] = Async[F].pure {
-    if (authenticator.fingerprint.forall(_ == fingerprint)) {
-      validNel(())
-    } else {
-      invalidNel(Error.format(fingerprint, authenticator.fingerprint.getOrElse("")))
+  override def isValid(authenticator: Authenticator): F[Status] =
+    Async[F].pure {
+      if (authenticator.fingerprint.forall(_ == fingerprint))
+        validNel(())
+      else
+        invalidNel(Error.format(fingerprint, authenticator.fingerprint.getOrElse("")))
     }
-  }
 }
 
 /**

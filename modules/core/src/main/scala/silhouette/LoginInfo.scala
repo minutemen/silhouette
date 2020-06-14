@@ -33,14 +33,15 @@ case class LoginInfo(providerID: String, providerKey: String)
  * The companion object.
  */
 object LoginInfo {
-  implicit val loginInfoDecoder: Decoder[LoginInfo] = (c: HCursor) => for {
-    providerID <- c.downField("providerID").as[String]
-    providerKey <- c.downField("providerKey").as[String]
-  } yield {
-    new LoginInfo(providerID, providerKey)
-  }
-  implicit val loginInfoEncoder: Encoder[LoginInfo] = (a: LoginInfo) => Json.obj(
-    ("providerID", Json.fromString(a.providerID)),
-    ("providerKey", Json.fromString(a.providerKey))
-  )
+  implicit val loginInfoDecoder: Decoder[LoginInfo] = (c: HCursor) =>
+    for {
+      providerID <- c.downField("providerID").as[String]
+      providerKey <- c.downField("providerKey").as[String]
+    } yield new LoginInfo(providerID, providerKey)
+
+  implicit val loginInfoEncoder: Encoder[LoginInfo] = (a: LoginInfo) =>
+    Json.obj(
+      ("providerID", Json.fromString(a.providerID)),
+      ("providerKey", Json.fromString(a.providerKey))
+    )
 }

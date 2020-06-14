@@ -44,14 +44,12 @@ case class CsrfStateItem(token: String) extends StateItem
  * The companion object of the [[CsrfStateItem]].
  */
 object CsrfStateItem {
-  implicit val jsonDecoder: Decoder[CsrfStateItem] = (c: HCursor) => for {
-    token <- c.downField("token").as[String]
-  } yield {
-    new CsrfStateItem(token)
-  }
-  implicit val jsonEncoder: Encoder[CsrfStateItem] = (a: CsrfStateItem) => Json.obj(
-    ("token", Json.fromString(a.token))
-  )
+  implicit val jsonDecoder: Decoder[CsrfStateItem] = (c: HCursor) =>
+    for {
+      token <- c.downField("token").as[String]
+    } yield new CsrfStateItem(token)
+
+  implicit val jsonEncoder: Encoder[CsrfStateItem] = (a: CsrfStateItem) => Json.obj(("token", Json.fromString(a.token)))
 }
 
 /**
@@ -95,23 +93,24 @@ class CsrfStateItemHandler[F[_]: Async] @Inject() (
    * @return Either an error or the item serialized as [[io.circe.Json]] and a function, that is able to embed item
    *         specific state into a response pipeline.
    */
-  override def serialize[R]: F[(Json, ResponseWriter[R])] = {
+  override def serialize[R]: F[(Json, ResponseWriter[R])] =
     for {
       id <- secureID.get
       json <- Async[F].pure(CsrfStateItem(id).asJson)
-      jwt <- Async[F].fromEither(claimWriter(Claims(
-        issuer = Some(cookieConfig.name),
-        subject = Some(ID),
-        audience = cookieConfig.domain.map(d => List(d)),
-        expirationTime = cookieConfig.maxAge.map(maxAge => clock.instant() + maxAge),
-        notBefore = Some(clock.instant()),
-        issuedAt = Some(clock.instant()),
-        jwtID = Some(id)
-      )))
-    } yield {
-      (json, (responsePipeline: ResponsePipeline[R]) => EmbedIntoCookie(cookieConfig)(responsePipeline)(jwt))
-    }
-  }
+      jwt <- Async[F].fromEither(
+        claimWriter(
+          Claims(
+            issuer = Some(cookieConfig.name),
+            subject = Some(ID),
+            audience = cookieConfig.domain.map(d => List(d)),
+            expirationTime = cookieConfig.maxAge.map(maxAge => clock.instant() + maxAge),
+            notBefore = Some(clock.instant()),
+            issuedAt = Some(clock.instant()),
+            jwtID = Some(id)
+          )
+        )
+      )
+    } yield (json, (responsePipeline: ResponsePipeline[R]) => EmbedIntoCookie(cookieConfig)(responsePipeline)(jwt))
 
   /**
    * Unserializes the state item.
@@ -125,7 +124,7 @@ class CsrfStateItemHandler[F[_]: Async] @Inject() (
    * @param request The request instance to get additional data to validate against.
    * @return Either an error or the unserialized state item.
    */
-  override def unserialize[R](json: Json, request: RequestPipeline[R]): F[CsrfStateItem] = {
+  override def unserialize[R](json: Json, request: RequestPipeline[R]): F[CsrfStateItem] =
     (for {
       jwt <- Async[F].fromOption(
         RetrieveFromCookie(cookieConfig.name)(request),
@@ -134,13 +133,12 @@ class CsrfStateItemHandler[F[_]: Async] @Inject() (
       clientClaims <- Async[F].fromEither(claimReader(jwt))
       clientState <- Async[F].pure(CsrfStateItem(clientClaims.jwtID.getOrElse("")))
       providerState <- Async[F].fromEither(json.as[CsrfStateItem].asInstanceOf[Either[Throwable, CsrfStateItem]])
-    } yield {
-      clientState -> providerState
-    }).flatMap {
-      case (clientState, providerState) if clientState == providerState => Async[F].pure(providerState)
-      case _ => Async[F].raiseError(new SocialStateException(ClientStateDoesNotMatch))
+    } yield clientState -> providerState).flatMap {
+      case (clientState, providerState) if clientState == providerState =>
+        Async[F].pure(providerState)
+      case _ =>
+        Async[F].raiseError(new SocialStateException(ClientStateDoesNotMatch))
     }
-  }
 }
 
 /**

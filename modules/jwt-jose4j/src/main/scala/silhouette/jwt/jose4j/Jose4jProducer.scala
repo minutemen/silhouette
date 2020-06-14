@@ -58,23 +58,24 @@ final case class SimpleJose4jProducer(jwsConfiguration: JwsConfiguration[String]
    * @param claims The claims to produce.
    * @return The produced JWT string on the right or an error on the left.
    */
-  override def produce(claims: JwtClaims): Either[Throwable, String] = Try {
-    val jws = new JsonWebSignature()
-    jws.setPayload(claims.toJson)
-    jwsConfiguration match {
-      case JwsHmacConfiguration(algorithm, key) =>
-        jws.setAlgorithmHeaderValue(algorithm.get)
-        jws.setKey(key)
-      case JwsRsaConfiguration(algorithm, _, privateKey) =>
-        jws.setAlgorithmHeaderValue(algorithm.get)
-        jws.setKey(privateKey)
-      case JwsEcConfiguration(algorithm, _, privateKey) =>
-        jws.setAlgorithmHeaderValue(algorithm.get)
-        jws.setKey(privateKey)
-      case JwsRsaPssConfiguration(algorithm, _, privateKey) =>
-        jws.setAlgorithmHeaderValue(algorithm.get)
-        jws.setKey(privateKey)
-    }
-    jws.getCompactSerialization
-  }.toEither
+  override def produce(claims: JwtClaims): Either[Throwable, String] =
+    Try {
+      val jws = new JsonWebSignature()
+      jws.setPayload(claims.toJson)
+      jwsConfiguration match {
+        case JwsHmacConfiguration(algorithm, key) =>
+          jws.setAlgorithmHeaderValue(algorithm.get)
+          jws.setKey(key)
+        case JwsRsaConfiguration(algorithm, _, privateKey) =>
+          jws.setAlgorithmHeaderValue(algorithm.get)
+          jws.setKey(privateKey)
+        case JwsEcConfiguration(algorithm, _, privateKey) =>
+          jws.setAlgorithmHeaderValue(algorithm.get)
+          jws.setKey(privateKey)
+        case JwsRsaPssConfiguration(algorithm, _, privateKey) =>
+          jws.setAlgorithmHeaderValue(algorithm.get)
+          jws.setKey(privateKey)
+      }
+      jws.getCompactSerialization
+    }.toEither
 }

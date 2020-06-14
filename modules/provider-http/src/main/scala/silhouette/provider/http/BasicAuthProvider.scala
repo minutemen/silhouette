@@ -53,7 +53,8 @@ class BasicAuthProvider[F[_]: Async, R, P, I <: Identity] @Inject() (
   protected val authInfoWriter: PasswordProvider[F]#AuthInfoWriter,
   protected val identityReader: LoginInfo => F[Option[I]],
   protected val passwordHasherRegistry: PasswordHasherRegistry
-) extends PasswordProvider[F] with RequestProvider[F, R, P, I] {
+) extends PasswordProvider[F]
+    with RequestProvider[F, R, P, I] {
 
   /**
    * The type of the credentials.
@@ -74,7 +75,7 @@ class BasicAuthProvider[F[_]: Async, R, P, I <: Identity] @Inject() (
    * @param handler A function that returns a [[http.ResponsePipeline]] for the given [[AuthState]].
    * @return The [[http.ResponsePipeline]].
    */
-  override def authenticate(request: RequestPipeline[R])(handler: AuthStateHandler): F[ResponsePipeline[P]] = {
+  override def authenticate(request: RequestPipeline[R])(handler: AuthStateHandler): F[ResponsePipeline[P]] =
     RetrieveBasicCredentialsFromHeader()(request) match {
       case Some(credentials) =>
         val loginInfo = LoginInfo(id, credentials.username)
@@ -90,7 +91,6 @@ class BasicAuthProvider[F[_]: Async, R, P, I <: Identity] @Inject() (
         }
       case None => handler(MissingCredentials())
     }
-  }
 }
 
 /**

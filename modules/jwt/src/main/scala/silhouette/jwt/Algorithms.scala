@@ -103,8 +103,7 @@ sealed trait JwsConfiguration[T] {
  * @param key       The secret key.
  * @tparam T The type of the algorithm representation.
  */
-case class JwsHmacConfiguration[T](algorithm: JwsHmacAlgorithm[T], key: SecretKey)
-  extends JwsConfiguration[T]
+case class JwsHmacConfiguration[T](algorithm: JwsHmacAlgorithm[T], key: SecretKey) extends JwsConfiguration[T]
 
 /**
  * The JWS configuration for asymmetric RSA cryptography based algorithms.

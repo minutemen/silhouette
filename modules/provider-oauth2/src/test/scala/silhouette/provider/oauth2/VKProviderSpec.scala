@@ -23,7 +23,7 @@ import cats.effect.IO._
 import io.circe.Decoder
 import silhouette.LoginInfo
 import silhouette.provider.oauth2.OAuth2Provider.UnexpectedResponse
-import silhouette.provider.oauth2.VKProvider.{ DefaultApiUri, infoDecoder }
+import silhouette.provider.oauth2.VKProvider.{ infoDecoder, DefaultApiUri }
 import silhouette.provider.social.SocialProvider.ProfileError
 import silhouette.provider.social.{ CommonSocialProfile, ProfileRetrievalException }
 import silhouette.specs2.BaseFixture
@@ -48,11 +48,13 @@ class VKProviderSpec extends OAuth2ProviderSpec {
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
         case e =>
           e.getMessage must equalTo(ProfileError.format(provider.id))
-          e.getCause.getMessage must equalTo(UnexpectedResponse.format(
-            provider.id,
-            apiResult,
-            StatusCode.BadRequest
-          ))
+          e.getCause.getMessage must equalTo(
+            UnexpectedResponse.format(
+              provider.id,
+              apiResult,
+              StatusCode.BadRequest
+            )
+          )
       }
     }
 
@@ -117,19 +119,21 @@ class VKProviderSpec extends OAuth2ProviderSpec {
     /**
      * The access token decoder to use to decode the [[OAuth2Info]] from JSON.
      */
-    override implicit val accessTokenDecoder: Decoder[OAuth2Info] = infoDecoder(clock)
+    implicit override val accessTokenDecoder: Decoder[OAuth2Info] = infoDecoder(clock)
 
     /**
      * The OAuth2 config.
      */
-    override lazy val config = spy(OAuth2Config(
-      authorizationUri = Some(uri"http://oauth.vk.com/authorize"),
-      accessTokenUri = uri"https://oauth.vk.com/access_token",
-      redirectUri = Some(uri"https://minutemen.group"),
-      clientID = "my.client.id",
-      clientSecret = "my.client.secret",
-      scope = Some("email")
-    ))
+    override lazy val config = spy(
+      OAuth2Config(
+        authorizationUri = Some(uri"http://oauth.vk.com/authorize"),
+        accessTokenUri = uri"https://oauth.vk.com/access_token",
+        redirectUri = Some(uri"https://minutemen.group"),
+        clientID = "my.client.id",
+        clientSecret = "my.client.secret",
+        scope = Some("email")
+      )
+    )
 
     /**
      * The provider to test.

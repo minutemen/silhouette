@@ -85,11 +85,10 @@ trait SocialProvider[F[_], C] extends Provider with SocialProfileBuilder[F] {
    * @param authInfo The auth info for which the profile information should be retrieved.
    * @return Either an error on the left or the build social profile on the right.
    */
-  def retrieveProfile(authInfo: A): F[Profile] = {
+  def retrieveProfile(authInfo: A): F[Profile] =
     buildProfile(authInfo).recoverWith {
       case e => F.raiseError(new ProfileRetrievalException(ProfileError.format(id), Some(e)))
     }
-  }
 
   /**
    * Resolves the URI to be absolute relative to the request.

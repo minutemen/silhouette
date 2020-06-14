@@ -28,7 +28,7 @@ import silhouette.provider.oauth2.FacebookProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
 import sttp.client.circe.asJson
-import sttp.client.{ SttpBackend, basicRequest }
+import sttp.client.{ basicRequest, SttpBackend }
 import sttp.model.Uri._
 
 /**
@@ -55,9 +55,11 @@ trait BaseFacebookProvider[F[_]] extends OAuth2Provider[F] {
    */
   override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
     val uri = config.apiUri.getOrElse(DefaultApiUri)
-    basicRequest.get(uri.param("access_token", authInfo.accessToken))
+    basicRequest
+      .get(uri.param("access_token", authInfo.accessToken))
       .response(asJson[Json])
-      .send().flatMap { response =>
+      .send()
+      .flatMap { response =>
         response.body match {
           case Left(error) =>
             F.raiseError(new UnexpectedResponseException(UnexpectedResponse.format(id, error.body, response.code)))
@@ -82,7 +84,7 @@ class FacebookProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, Co
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] = {
+  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] =
     Async[F].fromTry(json.hcursor.downField("id").as[String].getOrError(json, "id", ID)).map { id =>
       CommonSocialProfile(
         loginInfo = LoginInfo(ID, id),
@@ -90,11 +92,15 @@ class FacebookProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, Co
         lastName = json.hcursor.downField("last_name").as[String].toOption,
         fullName = json.hcursor.downField("name").as[String].toOption,
         email = json.hcursor.downField("email").as[String].toOption,
-        avatarUri = json.hcursor.downField("picture")
-          .downField("data").downField("url").as[String].toOption.map(uri => uri"$uri")
+        avatarUri = json.hcursor
+          .downField("picture")
+          .downField("data")
+          .downField("url")
+          .as[String]
+          .toOption
+          .map(uri => uri"$uri")
       )
     }
-  }
 }
 
 /**
@@ -113,7 +119,8 @@ class FacebookProvider[F[_]](
   implicit
   protected val sttpBackend: SttpBackend[F, Nothing, Nothing],
   protected val F: Async[F]
-) extends BaseFacebookProvider[F] with CommonProfileBuilder[F] {
+) extends BaseFacebookProvider[F]
+    with CommonProfileBuilder[F] {
 
   /**
    * The type of this class.

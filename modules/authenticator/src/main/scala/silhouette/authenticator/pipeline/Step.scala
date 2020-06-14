@@ -46,11 +46,9 @@ final case class TouchStep(clock: Clock) extends Step[Authenticator, Authenticat
    * @param authenticator The authenticator.
    * @return The touched authenticator.
    */
-  override def apply(authenticator: Authenticator): Authenticator = {
-    if (authenticator.isTouched) {
+  override def apply(authenticator: Authenticator): Authenticator =
+    if (authenticator.isTouched)
       authenticator.touch(clock)
-    } else {
+    else
       authenticator
-    }
-  }
 }

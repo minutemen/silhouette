@@ -28,7 +28,7 @@ import silhouette.provider.oauth2.InstagramProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
 import sttp.client.circe.asJson
-import sttp.client.{ SttpBackend, basicRequest }
+import sttp.client.{ basicRequest, SttpBackend }
 import sttp.model.Uri._
 
 /**
@@ -54,9 +54,11 @@ trait BaseInstagramProvider[F[_]] extends OAuth2Provider[F] {
    */
   override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
     val uri = config.apiUri.getOrElse(DefaultApiUri)
-    basicRequest.get(uri.param("access_token", authInfo.accessToken))
+    basicRequest
+      .get(uri.param("access_token", authInfo.accessToken))
       .response(asJson[Json])
-      .send().flatMap { response =>
+      .send()
+      .flatMap { response =>
         response.body match {
           case Left(error) =>
             F.raiseError(new UnexpectedResponseException(UnexpectedResponse.format(id, error.body, response.code)))
@@ -81,7 +83,7 @@ class InstagramProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, C
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] = {
+  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] =
     json.hcursor.downField("data").focus.map(_.hcursor) match {
       case Some(data) =>
         Async[F].fromTry(data.downField("id").as[String].getOrError(data.value, "id", ID)).map { id =>
@@ -94,7 +96,6 @@ class InstagramProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, C
       case None =>
         Async[F].raiseError(new UnexpectedResponseException(JsonPathError.format(ID, "data", json)))
     }
-  }
 }
 
 /**
@@ -113,7 +114,8 @@ class InstagramProvider[F[_]](
   implicit
   protected val sttpBackend: SttpBackend[F, Nothing, Nothing],
   protected val F: Async[F]
-) extends BaseInstagramProvider[F] with CommonProfileBuilder[F] {
+) extends BaseInstagramProvider[F]
+    with CommonProfileBuilder[F] {
 
   /**
    * The type of this class.

@@ -85,25 +85,31 @@ abstract class PasswordProvider[F[_]: Async] extends Provider {
    * @param password  The password to authenticate with.
    * @return The authentication state.
    */
-  def authenticate(loginInfo: LoginInfo, password: String): F[State] = {
+  def authenticate(loginInfo: LoginInfo, password: String): F[State] =
     Async[F].flatMap(authInfoReader(loginInfo)) {
-      case Some(passwordInfo) => passwordHasherRegistry.find(passwordInfo) match {
-        case Some(hasher) if hasher.matches(passwordInfo, password) =>
-          if ((passwordHasherRegistry isDeprecated hasher) || (hasher isDeprecated passwordInfo).contains(true)) {
-            Async[F].map(authInfoWriter(loginInfo, passwordHasherRegistry.current.hash(password))) { _ =>
-              Successful
-            }
-          } else {
-            Async[F].pure(Successful)
-          }
-        case Some(_) => Async[F].pure(InvalidPassword(PasswordDoesNotMatch.format(id)))
-        case None => Async[F].pure(UnsupportedHasher(HasherIsNotRegistered.format(
-          id, passwordInfo.hasher, passwordHasherRegistry.all.map(_.id).mkString(", ")
-        )))
-      }
+      case Some(passwordInfo) =>
+        passwordHasherRegistry.find(passwordInfo) match {
+          case Some(hasher) if hasher.matches(passwordInfo, password) =>
+            if ((passwordHasherRegistry isDeprecated hasher) || (hasher isDeprecated passwordInfo).contains(true))
+              Async[F].map(authInfoWriter(loginInfo, passwordHasherRegistry.current.hash(password))) { _ =>
+                Successful
+              }
+            else
+              Async[F].pure(Successful)
+          case Some(_) => Async[F].pure(InvalidPassword(PasswordDoesNotMatch.format(id)))
+          case None =>
+            Async[F].pure(
+              UnsupportedHasher(
+                HasherIsNotRegistered.format(
+                  id,
+                  passwordInfo.hasher,
+                  passwordHasherRegistry.all.map(_.id).mkString(", ")
+                )
+              )
+            )
+        }
       case None => Async[F].pure(NotFound(PasswordInfoNotFound.format(id, loginInfo)))
     }
-  }
 }
 
 /**

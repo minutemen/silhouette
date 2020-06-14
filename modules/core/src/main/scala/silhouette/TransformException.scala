@@ -23,5 +23,4 @@ package silhouette
  * @param msg   The exception message.
  * @param cause The exception cause.
  */
-class TransformException(msg: String, cause: Option[Throwable] = None)
-  extends SilhouetteException(msg, cause)
+class TransformException(msg: String, cause: Option[Throwable] = None) extends SilhouetteException(msg, cause)

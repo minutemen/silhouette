@@ -25,5 +25,4 @@ import silhouette.provider.ProviderException
  * @param msg The exception message.
  * @param cause The exception cause.
  */
-class InvalidPasswordException(msg: String, cause: Option[Throwable] = None)
-  extends ProviderException(msg, cause)
+class InvalidPasswordException(msg: String, cause: Option[Throwable] = None) extends ProviderException(msg, cause)
