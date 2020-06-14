@@ -72,7 +72,8 @@ trait SocialProvider[F[_], C] extends Provider with SocialProfileBuilder[F] {
    *
    * @param request The request pipeline.
    * @tparam R The type of the request.
-   * @return Either the [[ResponsePipeline]] on the left or the [[AuthInfo]] from the provider on the right.
+   * @return Either the [[silhouette.http.ResponsePipeline]] on the left or the [[AuthInfo]] from the provider on
+   *         the right.
    */
   def authenticate[R](request: RequestPipeline[R]): F[Either[ResponsePipeline[SilhouetteResponse], A]]
 

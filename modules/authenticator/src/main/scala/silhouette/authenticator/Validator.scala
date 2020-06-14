@@ -31,7 +31,7 @@ trait Validator[F[_]] {
    * Checks if the authenticator is valid.
    *
    * @param authenticator The authenticator to validate.
-   * @return [[cats.data.Validated.Valid]] if the authenticator is valid, [[cats.data.Validated.Invalid]] otherwise.
+   * @return [[cats.data.Validated]] if the authenticator is valid or invalid.
    */
   def isValid(authenticator: Authenticator): F[Status]
 }

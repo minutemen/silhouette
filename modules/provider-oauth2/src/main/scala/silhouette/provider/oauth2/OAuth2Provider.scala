@@ -148,7 +148,8 @@ trait OAuth2Provider[F[_]] extends SocialStateProvider[F, OAuth2Config] with OAu
    *
    * @param request The current request.
    * @tparam R The type of the request.
-   * @return Either the [[ResponsePipeline]] on the left or the [[AuthInfo]] from the provider on the right.
+   * @return Either the [[silhouette.http.ResponsePipeline]] on the left or the [[AuthInfo]] from the provider on
+   *         the right.
    */
   def authenticate[R](request: RequestPipeline[R]): F[Either[ResponsePipeline[SilhouetteResponse], A]] =
     handleFlow(request)(handleAuthorizationFlow(request, None))(code => getAccessToken(request, code))
@@ -156,14 +157,15 @@ trait OAuth2Provider[F[_]] extends SocialStateProvider[F, OAuth2Config] with OAu
   /**
    * Authenticates the user and returns the auth information and the state params passed to the provider.
    *
-   * Returns either a [[StatefulAuthInfo]] if all went OK or a `ResponsePipeline` that the controller
-   * sends to the browser (e.g.: in the case of OAuth where the user needs to be redirected to the service
-   * provider).
+   * Returns either a [[silhouette.provider.social.StatefulAuthInfo]] if all went OK or a
+   * [[silhouette.http.ResponsePipeline]] that the controller sends to the browser (e.g.: in the case of OAuth where
+   * the user needs to be redirected to the service provider).
    *
    * @param request      The request pipeline.
    * @param stateHandler The state handler instance which handles the state serialization/deserialization.
    * @tparam R The type of the request.
-   * @return Either the [[ResponsePipeline]] on the left or the [[StatefulAuthInfo]] from the provider on the right.
+   * @return Either the [[silhouette.http.ResponsePipeline]] on the left or the
+   *         [[silhouette.provider.social.StatefulAuthInfo]] from the provider on the right.
    */
   def authenticate[R](
     request: RequestPipeline[R],

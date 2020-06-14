@@ -172,7 +172,7 @@ object Dsl extends DslLowPriorityImplicits {
    *
    * In case of [[scala.None]], the function uses the implicit [[NoneError]], which can be translated directly to
    * an [[AuthState]]. There is automatically a low-priority implicit in scope, which translates to the
-   * [[MissingCredentials]] state. This can be overridden by defining a custom implicit.
+   * `MissingCredentials` state. This can be overridden by defining a custom implicit.
    *
    * @param noneError The error which should be used in the none case.
    * @tparam F The IO monad.
@@ -286,11 +286,11 @@ trait DslLowPriorityImplicits {
     EitherT.pure[F, Throwable](value)
 
   /**
-   * A low priority transformation that returns a [[Dsl.NoneError]] that can be translated to a [[MissingCredentials]]
-   * state.
+   * A low priority transformation that returns a [[Dsl.NoneError]] that can be translated to a `MissingCredentials` s
+   * tate.
    *
    * @tparam I The type of the identity.
-   * @return A [[Dsl.NoneError]] that can be translated to a [[MissingCredentials]] state.
+   * @return A [[Dsl.NoneError]] that can be translated to a `MissingCredentials` state.
    */
   implicit def noneToMissingCredentials[I <: Identity]: () => Dsl.NoneError[I] =
     () => NoneError(MissingCredentials())

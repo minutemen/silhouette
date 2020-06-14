@@ -48,7 +48,7 @@ final case class SlidingWindowValidator[F[_]: Async](idleTimeout: FiniteDuration
    * Checks if the [[Authenticator]] is valid.
    *
    * @param authenticator The [[Authenticator]] to validate.
-   * @return [[cats.data.Validated.Valid]] if the authenticator is valid, [[cats.data.Validated.Invalid]] otherwise.
+   * @return [[cats.data.Validated]] if the authenticator is valid or invalid.
    */
   override def isValid(authenticator: Authenticator): F[Status] = Async[F].pure {
     if (authenticator.touchedAt(clock).forall(_ <= idleTimeout)) {

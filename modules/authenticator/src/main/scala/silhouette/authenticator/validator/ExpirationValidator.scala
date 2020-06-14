@@ -41,7 +41,7 @@ final case class ExpirationValidator[F[_]: Async](clock: Clock) extends Validato
    * Checks if the [[Authenticator]] is valid.
    *
    * @param authenticator The [[Authenticator]] to validate.
-   * @return [[cats.data.Validated.Valid]] if the authenticator is valid, [[cats.data.Validated.Invalid]] otherwise.
+   * @return [[cats.data.Validated]] if the authenticator is valid or invalid.
    */
   override def isValid(authenticator: Authenticator): F[Status] = Async[F].pure {
     if (authenticator.expiresIn(clock).forall(_ >= 0.millis)) {

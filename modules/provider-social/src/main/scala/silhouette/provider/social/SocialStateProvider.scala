@@ -48,7 +48,8 @@ trait SocialStateProvider[F[_], C] extends SocialProvider[F, C] {
    * @param request      The request pipeline.
    * @param stateHandler The state handler instance which handles the state serialization/deserialization.
    * @tparam R The type of the request.
-   * @return Either the [[ResponsePipeline]] on the left or the [[StatefulAuthInfo]] from the provider on the right.
+   * @return Either the [[silhouette.http.ResponsePipeline]] on the left or the [[StatefulAuthInfo]] from the
+   *         provider on the right.
    */
   def authenticate[R](
     request: RequestPipeline[R],
