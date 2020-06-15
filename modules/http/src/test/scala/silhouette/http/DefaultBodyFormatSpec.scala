@@ -92,7 +92,8 @@ class DefaultBodyFormatSpec extends Specification {
       validXmlBody.as[Map[String, Seq[String]]] must beFailedTry.like {
         case e: UnsupportedContentTypeException =>
           e.getMessage must be equalTo errorMsg(
-            MediaType.ApplicationXWwwFormUrlencoded, MediaType.ApplicationXml
+            MediaType.ApplicationXWwwFormUrlencoded,
+            MediaType.ApplicationXml
           )
       }
       validXmlBody.as[Json] must beFailedTry.like {
@@ -132,13 +133,14 @@ class DefaultBodyFormatSpec extends Specification {
   "The `BodyReads.formUrlEncodedReads.read` method" should {
     "throw an `UnsupportedContentTypeException` if the content type isn't of type " +
       "`application/x-www-form-urlencoded`" in new Context {
-        BodyReader.formUrlEncodedReads(validXmlBody) must beFailedTry.like {
-          case e: UnsupportedContentTypeException =>
-            e.getMessage must be equalTo errorMsg(
-              MediaType.ApplicationXWwwFormUrlencoded, MediaType.ApplicationXml
-            )
-        }
+      BodyReader.formUrlEncodedReads(validXmlBody) must beFailedTry.like {
+        case e: UnsupportedContentTypeException =>
+          e.getMessage must be equalTo errorMsg(
+            MediaType.ApplicationXWwwFormUrlencoded,
+            MediaType.ApplicationXml
+          )
       }
+    }
 
     "return a Map[String, Seq[String]] from a valid form URL encoded body" in new Context {
       BodyReader.formUrlEncodedReads(validFormUrlEncodedBody) must beSuccessfulTry
@@ -278,12 +280,11 @@ class DefaultBodyFormatSpec extends Specification {
      * @param str The JSON string to parse.
      * @return The Json object on success or an exception on failure.
      */
-    def parseJson(str: String): Json = {
+    def parseJson(str: String): Json =
       io.circe.parser.parse(str) match {
         case Left(e)  => throw e
         case Right(j) => j
       }
-    }
 
     /**
      * Helper method that parses XML.

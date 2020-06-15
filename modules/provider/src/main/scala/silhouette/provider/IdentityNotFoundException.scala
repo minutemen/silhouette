@@ -23,5 +23,4 @@ package silhouette.provider
  * @param msg The exception message.
  * @param cause The exception cause.
  */
-class IdentityNotFoundException(msg: String, cause: Option[Throwable] = None)
-  extends ProviderException(msg, cause)
+class IdentityNotFoundException(msg: String, cause: Option[Throwable] = None) extends ProviderException(msg, cause)

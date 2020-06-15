@@ -54,8 +54,8 @@ object Dependencies {
     }
 
     object Silencer {
-      val compiler = compilerPlugin("com.github.ghik" % "silencer-plugin" % Version.silencer cross CrossVersion.full)
-      val lib = "com.github.ghik" % "silencer-lib" % Version.silencer % Provided cross CrossVersion.full
+      val compiler = compilerPlugin(("com.github.ghik" % "silencer-plugin" % Version.silencer).cross(CrossVersion.full))
+      val lib = ("com.github.ghik" % "silencer-lib" % Version.silencer % Provided).cross(CrossVersion.full)
     }
 
     val jbcrypt = "org.mindrot" % "jbcrypt" % "0.3m"

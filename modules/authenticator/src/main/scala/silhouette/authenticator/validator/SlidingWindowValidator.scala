@@ -41,8 +41,7 @@ import scala.concurrent.duration._
  * @param clock       The clock implementation to validate against.
  * @tparam F The type of the IO monad.
  */
-final case class SlidingWindowValidator[F[_]: Async](idleTimeout: FiniteDuration, clock: Clock)
-  extends Validator[F] {
+final case class SlidingWindowValidator[F[_]: Async](idleTimeout: FiniteDuration, clock: Clock) extends Validator[F] {
 
   /**
    * Checks if the [[Authenticator]] is valid.
@@ -50,13 +49,13 @@ final case class SlidingWindowValidator[F[_]: Async](idleTimeout: FiniteDuration
    * @param authenticator The [[Authenticator]] to validate.
    * @return [[cats.data.Validated]] if the authenticator is valid or invalid.
    */
-  override def isValid(authenticator: Authenticator): F[Status] = Async[F].pure {
-    if (authenticator.touchedAt(clock).forall(_ <= idleTimeout)) {
-      validNel(())
-    } else {
-      invalidNel(Error.format(authenticator.touchedAt(clock).getOrElse(0.millis) - idleTimeout))
+  override def isValid(authenticator: Authenticator): F[Status] =
+    Async[F].pure {
+      if (authenticator.touchedAt(clock).forall(_ <= idleTimeout))
+        validNel(())
+      else
+        invalidNel(Error.format(authenticator.touchedAt(clock).getOrElse(0.millis) - idleTimeout))
     }
-  }
 }
 
 /**

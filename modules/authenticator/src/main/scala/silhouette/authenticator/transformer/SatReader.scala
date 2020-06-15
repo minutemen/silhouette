@@ -40,13 +40,14 @@ final case class SatReader[F[_]: Async](reader: String => F[Option[Authenticator
    * @param token The simple authentication token to transform.
    * @return An authenticator on success, an error on failure.
    */
-  override def apply(token: String): F[Authenticator] = Async[F].flatMap(reader(token))(
-    _.fold[F[Authenticator]] {
-      Async[F].raiseError(new AuthenticatorException(MissingAuthenticator.format(token)))
-    } {
-      Async[F].pure
-    }
-  )
+  override def apply(token: String): F[Authenticator] =
+    Async[F].flatMap(reader(token))(
+      _.fold[F[Authenticator]] {
+        Async[F].raiseError(new AuthenticatorException(MissingAuthenticator.format(token)))
+      } {
+        Async[F].pure
+      }
+    )
 }
 
 /**

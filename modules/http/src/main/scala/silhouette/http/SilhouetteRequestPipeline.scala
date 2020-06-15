@@ -157,9 +157,8 @@ final protected[silhouette] case class SilhouetteRequestPipeline(
    * @param params The query params to set.
    * @return A new request pipeline instance with the set query params.
    */
-  override def withQueryParams(params: (String, String)*): SilhouetteRequestPipeline = {
+  override def withQueryParams(params: (String, String)*): SilhouetteRequestPipeline =
     copy(request.copy(uri = request.uri.params(params: _*)))
-  }
 
   /**
    * Creates a new request pipeline with the given body extractor.
@@ -167,7 +166,6 @@ final protected[silhouette] case class SilhouetteRequestPipeline(
    * @param bodyExtractor The body extractor to set.
    * @return A new request pipeline instance with the set body extractor.
    */
-  override def withBodyExtractor(bodyExtractor: RequestBodyExtractor[RB]): SilhouetteRequestPipeline = {
+  override def withBodyExtractor(bodyExtractor: RequestBodyExtractor[RB]): SilhouetteRequestPipeline =
     copy(bodyExtractor = bodyExtractor)
-  }
 }

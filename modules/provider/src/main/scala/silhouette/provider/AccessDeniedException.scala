@@ -23,5 +23,4 @@ package silhouette.provider
  * @param msg The exception message.
  * @param cause The exception cause.
  */
-class AccessDeniedException(msg: String, cause: Option[Throwable] = None)
-  extends ProviderException(msg, cause)
+class AccessDeniedException(msg: String, cause: Option[Throwable] = None) extends ProviderException(msg, cause)

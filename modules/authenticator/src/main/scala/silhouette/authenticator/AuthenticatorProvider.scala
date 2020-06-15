@@ -38,7 +38,8 @@ import silhouette.provider.RequestProvider
 class AuthenticatorProvider[F[_]: Async, R, P, I <: Identity] @Inject() (
   authenticationPipeline: AuthenticationPipeline[F, RequestPipeline[R], I],
   targetPipeline: TargetPipeline[F, ResponsePipeline[P]]
-) extends RequestProvider[F, R, P, I] with LazyLogging {
+) extends RequestProvider[F, R, P, I]
+    with LazyLogging {
 
   /**
    * The type of the credentials.
@@ -59,14 +60,13 @@ class AuthenticatorProvider[F[_]: Async, R, P, I <: Identity] @Inject() (
    * @param handler A function that returns a [[http.ResponsePipeline]] for the given [[AuthState]].
    * @return The [[http.ResponsePipeline]].
    */
-  override def authenticate(request: RequestPipeline[R])(handler: AuthStateHandler): F[ResponsePipeline[P]] = {
+  override def authenticate(request: RequestPipeline[R])(handler: AuthStateHandler): F[ResponsePipeline[P]] =
     Async[F].flatMap(authenticationPipeline(request)) {
       case authState @ Authenticated(_, authenticator, _) =>
         Sync[F].flatMap(handler(authState))(targetPipeline(authenticator, _))
       case authState =>
         handler(authState)
     }
-  }
 }
 
 /**

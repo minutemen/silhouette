@@ -97,10 +97,12 @@ class SocialProviderRegistrySpec extends Specification with Mockito {
     /**
      * The registry to test.
      */
-    val registry = SocialProviderRegistry(Seq(
-      facebook,
-      google,
-      twitter
-    ))
+    val registry = SocialProviderRegistry(
+      Seq(
+        facebook,
+        google,
+        twitter
+      )
+    )
   }
 }

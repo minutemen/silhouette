@@ -43,11 +43,10 @@ trait SocialProviderSpec[A <: AuthInfo] extends Specification with Mockito with 
    */
   def result[P](providerResult: IO[Either[ResponsePipeline[P], A]])(
     b: IO[ResponsePipeline[P]] => MatchResult[_]
-  ): MatchResult[Either[ResponsePipeline[P], A]] = {
+  ): MatchResult[Either[ResponsePipeline[P], A]] =
     providerResult.unsafeRunSync() must beLeft[ResponsePipeline[P]].like {
       case result => b(IO.pure(result))
     }
-  }
 
   /**
    * Applies a matcher on a auth info.
@@ -59,11 +58,10 @@ trait SocialProviderSpec[A <: AuthInfo] extends Specification with Mockito with 
    */
   def authInfo[P](providerResult: IO[Either[ResponsePipeline[P], A]])(
     b: A => MatchResult[_]
-  ): MatchResult[Either[ResponsePipeline[P], A]] = {
+  ): MatchResult[Either[ResponsePipeline[P], A]] =
     providerResult.unsafeRunSync() must beRight[A].like {
       case authInfo => b(authInfo)
     }
-  }
 
   /**
    * Applies a matcher on a social profile.
@@ -72,11 +70,10 @@ trait SocialProviderSpec[A <: AuthInfo] extends Specification with Mockito with 
    * @param b              The matcher block to apply.
    * @return A specs2 match result.
    */
-  def profile(providerResult: IO[SocialProfile])(b: SocialProfile => MatchResult[_]): MatchResult[SocialProfile] = {
+  def profile(providerResult: IO[SocialProfile])(b: SocialProfile => MatchResult[_]): MatchResult[SocialProfile] =
     providerResult.unsafeRunSync() must beLike[SocialProfile] {
       case socialProfile => b(socialProfile)
     }
-  }
 
   /**
    * Matches a partial function against a failure message.
@@ -90,11 +87,10 @@ trait SocialProviderSpec[A <: AuthInfo] extends Specification with Mockito with 
    */
   def failed[E <: Throwable: ClassTag](providerResult: IO[_])(
     f: => PartialFunction[Throwable, MatchResult[_]]
-  ): Result = {
+  ): Result =
     Try(
       providerResult.unsafeRunSync()
     ) must beAFailedTry(f): Result
-  }
 }
 
 /**
@@ -112,11 +108,10 @@ trait SocialStateProviderSpec[A <: AuthInfo] extends SocialProviderSpec[A] {
    */
   def statefulResult[P](providerResult: IO[Either[ResponsePipeline[P], StatefulAuthInfo[A]]])(
     b: IO[ResponsePipeline[P]] => MatchResult[_]
-  ): MatchResult[Either[ResponsePipeline[P], StatefulAuthInfo[A]]] = {
+  ): MatchResult[Either[ResponsePipeline[P], StatefulAuthInfo[A]]] =
     providerResult.unsafeRunSync() must beLeft[ResponsePipeline[P]].like {
       case result => b(IO.pure(result))
     }
-  }
 
   /**
    * Applies a matcher on a stateful auth info.
@@ -128,9 +123,8 @@ trait SocialStateProviderSpec[A <: AuthInfo] extends SocialProviderSpec[A] {
    */
   def statefulAuthInfo[P](providerResult: IO[Either[ResponsePipeline[P], StatefulAuthInfo[A]]])(
     b: StatefulAuthInfo[A] => MatchResult[_]
-  ): MatchResult[Either[ResponsePipeline[P], StatefulAuthInfo[A]]] = {
+  ): MatchResult[Either[ResponsePipeline[P], StatefulAuthInfo[A]]] =
     providerResult.unsafeRunSync() must beRight[StatefulAuthInfo[A]].like {
       case info => b(info)
     }
-  }
 }

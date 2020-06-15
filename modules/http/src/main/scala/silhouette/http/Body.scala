@@ -50,7 +50,7 @@ import scala.xml._
  * @param codec       The codec of the body.
  * @param data        The body data.
  */
-protected[silhouette] final case class Body(
+final protected[silhouette] case class Body(
   contentType: MediaType,
   codec: Codec = Body.DefaultCodec,
   data: immutable.ArraySeq[Byte]
@@ -71,7 +71,10 @@ protected[silhouette] final case class Body(
    * @tparam T The type of the body to transform to.
    * @return The body transformed to the given type on success, a failure otherwise.
    */
-  def as[T](implicit reader: BodyReader[T]): Try[T] = reader(this)
+  def as[T](
+    implicit
+    reader: BodyReader[T]
+  ): Try[T] = reader(this)
 }
 
 /**
@@ -93,7 +96,10 @@ private[silhouette] object Body {
    * @tparam T The type of the value.
    * @return The body representation of the given value.
    */
-  def from[T](value: T, codec: Codec = Body.DefaultCodec)(implicit writer: Codec => BodyWriter[T]): Body =
+  def from[T](value: T, codec: Codec = Body.DefaultCodec)(
+    implicit
+    writer: Codec => BodyWriter[T]
+  ): Body =
     writer(codec)(value)
 
   /**
@@ -111,10 +117,11 @@ private[silhouette] object Body {
 private[silhouette] object TextBody {
   type Type = String
   final val contentType = MediaType.TextPlain
-  def unapply(body: Body): Option[(Codec, immutable.ArraySeq[Byte])] = body.contentType match {
-    case this.contentType => Some((body.codec, body.data))
-    case _                => None
-  }
+  def unapply(body: Body): Option[(Codec, immutable.ArraySeq[Byte])] =
+    body.contentType match {
+      case this.contentType => Some((body.codec, body.data))
+      case _                => None
+    }
 }
 
 /**
@@ -123,10 +130,11 @@ private[silhouette] object TextBody {
 private[silhouette] object FormUrlEncodedBody {
   type Type = Map[String, Seq[String]]
   final val contentType = MediaType.ApplicationXWwwFormUrlencoded
-  def unapply(body: Body): Option[(Codec, immutable.ArraySeq[Byte])] = body.contentType match {
-    case this.contentType => Some((body.codec, body.data))
-    case _                => None
-  }
+  def unapply(body: Body): Option[(Codec, immutable.ArraySeq[Byte])] =
+    body.contentType match {
+      case this.contentType => Some((body.codec, body.data))
+      case _                => None
+    }
 }
 
 /**
@@ -136,10 +144,11 @@ private[silhouette] object JsonBody {
   type Type = Json
   final val contentType = MediaType.ApplicationJson
   final val allowedTypes = Seq(contentType, MediaType("text", "json"))
-  def unapply(body: Body): Option[(Codec, immutable.ArraySeq[Byte])] = body.contentType match {
-    case ct if this.allowedTypes contains ct => Some((body.codec, body.data))
-    case _                                   => None
-  }
+  def unapply(body: Body): Option[(Codec, immutable.ArraySeq[Byte])] =
+    body.contentType match {
+      case ct if this.allowedTypes contains ct => Some((body.codec, body.data))
+      case _                                   => None
+    }
 }
 
 /**
@@ -149,10 +158,11 @@ private[silhouette] object XmlBody {
   type Type = Node
   final val contentType = MediaType.ApplicationXml
   final val allowedTypes = Seq(contentType, MediaType("text", "xml"))
-  def unapply(body: Body): Option[(Codec, immutable.ArraySeq[Byte])] = body.contentType match {
-    case ct if this.allowedTypes contains ct => Some((body.codec, body.data))
-    case _                                   => None
-  }
+  def unapply(body: Body): Option[(Codec, immutable.ArraySeq[Byte])] =
+    body.contentType match {
+      case ct if this.allowedTypes contains ct => Some((body.codec, body.data))
+      case _                                   => None
+    }
 }
 
 /**
@@ -210,20 +220,22 @@ private[silhouette] trait DefaultBodyReader {
       Try {
         val data = new String(bytes.toArray, codec.charSet)
         val split = "[&;]".r.split(data)
-        val pairs: Seq[(String, String)] = if (split.length == 1 && split(0).isEmpty) {
-          Seq.empty
-        } else {
-          ArraySeq.unsafeWrapArray(split).map { param =>
-            val parts = param.split("=", -1)
-            val key = URLDecoder.decode(parts(0), codec.charSet.name())
-            val value = URLDecoder.decode(parts.lift(1).getOrElse(""), codec.charSet.name())
-            key -> value
-          }
-        }
+        val pairs: Seq[(String, String)] =
+          if (split.length == 1 && split(0).isEmpty)
+            Seq.empty
+          else
+            ArraySeq.unsafeWrapArray(split).map { param =>
+              val parts = param.split("=", -1)
+              val key = URLDecoder.decode(parts(0), codec.charSet.name())
+              val value = URLDecoder.decode(parts.lift(1).getOrElse(""), codec.charSet.name())
+              key -> value
+            }
 
         pairs
-          .groupBy(_._1).iterator
-          .map(param => param._1 -> param._2.map(_._2)).toMap
+          .groupBy(_._1)
+          .iterator
+          .map(param => param._1 -> param._2.map(_._2))
+          .toMap
       }
     case Body(ct, _, _) =>
       Failure(new UnsupportedContentTypeException(UnsupportedContentType.format(FormUrlEncodedBody.contentType, ct)))
@@ -241,9 +253,11 @@ private[silhouette] trait DefaultBodyReader {
         case Right(json)                  => Success(json)
       }
     case Body(ct, _, _) =>
-      Failure(new UnsupportedContentTypeException(
-        UnsupportedContentType.format(JsonBody.allowedTypes.mkString(", "), ct)
-      ))
+      Failure(
+        new UnsupportedContentTypeException(
+          UnsupportedContentType.format(JsonBody.allowedTypes.mkString(", "), ct)
+        )
+      )
   }
 
   /**
@@ -257,9 +271,11 @@ private[silhouette] trait DefaultBodyReader {
         case e: SAXParseException => Failure(new TransformException(e.getMessage, Option(e)))
       }
     case Body(ct, _, _) =>
-      Failure(new UnsupportedContentTypeException(
-        UnsupportedContentType.format(XmlBody.allowedTypes.mkString(", "), ct)
-      ))
+      Failure(
+        new UnsupportedContentTypeException(
+          UnsupportedContentType.format(XmlBody.allowedTypes.mkString(", "), ct)
+        )
+      )
   }
 }
 
@@ -274,9 +290,10 @@ private[silhouette] trait DefaultBodyWriter {
    *
    * @return A [[BodyWriter]] instance that transforms a string into a [[Body]].
    */
-  implicit val stringWrites: Codec => BodyWriter[TextBody.Type] = (codec: Codec) => (str: TextBody.Type) => {
-    Body(MediaType.TextPlain, codec, str.getBytes(codec.charSet))
-  }
+  implicit val stringWrites: Codec => BodyWriter[TextBody.Type] = (codec: Codec) =>
+    (str: TextBody.Type) => {
+      Body(MediaType.TextPlain, codec, str.getBytes(codec.charSet))
+    }
 
   /**
    * Transforms a form URL encoded string into [[Body]].
@@ -284,17 +301,14 @@ private[silhouette] trait DefaultBodyWriter {
    * @return A [[BodyWriter]] instance that transforms a form URL encoded string into [[Body]].
    */
   implicit val formUrlEncodedWrites: Codec => BodyWriter[FormUrlEncodedBody.Type] = {
-    codec: Codec =>
-      {
-        formData: FormUrlEncodedBody.Type =>
-          {
-            val charset = codec.charSet.name()
-            val urlEncodedString = formData.flatMap { item =>
-              item._2.map(c => s"${item._1}=${URLEncoder.encode(c, charset)}")
-            }.mkString("&")
-            Body(FormUrlEncodedBody.contentType, codec, urlEncodedString.getBytes(codec.charSet))
-          }
-      }
+    codec: Codec => formData: FormUrlEncodedBody.Type =>
+      val charset = codec.charSet.name()
+      val urlEncodedString = formData
+        .flatMap { item =>
+          item._2.map(c => s"${item._1}=${URLEncoder.encode(c, charset)}")
+        }
+        .mkString("&")
+      Body(FormUrlEncodedBody.contentType, codec, urlEncodedString.getBytes(codec.charSet))
   }
 
   /**
@@ -302,18 +316,20 @@ private[silhouette] trait DefaultBodyWriter {
    *
    * @return A [[BodyWriter]] instance that transforms a Circe JSON object into a [[Body]].
    */
-  implicit val circeJsonWrites: Codec => BodyWriter[JsonBody.Type] = (codec: Codec) => (json: JsonBody.Type) => {
-    Body(JsonBody.contentType, codec, json.noSpaces.getBytes(codec.charSet))
-  }
+  implicit val circeJsonWrites: Codec => BodyWriter[JsonBody.Type] = (codec: Codec) =>
+    (json: JsonBody.Type) => {
+      Body(JsonBody.contentType, codec, json.noSpaces.getBytes(codec.charSet))
+    }
 
   /**
    * Transforms a Scala XML object into a [[Body]] and vice versa.
    *
    * @return A [[BodyWriter]] instance that transforms a Scala XML object into a [[Body]] and vice versa.
    */
-  implicit val scalaXmlWrites: Codec => BodyWriter[XmlBody.Type] = (codec: Codec) => (xml: XmlBody.Type) => {
-    Body(XmlBody.contentType, codec, xml.mkString.getBytes(codec.charSet))
-  }
+  implicit val scalaXmlWrites: Codec => BodyWriter[XmlBody.Type] = (codec: Codec) =>
+    (xml: XmlBody.Type) => {
+      Body(XmlBody.contentType, codec, xml.mkString.getBytes(codec.charSet))
+    }
 }
 
 /**

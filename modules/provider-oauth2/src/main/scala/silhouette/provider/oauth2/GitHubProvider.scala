@@ -29,7 +29,7 @@ import silhouette.provider.oauth2.GitHubProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
 import sttp.client.circe.asJson
-import sttp.client.{ SttpBackend, basicRequest }
+import sttp.client.{ basicRequest, SttpBackend }
 import sttp.model.Header
 import sttp.model.Uri._
 
@@ -66,10 +66,12 @@ trait BaseGitHubProvider[F[_]] extends OAuth2Provider[F] {
    */
   override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
     val uri = config.apiUri.getOrElse(DefaultApiUri)
-    basicRequest.get(uri)
+    basicRequest
+      .get(uri)
       .header(BearerAuthorizationHeader(authInfo.accessToken))
       .response(asJson[Json])
-      .send().flatMap { response =>
+      .send()
+      .flatMap { response =>
         response.body match {
           case Left(error) =>
             F.raiseError(new UnexpectedResponseException(UnexpectedResponse.format(id, error.body, response.code)))
@@ -94,7 +96,7 @@ class GitHubProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, Comm
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] = {
+  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] =
     Async[F].fromTry(json.hcursor.downField("id").as[Long].getOrError(json, "id", ID)).map { id =>
       CommonSocialProfile(
         loginInfo = LoginInfo(ID, id.toString),
@@ -103,7 +105,6 @@ class GitHubProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, Comm
         avatarUri = json.hcursor.downField("avatar_url").as[String].toOption.map(uri => uri"$uri")
       )
     }
-  }
 }
 
 /**
@@ -122,7 +123,8 @@ class GitHubProvider[F[_]](
   implicit
   protected val sttpBackend: SttpBackend[F, Nothing, Nothing],
   protected val F: Async[F]
-) extends BaseGitHubProvider[F] with CommonProfileBuilder[F] {
+) extends BaseGitHubProvider[F]
+    with CommonProfileBuilder[F] {
 
   /**
    * The type of this class.

@@ -46,20 +46,22 @@ final case class JwtReader[F[_]: Async](claimReader: JwtClaimReader) extends Aut
    * @param jwt The JWT to transform.
    * @return An authenticator on success, an error on failure.
    */
-  override def apply(jwt: String): F[Authenticator] = Async[F].fromEither {
-    claimReader(jwt).flatMap { claims =>
-      val custom = Json.fromJsonObject(claims.custom)
-      val maybeID = claims.jwtID.map(Right.apply)
-        .getOrElse(Left(new AuthenticatorException(MissingClaimValue.format("jwtID"))))
-      val maybeSubject = claims.subject.map(Right.apply)
-        .getOrElse(Left(new AuthenticatorException(MissingClaimValue.format("subject"))))
+  override def apply(jwt: String): F[Authenticator] =
+    Async[F].fromEither {
+      claimReader(jwt).flatMap { claims =>
+        val custom = Json.fromJsonObject(claims.custom)
+        val maybeID = claims.jwtID
+          .map(Right.apply)
+          .getOrElse(Left(new AuthenticatorException(MissingClaimValue.format("jwtID"))))
+        val maybeSubject = claims.subject
+          .map(Right.apply)
+          .getOrElse(Left(new AuthenticatorException(MissingClaimValue.format("subject"))))
 
-      for {
-        id <- maybeID
-        subject <- maybeSubject
-        loginInfo <- buildLoginInfo(Base64.decode(subject))
-      } yield {
-        Authenticator(
+        for {
+          id <- maybeID
+          subject <- maybeSubject
+          loginInfo <- buildLoginInfo(Base64.decode(subject))
+        } yield Authenticator(
           id = id,
           loginInfo = loginInfo,
           touched = claims.issuedAt,
@@ -70,7 +72,6 @@ final case class JwtReader[F[_]: Async](claimReader: JwtClaimReader) extends Aut
         )
       }
     }
-  }
 
   /**
    * Builds the login info from Json.
@@ -78,11 +79,10 @@ final case class JwtReader[F[_]: Async](claimReader: JwtClaimReader) extends Aut
    * @param str The string representation of the login info.
    * @return The login info on the right or an error on the left.
    */
-  private def buildLoginInfo(str: String): Either[Throwable, LoginInfo] = {
-    decode[LoginInfo](str).left.map {
-      error => new AuthenticatorException(JsonParseError.format(str), Some(error.getCause))
+  private def buildLoginInfo(str: String): Either[Throwable, LoginInfo] =
+    decode[LoginInfo](str).left.map { error =>
+      new AuthenticatorException(JsonParseError.format(str), Some(error.getCause))
     }
-  }
 }
 
 /**

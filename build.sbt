@@ -155,7 +155,8 @@ lazy val silhouette = (project in file("."))
     `silhouette-provider-social`,
     `silhouette-provider-oauth2`,
     `silhouette-util`
-  ).settings(
+  )
+  .settings(
     publish := {},
     buildVersions := {
       // scalastyle:off println

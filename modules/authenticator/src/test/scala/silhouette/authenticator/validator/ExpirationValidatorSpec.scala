@@ -38,19 +38,22 @@ class ExpirationValidatorSpec extends Specification with Mockito {
   "The `isValid` method" should {
     "return always Valid if the `expires` property isn't set" in new Context {
       ExpirationValidator[IO](clock)
-        .isValid(authenticator).unsafeRunSync() must beEqualTo(validNel(()))
+        .isValid(authenticator)
+        .unsafeRunSync() must beEqualTo(validNel(()))
     }
 
     "return Valid if the authenticator is not expired" in new Context {
       ExpirationValidator[IO](Clock.fixed(instant.plusSeconds(60), UTC))
-        .isValid(authenticator.withExpiry(1.minute, clock)).unsafeRunSync() must beEqualTo(validNel(()))
+        .isValid(authenticator.withExpiry(1.minute, clock))
+        .unsafeRunSync() must beEqualTo(validNel(()))
     }
 
     "return Invalid if the authenticator is expired" in new Context {
       ExpirationValidator[IO](Clock.fixed(instant.plusSeconds(61), UTC))
-        .isValid(authenticator.withExpiry(1.minute, clock)).unsafeRunSync() must beEqualTo(
-          invalidNel(Error.format(1000.millis))
-        )
+        .isValid(authenticator.withExpiry(1.minute, clock))
+        .unsafeRunSync() must beEqualTo(
+        invalidNel(Error.format(1000.millis))
+      )
     }
   }
 

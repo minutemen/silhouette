@@ -22,9 +22,7 @@ import silhouette.http._
 /**
  * The query string transport.
  */
-final case class QueryStringTransport(name: String)
-  extends RetrieveFromRequest
-  with SmuggleIntoRequest {
+final case class QueryStringTransport(name: String) extends RetrieveFromRequest with SmuggleIntoRequest {
 
   /**
    * Retrieves the payload, stored in the query string, from request.

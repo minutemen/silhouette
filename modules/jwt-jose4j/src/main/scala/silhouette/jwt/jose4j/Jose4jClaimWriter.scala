@@ -39,14 +39,11 @@ final case class Jose4jClaimWriter(producer: Jose4jProducer) extends JwtClaimWri
    * @param jwt The JWT claims object to transform.
    * @return The JWT string representation or an error if the JWT claims object couldn't be transformed.
    */
-  override def apply(jwt: silhouette.jwt.Claims): Either[Throwable, String] = {
+  override def apply(jwt: silhouette.jwt.Claims): Either[Throwable, String] =
     for {
       claims <- toJose4j(jwt)
       jwt <- producer.produce(claims)
-    } yield {
-      jwt
-    }
-  }
+    } yield jwt
 
   /**
    * Converts the Silhouette claims instance to a jose4j claims instance.
@@ -85,14 +82,15 @@ final case class Jose4jClaimWriter(producer: Jose4jProducer) extends JwtClaimWri
    * @return A map containing custom claims.
    */
   private def transformCustomClaims(claims: JsonObject): java.util.Map[String, Object] = {
-    def toJava(value: Json): Object = value.fold[Object](
-      jsonNull = None.orNull,
-      jsonBoolean = (x: Boolean) => Boolean.box(x),
-      jsonNumber = (x: JsonNumber) => x.toBigDecimal.getOrElse(Integer.valueOf(0)),
-      jsonString = (x: String) => x,
-      jsonArray = (x: Vector[Json]) => x.map(toJava).asJava,
-      jsonObject = (x: JsonObject) => transformCustomClaims(x)
-    )
+    def toJava(value: Json): Object =
+      value.fold[Object](
+        jsonNull = None.orNull,
+        jsonBoolean = (x: Boolean) => Boolean.box(x),
+        jsonNumber = (x: JsonNumber) => x.toBigDecimal.getOrElse(Integer.valueOf(0)),
+        jsonString = (x: String) => x,
+        jsonArray = (x: Vector[Json]) => x.map(toJava).asJava,
+        jsonObject = (x: JsonObject) => transformCustomClaims(x)
+      )
 
     claims.toMap.map { case (name, value) => name -> toJava(value) }.asJava
   }

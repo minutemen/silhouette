@@ -46,12 +46,15 @@ package object http {
       method: Method = Method.GET,
       headers: Headers = Headers(Seq()),
       cookies: Seq[CookieWithMeta] = Seq()
-    ): RequestPipeline = SilhouetteRequestPipeline(SilhouetteRequest(
-      uri,
-      method,
-      headers,
-      cookies
-    ))
+    ): RequestPipeline =
+      SilhouetteRequestPipeline(
+        SilhouetteRequest(
+          uri,
+          method,
+          headers,
+          cookies
+        )
+      )
     def request: RequestPipeline = request()
 
     val response: ResponsePipeline = SilhouetteResponsePipeline(SilhouetteResponse(StatusCode.Ok))

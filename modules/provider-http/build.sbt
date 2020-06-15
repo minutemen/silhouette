@@ -22,4 +22,3 @@ libraryDependencies ++= Seq(
   Library.Cats.effect
 )
 //enablePlugins(Doc)
-

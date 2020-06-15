@@ -28,7 +28,7 @@ import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.oauth2.VKProvider._
 import silhouette.provider.social._
 import sttp.client.circe.asJson
-import sttp.client.{ SttpBackend, basicRequest }
+import sttp.client.{ basicRequest, SttpBackend }
 import sttp.model.Uri._
 
 /**
@@ -53,7 +53,7 @@ trait BaseVKProvider[F[_]] extends OAuth2Provider[F] {
    *
    * VK provider needs it own JSON decoder to extract the email from response.
    */
-  override implicit protected val accessTokenDecoder: Decoder[OAuth2Info] = infoDecoder(clock)
+  implicit override protected val accessTokenDecoder: Decoder[OAuth2Info] = infoDecoder(clock)
 
   /**
    * Builds the social profile.
@@ -63,9 +63,11 @@ trait BaseVKProvider[F[_]] extends OAuth2Provider[F] {
    */
   override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
     val uri = config.apiUri.getOrElse(DefaultApiUri)
-    basicRequest.get(uri.param("access_token", authInfo.accessToken))
+    basicRequest
+      .get(uri.param("access_token", authInfo.accessToken))
       .response(asJson[Json])
-      .send().flatMap { response =>
+      .send()
+      .flatMap { response =>
         response.body match {
           case Left(error) =>
             F.raiseError(new UnexpectedResponseException(UnexpectedResponse.format(id, error.body, response.code)))
@@ -96,7 +98,7 @@ class VKProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, CommonSo
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] = {
+  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] =
     json.hcursor.downField("response").downArray.focus.map(_.hcursor) match {
       case Some(response) =>
         Async[F].fromTry(response.downField("id").as[Long].getOrError(response.value, "id", ID)).map { id =>
@@ -112,7 +114,6 @@ class VKProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, CommonSo
         Async[F].raiseError(new UnexpectedResponseException(JsonPathError.format(ID, "response", json)))
 
     }
-  }
 }
 
 /**
@@ -131,7 +132,8 @@ class VKProvider[F[_]](
   implicit
   protected val sttpBackend: SttpBackend[F, Nothing, Nothing],
   protected val F: Async[F]
-) extends BaseVKProvider[F] with CommonProfileBuilder[F] {
+) extends BaseVKProvider[F]
+    with CommonProfileBuilder[F] {
 
   /**
    * The type of this class.
@@ -172,15 +174,15 @@ object VKProvider {
    *
    * @param clock The current clock instance.
    */
-  def infoDecoder(clock: Clock): Decoder[OAuth2Info] = (c: HCursor) => {
-    for {
-      accessToken <- c.downField(AccessToken).as[String]
-      tokenType <- c.downField(TokenType).as[Option[String]]
-      expiresIn <- c.downField(ExpiresIn).as[Option[Int]]
-      refreshToken <- c.downField(RefreshToken).as[Option[String]]
-      email <- c.downField("email").as[Option[String]]
-    } yield {
-      OAuth2Info(
+  def infoDecoder(clock: Clock): Decoder[OAuth2Info] =
+    (c: HCursor) => {
+      for {
+        accessToken <- c.downField(AccessToken).as[String]
+        tokenType <- c.downField(TokenType).as[Option[String]]
+        expiresIn <- c.downField(ExpiresIn).as[Option[Int]]
+        refreshToken <- c.downField(RefreshToken).as[Option[String]]
+        email <- c.downField("email").as[Option[String]]
+      } yield OAuth2Info(
         accessToken,
         tokenType,
         Some(clock.instant()),
@@ -189,5 +191,4 @@ object VKProvider {
         email.map(e => Map("email" -> e))
       )
     }
-  }
 }

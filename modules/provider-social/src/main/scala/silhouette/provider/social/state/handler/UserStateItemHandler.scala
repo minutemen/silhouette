@@ -33,14 +33,12 @@ case class UserStateItem(state: Map[String, String]) extends StateItem
  * The companion object of the [[UserStateItem]].
  */
 object UserStateItem {
-  implicit val jsonDecoder: Decoder[UserStateItem] = (c: HCursor) => for {
-    state <- c.downField("state").as[Map[String, String]]
-  } yield {
-    new UserStateItem(state)
-  }
-  implicit val jsonEncoder: Encoder[UserStateItem] = (a: UserStateItem) => Json.obj(
-    ("state", a.state.asJson)
-  )
+  implicit val jsonDecoder: Decoder[UserStateItem] = (c: HCursor) =>
+    for {
+      state <- c.downField("state").as[Map[String, String]]
+    } yield new UserStateItem(state)
+
+  implicit val jsonEncoder: Encoder[UserStateItem] = (a: UserStateItem) => Json.obj(("state", a.state.asJson))
 }
 
 /**

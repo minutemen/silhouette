@@ -35,14 +35,14 @@ class GravatarServiceSpec extends Specification with Mockito {
     }
 
     "return None if HTTP status code isn't 200" in new Context {
-      override implicit val sttpBackend: SttpBackendStub[Identity, Nothing] =
+      implicit override val sttpBackend: SttpBackendStub[Identity, Nothing] =
         SttpBackendStub.synchronous.whenAnyRequest.thenRespondNotFound
 
       service.retrieveUri(email) should beNone
     }
 
     "return secure Avatar URI" in new Context {
-      override implicit val sttpBackend: SttpBackendStub[Identity, Nothing] =
+      implicit override val sttpBackend: SttpBackendStub[Identity, Nothing] =
         SttpBackendStub.synchronous.whenAnyRequest.thenRespondOk()
 
       service.retrieveUri(email) should beSome(SecureURI(hash, Map("d" -> "404")))
@@ -50,7 +50,7 @@ class GravatarServiceSpec extends Specification with Mockito {
 
     "return insecure Avatar URI" in new Context {
       config.secure returns false
-      override implicit val sttpBackend: SttpBackendStub[Identity, Nothing] =
+      implicit override val sttpBackend: SttpBackendStub[Identity, Nothing] =
         SttpBackendStub.synchronous.whenAnyRequest.thenRespondOk()
 
       service.retrieveUri(email) should beSome(InsecureURI(hash, Map("d" -> "404")))
@@ -58,7 +58,7 @@ class GravatarServiceSpec extends Specification with Mockito {
 
     "return an URI with additional parameters" in new Context {
       config.params returns Map("d" -> "https://api.adorable.io/avatars/400/abott@adorable.io.png", "s" -> "400")
-      override implicit val sttpBackend: SttpBackendStub[Identity, Nothing] =
+      implicit override val sttpBackend: SttpBackendStub[Identity, Nothing] =
         SttpBackendStub.synchronous.whenAnyRequest.thenRespondOk()
 
       service.retrieveUri(email).map(_.toString()) should beSome(
@@ -68,7 +68,7 @@ class GravatarServiceSpec extends Specification with Mockito {
     }
 
     "not trim leading zeros" in new Context {
-      override implicit val sttpBackend: SttpBackendStub[Identity, Nothing] =
+      implicit override val sttpBackend: SttpBackendStub[Identity, Nothing] =
         SttpBackendStub.synchronous.whenAnyRequest.thenRespondOk()
 
       service.retrieveUri("123test@test.com") should beSome(

@@ -32,9 +32,9 @@ trait WithBouncyCastle {
 
   Try {
     val provider = new BouncyCastleProvider()
-    if (Option(Security.getProvider(provider.getName)).isDefined) {
+    if (Option(Security.getProvider(provider.getName)).isDefined)
       Security.removeProvider(provider.getName)
-    }
+
     Security.addProvider(provider)
   }.recoverWith {
     case e: Exception => Failure(new RuntimeException("Could not initialize bouncy castle encryption", e))

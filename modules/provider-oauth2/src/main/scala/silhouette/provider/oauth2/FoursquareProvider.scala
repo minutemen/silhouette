@@ -28,7 +28,7 @@ import silhouette.provider.oauth2.FoursquareProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
 import sttp.client.circe.asJson
-import sttp.client.{ SttpBackend, basicRequest }
+import sttp.client.{ basicRequest, SttpBackend }
 import sttp.model.Uri._
 
 /**
@@ -55,17 +55,18 @@ trait BaseFoursquareProvider[F[_]] extends OAuth2Provider[F] {
    */
   override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
     val uri = config.apiUri.getOrElse(DefaultApiUri)
-    basicRequest.get(uri.param("oauth_token", authInfo.accessToken))
+    basicRequest
+      .get(uri.param("oauth_token", authInfo.accessToken))
       .response(asJson[Json])
-      .send().flatMap { response =>
+      .send()
+      .flatMap { response =>
         response.body match {
           case Left(error) =>
             F.raiseError(new UnexpectedResponseException(UnexpectedResponse.format(id, error.body, response.code)))
           case Right(json) =>
             val errorType = json.hcursor.downField("meta").downField("errorType").as[String].toOption
-            if (errorType.contains("deprecated")) {
+            if (errorType.contains("deprecated"))
               logger.info("This implementation may be deprecated! Please contact the Silhouette team for a fix!")
-            }
 
             profileParser.parse(json, authInfo)
         }
@@ -89,7 +90,7 @@ class FoursquareProfileParser[F[_]: Async](config: OAuth2Config)
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] = {
+  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] =
     json.hcursor.downField("response").downField("user").focus.map(_.hcursor) match {
       case Some(user) =>
         Async[F].fromTry(user.downField("id").as[String].getOrError(user.value, "id", ID)).map { id =>
@@ -102,13 +103,13 @@ class FoursquareProfileParser[F[_]: Async](config: OAuth2Config)
             firstName = user.downField("firstName").as[String].toOption,
             lastName = user.downField("lastName").as[String].toOption,
             email = user.downField("contact").downField("email").as[String].toOption.filter(!_.isEmpty),
-            avatarUri = for (prefix <- avatarURLPart1; postfix <- avatarURLPart2)
-              yield uri"${prefix + resolution + postfix}"
+            avatarUri =
+              for (prefix <- avatarURLPart1; postfix <- avatarURLPart2)
+                yield uri"${prefix + resolution + postfix}"
           )
         }
       case None => Async[F].raiseError(new UnexpectedResponseException(JsonPathError.format(ID, "response.user", json)))
     }
-  }
 }
 
 /**
@@ -127,7 +128,8 @@ class FoursquareProvider[F[_]](
   implicit
   protected val sttpBackend: SttpBackend[F, Nothing, Nothing],
   protected val F: Async[F]
-) extends BaseFoursquareProvider[F] with CommonProfileBuilder[F] {
+) extends BaseFoursquareProvider[F]
+    with CommonProfileBuilder[F] {
 
   /**
    * The type of this class.

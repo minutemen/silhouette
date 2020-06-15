@@ -68,7 +68,7 @@ case class StateHandler[F[_]: Async] @Inject() (
    * @tparam R The type of the response.
    * @return Either an error or a JWT and a function, that is able embed item specific state into a response pipeline.
    */
-  def serialize[R]: F[(String, ResponseWriter[R])] = {
+  def serialize[R]: F[(String, ResponseWriter[R])] =
     for {
       items <- handlers.map(h => h.serialize[R].map(t => (h.id, t._1, t._2))).sequence
       jsonMap <- Async[F].pure(items.foldLeft(Map.empty[String, Json]) {
@@ -78,17 +78,16 @@ case class StateHandler[F[_]: Async] @Inject() (
         case (acc, (_, _, responseWriter)) => acc andThen responseWriter
       }
       jwt <- Async[F].fromEither(
-        claimWriter.apply(Claims(
-          issuer = config.jwtIssuer,
-          subject = config.jwtSubject,
-          expirationTime = config.jwtExpiry.map(clock.instant() + _),
-          custom = JsonObject.fromMap(jsonMap)
-        ))
+        claimWriter.apply(
+          Claims(
+            issuer = config.jwtIssuer,
+            subject = config.jwtSubject,
+            expirationTime = config.jwtExpiry.map(clock.instant() + _),
+            custom = JsonObject.fromMap(jsonMap)
+          )
+        )
       )
-    } yield {
-      jwt -> responseWriter
-    }
-  }
+    } yield jwt -> responseWriter
 
   /**
    * Unserializes the social state from the state param.
@@ -101,16 +100,11 @@ case class StateHandler[F[_]: Async] @Inject() (
    * @tparam R The type of the request.
    * @return The social state on success, an error on failure.
    */
-  def unserialize[R](state: String, request: RequestPipeline[R]): F[State] = {
+  def unserialize[R](state: String, request: RequestPipeline[R]): F[State] =
     for {
       claims <- Async[F].fromEither(claimReader(state))
-      items <- handlers.map(h =>
-        h.unserialize(claims.custom.toMap(h.id), request).map(item => h.id -> item)
-      ).sequence
-    } yield {
-      State(items.toNem)
-    }
-  }
+      items <- handlers.map(h => h.unserialize(claims.custom.toMap(h.id), request).map(item => h.id -> item)).sequence
+    } yield State(items.toNem)
 }
 
 /**

@@ -89,9 +89,9 @@ class CookieTransportSpec extends Specification {
     "smuggle a cookie into the request" in new Context {
       SmuggleIntoCookie(config)(requestPipeline)("payload")
         .cookie("test") must beSome[CookieWithMeta].like {
-          case cookie =>
-            cookie.value must be equalTo "payload"
-        }
+        case cookie =>
+          cookie.value must be equalTo "payload"
+      }
     }
   }
 
@@ -99,9 +99,9 @@ class CookieTransportSpec extends Specification {
     "embed a cookie into the response" in new Context {
       EmbedIntoCookie(config)(responsePipeline)("payload")
         .cookie("test") must beSome[CookieWithMeta].like {
-          case cookie =>
-            cookie.value must be equalTo "payload"
-        }
+        case cookie =>
+          cookie.value must be equalTo "payload"
+      }
     }
   }
 
@@ -109,10 +109,10 @@ class CookieTransportSpec extends Specification {
     "discard a cookie" in new Context {
       DiscardCookie(config)(responsePipeline)
         .cookie("test") must beSome[CookieWithMeta].like {
-          case cookie =>
-            cookie.value must be equalTo ""
-            cookie.maxAge must beSome(-86400)
-        }
+        case cookie =>
+          cookie.value must be equalTo ""
+          cookie.maxAge must beSome(-86400)
+      }
     }
   }
 

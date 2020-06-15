@@ -54,9 +54,9 @@ final case class CookieTransportConfig(
  */
 final case class CookieTransport(config: CookieTransportConfig)
   extends RetrieveFromRequest
-  with SmuggleIntoRequest
-  with EmbedIntoResponse
-  with DiscardFromResponse {
+    with SmuggleIntoRequest
+    with EmbedIntoResponse
+    with DiscardFromResponse {
 
   /**
    * Retrieves the payload, stored in a cookie, from request.
@@ -104,17 +104,18 @@ final case class CookieTransport(config: CookieTransportConfig)
    * @param value The cookie value.
    * @return A cookie value.
    */
-  private def cookie(value: String) = CookieWithMeta.unsafeApply(
-    name = config.name,
-    value = value,
-    expires = config.expires,
-    maxAge = config.maxAge.map(_.toSeconds.toInt),
-    domain = config.domain,
-    path = Some(config.path),
-    secure = config.secure,
-    httpOnly = config.httpOnly,
-    otherDirectives = config.otherDirectives
-  )
+  private def cookie(value: String) =
+    CookieWithMeta.unsafeApply(
+      name = config.name,
+      value = value,
+      expires = config.expires,
+      maxAge = config.maxAge.map(_.toSeconds.toInt),
+      domain = config.domain,
+      path = Some(config.path),
+      secure = config.secure,
+      httpOnly = config.httpOnly,
+      otherDirectives = config.otherDirectives
+    )
 }
 
 /**

@@ -33,7 +33,10 @@ import scala.util.{ Success, Try }
  *
  * @param ev The execution environment.
  */
-class DslSpec(implicit ev: ExecutionEnv) extends Specification {
+class DslSpec(
+  implicit
+  ev: ExecutionEnv
+) extends Specification {
 
   "The DSL" should {
     "lift a function that returns a non-effectful value into a KleisliM" in {

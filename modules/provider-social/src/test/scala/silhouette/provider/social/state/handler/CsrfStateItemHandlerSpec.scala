@@ -35,15 +35,11 @@ import sttp.model.CookieWithMeta
 class CsrfStateItemHandlerSpec extends Specification with Mockito with JsonMatchers {
 
   "The `serialize` method" should {
-    "return a serialized value of the state item" in new Context {
-
-    }
+    "return a serialized value of the state item" in new Context {}
   }
 
   "The `unserialize` method" should {
-    "unserialize the state item" in new Context {
-
-    }
+    "unserialize the state item" in new Context {}
   }
 
   /**
@@ -107,15 +103,16 @@ class CsrfStateItemHandlerSpec extends Specification with Mockito with JsonMatch
      * @param value The cookie value.
      * @return A cookie instance with the given value.
      */
-    def cookie(value: String): CookieWithMeta = CookieWithMeta.unsafeApply(
-      name = cookieTransportConfig.name,
-      value = value,
-      maxAge = cookieTransportConfig.maxAge.map(_.toSeconds.toInt),
-      path = Some(cookieTransportConfig.path),
-      domain = cookieTransportConfig.domain,
-      secure = cookieTransportConfig.secure,
-      httpOnly = cookieTransportConfig.httpOnly,
-      otherDirectives = cookieTransportConfig.otherDirectives
-    )
+    def cookie(value: String): CookieWithMeta =
+      CookieWithMeta.unsafeApply(
+        name = cookieTransportConfig.name,
+        value = value,
+        maxAge = cookieTransportConfig.maxAge.map(_.toSeconds.toInt),
+        path = Some(cookieTransportConfig.path),
+        domain = cookieTransportConfig.domain,
+        secure = cookieTransportConfig.secure,
+        httpOnly = cookieTransportConfig.httpOnly,
+        otherDirectives = cookieTransportConfig.otherDirectives
+      )
   }
 }

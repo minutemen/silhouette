@@ -267,7 +267,10 @@ class BasicAuthProviderSpec extends PasswordProviderSpec with Mockito {
      * The provider to test.
      */
     val provider = new BasicAuthProvider[IO, SilhouetteRequest, SilhouetteResponse, User](
-      authInfoReader, authInfoWriter, identityReader, passwordHasherRegistry
+      authInfoReader,
+      authInfoWriter,
+      identityReader,
+      passwordHasherRegistry
     )
   }
 }

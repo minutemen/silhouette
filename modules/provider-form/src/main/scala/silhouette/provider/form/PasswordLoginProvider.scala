@@ -68,7 +68,7 @@ class PasswordLoginProvider[F[_]: Async] @Inject() (
    * @param credentials The credentials to authenticate with.
    * @return The login info if the authentication was successful, otherwise a failure.
    */
-  def authenticate(credentials: PasswordCredentials): F[LoginInfo] = {
+  def authenticate(credentials: PasswordCredentials): F[LoginInfo] =
     Async[F].flatMap(loginInfo(credentials)) { loginInfo =>
       Async[F].flatMap(authenticate(loginInfo, credentials.password)) {
         case Successful               => Async[F].pure(loginInfo)
@@ -77,7 +77,6 @@ class PasswordLoginProvider[F[_]: Async] @Inject() (
         case NotFound(error)          => Async[F].raiseError(new IdentityNotFoundException(error))
       }
     }
-  }
 
   /**
    * Gets the login info for the given credentials.

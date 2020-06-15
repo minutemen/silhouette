@@ -54,12 +54,13 @@ object BasicCredentials {
    * @param value The decoded value of a "Basic" authentication scheme.
    * @return Maybe some [[BasicCredentials]] if the values could be extracted, None otherwise.
    */
-  def unapply(value: String): Option[BasicCredentials] = Try(Base64.decode(value).split(":", 2)) match {
-    case Success(Array(identifier, password)) =>
-      Some(BasicCredentials(identifier, password))
-    case _ =>
-      None
-  }
+  def unapply(value: String): Option[BasicCredentials] =
+    Try(Base64.decode(value).split(":", 2)) match {
+      case Success(Array(identifier, password)) =>
+        Some(BasicCredentials(identifier, password))
+      case _ =>
+        None
+    }
 
   /**
    * Transforms [[BasicCredentials]] into the value of a "Basic" authentication scheme.

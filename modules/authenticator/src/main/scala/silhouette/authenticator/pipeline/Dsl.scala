@@ -115,7 +115,10 @@ object Dsl extends DslLowPriorityImplicits {
    * @tparam B The type the function returns.
    * @tparam C The type that will be stored in [[Maybe]].
    */
-  implicit class Function1Ops[F[_]: Async, A, B, C](f: A => B)(implicit writes: MaybeWriter[F, B, C]) {
+  implicit class Function1Ops[F[_]: Async, A, B, C](f: A => B)(
+    implicit
+    writes: MaybeWriter[F, B, C]
+  ) {
 
     /**
      * Lifts a function `A` => `B` into a [[KleisliM]].
@@ -183,8 +186,7 @@ object Dsl extends DslLowPriorityImplicits {
   implicit def optionToMaybeWriter[F[_]: Async, A, I <: Identity](
     implicit
     noneError: () => NoneError[I]
-  ): MaybeWriter[F, Option[A], A] = (value: Option[A]) =>
-    EitherT.fromEither[F](value.toRight(noneError()))
+  ): MaybeWriter[F, Option[A], A] = (value: Option[A]) => EitherT.fromEither[F](value.toRight(noneError()))
 
   /**
    * A transformation function that transforms a [[scala.util.Try]] to [[Maybe]].
@@ -193,8 +195,8 @@ object Dsl extends DslLowPriorityImplicits {
    * @tparam A The type to convert.
    * @return The [[Maybe]] representation for the [[scala.util.Try]] type.
    */
-  implicit def tryToMaybeWriter[F[_]: Async, A]: MaybeWriter[F, Try[A], A] = (value: Try[A]) =>
-    EitherT.fromEither[F](value.toEither)
+  implicit def tryToMaybeWriter[F[_]: Async, A]: MaybeWriter[F, Try[A], A] =
+    (value: Try[A]) => EitherT.fromEither[F](value.toEither)
 
   /**
    * A transformation function that transforms an `Either[Throwable, A]` to [[Maybe]].
@@ -216,11 +218,12 @@ object Dsl extends DslLowPriorityImplicits {
     implicit
     writer: Dsl.MaybeWriter[IO, A, B],
     contextShift: ContextShift[IO]
-  ): Dsl.MaybeWriter[IO, Future[A], B] = (value: Future[A]) =>
-    for {
-      r <- EitherT.right(IO.fromFuture(IO(value)))
-      v <- writer(r)
-    } yield v
+  ): Dsl.MaybeWriter[IO, Future[A], B] =
+    (value: Future[A]) =>
+      for {
+        r <- EitherT.right(IO.fromFuture(IO(value)))
+        v <- writer(r)
+      } yield v
 
   /**
    * A transformation function that transforms a functional effect to [[Dsl.Maybe]].
@@ -232,11 +235,12 @@ object Dsl extends DslLowPriorityImplicits {
   implicit def effectToMaybeWriter[F[_]: Async, A, B](
     implicit
     writer: Dsl.MaybeWriter[F, A, B]
-  ): Dsl.MaybeWriter[F, F[A], B] = (value: F[A]) =>
-    for {
-      r <- EitherT.right(value)
-      v <- writer(r)
-    } yield v
+  ): Dsl.MaybeWriter[F, F[A], B] =
+    (value: F[A]) =>
+      for {
+        r <- EitherT.right(value)
+        v <- writer(r)
+      } yield v
 
   /**
    * Provides an implicit conversion from a function `A` => `B` to [[KleisliM]] .
@@ -282,8 +286,7 @@ trait DslLowPriorityImplicits {
    * @tparam A The type to convert.
    * @return The [[Dsl.Maybe]] representation for type `A`.
    */
-  implicit def toMaybeWrites[F[_]: Async, A]: Dsl.MaybeWriter[F, A, A] = (value: A) =>
-    EitherT.pure[F, Throwable](value)
+  implicit def toMaybeWrites[F[_]: Async, A]: Dsl.MaybeWriter[F, A, A] = (value: A) => EitherT.pure[F, Throwable](value)
 
   /**
    * A low priority transformation that returns a [[Dsl.NoneError]] that can be translated to a `MissingCredentials` s

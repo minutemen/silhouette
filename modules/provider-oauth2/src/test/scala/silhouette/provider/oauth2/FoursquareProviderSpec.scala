@@ -21,7 +21,7 @@ import java.nio.file.Paths
 
 import cats.effect.IO.{ Map => _, _ }
 import silhouette.LoginInfo
-import silhouette.provider.oauth2.FoursquareProvider.{ DefaultApiUri, AvatarResolution }
+import silhouette.provider.oauth2.FoursquareProvider.{ AvatarResolution, DefaultApiUri }
 import silhouette.provider.oauth2.OAuth2Provider.UnexpectedResponse
 import silhouette.provider.social.SocialProvider.ProfileError
 import silhouette.provider.social.{ CommonSocialProfile, ProfileRetrievalException }
@@ -47,11 +47,13 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
         case e =>
           e.getMessage must equalTo(ProfileError.format(provider.id))
-          e.getCause.getMessage must equalTo(UnexpectedResponse.format(
-            provider.id,
-            apiResult,
-            StatusCode.BadRequest
-          ))
+          e.getCause.getMessage must equalTo(
+            UnexpectedResponse.format(
+              provider.id,
+              apiResult,
+              StatusCode.BadRequest
+            )
+          )
       }
     }
 
@@ -152,14 +154,16 @@ class FoursquareProviderSpec extends OAuth2ProviderSpec {
     /**
      * The OAuth2 config.
      */
-    override lazy val config = spy(OAuth2Config(
-      authorizationUri = Some(uri"https://foursquare.com/oauth2/authenticate"),
-      accessTokenUri = uri"https://foursquare.com/oauth2/access_token",
-      redirectUri = Some(uri"https://minutemen.group"),
-      clientID = "my.client.id",
-      clientSecret = "my.client.secret",
-      scope = None
-    ))
+    override lazy val config = spy(
+      OAuth2Config(
+        authorizationUri = Some(uri"https://foursquare.com/oauth2/authenticate"),
+        accessTokenUri = uri"https://foursquare.com/oauth2/access_token",
+        redirectUri = Some(uri"https://minutemen.group"),
+        clientID = "my.client.id",
+        clientSecret = "my.client.secret",
+        scope = None
+      )
+    )
 
     /**
      * The provider to test.

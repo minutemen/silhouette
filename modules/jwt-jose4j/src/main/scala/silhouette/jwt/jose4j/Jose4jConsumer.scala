@@ -76,7 +76,7 @@ final case class SimpleJose4jConsumer(
    * @param jwt The JWT token to consume.
    * @return An error on the left or the [[org.jose4j.jwt.JwtClaims]] extracted from the JWT token on right.
    */
-  override def consume(jwt: String): Either[Throwable, JwtClaims] = {
+  override def consume(jwt: String): Either[Throwable, JwtClaims] =
     Try(new JwtConsumerBuilder())
       .map(jwsBuilder)
       .map(requireSubjectBuilder)
@@ -88,7 +88,6 @@ final case class SimpleJose4jConsumer(
       .map(expectedAudienceBuilder)
       .map(_.build().processToClaims(jwt))
       .toEither
-  }
 
   /**
    * Maps the `jws` configuration to the [[org.jose4j.jwt.consumer.JwtConsumerBuilder]].

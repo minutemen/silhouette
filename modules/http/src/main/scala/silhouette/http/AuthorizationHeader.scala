@@ -57,12 +57,13 @@ object BasicAuthorizationHeader extends AuthorizationHeader(AuthScheme.Basic) {
    * @param header The header from which the [[BasicCredentials]] should be extracted.
    * @return Maybe some [[BasicCredentials]] if the values could be extracted, None otherwise.
    */
-  def unapply(header: Header): Option[BasicCredentials] = header match {
-    case Header(HeaderNames.Authorization, value) =>
-      scheme.unapply(value).flatMap(BasicCredentials.unapply)
-    case _ =>
-      None
-  }
+  def unapply(header: Header): Option[BasicCredentials] =
+    header match {
+      case Header(HeaderNames.Authorization, value) =>
+        scheme.unapply(value).flatMap(BasicCredentials.unapply)
+      case _ =>
+        None
+    }
 }
 
 /**
@@ -84,10 +85,11 @@ object BearerAuthorizationHeader extends AuthorizationHeader(AuthScheme.Bearer) 
    * @param header The header from which the [[BearerToken]] should be extracted.
    * @return The extracted [[BearerToken]].
    */
-  def unapply(header: Header): Option[BearerToken] = header match {
-    case Header(HeaderNames.Authorization, value) =>
-      scheme.unapply(value).map(BearerToken.apply)
-    case _ =>
-      None
-  }
+  def unapply(header: Header): Option[BearerToken] =
+    header match {
+      case Header(HeaderNames.Authorization, value) =>
+        scheme.unapply(value).map(BearerToken.apply)
+      case _ =>
+        None
+    }
 }

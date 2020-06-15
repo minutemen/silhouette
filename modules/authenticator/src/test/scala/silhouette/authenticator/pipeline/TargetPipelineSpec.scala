@@ -53,14 +53,16 @@ class TargetPipelineSpec extends Specification with Mockito {
       discardPipeline(authenticator, responsePipeline).unsafeRunSync() must
         beLike[Fake.ResponsePipeline] {
           case response =>
-            response.cookie("test") must beSome(CookieWithMeta.unsafeApply(
-              name = "test",
-              value = "",
-              maxAge = Some(-86400),
-              path = Some("/"),
-              secure = true,
-              httpOnly = true
-            ))
+            response.cookie("test") must beSome(
+              CookieWithMeta.unsafeApply(
+                name = "test",
+                value = "",
+                maxAge = Some(-86400),
+                path = Some("/"),
+                secure = true,
+                httpOnly = true
+              )
+            )
         }
     }
   }

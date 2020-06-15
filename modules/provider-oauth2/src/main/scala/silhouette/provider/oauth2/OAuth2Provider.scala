@@ -59,12 +59,11 @@ case class OAuth2Info(
    *
    * @param clock The clock to check against.
    */
-  def expired(clock: Clock): Boolean = {
+  def expired(clock: Clock): Boolean =
     (expiresIn, createdAt) match {
       case (Some(in), Some(at)) => clock.instant().isAfter(at.plusSeconds(in.toLong))
       case _                    => false
     }
-  }
 }
 
 /**
@@ -78,16 +77,15 @@ object OAuth2Info extends OAuth2Constants {
    * @param clock The current clock instance.
    * @see https://tools.ietf.org/html/rfc6749#section-5.1
    */
-  def decoder(clock: Clock): Decoder[OAuth2Info] = (c: HCursor) => {
-    for {
-      accessToken <- c.downField(AccessToken).as[String]
-      tokenType <- c.downField(TokenType).as[Option[String]]
-      expiresIn <- c.downField(ExpiresIn).as[Option[Int]]
-      refreshToken <- c.downField(RefreshToken).as[Option[String]]
-    } yield {
-      OAuth2Info(accessToken, tokenType, Some(clock.instant()), expiresIn, refreshToken)
+  def decoder(clock: Clock): Decoder[OAuth2Info] =
+    (c: HCursor) => {
+      for {
+        accessToken <- c.downField(AccessToken).as[String]
+        tokenType <- c.downField(TokenType).as[Option[String]]
+        expiresIn <- c.downField(ExpiresIn).as[Option[Int]]
+        refreshToken <- c.downField(RefreshToken).as[Option[String]]
+      } yield OAuth2Info(accessToken, tokenType, Some(clock.instant()), expiresIn, refreshToken)
     }
-  }
 }
 
 /**
@@ -170,13 +168,13 @@ trait OAuth2Provider[F[_]] extends SocialStateProvider[F, OAuth2Config] with OAu
   def authenticate[R](
     request: RequestPipeline[R],
     stateHandler: StateHandler[F]
-  ): F[Either[ResponsePipeline[SilhouetteResponse], StatefulAuthInfo[A]]] = {
+  ): F[Either[ResponsePipeline[SilhouetteResponse], StatefulAuthInfo[A]]] =
     stateHandler.serialize[SilhouetteResponse].flatMap {
       case (state, responseWriter) =>
         handleFlow(request) {
           handleAuthorizationFlow(request, Some(state))
-        } {
-          code => getAccessToken(request, code)
+        } { code =>
+          getAccessToken(request, code)
         }.flatMap {
           case Left(response) =>
             F.pure(Left(responseWriter(response)))
@@ -186,7 +184,6 @@ trait OAuth2Provider[F[_]] extends SocialStateProvider[F, OAuth2Config] with OAu
             }
         }
     }
-  }
 
   /**
    * Refreshes the access token.
@@ -194,7 +191,7 @@ trait OAuth2Provider[F[_]] extends SocialStateProvider[F, OAuth2Config] with OAu
    * @param refreshToken The refresh token.
    * @return An error on failure or the auth info containing the access token on success.
    */
-  def refresh(refreshToken: String): F[OAuth2Info] = {
+  def refresh(refreshToken: String): F[OAuth2Info] =
     config.refreshUri match {
       case Some(uri) =>
         val params = Map(
@@ -204,12 +201,14 @@ trait OAuth2Provider[F[_]] extends SocialStateProvider[F, OAuth2Config] with OAu
           config.refreshParams.map { case (key, value) => key -> value } ++
           config.scope.map(scope => Map(Scope -> scope)).getOrElse(Map())
 
-        basicRequest.post(uri)
+        basicRequest
+          .post(uri)
           .headers(authorizationHeader)
           .headers(refreshHeaders: _*)
           .body(params)
           .response(asJson[OAuth2Info])
-          .send().flatMap { response =>
+          .send()
+          .flatMap { response =>
             response.body match {
               case Left(error) =>
                 F.raiseError(new UnexpectedResponseException(UnexpectedResponse.format(id, error.body, response.code)))
@@ -221,7 +220,6 @@ trait OAuth2Provider[F[_]] extends SocialStateProvider[F, OAuth2Config] with OAu
       case None =>
         F.raiseError(new ConfigurationException(RefreshUriUndefined.format(id)))
     }
-  }
 
   /**
    * Handles the OAuth2 flow.
@@ -242,20 +240,20 @@ trait OAuth2Provider[F[_]] extends SocialStateProvider[F, OAuth2Config] with OAu
     left: => Either[Throwable, LF]
   )(
     right: String => F[RF]
-  ): F[Either[LF, RF]] = {
+  ): F[Either[LF, RF]] =
     request.extractString(Error).map {
       case e @ AccessDenied => new AccessDeniedException(AuthorizationError.format(id, e))
       case e                => new UnexpectedResponseException(AuthorizationError.format(id, e))
     } match {
       case Some(exception) => F.raiseError(exception)
-      case None => request.extractString(Code) match {
-        // We're being redirected back from the authorization server with the access code and the state
-        case Some(code) => F.map(right(code))(Right.apply)
-        // There's no code in the request, this is the first step in the OAuth flow
-        case None       => F.fromEither(left).map(Left.apply)
-      }
+      case None =>
+        request.extractString(Code) match {
+          // We're being redirected back from the authorization server with the access code and the state
+          case Some(code) => F.map(right(code))(Right.apply)
+          // There's no code in the request, this is the first step in the OAuth flow
+          case None => F.fromEither(left).map(Left.apply)
+        }
     }
-  }
 
   /**
    * Handles the authorization step of the OAuth2 flow.
@@ -268,7 +266,7 @@ trait OAuth2Provider[F[_]] extends SocialStateProvider[F, OAuth2Config] with OAu
   protected def handleAuthorizationFlow[R](
     request: RequestPipeline[R],
     maybeState: Option[String] = None
-  ): Either[Throwable, ResponsePipeline[SilhouetteResponse]] = {
+  ): Either[Throwable, ResponsePipeline[SilhouetteResponse]] =
     config.authorizationUri match {
       case Some(authorizationURI) =>
         val params = List(
@@ -280,15 +278,19 @@ trait OAuth2Provider[F[_]] extends SocialStateProvider[F, OAuth2Config] with OAu
         ).flatten.toMap ++ config.authorizationParams
 
         val uri = uri"$authorizationURI?$params"
-        logger.debug("[%s] Use authorization URI: %s".format(
-          id, config.authorizationUri.map(_.toString()).getOrElse("")
-        ))
+        logger.debug(
+          "[%s] Use authorization URI: %s".format(
+            id,
+            config.authorizationUri.map(_.toString()).getOrElse("")
+          )
+        )
         logger.debug("[%s] Redirecting to: %s".format(id, uri))
-        Right(SilhouetteResponsePipeline(SilhouetteResponse(StatusCode.SeeOther))
-          .withHeaders(Header(HeaderNames.Location, uri.toString())))
+        Right(
+          SilhouetteResponsePipeline(SilhouetteResponse(StatusCode.SeeOther))
+            .withHeaders(Header(HeaderNames.Location, uri.toString()))
+        )
       case None => Left(new ConfigurationException(AuthorizationUriUndefined.format(id)))
     }
-  }
 
   /**
    * Gets the access token.
@@ -306,12 +308,14 @@ trait OAuth2Provider[F[_]] extends SocialStateProvider[F, OAuth2Config] with OAu
       config.accessTokenParams.map { case (key, value) => key -> value } ++
       config.redirectUri.map(uri => Map(RedirectUri -> resolveCallbackUri(uri, request).toString)).getOrElse(Map())
 
-    basicRequest.post(config.accessTokenUri)
+    basicRequest
+      .post(config.accessTokenUri)
       .headers(authorizationHeader)
       .headers(accessTokenHeaders: _*)
       .body(params)
       .response(asJson[OAuth2Info])
-      .send().flatMap { response =>
+      .send()
+      .flatMap { response =>
         response.body match {
           case Left(error) =>
             F.raiseError(new UnexpectedResponseException(UnexpectedResponse.format(id, error.body, response.code)))
@@ -335,9 +339,10 @@ object OAuth2Provider extends OAuth2Constants {
    * @tparam T The type of the result.
    */
   implicit class RichDecoderResult[T](result: Decoder.Result[T]) {
-    def getOrError(json: Json, path: String, id: String): Try[T] = result.toTry.recoverWith {
-      case e: Exception => Failure(new UnexpectedResponseException(JsonPathError.format(id, path, json), Some(e)))
-    }
+    def getOrError(json: Json, path: String, id: String): Try[T] =
+      result.toTry.recoverWith {
+        case e: Exception => Failure(new UnexpectedResponseException(JsonPathError.format(id, path, json), Some(e)))
+      }
   }
 
   /**
@@ -396,7 +401,8 @@ case class OAuth2Config(
   redirectUri: Option[Uri] = None,
   refreshUri: Option[Uri] = None,
   apiUri: Option[Uri] = None,
-  clientID: String, clientSecret: String,
+  clientID: String,
+  clientSecret: String,
   scope: Option[String] = None,
   authorizationParams: Map[String, String] = Map.empty,
   accessTokenParams: Map[String, String] = Map.empty,

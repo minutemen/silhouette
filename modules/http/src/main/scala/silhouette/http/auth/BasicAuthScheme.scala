@@ -33,16 +33,18 @@ case object BasicAuthSchemeReader extends (String => Try[BasicCredentials]) {
    * @param value The "basic" `Authorization` header value.
    * @return Some [[BasicCredentials]] on success or a failure if the value could not be parsed.
    */
-  override def apply(value: String): Try[BasicCredentials] = value match {
-    case AuthScheme.Basic(payload) => payload match {
-      case BasicCredentials(credentials) =>
-        Success(credentials)
+  override def apply(value: String): Try[BasicCredentials] =
+    value match {
+      case AuthScheme.Basic(payload) =>
+        payload match {
+          case BasicCredentials(credentials) =>
+            Success(credentials)
+          case _ =>
+            Failure(new TransformException(InvalidBasicAuthHeader))
+        }
       case _ =>
-        Failure(new TransformException(InvalidBasicAuthHeader))
+        Failure(new TransformException(MissingBasicAuthIdentifier))
     }
-    case _ =>
-      Failure(new TransformException(MissingBasicAuthIdentifier))
-  }
 
   /**
    * The error messages.

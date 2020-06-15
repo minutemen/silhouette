@@ -29,7 +29,7 @@ import silhouette.provider.oauth2.Auth0Provider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
 import sttp.client.circe.asJson
-import sttp.client.{ SttpBackend, basicRequest }
+import sttp.client.{ basicRequest, SttpBackend }
 import sttp.model.Uri._
 
 /**
@@ -67,11 +67,13 @@ trait BaseAuth0Provider[F[_]] extends OAuth2Provider[F] {
    * @param authInfo The auth info received from the provider.
    * @return On success the build social profile, otherwise a failure.
    */
-  override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
-    basicRequest.get(config.apiUri.getOrElse(DefaultApiUri))
+  override protected def buildProfile(authInfo: OAuth2Info): F[Profile] =
+    basicRequest
+      .get(config.apiUri.getOrElse(DefaultApiUri))
       .header(BearerAuthorizationHeader(authInfo.accessToken))
       .response(asJson[Json])
-      .send().flatMap { response =>
+      .send()
+      .flatMap { response =>
         response.body match {
           case Left(error) =>
             F.raiseError(new UnexpectedResponseException(UnexpectedResponse.format(id, error.body, response.code)))
@@ -79,7 +81,6 @@ trait BaseAuth0Provider[F[_]] extends OAuth2Provider[F] {
             profileParser.parse(json, authInfo)
         }
       }
-  }
 
   /**
    * Gets the access token.
@@ -89,12 +90,11 @@ trait BaseAuth0Provider[F[_]] extends OAuth2Provider[F] {
    * @tparam R The type of the request.
    * @return The info containing the access token.
    */
-  override protected def getAccessToken[R](request: RequestPipeline[R], code: String): F[OAuth2Info] = {
+  override protected def getAccessToken[R](request: RequestPipeline[R], code: String): F[OAuth2Info] =
     request.queryParamValue("token_type") match {
       case Some("bearer") => F.pure(OAuth2Info(code))
       case _              => super.getAccessToken(request, code)
     }
-  }
 }
 
 /**
@@ -111,7 +111,7 @@ class Auth0ProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, Commo
    * @param authInfo The auth info to query the provider again for additional data.
    * @return The social profile from the given result.
    */
-  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] = {
+  override def parse(json: Json, authInfo: OAuth2Info): F[CommonSocialProfile] =
     Async[F].fromTry(json.hcursor.downField("sub").as[String].getOrError(json, "sub", ID)).map { id =>
       CommonSocialProfile(
         loginInfo = LoginInfo(ID, id),
@@ -122,7 +122,6 @@ class Auth0ProfileParser[F[_]: Async] extends SocialProfileParser[F, Json, Commo
         avatarUri = json.hcursor.downField("picture").as[String].toOption.map(uri => uri"$uri")
       )
     }
-  }
 }
 
 /**
@@ -141,7 +140,8 @@ class Auth0Provider[F[_]](
   implicit
   protected val sttpBackend: SttpBackend[F, Nothing, Nothing],
   protected val F: Async[F]
-) extends BaseAuth0Provider[F] with CommonProfileBuilder[F] {
+) extends BaseAuth0Provider[F]
+    with CommonProfileBuilder[F] {
 
   /**
    * The type of this class.

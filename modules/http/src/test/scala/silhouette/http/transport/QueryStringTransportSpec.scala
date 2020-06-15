@@ -46,7 +46,8 @@ class QueryStringTransportSpec extends Specification {
 
   "The `smuggle` method" should {
     "smuggle a query param into the request" in new Context {
-      transport.smuggle("payload", requestPipeline)
+      transport
+        .smuggle("payload", requestPipeline)
         .queryParamValue("test") must beSome("payload")
     }
   }

@@ -18,7 +18,12 @@
 package silhouette.http.transport
 
 import silhouette.http._
-import silhouette.http.auth.{ BasicAuthSchemeReader, BasicAuthSchemeWriter, BearerAuthSchemeReader, BearerAuthSchemeWriter }
+import silhouette.http.auth.{
+  BasicAuthSchemeReader,
+  BasicAuthSchemeWriter,
+  BearerAuthSchemeReader,
+  BearerAuthSchemeWriter
+}
 import sttp.model.{ Header, HeaderNames }
 
 /**
@@ -28,8 +33,8 @@ import sttp.model.{ Header, HeaderNames }
  */
 final case class HeaderTransport(name: String)
   extends RetrieveFromRequest
-  with SmuggleIntoRequest
-  with EmbedIntoResponse {
+    with SmuggleIntoRequest
+    with EmbedIntoResponse {
 
   /**
    * Retrieves the payload, stored in a header, from request.
@@ -85,8 +90,7 @@ final case class RetrieveFromHeader(name: String) extends Retrieve[String] {
  *
  * @param name The name of the header in which the payload will be transported; Defaults to Authorization.
  */
-final case class RetrieveBearerTokenFromHeader(name: String = HeaderNames.Authorization)
-  extends Retrieve[BearerToken] {
+final case class RetrieveBearerTokenFromHeader(name: String = HeaderNames.Authorization) extends Retrieve[BearerToken] {
 
   /**
    * Reads a bearer token from a header.
@@ -208,8 +212,7 @@ final case class EmbedIntoHeader[R](name: String) extends Embed[String, R] {
  * @param name The name of the header in which the payload will be transported; Defaults to Authorization.
  * @tparam R The type of the response.
  */
-final case class EmbedBearerTokenIntoHeader[R](name: String = HeaderNames.Authorization)
-  extends Embed[BearerToken, R] {
+final case class EmbedBearerTokenIntoHeader[R](name: String = HeaderNames.Authorization) extends Embed[BearerToken, R] {
 
   /**
    * Merges some token and a [[ResponsePipeline]] into a [[ResponsePipeline]] that contains a bearer token header with
