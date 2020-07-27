@@ -1,21 +1,14 @@
 name: build
 
-on:
-  push:
-    branches:
-      - master
-    tags:
-      - *
-
-  pull_request:
-    branches:
-      - master
+on: ["push", "pull_request"]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
       - name: Run tests
         run: sbt coverage test
       - name: Coverage Report
@@ -28,5 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
       - name: Formatting
         run: sbt scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
