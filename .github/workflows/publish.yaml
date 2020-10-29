@@ -1,0 +1,27 @@
+name: Publish
+
+#on:
+#  push:
+#    branches:
+#      - master
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    name: Publishing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - name: Get app vars
+        run: |
+          OUTPUT=$(sbt --error 'set showSuccess := false' buildVersions 2>&- | tail -2)
+          PROJECT_VERSION=$(echo "${OUTPUT//$'\n'/ }" | sed "s/.*PROJECT_VERSION \([^ ]*\).*$/\1/")
+          echo "PROJECT_VERSION=$PROJECT_VERSION" >> $GITHUB_ENV
+      - name: Publish snapshot
+        if: env.GITHUB_REPOSITORY == "akkie/silhouette" && endsWith(env.PROJECT_VERSION, '-SNAPSHOT')
+        run: sbt +publish

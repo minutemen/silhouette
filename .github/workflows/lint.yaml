@@ -13,9 +13,7 @@ jobs:
         with:
           fetch-depth: 1
       - name: Formatting
-        shell: bash
         run: sbt scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
 
       - name: Styling
-        shell: bash
         run: sbt scalastyle test:scalastyle
