@@ -29,9 +29,11 @@ jobs:
 
       - name: Run tests
         run: sbt coverage test
+        shell: bash
 
       - name: Coverage Report
         run: sbt coverageReport
+        shell: bash
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
@@ -45,7 +47,9 @@ jobs:
         with:
           fetch-depth: 1
       - name: Formatting
+        shell: bash
         run: sbt scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
 
       - name: Styling
+        shell: bash
         run: sbt scalastyle test:scalastyle
