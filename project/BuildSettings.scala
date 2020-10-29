@@ -105,7 +105,7 @@ object Publish extends AutoPlugin {
   override def projectSettings: Seq[Setting[_]] =
     sonatypeSettings ++ Seq(
       description := "Framework agnostic authentication library for Scala that supports several authentication " +
-        "methods, including OAuth2, OpenID Connect, CAS, Credentials, Basic Authentication " +
+        "methods, including OAuth2, OpenID Connect, Credentials, Basic Authentication " +
         "or custom authentication schemes",
       homepage := Some(url("http://www.silhouette.rocks/")),
       licenses := Seq("Apache-2.0" -> url("https://github.com/minutemen/silhouette/blob/master/LICENSE")),

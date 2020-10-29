@@ -27,5 +27,5 @@ jobs:
       - name: Echo github repository
         run: echo $GITHUB_REPOSITORY
       - name: Publish snapshot
-        if: env.GITHUB_REPOSITORY == 'akkie/silhouette' && endsWith(env.PROJECT_VERSION, '-SNAPSHOT')
+        if: $GITHUB_REPOSITORY == 'akkie/silhouette' && endsWith($PROJECT_VERSION, '-SNAPSHOT')
         run: sbt +publish
