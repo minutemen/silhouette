@@ -1,13 +1,9 @@
 name: Publish
 
-#on:
-#  push:
-#    branches:
-#      - master
-
 on:
   push:
-  pull_request:
+    branches:
+      - master
 
 jobs:
   lint:
@@ -27,7 +23,7 @@ jobs:
       - name: Echo github repository
         run: echo $GITHUB_REPOSITORY
       - name: Publish snapshot
-        if: github.repository=='akkie/silhouette' && endsWith(env.PROJECT_VERSION, '-SNAPSHOT')
+        if: github.repository=='minutemen/silhouette' && endsWith(env.PROJECT_VERSION, '-SNAPSHOT')
         run: sbt +publish
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}

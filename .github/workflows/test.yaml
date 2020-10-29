@@ -33,10 +33,12 @@ jobs:
         shell: bash
 
       - name: Coverage Report
+        if: contains(runner.os, 'ubuntu')
         run: sbt coverageReport
         shell: bash
 
       - name: Upload coverage to Codecov
+        if: contains(runner.os, 'ubuntu')
         uses: codecov/codecov-action@v1
         with:
           fail_ci_if_error: true
