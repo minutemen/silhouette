@@ -1,0 +1,34 @@
+name: Publish
+
+#on:
+#  push:
+#    branches:
+#      - master
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    name: Publishing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - name: Get app vars
+        run: |
+          OUTPUT=$(sbt --error 'set showSuccess := false' buildVersions 2>&- | tail -2)
+          PROJECT_VERSION=$(echo "${OUTPUT//$'\n'/ }" | sed "s/.*PROJECT_VERSION \([^ ]*\).*$/\1/")
+          echo "PROJECT_VERSION=$PROJECT_VERSION" >> $GITHUB_ENV
+      - name: Echo project version
+        run: echo $PROJECT_VERSION
+      - name: Echo github repository
+        run: echo $GITHUB_REPOSITORY
+      - name: Publish snapshot
+        if: github.repository=='akkie/silhouette' && endsWith(env.PROJECT_VERSION, '-SNAPSHOT')
+        run: sbt +publish
+        env:
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}

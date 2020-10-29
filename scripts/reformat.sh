@@ -20,6 +20,4 @@
 #
 set -o nounset -o errexit
 
-SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-"$SCRIPTS_DIR/sbt.sh" clean scalafmt test:scalafmt scalafmtSbt
+sbt clean scalafmt test:scalafmt scalafmtSbt

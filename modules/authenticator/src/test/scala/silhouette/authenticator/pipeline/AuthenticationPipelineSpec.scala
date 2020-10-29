@@ -91,7 +91,7 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
 
       authenticatorReader(token) returns IO.pure(authenticator)
       validator.isValid(authenticator) returns IO.pure(validNel(()))
-      identityReader.apply(loginInfo) returns IO.pure(None)
+      identityReader.apply(authenticator) returns IO.pure(None)
 
       pipeline(request).unsafeRunSync() must beEqualTo(MissingIdentity(authenticator, loginInfo))
     }
@@ -102,7 +102,7 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
 
       authenticatorReader(token) returns IO.pure(authenticator)
       validator.isValid(authenticator) returns IO.pure(validNel(()))
-      identityReader.apply(loginInfo) returns IO.raiseError(exception)
+      identityReader.apply(authenticator) returns IO.raiseError(exception)
 
       pipeline(request).unsafeRunSync() must beLike[AuthState[User, Authenticator]] {
         case AuthFailure(e) =>
@@ -115,7 +115,7 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
 
       authenticatorReader(token) returns IO.pure(authenticator)
       validator.isValid(authenticator) returns IO.pure(validNel(()))
-      identityReader.apply(loginInfo) returns IO.pure(Some(user))
+      identityReader.apply(authenticator) returns IO.pure(Some(user))
 
       pipeline(request).unsafeRunSync() must beEqualTo(Authenticated(user, authenticator, loginInfo))
     }
@@ -162,10 +162,10 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
     val authenticatorReader = mock[AuthenticatorReader[IO, String]]
 
     /**
-     * The reader to retrieve the [[Identity]] for the [[LoginInfo]] stored in the
-     * [[silhouette.authenticator.Authenticator]] from the persistence layer.
+     * The reader to retrieve the [[Identity]] for the [[silhouette.authenticator.Authenticator]]
+     * from the persistence layer or from the authenticator itself.
      */
-    val identityReader = mock[LoginInfo => IO[Option[User]]].smart
+    val identityReader = mock[Authenticator => IO[Option[User]]].smart
 
     /**
      * A [[Validator]] to apply to the [[silhouette.authenticator.Authenticator]].

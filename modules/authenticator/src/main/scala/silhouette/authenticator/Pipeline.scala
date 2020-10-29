@@ -34,8 +34,8 @@ import silhouette.authenticator.pipeline.Dsl.{ KleisliM, NoneError }
  * pipeline can be represented by a [[AuthState]] that describes the result of each step.
  *
  * @param pipeline       The pipeline which transforms the source to an authenticator.
- * @param identityReader The reader to retrieve the [[Identity]] for the [[LoginInfo]] stored in the
- *                       [[silhouette.authenticator.Authenticator]] from the persistence layer.
+ * @param identityReader The reader to retrieve the [[Identity]] for the [[silhouette.authenticator.Authenticator]]
+ *                       from the persistence layer or from the authenticator itself.
  * @param validators     The list of validators to apply to the [[silhouette.authenticator.Authenticator]].
  *
  * @tparam F The type of the IO monad.
@@ -44,7 +44,7 @@ import silhouette.authenticator.pipeline.Dsl.{ KleisliM, NoneError }
  */
 final case class AuthenticationPipeline[F[_]: Async, S, I <: Identity](
   pipeline: KleisliM[F, S, Authenticator],
-  identityReader: LoginInfo => F[Option[I]],
+  identityReader: Authenticator => F[Option[I]],
   validators: Set[Validator[F]] = Set.empty[Validator[F]]
 ) extends (S => F[AuthState[I, Authenticator]]) {
 
@@ -64,7 +64,7 @@ final case class AuthenticationPipeline[F[_]: Async, S, I <: Identity](
             case Invalid(errors) =>
               Async[F].pure(InvalidCredentials(authenticator, errors))
             case Valid(_) =>
-              Async[F].map(identityReader(authenticator.loginInfo)) {
+              Async[F].map(identityReader(authenticator)) {
                 case Some(identity) =>
                   Authenticated(identity, authenticator, authenticator.loginInfo)
                 case None =>
