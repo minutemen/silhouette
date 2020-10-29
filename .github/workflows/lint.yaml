@@ -1,0 +1,21 @@
+name: Lint
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    name: Linting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - name: Formatting
+        shell: bash
+        run: sbt scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
+
+      - name: Styling
+        shell: bash
+        run: sbt scalastyle test:scalastyle

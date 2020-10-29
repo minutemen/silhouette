@@ -1,6 +1,6 @@
 Silhouette
 ==========
-![Build Status](https://github.com/minutemen/silhouette/workflows/build/badge.svg) [![codecov](https://codecov.io/gh/akkie/silhouette/branch/master/graph/badge.svg)](https://codecov.io/gh/akkie/silhouette) [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/minutemen/silhouette?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+![Build Status](https://github.com/minutemen/silhouette/workflows/build/badge.svg) [![codecov](https://codecov.io/gh/minutemen/silhouette/branch/master/graph/badge.svg)](https://codecov.io/gh/minutemen/silhouette) [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/minutemen/silhouette?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 **Silhouette** is a framework agnostic authentication library for Scala that supports several authentication methods, including OAuth1, OAuth2, OpenID, CAS, Credentials, Basic Authentication, Two Factor Authentication or custom authentication schemes.
 

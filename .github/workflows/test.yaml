@@ -1,4 +1,4 @@
-name: Build and Test
+name: Test
 
 on:
   push:
@@ -6,6 +6,7 @@ on:
 
 jobs:
   build:
+    name: Testing
     strategy:
       fail-fast: false
       matrix:
@@ -39,17 +40,3 @@ jobs:
         uses: codecov/codecov-action@v1
         with:
           fail_ci_if_error: true
-  lint:
-    name: Linting
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 1
-      - name: Formatting
-        shell: bash
-        run: sbt scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
-
-      - name: Styling
-        shell: bash
-        run: sbt scalastyle test:scalastyle
