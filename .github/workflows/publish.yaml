@@ -29,3 +29,6 @@ jobs:
       - name: Publish snapshot
         if: github.repository=='akkie/silhouette' && endsWith(env.PROJECT_VERSION, '-SNAPSHOT')
         run: sbt +publish
+        env:
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
