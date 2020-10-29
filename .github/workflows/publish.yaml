@@ -23,5 +23,5 @@ jobs:
           PROJECT_VERSION=$(echo "${OUTPUT//$'\n'/ }" | sed "s/.*PROJECT_VERSION \([^ ]*\).*$/\1/")
           echo "PROJECT_VERSION=$PROJECT_VERSION" >> $GITHUB_ENV
       - name: Publish snapshot
-        if: env.GITHUB_REPOSITORY == "akkie/silhouette" && endsWith(env.PROJECT_VERSION, '-SNAPSHOT')
+        if: env.GITHUB_REPOSITORY == 'akkie/silhouette' && endsWith(env.PROJECT_VERSION, '-SNAPSHOT')
         run: sbt +publish
