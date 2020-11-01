@@ -6,7 +6,8 @@ on:
       - master
 
 jobs:
-  lint:
+  publish:
+    if: ${{ github.repository == 'minutemen/silhouette' }}
     name: Publishing
     runs-on: ubuntu-latest
     steps:
@@ -23,7 +24,7 @@ jobs:
       - name: Echo github repository
         run: echo $GITHUB_REPOSITORY
       - name: Publish snapshot
-        if: github.repository=='minutemen/silhouette' && endsWith(env.PROJECT_VERSION, '-SNAPSHOT')
+        if: endsWith(env.PROJECT_VERSION, '-SNAPSHOT')
         run: sbt +publish
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
