@@ -22,7 +22,7 @@ import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
 import silhouette.crypto.Hash.md5
 import silhouette.util.GravatarService._
-import sttp.client._
+import sttp.client3._
 import sttp.model.Uri
 
 /**
@@ -35,7 +35,7 @@ import sttp.model.Uri
  */
 final case class GravatarService[F[_]] @Inject() (config: GravatarServiceConfig = GravatarServiceConfig())(
   implicit
-  val sttpBackend: SttpBackend[F, Nothing, Nothing],
+  val sttpBackend: SttpBackend[F, Any],
   protected val F: Async[F]
 ) extends AvatarService[F]
     with LazyLogging {
@@ -50,7 +50,7 @@ final case class GravatarService[F[_]] @Inject() (config: GravatarServiceConfig 
     hash(email) match {
       case Some(hash) =>
         val url = (if (config.secure) SecureURI else InsecureURI)(hash, config.params)
-        Async[F].map(basicRequest.get(url).send()) { response =>
+        Async[F].map(basicRequest.get(url).send(sttpBackend)) { response =>
           response.body match {
             case Left(error) =>
               logger.info(s"Gravatar API returns status `${response.code}` with error: $error")

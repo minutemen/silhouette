@@ -28,8 +28,8 @@ import silhouette.provider.UnexpectedResponseException
 import silhouette.provider.oauth2.Auth0Provider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
-import sttp.client.circe.asJson
-import sttp.client.{ basicRequest, SttpBackend }
+import sttp.client3.circe.asJson
+import sttp.client3.{ basicRequest, SttpBackend }
 import sttp.model.Uri._
 
 /**
@@ -72,11 +72,13 @@ trait BaseAuth0Provider[F[_]] extends OAuth2Provider[F] {
       .get(config.apiUri.getOrElse(DefaultApiUri))
       .header(BearerAuthorizationHeader(authInfo.accessToken))
       .response(asJson[Json])
-      .send()
+      .send(sttpBackend)
       .flatMap { response =>
         response.body match {
           case Left(error) =>
-            F.raiseError(new UnexpectedResponseException(UnexpectedResponse.format(id, error.body, response.code)))
+            F.raiseError(
+              new UnexpectedResponseException(UnexpectedResponse.format(id, error.getMessage, response.code))
+            )
           case Right(json) =>
             profileParser.parse(json, authInfo)
         }
@@ -138,7 +140,7 @@ class Auth0Provider[F[_]](
   val config: OAuth2Config
 )(
   implicit
-  protected val sttpBackend: SttpBackend[F, Nothing, Nothing],
+  protected val sttpBackend: SttpBackend[F, Any],
   protected val F: Async[F]
 ) extends BaseAuth0Provider[F]
     with CommonProfileBuilder[F] {

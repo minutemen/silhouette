@@ -29,8 +29,8 @@ import silhouette.provider.social.state.StateHandler
 import silhouette.provider.social.{ SocialStateProvider, StatefulAuthInfo }
 import silhouette.provider.{ AccessDeniedException, UnexpectedResponseException }
 import silhouette.{ AuthInfo, ConfigurationException }
-import sttp.client._
-import sttp.client.circe._
+import sttp.client3._
+import sttp.client3.circe._
 import sttp.model.{ Header, HeaderNames, StatusCode, Uri }
 
 import scala.util.{ Failure, Try }
@@ -139,7 +139,7 @@ trait OAuth2Provider[F[_]] extends SocialStateProvider[F, OAuth2Config] with OAu
   /**
    * The implicit STTP backend.
    */
-  implicit protected val sttpBackend: SttpBackend[F, Nothing, Nothing]
+  implicit protected val sttpBackend: SttpBackend[F, Any]
 
   /**
    * Starts the authentication process.
@@ -206,11 +206,13 @@ trait OAuth2Provider[F[_]] extends SocialStateProvider[F, OAuth2Config] with OAu
           .headers(refreshHeaders: _*)
           .body(params)
           .response(asJson[OAuth2Info])
-          .send()
+          .send(sttpBackend)
           .flatMap { response =>
             response.body match {
               case Left(error) =>
-                F.raiseError(new UnexpectedResponseException(UnexpectedResponse.format(id, error.body, response.code)))
+                F.raiseError(
+                  new UnexpectedResponseException(UnexpectedResponse.format(id, error.getMessage, response.code))
+                )
               case Right(info) =>
                 logger.debug("[%s] Access token response: [%s]".format(id, response))
                 F.pure(info)
@@ -313,11 +315,13 @@ trait OAuth2Provider[F[_]] extends SocialStateProvider[F, OAuth2Config] with OAu
       .headers(accessTokenHeaders: _*)
       .body(params)
       .response(asJson[OAuth2Info])
-      .send()
+      .send(sttpBackend)
       .flatMap { response =>
         response.body match {
           case Left(error) =>
-            F.raiseError(new UnexpectedResponseException(UnexpectedResponse.format(id, error.body, response.code)))
+            F.raiseError(
+              new UnexpectedResponseException(UnexpectedResponse.format(id, error.getMessage, response.code))
+            )
           case Right(info) =>
             logger.debug("[%s] Access token response: [%s]".format(id, response))
             F.pure(info)
@@ -351,7 +355,7 @@ object OAuth2Provider extends OAuth2Constants {
   val RefreshUriUndefined = "[%s] Refresh URI is undefined"
   val AuthorizationError = "[%s] Authorization server returned error: %s"
   val JsonPathError = "[%s] Cannot access json path `%s` in Json: %s"
-  val UnexpectedResponse = "[%s] Got unexpected response `%s`; status: %s"
+  val UnexpectedResponse = "[%s] Got unexpected response: %s; status: %s"
 }
 
 /**

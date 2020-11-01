@@ -33,9 +33,9 @@ import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
 import silhouette.provider.{ AccessDeniedException, UnexpectedResponseException }
 import silhouette.specs2.BaseFixture
-import sttp.client.Response
-import sttp.client.asynchttpclient.cats.AsyncHttpClientCatsBackend
-import sttp.client.testing.SttpBackendStub
+import sttp.client3.Response
+import sttp.client3.asynchttpclient.cats.AsyncHttpClientCatsBackend
+import sttp.client3.testing.SttpBackendStub
 import sttp.model.Uri._
 import sttp.model._
 
@@ -183,7 +183,11 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
         .thenRespond(Response("<html></html>", StatusCode.Ok))
 
       failed[UnexpectedResponseException](c.provider.authenticate(request)) { case e =>
-        e.getMessage must be equalTo UnexpectedResponse.format(c.provider.id, "<html></html>", StatusCode.Ok)
+        e.getMessage must be equalTo UnexpectedResponse.format(
+          c.provider.id,
+          "expected json value got '<html>...' (line 1, column 1)",
+          StatusCode.Ok
+        )
       }
     }
 
@@ -197,7 +201,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
       failed[UnexpectedResponseException](c.provider.authenticate(request)) { case e =>
         e.getMessage must be equalTo UnexpectedResponse.format(
           c.provider.id,
-          "Unauthorized",
+          "statusCode: 401, response: Unauthorized",
           StatusCode.Unauthorized
         )
       }
@@ -213,7 +217,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
       failed[UnexpectedResponseException](c.provider.authenticate(request)) { case e =>
         e.getMessage must be equalTo UnexpectedResponse.format(
           c.provider.id,
-          "{}",
+          "Attempt to decode value on failed cursor: DownField(access_token)",
           StatusCode.Ok
         )
       }
@@ -256,7 +260,11 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
             .thenRespond(Response("<html></html>", StatusCode.Ok))
 
           failed[UnexpectedResponseException](c.provider.refresh(refreshToken)) { case e =>
-            e.getMessage must be equalTo UnexpectedResponse.format(c.provider.id, "<html></html>", StatusCode.Ok)
+            e.getMessage must be equalTo UnexpectedResponse.format(
+              c.provider.id,
+              "expected json value got '<html>...' (line 1, column 1)",
+              StatusCode.Ok
+            )
           }: Result
       }
     }
@@ -274,7 +282,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
           failed[UnexpectedResponseException](c.provider.refresh(refreshToken)) { case e =>
             e.getMessage must be equalTo UnexpectedResponse.format(
               c.provider.id,
-              "Unauthorized",
+              "statusCode: 401, response: Unauthorized",
               StatusCode.Unauthorized
             )
           }: Result
@@ -294,7 +302,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
           failed[UnexpectedResponseException](c.provider.refresh(refreshToken)) { case e =>
             e.getMessage must be equalTo UnexpectedResponse.format(
               c.provider.id,
-              "{}",
+              "Attempt to decode value on failed cursor: DownField(access_token)",
               StatusCode.Ok
             )
           }: Result
@@ -408,7 +416,7 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
     /**
      * The STTP backend.
      */
-    implicit var sttpBackend: SttpBackendStub[IO, Nothing] = AsyncHttpClientCatsBackend.stub
+    implicit var sttpBackend: SttpBackendStub[IO, Any] = AsyncHttpClientCatsBackend.stub
 
     /**
      * A OAuth2 info as JSON.

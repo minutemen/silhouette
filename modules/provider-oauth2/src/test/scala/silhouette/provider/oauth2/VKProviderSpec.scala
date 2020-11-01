@@ -27,8 +27,8 @@ import silhouette.provider.oauth2.VKProvider.{ infoDecoder, DefaultApiUri }
 import silhouette.provider.social.SocialProvider.ProfileError
 import silhouette.provider.social.{ CommonSocialProfile, ProfileRetrievalException }
 import silhouette.specs2.BaseFixture
-import sttp.client.asynchttpclient.cats.AsyncHttpClientCatsBackend
-import sttp.client.{ Request, Response, SttpClientException }
+import sttp.client3.asynchttpclient.cats.AsyncHttpClientCatsBackend
+import sttp.client3.{ HttpError, Request, Response }
 import sttp.model.Uri._
 import sttp.model.{ Method, StatusCode, Uri }
 
@@ -42,7 +42,7 @@ class VKProviderSpec extends OAuth2ProviderSpec {
       val apiResult = ErrorJson.asJson
 
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiUri.param("access_token", oAuth2Info.accessToken)))
+        .whenRequestMatches(requestMatcher(DefaultApiUri.withParam("access_token", oAuth2Info.accessToken)))
         .thenRespond(Response(apiResult.toString, StatusCode.BadRequest))
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) { case e =>
@@ -50,7 +50,7 @@ class VKProviderSpec extends OAuth2ProviderSpec {
         e.getCause.getMessage must equalTo(
           UnexpectedResponse.format(
             provider.id,
-            apiResult,
+            HttpError(apiResult, StatusCode.BadRequest).getMessage,
             StatusCode.BadRequest
           )
         )
@@ -59,8 +59,8 @@ class VKProviderSpec extends OAuth2ProviderSpec {
 
     "fail with ProfileRetrievalException if an unexpected error occurred" in new Context {
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiUri.param("access_token", oAuth2Info.accessToken)))
-        .thenRespond(throw new SttpClientException.ConnectException(new RuntimeException))
+        .whenRequestMatches(requestMatcher(DefaultApiUri.withParam("access_token", oAuth2Info.accessToken)))
+        .thenRespond(throw new RuntimeException)
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) { case e =>
         e.getMessage must equalTo(ProfileError.format(provider.id))
@@ -68,12 +68,12 @@ class VKProviderSpec extends OAuth2ProviderSpec {
     }
 
     "use the overridden API URI" in new Context {
-      val uri = DefaultApiUri.param("new", "true")
+      val uri = DefaultApiUri.withParam("new", "true")
       val apiResult = UserProfileJson.asJson
 
       config.apiUri returns Some(uri)
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(uri.param("access_token", oAuth2Info.accessToken)))
+        .whenRequestMatches(requestMatcher(uri.withParam("access_token", oAuth2Info.accessToken)))
         .thenRespond(Response(apiResult.toString, StatusCode.Ok))
 
       provider.retrieveProfile(oAuth2Info).unsafeRunSync()
@@ -81,7 +81,7 @@ class VKProviderSpec extends OAuth2ProviderSpec {
 
     "return the social profile" in new Context {
       sttpBackend = AsyncHttpClientCatsBackend.stub
-        .whenRequestMatches(requestMatcher(DefaultApiUri.param("access_token", oAuth2Info.accessToken)))
+        .whenRequestMatches(requestMatcher(DefaultApiUri.withParam("access_token", oAuth2Info.accessToken)))
         .thenRespond(Response(UserProfileJson.asJson.toString, StatusCode.Ok))
 
       profile(provider.retrieveProfile(oAuth2Info)) { p =>

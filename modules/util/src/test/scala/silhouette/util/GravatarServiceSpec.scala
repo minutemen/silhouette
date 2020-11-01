@@ -23,8 +23,8 @@ import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.util.GravatarService._
-import sttp.client.asynchttpclient.cats.AsyncHttpClientCatsBackend
-import sttp.client.testing.SttpBackendStub
+import sttp.client3.asynchttpclient.cats.AsyncHttpClientCatsBackend
+import sttp.client3.testing.SttpBackendStub
 
 import scala.concurrent.ExecutionContext
 
@@ -40,14 +40,14 @@ class GravatarServiceSpec extends Specification with Mockito {
     }
 
     "return None if HTTP status code isn't 200" in new Context {
-      override val sttpBackend: SttpBackendStub[IO, Nothing] =
+      override val sttpBackend: SttpBackendStub[IO, Any] =
         AsyncHttpClientCatsBackend.stub.whenAnyRequest.thenRespondNotFound
 
       service.retrieveUri(email).unsafeRunSync() should beNone
     }
 
     "return secure Avatar URI" in new Context {
-      override val sttpBackend: SttpBackendStub[IO, Nothing] =
+      override val sttpBackend: SttpBackendStub[IO, Any] =
         AsyncHttpClientCatsBackend.stub.whenAnyRequest.thenRespondOk()
 
       service.retrieveUri(email).unsafeRunSync() should beSome(SecureURI(hash, Map("d" -> "404")))
@@ -55,7 +55,7 @@ class GravatarServiceSpec extends Specification with Mockito {
 
     "return insecure Avatar URI" in new Context {
       config.secure returns false
-      override val sttpBackend: SttpBackendStub[IO, Nothing] =
+      override val sttpBackend: SttpBackendStub[IO, Any] =
         AsyncHttpClientCatsBackend.stub.whenAnyRequest.thenRespondOk()
 
       service.retrieveUri(email).unsafeRunSync() should beSome(InsecureURI(hash, Map("d" -> "404")))
@@ -63,7 +63,7 @@ class GravatarServiceSpec extends Specification with Mockito {
 
     "return an URI with additional parameters" in new Context {
       config.params returns Map("d" -> "https://api.adorable.io/avatars/400/abott@adorable.io.png", "s" -> "400")
-      override val sttpBackend: SttpBackendStub[IO, Nothing] =
+      override val sttpBackend: SttpBackendStub[IO, Any] =
         AsyncHttpClientCatsBackend.stub.whenAnyRequest.thenRespondOk()
 
       service.retrieveUri(email).map(_.toString()).unsafeRunSync() should beSome(
@@ -73,7 +73,7 @@ class GravatarServiceSpec extends Specification with Mockito {
     }
 
     "not trim leading zeros" in new Context {
-      override val sttpBackend: SttpBackendStub[IO, Nothing] =
+      override val sttpBackend: SttpBackendStub[IO, Any] =
         AsyncHttpClientCatsBackend.stub.whenAnyRequest.thenRespondOk()
 
       service.retrieveUri("123test@test.com").unsafeRunSync() should beSome(
@@ -90,7 +90,7 @@ class GravatarServiceSpec extends Specification with Mockito {
     /**
      * The STTP backend.
      */
-    val sttpBackend: SttpBackendStub[IO, Nothing] = AsyncHttpClientCatsBackend.stub
+    val sttpBackend: SttpBackendStub[IO, Any] = AsyncHttpClientCatsBackend.stub
 
     /**
      * The Gravatar service config.

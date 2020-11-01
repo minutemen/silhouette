@@ -23,7 +23,7 @@ object Dependencies {
     val specs2 = "4.10.5"
     val circe = "0.13.0"
     val cats = "2.2.0"
-    val sttp = "2.1.5"
+    val sttp = "3.0.0-RC7"
     val silencer = "1.7.1"
   }
 
@@ -48,9 +48,9 @@ object Dependencies {
     }
 
     object Sttp {
-      val core = "com.softwaremill.sttp.client" %% "core" % Version.sttp
-      val circe = "com.softwaremill.sttp.client" %% "circe" % Version.sttp
-      val cats = "com.softwaremill.sttp.client" %% "async-http-client-backend-cats" % Version.sttp
+      val core = "com.softwaremill.sttp.client3" %% "core" % Version.sttp
+      val circe = "com.softwaremill.sttp.client3" %% "circe" % Version.sttp
+      val cats = "com.softwaremill.sttp.client3" %% "async-http-client-backend-cats" % Version.sttp
     }
 
     object Silencer {
