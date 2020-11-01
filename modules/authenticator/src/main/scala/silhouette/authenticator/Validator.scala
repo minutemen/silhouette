@@ -31,14 +31,14 @@ trait Validator[F[_]] {
    * Checks if the authenticator is valid.
    *
    * @param authenticator The authenticator to validate.
-   * @return [[cats.data.Validated]] if the authenticator is valid or invalid.
+   * @return The validation result.
    */
-  def isValid(authenticator: Authenticator): F[Status]
+  def isValid(authenticator: Authenticator): F[Result]
 }
 
 /**
  * The companion object.
  */
 object Validator {
-  type Status = ValidatedNel[String, Unit]
+  type Result = ValidatedNel[String, Unit]
 }
