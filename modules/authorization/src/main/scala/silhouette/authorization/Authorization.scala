@@ -18,7 +18,7 @@
 package silhouette.authorization
 
 import cats.effect.Async
-import cats.implicits._
+import cats.syntax.all._
 import silhouette.Identity
 
 /**

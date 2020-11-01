@@ -18,7 +18,7 @@
 package silhouette.provider.social
 
 import cats.effect.Async
-import cats.implicits._
+import cats.syntax.all._
 import silhouette.AuthInfo
 import silhouette.http.{ RequestPipeline, ResponsePipeline, SilhouetteResponse }
 import silhouette.provider.Provider
