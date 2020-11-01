@@ -85,12 +85,11 @@ final protected[silhouette] case class SilhouetteResponsePipeline(protected val 
    */
   override def withCookies(cookies: CookieWithMeta*): SilhouetteResponsePipeline = {
     val filteredCookies = cookies.groupByPreserveOrder(_.name).map(_._2.last)
-    val newCookies = filteredCookies.foldLeft(this.cookies) {
-      case (acc, cookie) =>
-        acc.indexWhere(_.name == cookie.name) match {
-          case -1 => acc :+ cookie
-          case i  => acc.patch(i, Seq(cookie), 1)
-        }
+    val newCookies = filteredCookies.foldLeft(this.cookies) { case (acc, cookie) =>
+      acc.indexWhere(_.name == cookie.name) match {
+        case -1 => acc :+ cookie
+        case i  => acc.patch(i, Seq(cookie), 1)
+      }
     }
 
     copy(response.copy(cookies = newCookies))

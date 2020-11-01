@@ -94,18 +94,17 @@ final case class SimpleJose4jConsumer(
    *
    * @return The builder pipeline.
    */
-  private def jwsBuilder: BuilderPipeline = {
-    case builder =>
-      jwsConfiguration match {
-        case JwsHmacConfiguration(_, key) =>
-          builder.setVerificationKey(key)
-        case JwsRsaConfiguration(_, publicKey, _) =>
-          builder.setVerificationKey(publicKey)
-        case JwsEcConfiguration(_, publicKey, _) =>
-          builder.setVerificationKey(publicKey)
-        case JwsRsaPssConfiguration(_, publicKey, _) =>
-          builder.setVerificationKey(publicKey)
-      }
+  private def jwsBuilder: BuilderPipeline = { case builder =>
+    jwsConfiguration match {
+      case JwsHmacConfiguration(_, key) =>
+        builder.setVerificationKey(key)
+      case JwsRsaConfiguration(_, publicKey, _) =>
+        builder.setVerificationKey(publicKey)
+      case JwsEcConfiguration(_, publicKey, _) =>
+        builder.setVerificationKey(publicKey)
+      case JwsRsaPssConfiguration(_, publicKey, _) =>
+        builder.setVerificationKey(publicKey)
+    }
   }
 
   /**
@@ -163,9 +162,8 @@ final case class SimpleJose4jConsumer(
    *
    * @return The builder pipeline.
    */
-  private def expectedIssuerBuilder: BuilderPipeline = {
-    case builder =>
-      expectedIssuer.map(issuer => builder.setExpectedIssuer(issuer)).getOrElse(builder)
+  private def expectedIssuerBuilder: BuilderPipeline = { case builder =>
+    expectedIssuer.map(issuer => builder.setExpectedIssuer(issuer)).getOrElse(builder)
   }
 
   /**
@@ -173,8 +171,7 @@ final case class SimpleJose4jConsumer(
    *
    * @return The builder pipeline.
    */
-  private def expectedAudienceBuilder: BuilderPipeline = {
-    case builder =>
-      expectedAudience.map(audience => builder.setExpectedAudience(audience: _*)).getOrElse(builder)
+  private def expectedAudienceBuilder: BuilderPipeline = { case builder =>
+    expectedAudience.map(audience => builder.setExpectedAudience(audience: _*)).getOrElse(builder)
   }
 }

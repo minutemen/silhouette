@@ -47,28 +47,25 @@ class CookieTransportSpec extends Specification {
 
   "The `smuggle` method" should {
     "smuggle a cookie into the request" in new Context {
-      transport.smuggle("payload", requestPipeline).cookie("test") must beSome[CookieWithMeta].like {
-        case cookie =>
-          cookie.value must be equalTo "payload"
+      transport.smuggle("payload", requestPipeline).cookie("test") must beSome[CookieWithMeta].like { case cookie =>
+        cookie.value must be equalTo "payload"
       }
     }
   }
 
   "The `embed` method" should {
     "embed a cookie into the response" in new Context {
-      transport.embed("payload", responsePipeline).cookie("test") must beSome[CookieWithMeta].like {
-        case cookie =>
-          cookie.value must be equalTo "payload"
+      transport.embed("payload", responsePipeline).cookie("test") must beSome[CookieWithMeta].like { case cookie =>
+        cookie.value must be equalTo "payload"
       }
     }
   }
 
   "The `discard` method" should {
     "discard a cookie" in new Context {
-      transport.discard(responsePipeline).cookie("test") must beSome[CookieWithMeta].like {
-        case cookie =>
-          cookie.value must be equalTo ""
-          cookie.maxAge must beSome(-86400)
+      transport.discard(responsePipeline).cookie("test") must beSome[CookieWithMeta].like { case cookie =>
+        cookie.value must be equalTo ""
+        cookie.maxAge must beSome(-86400)
       }
     }
   }
@@ -88,9 +85,8 @@ class CookieTransportSpec extends Specification {
   "The `SmuggleIntoCookie` writes" should {
     "smuggle a cookie into the request" in new Context {
       SmuggleIntoCookie(config)(requestPipeline)("payload")
-        .cookie("test") must beSome[CookieWithMeta].like {
-        case cookie =>
-          cookie.value must be equalTo "payload"
+        .cookie("test") must beSome[CookieWithMeta].like { case cookie =>
+        cookie.value must be equalTo "payload"
       }
     }
   }
@@ -98,9 +94,8 @@ class CookieTransportSpec extends Specification {
   "The `EmbedIntoCookie` writes" should {
     "embed a cookie into the response" in new Context {
       EmbedIntoCookie(config)(responsePipeline)("payload")
-        .cookie("test") must beSome[CookieWithMeta].like {
-        case cookie =>
-          cookie.value must be equalTo "payload"
+        .cookie("test") must beSome[CookieWithMeta].like { case cookie =>
+        cookie.value must be equalTo "payload"
       }
     }
   }
@@ -108,10 +103,9 @@ class CookieTransportSpec extends Specification {
   "The `DiscardCookie` writes" should {
     "discard a cookie" in new Context {
       DiscardCookie(config)(responsePipeline)
-        .cookie("test") must beSome[CookieWithMeta].like {
-        case cookie =>
-          cookie.value must be equalTo ""
-          cookie.maxAge must beSome(-86400)
+        .cookie("test") must beSome[CookieWithMeta].like { case cookie =>
+        cookie.value must be equalTo ""
+        cookie.maxAge must beSome(-86400)
       }
     }
   }

@@ -71,47 +71,40 @@ class DefaultBodyFormatSpec extends Specification {
     }
 
     "return a Failure on invalid json" in new Context {
-      invalidJsonBody.as[Json].toEither must beLeft[Throwable].like {
-        case e =>
-          e must beAnInstanceOf[TransformException]
+      invalidJsonBody.as[Json].toEither must beLeft[Throwable].like { case e =>
+        e must beAnInstanceOf[TransformException]
       }
     }
 
     "return a Failure on invalid xml" in new Context {
-      invalidJsonBody.as[Node].toEither must beLeft[Throwable].like {
-        case e =>
-          e must beAnInstanceOf[TransformException]
+      invalidJsonBody.as[Node].toEither must beLeft[Throwable].like { case e =>
+        e must beAnInstanceOf[TransformException]
       }
     }
 
     "return a Failure on unsupported content type" in new Context {
-      validXmlBody.as[String] must beFailedTry.like {
-        case e: UnsupportedContentTypeException =>
-          e.getMessage must be equalTo errorMsg(MediaType.TextPlain, XmlBody.contentType)
+      validXmlBody.as[String] must beFailedTry.like { case e: UnsupportedContentTypeException =>
+        e.getMessage must be equalTo errorMsg(MediaType.TextPlain, XmlBody.contentType)
       }
-      validXmlBody.as[Map[String, Seq[String]]] must beFailedTry.like {
-        case e: UnsupportedContentTypeException =>
-          e.getMessage must be equalTo errorMsg(
-            MediaType.ApplicationXWwwFormUrlencoded,
-            MediaType.ApplicationXml
-          )
+      validXmlBody.as[Map[String, Seq[String]]] must beFailedTry.like { case e: UnsupportedContentTypeException =>
+        e.getMessage must be equalTo errorMsg(
+          MediaType.ApplicationXWwwFormUrlencoded,
+          MediaType.ApplicationXml
+        )
       }
-      validXmlBody.as[Json] must beFailedTry.like {
-        case e: UnsupportedContentTypeException =>
-          e.getMessage must be equalTo errorMsg(JsonBody.allowedTypes, MediaType.ApplicationXml)
+      validXmlBody.as[Json] must beFailedTry.like { case e: UnsupportedContentTypeException =>
+        e.getMessage must be equalTo errorMsg(JsonBody.allowedTypes, MediaType.ApplicationXml)
       }
-      validJsonBody.as[Node] must beFailedTry.like {
-        case e: UnsupportedContentTypeException =>
-          e.getMessage must be equalTo errorMsg(XmlBody.allowedTypes, MediaType.ApplicationJson)
+      validJsonBody.as[Node] must beFailedTry.like { case e: UnsupportedContentTypeException =>
+        e.getMessage must be equalTo errorMsg(XmlBody.allowedTypes, MediaType.ApplicationJson)
       }
     }
   }
 
   "The `BodyReads.stringReads.reads` method" should {
     "throw an `UnsupportedContentTypeException` if the content type isn't of type `text/plain`" in new Context {
-      BodyReader.stringReads(validXmlBody) must beFailedTry.like {
-        case e: UnsupportedContentTypeException =>
-          e.getMessage must be equalTo errorMsg(MediaType.TextPlain, MediaType.ApplicationXml)
+      BodyReader.stringReads(validXmlBody) must beFailedTry.like { case e: UnsupportedContentTypeException =>
+        e.getMessage must be equalTo errorMsg(MediaType.TextPlain, MediaType.ApplicationXml)
       }
     }
 
@@ -133,14 +126,13 @@ class DefaultBodyFormatSpec extends Specification {
   "The `BodyReads.formUrlEncodedReads.read` method" should {
     "throw an `UnsupportedContentTypeException` if the content type isn't of type " +
       "`application/x-www-form-urlencoded`" in new Context {
-      BodyReader.formUrlEncodedReads(validXmlBody) must beFailedTry.like {
-        case e: UnsupportedContentTypeException =>
+        BodyReader.formUrlEncodedReads(validXmlBody) must beFailedTry.like { case e: UnsupportedContentTypeException =>
           e.getMessage must be equalTo errorMsg(
             MediaType.ApplicationXWwwFormUrlencoded,
             MediaType.ApplicationXml
           )
+        }
       }
-    }
 
     "return a Map[String, Seq[String]] from a valid form URL encoded body" in new Context {
       BodyReader.formUrlEncodedReads(validFormUrlEncodedBody) must beSuccessfulTry
@@ -165,9 +157,8 @@ class DefaultBodyFormatSpec extends Specification {
 
   "The `BodyReads.circeJsonReads.read` method" should {
     "throw an `UnsupportedContentTypeException` if the content type isn't of type `application/json`" in new Context {
-      BodyReader.circeJsonReads(validXmlBody) must beFailedTry.like {
-        case e: UnsupportedContentTypeException =>
-          e.getMessage must be equalTo errorMsg(JsonBody.allowedTypes, MediaType.ApplicationXml)
+      BodyReader.circeJsonReads(validXmlBody) must beFailedTry.like { case e: UnsupportedContentTypeException =>
+        e.getMessage must be equalTo errorMsg(JsonBody.allowedTypes, MediaType.ApplicationXml)
       }
     }
 
@@ -196,9 +187,8 @@ class DefaultBodyFormatSpec extends Specification {
 
   "The `BodyReads.scalaXmlReads.read` method" should {
     "throw an `UnsupportedContentTypeException` if the content type isn't of type `application/xml`" in new Context {
-      BodyReader.scalaXmlReads(validJsonBody) must beFailedTry.like {
-        case e: UnsupportedContentTypeException =>
-          e.getMessage must be equalTo errorMsg(XmlBody.allowedTypes, MediaType.ApplicationJson)
+      BodyReader.scalaXmlReads(validJsonBody) must beFailedTry.like { case e: UnsupportedContentTypeException =>
+        e.getMessage must be equalTo errorMsg(XmlBody.allowedTypes, MediaType.ApplicationJson)
       }
     }
 
