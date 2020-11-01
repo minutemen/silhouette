@@ -154,7 +154,6 @@ final case class Authenticator(
    * @return True if the authenticator is valid, false otherwise.
    */
   def isValid[F[_]: Async](validators: Set[Validator[F]]): F[Status] = {
-    import cats.instances.list._
     import cats.syntax.foldable._
     import cats.syntax.traverse._
     Async[F].map(validators.map(_.isValid(this)).toList.sequence)(_.sequence_)

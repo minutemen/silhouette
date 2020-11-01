@@ -267,8 +267,8 @@ private[silhouette] trait DefaultBodyReader {
    */
   implicit val scalaXmlReads: BodyReader[XmlBody.Type] = {
     case XmlBody(codec, bytes) =>
-      Try(XML.loadString(new String(bytes.toArray, codec.charSet))).recoverWith {
-        case e: SAXParseException => Failure(new TransformException(e.getMessage, Option(e)))
+      Try(XML.loadString(new String(bytes.toArray, codec.charSet))).recoverWith { case e: SAXParseException =>
+        Failure(new TransformException(e.getMessage, Option(e)))
       }
     case Body(ct, _, _) =>
       Failure(

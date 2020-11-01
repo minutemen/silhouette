@@ -61,9 +61,8 @@ final case class Jose4jClaimWriter(producer: Jose4jProducer) extends JwtClaimWri
     claims.issuedAt.foreach(v => result.setIssuedAt(NumericDate.fromSeconds(v.getEpochSecond)))
     claims.jwtID.foreach(result.setJwtId)
 
-    val (reservedClaims, customClaims) = transformCustomClaims(claims.custom).asScala.partition {
-      case (k, _) =>
-        silhouette.jwt.ReservedClaims.contains(k)
+    val (reservedClaims, customClaims) = transformCustomClaims(claims.custom).asScala.partition { case (k, _) =>
+      silhouette.jwt.ReservedClaims.contains(k)
     }
 
     reservedClaims.headOption match {

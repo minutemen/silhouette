@@ -20,7 +20,7 @@ package silhouette.provider.oauth2
 import java.time.Clock
 
 import cats.effect.Async
-import cats.implicits._
+import cats.syntax.all._
 import io.circe.Json
 import silhouette.LoginInfo
 import silhouette.http.BearerAuthorizationHeader

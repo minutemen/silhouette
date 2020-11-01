@@ -34,9 +34,8 @@ class SatReaderSpec extends Specification with Mockito {
     "throw an `AuthenticatorException` if no authenticator couldn't be found for the given token" in new Context {
       override val satReader = SatReader[IO](_ => IO.pure(None))
 
-      satReader("some.token").unsafeRunSync() must throwA[AuthenticatorException].like {
-        case e =>
-          e.getMessage must be equalTo MissingAuthenticator.format("some.token")
+      satReader("some.token").unsafeRunSync() must throwA[AuthenticatorException].like { case e =>
+        e.getMessage must be equalTo MissingAuthenticator.format("some.token")
       }
     }
 

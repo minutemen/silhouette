@@ -46,9 +46,8 @@ class BasicAuthProviderSpec extends PasswordProviderSpec with Mockito {
 
       there was one(authStateHandler).apply(authStateCaptor)
 
-      authStateCaptor.value must beLike[AuthState[User, BasicCredentials]] {
-        case AuthFailure(e) =>
-          e.getMessage must be equalTo HasherIsNotRegistered.format(provider.id, "unknown", "foo, bar")
+      authStateCaptor.value must beLike[AuthState[User, BasicCredentials]] { case AuthFailure(e) =>
+        e.getMessage must be equalTo HasherIsNotRegistered.format(provider.id, "unknown", "foo, bar")
       }
     }
 
