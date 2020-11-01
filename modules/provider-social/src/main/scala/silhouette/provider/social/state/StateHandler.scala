@@ -21,7 +21,7 @@ import java.time.Clock
 
 import cats.data.{ NonEmptyList => NEL }
 import cats.effect.Async
-import cats.implicits._
+import cats.syntax.all._
 import io.circe.{ Json, JsonObject }
 import javax.inject.Inject
 import silhouette.RichInstant._

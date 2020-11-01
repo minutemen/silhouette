@@ -20,7 +20,7 @@ package silhouette.provider.oauth2
 import java.net.URLEncoder._
 import java.time.{ Clock, Instant }
 
-import cats.implicits._
+import cats.syntax.all._
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.{ Decoder, HCursor, Json }
 import silhouette.http._
