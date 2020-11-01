@@ -71,11 +71,10 @@ class BCryptPasswordHasher(logRounds: Int = 10) extends PasswordHasher {
    *         suitable for the given password, this method should return None.
    */
   override def isDeprecated(passwordInfo: PasswordInfo): Option[Boolean] =
-    Option(isSuitable(passwordInfo)).collect {
-      case true =>
-        val LogRoundsPattern(lr) = passwordInfo.password
-        // Is deprecated if the log rounds has changed
-        lr != logRounds.toString
+    Option(isSuitable(passwordInfo)).collect { case true =>
+      val LogRoundsPattern(lr) = passwordInfo.password
+      // Is deprecated if the log rounds has changed
+      lr != logRounds.toString
     }
 }
 

@@ -20,7 +20,7 @@ package silhouette.provider.social.state.handler
 import java.time.Clock
 
 import cats.effect.Async
-import cats.implicits._
+import cats.syntax.all._
 import io.circe.syntax._
 import io.circe.{ Decoder, Encoder, HCursor, Json }
 import javax.inject.Inject

@@ -19,7 +19,7 @@ package silhouette.jwt.jose4j
 
 import java.time.Instant
 
-import cats.implicits._
+import cats.syntax.all._
 import io.circe.{ Json, JsonObject }
 import org.jose4j.jwt.JwtClaims
 import silhouette.jwt.jose4j.Jose4jClaimReader._

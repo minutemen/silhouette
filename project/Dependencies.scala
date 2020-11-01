@@ -20,11 +20,11 @@ import sbt._
 object Dependencies {
 
   object Version {
-    val specs2 = "4.6.0"
+    val specs2 = "4.10.5"
     val circe = "0.13.0"
-    val cats = "2.1.1"
-    val sttp = "2.1.5"
-    val silencer = "1.7.0"
+    val cats = "2.2.0"
+    val sttp = "2.1.0-RC1"
+    val silencer = "1.7.1"
   }
 
   val resolvers = Seq()
@@ -58,14 +58,14 @@ object Dependencies {
       val lib = ("com.github.ghik" % "silencer-lib" % Version.silencer % Provided).cross(CrossVersion.full)
     }
 
-    val jbcrypt = "org.mindrot" % "jbcrypt" % "0.3m"
+    val jbcrypt = "org.mindrot" % "jbcrypt" % "0.4"
     val slf4jApi = "org.slf4j" % "slf4j-api" % "1.7.13"
     val inject = "javax.inject" % "javax.inject" % "1"
-    val commonCodec = "commons-codec" % "commons-codec" % "1.10"
+    val commonCodec = "commons-codec" % "commons-codec" % "1.15"
     val jose4j = "org.bitbucket.b_c" % "jose4j" % "0.7.2"
     val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15on" % "1.66"
     val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.2.0"
-    val collectionCombat = "org.scala-lang.modules" %% "scala-collection-compat" % "2.1.6"
+    val collectionCombat = "org.scala-lang.modules" %% "scala-collection-compat" % "2.2.0"
     val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
     val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
   }

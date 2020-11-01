@@ -57,9 +57,8 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
 
       authenticatorReader(token) returns IO.raiseError(exception)
 
-      pipeline(request).unsafeRunSync() must beLike[AuthState[User, Authenticator]] {
-        case AuthFailure(e) =>
-          e.getMessage must be equalTo exception.getMessage
+      pipeline(request).unsafeRunSync() must beLike[AuthState[User, Authenticator]] { case AuthFailure(e) =>
+        e.getMessage must be equalTo exception.getMessage
       }
     }
 
@@ -80,9 +79,8 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
       authenticatorReader(token) returns IO.pure(authenticator)
       validator.isValid(authenticator) returns IO.raiseError(exception)
 
-      pipeline(request).unsafeRunSync() must beLike[AuthState[User, Authenticator]] {
-        case AuthFailure(e) =>
-          e.getMessage must be equalTo exception.getMessage
+      pipeline(request).unsafeRunSync() must beLike[AuthState[User, Authenticator]] { case AuthFailure(e) =>
+        e.getMessage must be equalTo exception.getMessage
       }
     }
 
@@ -104,9 +102,8 @@ class AuthenticationPipelineSpec extends Specification with Mockito {
       validator.isValid(authenticator) returns IO.pure(validNel(()))
       identityReader.apply(authenticator) returns IO.raiseError(exception)
 
-      pipeline(request).unsafeRunSync() must beLike[AuthState[User, Authenticator]] {
-        case AuthFailure(e) =>
-          e.getMessage must be equalTo exception.getMessage
+      pipeline(request).unsafeRunSync() must beLike[AuthState[User, Authenticator]] { case AuthFailure(e) =>
+        e.getMessage must be equalTo exception.getMessage
       }
     }
 

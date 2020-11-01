@@ -61,9 +61,8 @@ class AuthenticatorProviderSpec extends Specification with Mockito {
 
       there was one(authStateHandler).apply(authStateCaptor)
 
-      authStateCaptor.value must beLike[AuthState[User, Authenticator]] {
-        case AuthFailure(e) =>
-          e.getMessage must be equalTo exception.getMessage
+      authStateCaptor.value must beLike[AuthState[User, Authenticator]] { case AuthFailure(e) =>
+        e.getMessage must be equalTo exception.getMessage
       }
     }
 
@@ -96,9 +95,8 @@ class AuthenticatorProviderSpec extends Specification with Mockito {
 
       there was one(authStateHandler).apply(authStateCaptor)
 
-      authStateCaptor.value must beLike[AuthState[User, Authenticator]] {
-        case AuthFailure(e) =>
-          e.getMessage must be equalTo exception.getMessage
+      authStateCaptor.value must beLike[AuthState[User, Authenticator]] { case AuthFailure(e) =>
+        e.getMessage must be equalTo exception.getMessage
       }
     }
 
@@ -132,9 +130,8 @@ class AuthenticatorProviderSpec extends Specification with Mockito {
 
       there was one(authStateHandler).apply(authStateCaptor)
 
-      authStateCaptor.value must beLike[AuthState[User, Authenticator]] {
-        case AuthFailure(e) =>
-          e.getMessage must be equalTo exception.getMessage
+      authStateCaptor.value must beLike[AuthState[User, Authenticator]] { case AuthFailure(e) =>
+        e.getMessage must be equalTo exception.getMessage
       }
     }
 

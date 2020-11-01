@@ -55,15 +55,15 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
     implicit val c: BaseContext = context
     "fail with an AccessDeniedException if `error` key with value `access_denied` exists in query string" in {
       val request = Fake.request.withQueryParams(Error -> AccessDenied)
-      failed[AccessDeniedException](c.provider.authenticate(request)) {
-        case e => e.getMessage must be equalTo AuthorizationError.format(c.provider.id, "access_denied")
+      failed[AccessDeniedException](c.provider.authenticate(request)) { case e =>
+        e.getMessage must be equalTo AuthorizationError.format(c.provider.id, "access_denied")
       }
     }
 
     "fail with an UnexpectedResponseException if `error` key with unspecified value exists in query string" in {
       val request = Fake.request.withQueryParams(Error -> "unspecified")
-      failed[UnexpectedResponseException](c.provider.authenticate(request)) {
-        case e => e.getMessage must be equalTo AuthorizationError.format(c.provider.id, "unspecified")
+      failed[UnexpectedResponseException](c.provider.authenticate(request)) { case e =>
+        e.getMessage must be equalTo AuthorizationError.format(c.provider.id, "unspecified")
       }
     }
 
@@ -74,8 +74,8 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
         case Some(_) =>
           c.config.authorizationUri returns None
 
-          failed[ConfigurationException](c.provider.authenticate(Fake.request)) {
-            case e => e.getMessage must be equalTo AuthorizationUriUndefined.format(c.provider.id)
+          failed[ConfigurationException](c.provider.authenticate(Fake.request)) { case e =>
+            e.getMessage must be equalTo AuthorizationUriUndefined.format(c.provider.id)
           }: Result
       }
     }
@@ -168,9 +168,8 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
           skipped("authorizationURI is not defined, so this step isn't needed for provider: " + c.provider.getClass)
         case Some(_) =>
           result(c.provider.authenticate(Fake.request))(result =>
-            result.unsafeRunSync().header(HeaderNames.Location) must beSome[Header].like {
-              case header =>
-                header.value must not contain OAuth2Provider.State
+            result.unsafeRunSync().header(HeaderNames.Location) must beSome[Header].like { case header =>
+              header.value must not contain OAuth2Provider.State
             }
           ): Result
       }
@@ -183,9 +182,8 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
       c.sttpBackend = AsyncHttpClientCatsBackend.stub.whenAnyRequest
         .thenRespond(Response("<html></html>", StatusCode.Ok))
 
-      failed[UnexpectedResponseException](c.provider.authenticate(request)) {
-        case e =>
-          e.getMessage must be equalTo UnexpectedResponse.format(c.provider.id, "<html></html>", StatusCode.Ok)
+      failed[UnexpectedResponseException](c.provider.authenticate(request)) { case e =>
+        e.getMessage must be equalTo UnexpectedResponse.format(c.provider.id, "<html></html>", StatusCode.Ok)
       }
     }
 
@@ -196,13 +194,12 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
       c.sttpBackend = AsyncHttpClientCatsBackend.stub.whenAnyRequest
         .thenRespond(Response("Unauthorized", StatusCode.Unauthorized))
 
-      failed[UnexpectedResponseException](c.provider.authenticate(request)) {
-        case e =>
-          e.getMessage must be equalTo UnexpectedResponse.format(
-            c.provider.id,
-            "Unauthorized",
-            StatusCode.Unauthorized
-          )
+      failed[UnexpectedResponseException](c.provider.authenticate(request)) { case e =>
+        e.getMessage must be equalTo UnexpectedResponse.format(
+          c.provider.id,
+          "Unauthorized",
+          StatusCode.Unauthorized
+        )
       }
     }
 
@@ -213,13 +210,12 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
       c.sttpBackend = AsyncHttpClientCatsBackend.stub.whenAnyRequest
         .thenRespond(Response(Json.obj().noSpaces, StatusCode.Ok))
 
-      failed[UnexpectedResponseException](c.provider.authenticate(request)) {
-        case e =>
-          e.getMessage must be equalTo UnexpectedResponse.format(
-            c.provider.id,
-            "{}",
-            StatusCode.Ok
-          )
+      failed[UnexpectedResponseException](c.provider.authenticate(request)) { case e =>
+        e.getMessage must be equalTo UnexpectedResponse.format(
+          c.provider.id,
+          "{}",
+          StatusCode.Ok
+        )
       }
     }
 
@@ -243,8 +239,8 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
         case Some(_) =>
           c.config.refreshUri returns None
 
-          failed[ConfigurationException](c.provider.refresh("some-refresh-token")) {
-            case e => e.getMessage must be equalTo RefreshUriUndefined.format(c.provider.id)
+          failed[ConfigurationException](c.provider.refresh("some-refresh-token")) { case e =>
+            e.getMessage must be equalTo RefreshUriUndefined.format(c.provider.id)
           }: Result
       }
     }
@@ -259,9 +255,8 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
           c.sttpBackend = AsyncHttpClientCatsBackend.stub.whenAnyRequest
             .thenRespond(Response("<html></html>", StatusCode.Ok))
 
-          failed[UnexpectedResponseException](c.provider.refresh(refreshToken)) {
-            case e =>
-              e.getMessage must be equalTo UnexpectedResponse.format(c.provider.id, "<html></html>", StatusCode.Ok)
+          failed[UnexpectedResponseException](c.provider.refresh(refreshToken)) { case e =>
+            e.getMessage must be equalTo UnexpectedResponse.format(c.provider.id, "<html></html>", StatusCode.Ok)
           }: Result
       }
     }
@@ -276,13 +271,12 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
           c.sttpBackend = AsyncHttpClientCatsBackend.stub.whenAnyRequest
             .thenRespond(Response("Unauthorized", StatusCode.Unauthorized))
 
-          failed[UnexpectedResponseException](c.provider.refresh(refreshToken)) {
-            case e =>
-              e.getMessage must be equalTo UnexpectedResponse.format(
-                c.provider.id,
-                "Unauthorized",
-                StatusCode.Unauthorized
-              )
+          failed[UnexpectedResponseException](c.provider.refresh(refreshToken)) { case e =>
+            e.getMessage must be equalTo UnexpectedResponse.format(
+              c.provider.id,
+              "Unauthorized",
+              StatusCode.Unauthorized
+            )
           }: Result
       }
     }
@@ -297,13 +291,12 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
           c.sttpBackend = AsyncHttpClientCatsBackend.stub.whenAnyRequest
             .thenRespond(Response(Json.obj().noSpaces, StatusCode.Ok))
 
-          failed[UnexpectedResponseException](c.provider.refresh(refreshToken)) {
-            case e =>
-              e.getMessage must be equalTo UnexpectedResponse.format(
-                c.provider.id,
-                "{}",
-                StatusCode.Ok
-              )
+          failed[UnexpectedResponseException](c.provider.refresh(refreshToken)) { case e =>
+            e.getMessage must be equalTo UnexpectedResponse.format(
+              c.provider.id,
+              "{}",
+              StatusCode.Ok
+            )
           }: Result
       }
     }
@@ -373,16 +366,14 @@ abstract class OAuth2ProviderSpec extends SocialStateProviderSpec[OAuth2Info] {
         redirectUri match {
           case Some(_) =>
             result(c.provider.authenticate(request)) { result =>
-              result.unsafeRunSync().header(HeaderNames.Location) must beSome[Header].like {
-                case header =>
-                  header.value must contain(s"$RedirectUri=${encode(resolvedRedirectUri.toString, "UTF-8")}")
+              result.unsafeRunSync().header(HeaderNames.Location) must beSome[Header].like { case header =>
+                header.value must contain(s"$RedirectUri=${encode(resolvedRedirectUri.toString, "UTF-8")}")
               }
             }: Result
           case None =>
             result(c.provider.authenticate(request)) { result =>
-              result.unsafeRunSync().header(HeaderNames.Location) must beSome[Header].like {
-                case header =>
-                  header.value must not contain s"$RedirectUri="
+              result.unsafeRunSync().header(HeaderNames.Location) must beSome[Header].like { case header =>
+                header.value must not contain s"$RedirectUri="
               }
             }: Result
         }

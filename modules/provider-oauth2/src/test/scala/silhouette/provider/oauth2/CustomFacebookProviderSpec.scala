@@ -47,16 +47,15 @@ class CustomFacebookProviderSpec extends OAuth2ProviderSpec {
         .whenRequestMatches(requestMatcher(DefaultApiUri.param("access_token", oAuth2Info.accessToken)))
         .thenRespond(Response(apiResult.toString, StatusCode.BadRequest))
 
-      failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
-        case e =>
-          e.getMessage must equalTo(ProfileError.format(provider.id))
-          e.getCause.getMessage must equalTo(
-            UnexpectedResponse.format(
-              provider.id,
-              apiResult,
-              StatusCode.BadRequest
-            )
+      failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) { case e =>
+        e.getMessage must equalTo(ProfileError.format(provider.id))
+        e.getCause.getMessage must equalTo(
+          UnexpectedResponse.format(
+            provider.id,
+            apiResult,
+            StatusCode.BadRequest
           )
+        )
       }
     }
 
@@ -65,8 +64,8 @@ class CustomFacebookProviderSpec extends OAuth2ProviderSpec {
         .whenRequestMatches(requestMatcher(DefaultApiUri.param("access_token", oAuth2Info.accessToken)))
         .thenRespond(throw new SttpClientException.ConnectException(new RuntimeException))
 
-      failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) {
-        case e => e.getMessage must equalTo(ProfileError.format(provider.id))
+      failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) { case e =>
+        e.getMessage must equalTo(ProfileError.format(provider.id))
       }
     }
 
@@ -147,8 +146,8 @@ class CustomFacebookProviderSpec extends OAuth2ProviderSpec {
      * @param uri To URI to match against.
      * @return A partial function that matches the request.
      */
-    def requestMatcher(uri: Uri): PartialFunction[Request[_, _], Boolean] = {
-      case r: Request[_, _] => r.method == Method.GET && r.uri == uri
+    def requestMatcher(uri: Uri): PartialFunction[Request[_, _], Boolean] = { case r: Request[_, _] =>
+      r.method == Method.GET && r.uri == uri
     }
   }
 
