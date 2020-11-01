@@ -70,12 +70,7 @@ object BasicSettings extends AutoPlugin {
         options.filterNot(_ == "-Ywarn-dead-code") // Allow dead code in tests (to support using mockito).
       },
       parallelExecution in Test := false,
-      fork in Test := true,
-      // Needed to avoid https://github.com/travis-ci/travis-ci/issues/3775 in forked tests
-      // in Travis with `sudo: false`.
-      // See https://github.com/sbt/sbt/issues/653
-      // and https://github.com/travis-ci/travis-ci/issues/3775
-      javaOptions += "-Xmx1G"
+      fork in Test := true
     )
 }
 
