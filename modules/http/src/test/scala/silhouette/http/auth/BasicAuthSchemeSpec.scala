@@ -30,14 +30,14 @@ class BasicAuthSchemeSpec extends Specification {
 
   "The `read` method" should {
     "return None if the header value doesn't start with 'Basic'" in {
-      BasicAuthSchemeReader("test") must beFailedTry.like {
-        case e: TransformException => e.getMessage must be equalTo MissingBasicAuthIdentifier
+      BasicAuthSchemeReader("test") must beFailedTry.like { case e: TransformException =>
+        e.getMessage must be equalTo MissingBasicAuthIdentifier
       }
     }
 
     "return None if the authorization part value doesn't consists of two parts" in {
-      BasicAuthSchemeReader(s"Basic ${Base64.encode("test")}") must beFailedTry.like {
-        case e: TransformException => e.getMessage must be equalTo InvalidBasicAuthHeader
+      BasicAuthSchemeReader(s"Basic ${Base64.encode("test")}") must beFailedTry.like { case e: TransformException =>
+        e.getMessage must be equalTo InvalidBasicAuthHeader
       }
     }
 

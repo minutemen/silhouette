@@ -35,8 +35,8 @@ class PasswordLoginProviderSpec extends PasswordProviderSpec {
 
       authInfoReader.apply(loginInfo) returns IO.pure(None)
 
-      provider.authenticate(credentials).unsafeRunSync() must throwA[IdentityNotFoundException].like {
-        case e => e.getMessage must beEqualTo(PasswordInfoNotFound.format(provider.id, loginInfo))
+      provider.authenticate(credentials).unsafeRunSync() must throwA[IdentityNotFoundException].like { case e =>
+        e.getMessage must beEqualTo(PasswordInfoNotFound.format(provider.id, loginInfo))
       }
     }
 
@@ -47,8 +47,8 @@ class PasswordLoginProviderSpec extends PasswordProviderSpec {
       fooHasher.matches(passwordInfo, credentials.password) returns false
       authInfoReader.apply(loginInfo) returns IO.pure(Some(passwordInfo))
 
-      provider.authenticate(credentials).unsafeRunSync() must throwA[InvalidPasswordException].like {
-        case e => e.getMessage must beEqualTo(PasswordDoesNotMatch.format(provider.id))
+      provider.authenticate(credentials).unsafeRunSync() must throwA[InvalidPasswordException].like { case e =>
+        e.getMessage must beEqualTo(PasswordDoesNotMatch.format(provider.id))
       }
     }
 
@@ -58,8 +58,8 @@ class PasswordLoginProviderSpec extends PasswordProviderSpec {
 
       authInfoReader.apply(loginInfo) returns IO.pure(Some(passwordInfo))
 
-      provider.authenticate(credentials).unsafeRunSync() must throwA[ConfigurationException].like {
-        case e => e.getMessage must beEqualTo(HasherIsNotRegistered.format(provider.id, "unknown", "foo, bar"))
+      provider.authenticate(credentials).unsafeRunSync() must throwA[ConfigurationException].like { case e =>
+        e.getMessage must beEqualTo(HasherIsNotRegistered.format(provider.id, "unknown", "foo, bar"))
       }
     }
 

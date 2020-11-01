@@ -36,7 +36,7 @@ trait WithBouncyCastle {
       Security.removeProvider(provider.getName)
 
     Security.addProvider(provider)
-  }.recoverWith {
-    case e: Exception => Failure(new RuntimeException("Could not initialize bouncy castle encryption", e))
+  }.recoverWith { case e: Exception =>
+    Failure(new RuntimeException("Could not initialize bouncy castle encryption", e))
   }
 }

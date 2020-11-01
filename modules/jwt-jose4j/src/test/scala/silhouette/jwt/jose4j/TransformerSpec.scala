@@ -121,8 +121,8 @@ class TransformerSpec extends Specification {
 
   "The `read` method" should {
     "throw a JwtException if an error occurred during decoding" in new Context {
-      reader.apply("invalid.token") must beLeft[Throwable].like {
-        case e: JwtException => e.getMessage must be equalTo FraudulentJwtToken.format("invalid.token")
+      reader.apply("invalid.token") must beLeft[Throwable].like { case e: JwtException =>
+        e.getMessage must be equalTo FraudulentJwtToken.format("invalid.token")
       }
     }
   }
@@ -204,15 +204,14 @@ class TransformerSpec extends Specification {
      * @return A Specs2 match result.
      */
     protected def transform(claims: Claims): MatchResult[Any] =
-      writer.apply(claims) must beRight[String].like {
-        case jwt =>
-          reader.apply(jwt) must beRight(
-            claims.copy(
-              expirationTime = claims.expirationTime.map(_.truncatedTo(ChronoUnit.SECONDS)),
-              notBefore = claims.notBefore.map(_.truncatedTo(ChronoUnit.SECONDS)),
-              issuedAt = claims.issuedAt.map(_.truncatedTo(ChronoUnit.SECONDS))
-            )
+      writer.apply(claims) must beRight[String].like { case jwt =>
+        reader.apply(jwt) must beRight(
+          claims.copy(
+            expirationTime = claims.expirationTime.map(_.truncatedTo(ChronoUnit.SECONDS)),
+            notBefore = claims.notBefore.map(_.truncatedTo(ChronoUnit.SECONDS)),
+            issuedAt = claims.issuedAt.map(_.truncatedTo(ChronoUnit.SECONDS))
           )
+        )
       }
 
     /**

@@ -83,13 +83,13 @@ class SilhouetteResponsePipelineSpec extends Specification {
         )
         .headers must
         be equalTo Headers(
-        Seq(
-          Header("TEST1", "value1, value2"),
-          Header("TEST2", "value1"),
-          Header("TEST3", "value1"),
-          Header("TEST3", "value2, value3")
+          Seq(
+            Header("TEST1", "value1, value2"),
+            Header("TEST2", "value1"),
+            Header("TEST3", "value1"),
+            Header("TEST3", "value2, value3")
+          )
         )
-      )
     }
 
     "not override any existing header" in new Context {

@@ -71,11 +71,11 @@ case class StateHandler[F[_]: Async] @Inject() (
   def serialize[R]: F[(String, ResponseWriter[R])] =
     for {
       items <- handlers.map(h => h.serialize[R].map(t => (h.id, t._1, t._2))).sequence
-      jsonMap <- Async[F].pure(items.foldLeft(Map.empty[String, Json]) {
-        case (acc, (handlerID, json, _)) => acc + (handlerID -> json)
+      jsonMap <- Async[F].pure(items.foldLeft(Map.empty[String, Json]) { case (acc, (handlerID, json, _)) =>
+        acc + (handlerID -> json)
       })
-      responseWriter = items.foldLeft[ResponseWriter[R]](identity) {
-        case (acc, (_, _, responseWriter)) => acc andThen responseWriter
+      responseWriter = items.foldLeft[ResponseWriter[R]](identity) { case (acc, (_, _, responseWriter)) =>
+        acc andThen responseWriter
       }
       jwt <- Async[F].fromEither(
         claimWriter.apply(

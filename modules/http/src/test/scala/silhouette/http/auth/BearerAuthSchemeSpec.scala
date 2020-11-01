@@ -29,8 +29,8 @@ class BearerAuthSchemeSpec extends Specification {
 
   "The `read` method" should {
     "return None if the header value doesn't start with 'Bearer'" in {
-      BearerAuthSchemeReader("test") must beFailedTry.like {
-        case e: TransformException => e.getMessage must be equalTo MissingBearerAuthIdentifier
+      BearerAuthSchemeReader("test") must beFailedTry.like { case e: TransformException =>
+        e.getMessage must be equalTo MissingBearerAuthIdentifier
       }
     }
 

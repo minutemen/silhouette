@@ -49,7 +49,7 @@ class HashSpec extends Specification {
     "create a SHA-512 hash of a string" in {
       sha512("SÄÜ%&/($§QW@\\'Ä_:;>|§`´*~") must be equalTo
         "dfa7f66ff599f21a91c8aedb6bfafb12b029e3f4856866d3f7a51d5701e06d101e4a5dd55d9009e96fbfad3f1ec972dd7634431" +
-          "5ca311766f4d50b94a0f32edb"
+        "5ca311766f4d50b94a0f32edb"
     }
   }
 }

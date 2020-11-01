@@ -40,20 +40,18 @@ class SocialProviderRegistrySpec extends Specification with Mockito {
     "return a provider by its ID as SocialProvider" in new Context {
       val provider = registry.get[SocialProvider[IO, _]]("google")
 
-      provider must beSome[SocialProvider[IO, _]].like[MatchResult[SocialProvider[IO, _]]] {
-        case value =>
-          value.id must be equalTo google.id
-          value must beAnInstanceOf[SocialProvider[IO, _]]
+      provider must beSome[SocialProvider[IO, _]].like[MatchResult[SocialProvider[IO, _]]] { case value =>
+        value.id must be equalTo google.id
+        value must beAnInstanceOf[SocialProvider[IO, _]]
       }
     }
 
     "return a provider by its ID as OAuth2Provider" in new Context {
       val provider = registry.get[OAuth2Provider]("google")
 
-      provider must beSome[OAuth2Provider].like {
-        case value =>
-          value.id must be equalTo google.id
-          value must beAnInstanceOf[OAuth2Provider]
+      provider must beSome[OAuth2Provider].like { case value =>
+        value.id must be equalTo google.id
+        value must beAnInstanceOf[OAuth2Provider]
       }
     }
 

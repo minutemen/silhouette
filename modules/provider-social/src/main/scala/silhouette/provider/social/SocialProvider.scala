@@ -86,8 +86,8 @@ trait SocialProvider[F[_], C] extends Provider with SocialProfileBuilder[F] {
    * @return Either an error on the left or the build social profile on the right.
    */
   def retrieveProfile(authInfo: A): F[Profile] =
-    buildProfile(authInfo).recoverWith {
-      case e => F.raiseError(new ProfileRetrievalException(ProfileError.format(id), Some(e)))
+    buildProfile(authInfo).recoverWith { case e =>
+      F.raiseError(new ProfileRetrievalException(ProfileError.format(id), Some(e)))
     }
 
   /**
