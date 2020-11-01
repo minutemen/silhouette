@@ -32,16 +32,14 @@ class TouchStepSpec extends Specification with Mockito {
 
   "The `apply` method" should {
     "touch the authenticator if touching is enabled" in new Context {
-      step.apply(authenticator.touch(enableTouchClock)) must beLike[Authenticator] {
-        case a =>
-          a.touched must beSome(pipelineTouchClock.instant())
+      step.apply(authenticator.touch(enableTouchClock)) must beLike[Authenticator] { case a =>
+        a.touched must beSome(pipelineTouchClock.instant())
       }
     }
 
     "not touch the authenticator if touching is disabled" in new Context {
-      step.apply(authenticator) must beLike[Authenticator] {
-        case a =>
-          a.touched must beNone
+      step.apply(authenticator) must beLike[Authenticator] { case a =>
+        a.touched must beNone
       }
     }
   }

@@ -43,26 +43,24 @@ class TargetPipelineSpec extends Specification with Mockito {
 
     "embed the authenticator into the response" in new Context {
       embedPipeline(authenticator, responsePipeline).unsafeRunSync() must
-        beLike[Fake.ResponsePipeline] {
-          case response =>
-            response.header("test") must beSome(Header("test", authenticator.toString))
+        beLike[Fake.ResponsePipeline] { case response =>
+          response.header("test") must beSome(Header("test", authenticator.toString))
         }
     }
 
     "discard a cookie from the response" in new Context {
       discardPipeline(authenticator, responsePipeline).unsafeRunSync() must
-        beLike[Fake.ResponsePipeline] {
-          case response =>
-            response.cookie("test") must beSome(
-              CookieWithMeta.unsafeApply(
-                name = "test",
-                value = "",
-                maxAge = Some(-86400),
-                path = Some("/"),
-                secure = true,
-                httpOnly = true
-              )
+        beLike[Fake.ResponsePipeline] { case response =>
+          response.cookie("test") must beSome(
+            CookieWithMeta.unsafeApply(
+              name = "test",
+              value = "",
+              maxAge = Some(-86400),
+              path = Some("/"),
+              secure = true,
+              httpOnly = true
             )
+          )
         }
     }
   }

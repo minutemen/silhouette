@@ -169,20 +169,19 @@ trait OAuth2Provider[F[_]] extends SocialStateProvider[F, OAuth2Config] with OAu
     request: RequestPipeline[R],
     stateHandler: StateHandler[F]
   ): F[Either[ResponsePipeline[SilhouetteResponse], StatefulAuthInfo[A]]] =
-    stateHandler.serialize[SilhouetteResponse].flatMap {
-      case (state, responseWriter) =>
-        handleFlow(request) {
-          handleAuthorizationFlow(request, Some(state))
-        } { code =>
-          getAccessToken(request, code)
-        }.flatMap {
-          case Left(response) =>
-            F.pure(Left(responseWriter(response)))
-          case Right(oAuth2Info) =>
-            stateHandler.unserialize(request.extractString(State).getOrElse(""), request).map { state =>
-              Right(StatefulAuthInfo(oAuth2Info, state))
-            }
-        }
+    stateHandler.serialize[SilhouetteResponse].flatMap { case (state, responseWriter) =>
+      handleFlow(request) {
+        handleAuthorizationFlow(request, Some(state))
+      } { code =>
+        getAccessToken(request, code)
+      }.flatMap {
+        case Left(response) =>
+          F.pure(Left(responseWriter(response)))
+        case Right(oAuth2Info) =>
+          stateHandler.unserialize(request.extractString(State).getOrElse(""), request).map { state =>
+            Right(StatefulAuthInfo(oAuth2Info, state))
+          }
+      }
     }
 
   /**
@@ -340,8 +339,8 @@ object OAuth2Provider extends OAuth2Constants {
    */
   implicit class RichDecoderResult[T](result: Decoder.Result[T]) {
     def getOrError(json: Json, path: String, id: String): Try[T] =
-      result.toTry.recoverWith {
-        case e: Exception => Failure(new UnexpectedResponseException(JsonPathError.format(id, path, json), Some(e)))
+      result.toTry.recoverWith { case e: Exception =>
+        Failure(new UnexpectedResponseException(JsonPathError.format(id, path, json), Some(e)))
       }
   }
 
