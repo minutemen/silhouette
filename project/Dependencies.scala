@@ -24,7 +24,7 @@ object Dependencies {
     val circe = "0.13.0"
     val cats = "2.1.1"
     val sttp = "2.1.0-RC1"
-    val silencer = "1.7.0"
+    val silencer = "1.7.1"
   }
 
   val resolvers = Seq()
