@@ -1,8 +1,15 @@
 pull_request_rules:
-  - name: automatic merge for scala-steward pull requests
+  - name: Automatic merge for scala-steward pull requests
     conditions:
-      - author~=^scala-steward$
-      - base=master
+      - author=scala-steward
+      - status-success=Testing
     actions:
       merge:
         method: merge
+
+  - name: Labeling for Scala Steward PR's
+    conditions:
+      - author=scala-steward
+    actions:
+      label:
+        add: [ "type:updates" ]
