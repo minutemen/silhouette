@@ -27,8 +27,8 @@ import silhouette.provider.oauth2.OAuth2Provider.UnexpectedResponse
 import silhouette.provider.social.SocialProvider.ProfileError
 import silhouette.provider.social.{ CommonSocialProfile, ProfileRetrievalException }
 import silhouette.specs2.BaseFixture
-import sttp.client.asynchttpclient.cats.AsyncHttpClientCatsBackend
-import sttp.client.{ Request, Response, SttpClientException }
+import sttp.client3.asynchttpclient.cats.AsyncHttpClientCatsBackend
+import sttp.client3.{ HttpError, Request, Response }
 import sttp.model.Uri._
 import sttp.model.{ Method, StatusCode, Uri }
 
@@ -50,7 +50,7 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
         e.getCause.getMessage must equalTo(
           UnexpectedResponse.format(
             provider.id,
-            apiResult,
+            HttpError(apiResult, StatusCode.BadRequest).getMessage,
             StatusCode.BadRequest
           )
         )
@@ -60,7 +60,7 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
     "fail with ProfileRetrievalException if an unexpected error occurred" in new Context {
       sttpBackend = AsyncHttpClientCatsBackend.stub
         .whenRequestMatches(requestMatcher(DefaultApiUri))
-        .thenRespond(throw new SttpClientException.ConnectException(new RuntimeException))
+        .thenRespond(throw new RuntimeException)
 
       failed[ProfileRetrievalException](provider.retrieveProfile(oAuth2Info)) { case e =>
         e.getMessage must equalTo(ProfileError.format(provider.id))
@@ -68,7 +68,7 @@ class DropboxProviderSpec extends OAuth2ProviderSpec {
     }
 
     "use the overridden API URI" in new Context {
-      val uri = DefaultApiUri.param("new", "true")
+      val uri = DefaultApiUri.withParam("new", "true")
       val apiResult = UserProfileJson.asJson
 
       config.apiUri returns Some(uri)

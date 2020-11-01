@@ -27,8 +27,8 @@ import silhouette.provider.UnexpectedResponseException
 import silhouette.provider.oauth2.FacebookProvider._
 import silhouette.provider.oauth2.OAuth2Provider._
 import silhouette.provider.social._
-import sttp.client.circe.asJson
-import sttp.client.{ basicRequest, SttpBackend }
+import sttp.client3.circe.asJson
+import sttp.client3.{ basicRequest, SttpBackend }
 import sttp.model.Uri._
 
 /**
@@ -56,13 +56,15 @@ trait BaseFacebookProvider[F[_]] extends OAuth2Provider[F] {
   override protected def buildProfile(authInfo: OAuth2Info): F[Profile] = {
     val uri = config.apiUri.getOrElse(DefaultApiUri)
     basicRequest
-      .get(uri.param("access_token", authInfo.accessToken))
+      .get(uri.withParam("access_token", authInfo.accessToken))
       .response(asJson[Json])
-      .send()
+      .send(sttpBackend)
       .flatMap { response =>
         response.body match {
           case Left(error) =>
-            F.raiseError(new UnexpectedResponseException(UnexpectedResponse.format(id, error.body, response.code)))
+            F.raiseError(
+              new UnexpectedResponseException(UnexpectedResponse.format(id, error.getMessage, response.code))
+            )
           case Right(json) =>
             profileParser.parse(json, authInfo)
         }
@@ -117,7 +119,7 @@ class FacebookProvider[F[_]](
   val config: OAuth2Config
 )(
   implicit
-  protected val sttpBackend: SttpBackend[F, Nothing, Nothing],
+  protected val sttpBackend: SttpBackend[F, Any],
   protected val F: Async[F]
 ) extends BaseFacebookProvider[F]
     with CommonProfileBuilder[F] {
