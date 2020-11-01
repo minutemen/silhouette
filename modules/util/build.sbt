@@ -19,6 +19,7 @@ import Dependencies._
 
 libraryDependencies ++= Seq(
   Library.Cats.effect,
-  Library.Sttp.core
+  Library.Sttp.core,
+  Library.Sttp.cats
 )
 //enablePlugins(Doc)
