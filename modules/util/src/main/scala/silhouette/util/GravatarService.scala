@@ -17,10 +17,10 @@
  */
 package silhouette.util
 
-import cats.Monad
+import cats.effect.Async
 import com.typesafe.scalalogging.LazyLogging
 import javax.inject.Inject
-import silhouette.crypto.Hash._
+import silhouette.crypto.Hash.md5
 import silhouette.util.GravatarService._
 import sttp.client._
 import sttp.model.Uri
@@ -28,11 +28,15 @@ import sttp.model.Uri
 /**
  * Retrieves avatar URIs from the Gravatar service.
  *
- * @param settings The Gravatar service settings.
+ * @param config      The Gravatar service config.
+ * @param sttpBackend The STTP backend.
+ * @param F           The IO monad type class.
+ * @tparam F The type of the IO monad.
  */
-final case class GravatarService[F[_]: Monad] @Inject() (settings: GravatarServiceConfig = GravatarServiceConfig())(
+final case class GravatarService[F[_]] @Inject() (config: GravatarServiceConfig = GravatarServiceConfig())(
   implicit
-  val sttpBackend: SttpBackend[F, Nothing, Nothing]
+  val sttpBackend: SttpBackend[F, Nothing, Nothing],
+  protected val F: Async[F]
 ) extends AvatarService[F]
     with LazyLogging {
 
@@ -45,8 +49,8 @@ final case class GravatarService[F[_]: Monad] @Inject() (settings: GravatarServi
   override def retrieveUri(email: String): F[Option[Uri]] =
     hash(email) match {
       case Some(hash) =>
-        val url = (if (settings.secure) SecureURI else InsecureURI)(hash, settings.params)
-        Monad[F].map(basicRequest.get(url).send()) { response =>
+        val url = (if (config.secure) SecureURI else InsecureURI)(hash, config.params)
+        Async[F].map(basicRequest.get(url).send()) { response =>
           response.body match {
             case Left(error) =>
               logger.info(s"Gravatar API returns status `${response.code}` with error: $error")
@@ -55,7 +59,7 @@ final case class GravatarService[F[_]: Monad] @Inject() (settings: GravatarServi
               Some(url)
           }
         }
-      case None => Monad[F].pure(None)
+      case None => Async[F].pure(None)
     }
 
   /**
@@ -85,7 +89,7 @@ object GravatarService {
 }
 
 /**
- * The gravatar service settings object.
+ * The gravatar service config object.
  *
  * @param secure Indicates if the secure or insecure URL should be used to query the avatar images. Defaults to secure.
  * @param params A list of params to append to the URL.

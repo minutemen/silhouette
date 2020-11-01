@@ -17,61 +17,66 @@
  */
 package silhouette.util
 
+import cats.effect.IO.{ Map => _, _ }
+import cats.effect.{ ContextShift, IO }
 import org.specs2.mock.Mockito
 import org.specs2.mutable.Specification
 import org.specs2.specification.Scope
 import silhouette.util.GravatarService._
-import sttp.client.Identity
+import sttp.client.asynchttpclient.cats.AsyncHttpClientCatsBackend
 import sttp.client.testing.SttpBackendStub
+
+import scala.concurrent.ExecutionContext
 
 /**
  * Test case for the [[GravatarService]] class.
  */
 class GravatarServiceSpec extends Specification with Mockito {
+  implicit val cs: ContextShift[IO] = IO.contextShift(ExecutionContext.Implicits.global)
 
   "The `retrieveURI` method" should {
     "return None if email is empty" in new Context {
-      service.retrieveUri("") should beNone
+      service.retrieveUri("").unsafeRunSync() should beNone
     }
 
     "return None if HTTP status code isn't 200" in new Context {
-      implicit override val sttpBackend: SttpBackendStub[Identity, Nothing] =
-        SttpBackendStub.synchronous.whenAnyRequest.thenRespondNotFound
+      override val sttpBackend: SttpBackendStub[IO, Nothing] =
+        AsyncHttpClientCatsBackend.stub.whenAnyRequest.thenRespondNotFound
 
-      service.retrieveUri(email) should beNone
+      service.retrieveUri(email).unsafeRunSync() should beNone
     }
 
     "return secure Avatar URI" in new Context {
-      implicit override val sttpBackend: SttpBackendStub[Identity, Nothing] =
-        SttpBackendStub.synchronous.whenAnyRequest.thenRespondOk()
+      override val sttpBackend: SttpBackendStub[IO, Nothing] =
+        AsyncHttpClientCatsBackend.stub.whenAnyRequest.thenRespondOk()
 
-      service.retrieveUri(email) should beSome(SecureURI(hash, Map("d" -> "404")))
+      service.retrieveUri(email).unsafeRunSync() should beSome(SecureURI(hash, Map("d" -> "404")))
     }
 
     "return insecure Avatar URI" in new Context {
       config.secure returns false
-      implicit override val sttpBackend: SttpBackendStub[Identity, Nothing] =
-        SttpBackendStub.synchronous.whenAnyRequest.thenRespondOk()
+      override val sttpBackend: SttpBackendStub[IO, Nothing] =
+        AsyncHttpClientCatsBackend.stub.whenAnyRequest.thenRespondOk()
 
-      service.retrieveUri(email) should beSome(InsecureURI(hash, Map("d" -> "404")))
+      service.retrieveUri(email).unsafeRunSync() should beSome(InsecureURI(hash, Map("d" -> "404")))
     }
 
     "return an URI with additional parameters" in new Context {
       config.params returns Map("d" -> "https://api.adorable.io/avatars/400/abott@adorable.io.png", "s" -> "400")
-      implicit override val sttpBackend: SttpBackendStub[Identity, Nothing] =
-        SttpBackendStub.synchronous.whenAnyRequest.thenRespondOk()
+      override val sttpBackend: SttpBackendStub[IO, Nothing] =
+        AsyncHttpClientCatsBackend.stub.whenAnyRequest.thenRespondOk()
 
-      service.retrieveUri(email).map(_.toString()) should beSome(
+      service.retrieveUri(email).map(_.toString()).unsafeRunSync() should beSome(
         "https://secure.gravatar.com/avatar/0c91c2a94e7f613f82f08863c675ac5f?d=" +
           "https://api.adorable.io/avatars/400/abott@adorable.io.png&s=400"
       )
     }
 
     "not trim leading zeros" in new Context {
-      implicit override val sttpBackend: SttpBackendStub[Identity, Nothing] =
-        SttpBackendStub.synchronous.whenAnyRequest.thenRespondOk()
+      override val sttpBackend: SttpBackendStub[IO, Nothing] =
+        AsyncHttpClientCatsBackend.stub.whenAnyRequest.thenRespondOk()
 
-      service.retrieveUri("123test@test.com") should beSome(
+      service.retrieveUri("123test@test.com").unsafeRunSync() should beSome(
         SecureURI("0d77aed6b4c5857473c9a04c2017f8b8", Map("d" -> "404"))
       )
     }
@@ -85,7 +90,7 @@ class GravatarServiceSpec extends Specification with Mockito {
     /**
      * The STTP backend.
      */
-    implicit val sttpBackend: SttpBackendStub[Identity, Nothing] = SttpBackendStub.synchronous
+    val sttpBackend: SttpBackendStub[IO, Nothing] = AsyncHttpClientCatsBackend.stub
 
     /**
      * The Gravatar service config.
@@ -95,7 +100,7 @@ class GravatarServiceSpec extends Specification with Mockito {
     /**
      * The Gravatar service implementation.
      */
-    lazy val service = GravatarService(config)
+    lazy val service = GravatarService[IO](config)(sttpBackend, cats.effect.IO.ioConcurrentEffect)
 
     /**
      * The email for which the Avatar should be retrieved.
