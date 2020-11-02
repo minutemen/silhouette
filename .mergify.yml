@@ -2,7 +2,7 @@ pull_request_rules:
   - name: Automatic merge for scala-steward pull requests
     conditions:
       - author=scala-steward
-      - status-success=Test / Status
+      - status-success=Test / Status (pull_request)
     actions:
       merge:
         method: merge
