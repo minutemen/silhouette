@@ -17,4 +17,3 @@ jobs:
         with:
           fossa-api-key: ${{ secrets.FOSSA_API_KEY }}
           github-token: ${{ github.token }}
-s
