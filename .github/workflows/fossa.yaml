@@ -1,8 +1,8 @@
 name: License Scan
 
 on:
-  - pull_request
-  - push
+  push:
+  pull_request:
 
 jobs:
   fossa:
