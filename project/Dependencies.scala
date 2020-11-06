@@ -23,7 +23,7 @@ object Dependencies {
     val specs2 = "4.10.5"
     val circe = "0.13.0"
     val cats = "2.2.0"
-    val sttp = "3.0.0-RC7"
+    val sttp = "3.0.0-RC8"
     val silencer = "1.7.1"
   }
 
