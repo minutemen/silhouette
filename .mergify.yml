@@ -3,6 +3,7 @@ pull_request_rules:
     conditions:
       - author=scala-steward
       - status-success=Test / Status (pull_request)
+      - base=master
     actions:
       merge:
         method: merge
