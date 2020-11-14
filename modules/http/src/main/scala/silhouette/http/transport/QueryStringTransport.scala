@@ -30,7 +30,7 @@ final case class QueryStringTransport(name: String) extends RetrieveFromRequest 
    * @param request The request pipeline to retrieve the payload from.
    * @return Some value or None if no payload could be found in request.
    */
-  override def retrieve(request: Request): Option[String] = request.queryParamValue(name)
+  override def retrieve(request: Request): Option[String] = request.queryParams.get(name)
 
   /**
    * Adds a query param with the given payload to the request.

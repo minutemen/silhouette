@@ -93,7 +93,7 @@ trait BaseAuth0Provider[F[_]] extends OAuth2Provider[F] {
    * @return The info containing the access token.
    */
   override protected def getAccessToken[R](request: RequestPipeline[R], code: String): F[OAuth2Info] =
-    request.queryParamValue("token_type") match {
+    request.queryParams.get("token_type") match {
       case Some("bearer") => F.pure(OAuth2Info(code))
       case _              => super.getAccessToken(request, code)
     }

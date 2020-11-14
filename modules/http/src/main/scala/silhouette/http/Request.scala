@@ -48,7 +48,7 @@ trait Request extends WithHeaders with WithCookies {
    *
    * @return The raw query string.
    */
-  def rawQueryString: String = uri.toJavaUri.getRawQuery
+  def rawQueryString: String
 
   /**
    * Gets all query params.
@@ -58,29 +58,7 @@ trait Request extends WithHeaders with WithCookies {
    *
    * @return All query params.
    */
-  def queryParams: QueryParams = uri.params
-
-  /**
-   * Gets the values for a query param.
-   *
-   * While there is no definitive standard, most web frameworks allow duplicate params with the
-   * same name. Therefore we must define a query param values as list of values.
-   *
-   * @param name The name of the query param for which the values should be returned.
-   * @return A list of param values for the given name or an empty list if no params for the given name could be found.
-   */
-  def queryParamValues(name: String): Seq[String] = queryParams.getMulti(name).getOrElse(Nil)
-
-  /**
-   * Optionally returns the first query param value associated with the given query param name.
-   *
-   * While there is no definitive standard, most web frameworks allow duplicate params with the
-   * same name. Therefore we must define a query param values as list of values.
-   *
-   * @param name The name of the query param for which the values should be returned.
-   * @return Some query param value for the given name, None if no query param for the given name could be found.
-   */
-  def queryParamValue(name: String): Option[String] = queryParams.get(name)
+  def queryParams: QueryParams
 
   /**
    * Generates a default fingerprint from common request headers.

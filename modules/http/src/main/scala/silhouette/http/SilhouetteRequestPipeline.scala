@@ -142,6 +142,13 @@ final protected[silhouette] case class SilhouetteRequestPipeline(
   }
 
   /**
+   * Gets the raw query string.
+   *
+   * @return The raw query string.
+   */
+  override def rawQueryString: String = uri.toJavaUri.getRawQuery
+
+  /**
    * Gets all query params.
    *
    * @return All query params.

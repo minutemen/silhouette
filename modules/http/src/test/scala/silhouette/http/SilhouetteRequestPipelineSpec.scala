@@ -164,28 +164,18 @@ class SilhouetteRequestPipelineSpec extends Specification {
 
   "The `rawQueryString` method" should {
     "return the raw query string" in new Context {
-      requestPipeline.rawQueryString must be equalTo "test1=value1&test1=value2&test2=value1"
+      requestPipeline.rawQueryString must be equalTo "test1=value1&test1=value2&test2=value2"
     }
 
     "be URL encoded" in new Context {
       requestPipeline.withQueryParams("test=3" -> "value=4").rawQueryString must be equalTo
-        "test1=value1&test1=value2&test2=value1&test%3D3=value%3D4"
+        "test1=value1&test1=value2&test2=value2&test%3D3=value%3D4"
     }
   }
 
   "The `queryParams` method" should {
     "return all query params" in new Context {
       requestPipeline.queryParams.toMap must be equalTo request.uri.params.toMap
-    }
-  }
-
-  "The `queryParam` method" should {
-    "return the list of query params" in new Context {
-      requestPipeline.queryParamValues("test1") must be equalTo Seq("value1", "value2")
-    }
-
-    "return an empty list if no query param with the given name was found" in new Context {
-      requestPipeline.queryParamValues("test3") must beEmpty
     }
   }
 
@@ -200,7 +190,7 @@ class SilhouetteRequestPipelineSpec extends Specification {
         .fromMultiMap(
           Map(
             "test1" -> Seq("value1", "value2"),
-            "test2" -> Seq("value1"),
+            "test2" -> Seq("value2"),
             "test3" -> Seq("value1")
           )
         )
@@ -210,17 +200,17 @@ class SilhouetteRequestPipelineSpec extends Specification {
     "append multiple query params" in new Context {
       requestPipeline
         .withQueryParams(
-          "test3" -> "value1",
-          "test4" -> "value1"
+          "test3" -> "value3",
+          "test4" -> "value4"
         )
         .queryParams
         .toMap must be equalTo QueryParams
         .fromMultiMap(
           Map(
             "test1" -> Seq("value1", "value2"),
-            "test2" -> Seq("value1"),
-            "test3" -> Seq("value1"),
-            "test4" -> Seq("value1")
+            "test2" -> Seq("value2"),
+            "test3" -> Seq("value3"),
+            "test4" -> Seq("value4")
           )
         )
         .toMap
@@ -237,7 +227,7 @@ class SilhouetteRequestPipelineSpec extends Specification {
         .fromMultiMap(
           Map(
             "test1" -> Seq("value1", "value2"),
-            "test2" -> Seq("value1"),
+            "test2" -> Seq("value2"),
             "test3" -> Seq("value1", "value2")
           )
         )
@@ -502,7 +492,7 @@ class SilhouetteRequestPipelineSpec extends Specification {
      * A request.
      */
     val request = SilhouetteRequest(
-      uri = uri"http://localhost?test1=value1&test1=value2&test2=value1",
+      uri = uri"http://localhost?test1=value1&test1=value2&test2=value2",
       method = Method.POST,
       headers = Headers(
         Seq(

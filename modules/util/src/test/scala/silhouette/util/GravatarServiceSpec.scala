@@ -41,7 +41,7 @@ class GravatarServiceSpec extends Specification with Mockito {
 
     "return None if HTTP status code isn't 200" in new Context {
       override val sttpBackend: SttpBackendStub[IO, Any] =
-        AsyncHttpClientCatsBackend.stub.whenAnyRequest.thenRespondNotFound
+        AsyncHttpClientCatsBackend.stub.whenAnyRequest.thenRespondNotFound()
 
       service.retrieveUri(email).unsafeRunSync() should beNone
     }

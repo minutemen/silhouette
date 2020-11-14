@@ -160,12 +160,12 @@ trait RequestPipeline[+R] extends Request with RequestExtractor[R] {
    * {{{
    *   withQueryParams("test3" -> "value1", "test1" -> "value3", "test1" -> "value4"))
    *
-   *   Map(
-   *     "test1" -> Seq("value1", "value2"),
-   *     "test2" -> Seq("value1"),
-   *     "test3" -> Seq("value1"),
-   *     "test1" -> Seq("value3"),
-   *     "test1" -> Seq("value4")
+   *   Seq(
+   *     ("test1", Seq("value1", "value2")),
+   *     ("test2", Seq("value2")),
+   *     ("test3", Seq("value1")),
+   *     ("test1", Seq("value3")),
+   *     ("test1", Seq("value4"))
    *   )
    * }}}
    *

@@ -64,7 +64,7 @@ protected[silhouette] trait RequestExtractor[+R] extends LazyLogging {
   protected def fromQueryString(name: String, parts: Option[Parts]): Option[String] =
     isAllowed(RequestPart.QueryString, parts) {
       logger.debug(s"Try to extract value with name `$name` from query string: $rawQueryString")
-      queryParamValue(name)
+      queryParams.get(name)
     }
 
   /**

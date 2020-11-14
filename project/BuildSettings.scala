@@ -40,7 +40,6 @@ object BasicSettings extends AutoPlugin {
     "-Xlint:adapted-args",
     "-Xlint:inaccessible",
     "-Xlint:infer-any",
-    "-Xlint:nullary-override",
     "-Xlint:nullary-unit"
   )
 
@@ -59,7 +58,7 @@ object BasicSettings extends AutoPlugin {
       organization := "group.minutemen",
       resolvers ++= Dependencies.resolvers,
       scalaVersion := crossScalaVersions.value.head,
-      crossScalaVersions := Seq("2.13.2", "2.12.11"),
+      crossScalaVersions := Seq("2.13.3", "2.12.12"),
       scalacOptions ++= {
         scalacOptionsCommon ++ (scalaBinaryVersion.value match {
           case "2.12" => `scalacOptions2.12.x`
