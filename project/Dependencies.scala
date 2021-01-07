@@ -22,8 +22,8 @@ object Dependencies {
   object Version {
     val specs2 = "4.10.5"
     val circe = "0.13.0"
-    val cats = "2.3.0"
-    val sttp = "3.0.0-RC14"
+    val cats = "2.3.1"
+    val sttp = "3.0.0-RC11"
     val silencer = "1.7.1"
   }
 
@@ -63,7 +63,7 @@ object Dependencies {
     val inject = "javax.inject" % "javax.inject" % "1"
     val commonCodec = "commons-codec" % "commons-codec" % "1.15"
     val jose4j = "org.bitbucket.b_c" % "jose4j" % "0.7.4"
-    val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15on" % "1.67"
+    val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15on" % "1.68"
     val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.3.0"
     val collectionCombat = "org.scala-lang.modules" %% "scala-collection-compat" % "2.3.2"
     val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
