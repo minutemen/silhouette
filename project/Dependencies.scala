@@ -66,7 +66,7 @@ object Dependencies {
     val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15on" % "1.68"
     val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.3.0"
     val collectionCombat = "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.2"
-    val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
+    val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.3"
     val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
   }
 }
