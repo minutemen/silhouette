@@ -20,7 +20,7 @@ import sbt._
 object Dependencies {
 
   object Version {
-    val specs2 = "4.10.6"
+    val specs2 = "4.12.3"
     val circe = "0.13.0"
     val cats = "2.3.1"
     val sttp = "3.0.0-RC11"
@@ -62,11 +62,11 @@ object Dependencies {
     val slf4jApi = "org.slf4j" % "slf4j-api" % "1.7.13"
     val inject = "javax.inject" % "javax.inject" % "1"
     val commonCodec = "commons-codec" % "commons-codec" % "1.15"
-    val jose4j = "org.bitbucket.b_c" % "jose4j" % "0.7.7"
+    val jose4j = "org.bitbucket.b_c" % "jose4j" % "0.7.8"
     val bouncyCastle = "org.bouncycastle" % "bcprov-jdk15on" % "1.68"
     val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.3.0"
-    val collectionCombat = "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.4"
-    val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.3"
+    val collectionCombat = "org.scala-lang.modules" %% "scala-collection-compat" % "2.4.3"
+    val scalaLogging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4"
     val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
   }
 }
