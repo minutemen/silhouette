@@ -20,7 +20,7 @@ import sbt._
 object Dependencies {
 
   object Version {
-    val specs2 = "4.12.3"
+    val specs2 = "4.12.9"
     val circe = "0.13.0"
     val cats = "2.3.1"
     val sttp = "3.0.0-RC11"
